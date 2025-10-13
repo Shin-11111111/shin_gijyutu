@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技術科授業用 関連ツール集</title>
+    <!-- Tailwind CSS CDNをロード -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwindの設定（CSSの定義）
+        tailwind.config = {
+            theme: {
+                extend: {
+                    // フォントをInter（またはシステムフォント）に設定
+                    fontFamily: {
+                        sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        // カスタムカラーを定義
+                        'primary-blue': '#3498db',
+                        'secondary-orange': '#e67e22',
+                        'dark-heading': '#2c3e50',
+                        'teacher-bg': '#34495e',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!--
+    ==================================================
+    【重要】JavaScript設定まとめ（パスワードと色定義）
+    ==================================================
+    -->
+    <script>
+        const APP_CONFIG = {
+            // 認証パスワードをここで設定します
+            password: "gijyutu251013",
+            // メッセージボックスの色情報 (Tailwindクラスとして定義)
+            colors: {
+                success: 'bg-[#2ecc71]', // 緑色 (成功時)
+                error: 'bg-[#e74c3c]'   // 赤色 (エラー時)
+            }
+        };
+    </script>
+</head>
+<body class="font-sans bg-gray-50 text-gray-800 p-4 md:p-8 min-h-screen">
+
+    <!-- メッセージ表示用コンテナ (モーダル風アラート) -->
+    <div id="message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-center space-y-2">
+        <!-- メッセージはJSで挿入されます -->
+    </div>
+
+    <main class="max-w-4xl mx-auto">
+        
+        <!-- 教員モードボタン: 右寄せコンテナ内に配置 -->
+        <div class="flex justify-end mb-4">
+            <button id="teacher-mode-button" 
+                    class="bg-[#2ecc71] hover:bg-[#27ae60] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#2ecc71]/50">
+                教員モードに切り替える
+            </button>
+        </div>
+
+        <h1 class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary-blue pb-3 mb-6">
+            久保田の技術授業の部屋
+        </h1>
+
+        <!-- お知らせセクション: H1タグの後に続きます -->
+        <div class="border-2 border-red-500 bg-red-50 p-4 mb-6 rounded-lg text-red-700 shadow-md">
+            <strong class="block text-xl mb-1">お知らせ（10/13更新）</strong>
+            <p>
+                技術授業の部屋の配信開始しました。要望や、このサイトのタイトルを募集中…（今「久保田の技術授業の部屋」と書いてあるところ）
+            </p>
+        </div>
+
+        <!-- ==================== ★ 教員専用リンクセクション（初期非表示） ★ ==================== -->
+        <div id="teacher-only-links" class="hidden">
+            <h2 class="bg-teacher-bg text-white p-3 mb-4 rounded-lg font-bold text-xl">
+                【教員専用】管理・授業支援サイト
+            </h2>
+            <ul class="space-y-3">
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://miraiseed5.benesse.ne.jp/seed/start/" target="_blank" class="text-primary-blue font-bold block">
+                        ミライシード
+                        <span class="text-sm text-gray-500 block mt-1">教員・管理者用 意見交換やレポートなど</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://mirai-pf.jp/user/index.html" target="_blank" class="text-primary-blue font-bold block">
+                        みらいスクールプラットフォーム
+                        <span class="text-sm text-gray-500 block mt-1">道徳用デジタル教科書</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://www.lentrance.com/school/login" target="_blank" class="text-primary-blue font-bold block">
+                        Lentrance
+                        <span class="text-sm text-gray-500 block mt-1">デジタル教科書</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://forms.office.com/" target="_blank" class="text-primary-blue font-bold block">
+                        Microsoft Forms
+                        <span class="text-sm text-gray-500 block mt-1">アンケート作成・集計</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://www.nhk.or.jp/school/" target="_blank" class="text-primary-blue font-bold block">
+                        NHK for School
+                        <span class="text-sm text-gray-500 block mt-1">授業用の動画</span>
+                    </a>
+                </li>
+            </ul>
+            <hr class="my-8 border-gray-300">
+        </div>
+        <!-- ==================================================================================== -->
+        
+
+        <!-- ==================== よく使うリンク（グリッドセクション） ==================== -->
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            よく使うサイト一覧（クリックで開くことができます）
+        </h2>
+        
+        <!-- グリッドレイアウト: モバイル1列、タブレット2列、デスクトップ3列 -->
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://akiruno.l-gate.net/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    L-gate
+                    <span class="text-sm text-gray-600 block mt-1">アンケートなど</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://scratch.mit.edu/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Scratch
+                    <span class="text-sm text-gray-600 block mt-1">プログラミングのサイト</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://makecode.microbit.org/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    micro:bit
+                    <span class="text-sm text-gray-600 block mt-1">実機のプログラミング</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://www.tinkercad.com/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Tinkercad
+                    <span class="text-sm text-gray-600 block mt-1">3D CADと回路のシミュレーション</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://teams.microsoft.com/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Microsoft Teams
+                    <span class="text-sm text-gray-600 block mt-1">Web版 課題の提出など</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://word.cloud.microsoft/ja-jp/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Microsoft Word
+                    <span class="text-sm text-gray-600 block mt-1">Web版</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://excel.cloud.microsoft/ja-jp/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Microsoft Excel
+                    <span class="text-sm text-gray-600 block mt-1">Web版</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://powerpoint.cloud.microsoft/ja-jp/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    Microsoft Power Point
+                    <span class="text-sm text-gray-600 block mt-1">Web版</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://kaihatuiinkai.jp/time_shift/index.html" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    タイムシフトカメラ
+                    <span class="text-sm text-gray-600 block mt-1">数秒遅れで動画を撮影可能</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://miraiseed5.benesse.ne.jp/seed/start/5AYEmcdr" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    ミライシード
+                    <span class="text-sm text-gray-600 block mt-1">授業ツール</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://sushida.net/" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    寿司打
+                    <span class="text-sm text-gray-600 block mt-1">タイピング練習</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ==================== 下線 ==================== -->
+        <hr class="my-8 border-gray-300">
+
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            便利ツール（クリックで開くことができます）
+        </h2>
+
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    サイコロ
+                    <span class="text-sm text-gray-600 block mt-1">1～6のランダムな数字</span>
+                </a>
+            </li>
+            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
+                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    ルーレット
+                    <span class="text-sm text-gray-600 block mt-1">選択肢を指定できます</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ==================== 下線 ==================== -->
+        <hr class="my-8 border-gray-300">
+
+        <!-- ==================== 分類別リスト（通常縦並び） ==================== -->
+        
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            木材加工
+        </h2>
+        <ul class="space-y-3">
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href="https://www.petitcad.com/login" target="_blank" class="text-primary-blue font-bold block text-lg">
+                    プチキャド
+                    <span class="text-sm text-gray-500 block mt-1">木材用3D CAD（パスワードは授業中に説明します）</span>
+                </a>
+            </li>
+        </ul>
+
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            情報
+        </h2>
+        <ul class="space-y-3">
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href="https://gemini.google.com/app?hl=ja" target="_blank" class="text-primary-blue font-bold block text-lg">
+                    Gemini
+                    <span class="text-sm text-gray-500 block mt-1">生成AI。AIの使用は注意が必要です。技術の授業で扱ってからアクセスしましょう。</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ==================== 下線 ==================== -->
+        <hr class="my-8 border-gray-300">
+
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            定期考査対策
+        </h2>
+
+        <ul class="space-y-3">
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    予想問題
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ==================== 下線 ==================== -->
+        <hr class="my-8 border-gray-300">
+
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            技能関係の評価規準
+        </h2>
+
+        <ul class="space-y-3">
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    〇〇の評価規準
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    〇〇の評価規準
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    〇〇の評価規準
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- ==================== 下線 ==================== -->
+        <hr class="my-8 border-gray-300">
+
+        <!-- ==================== 資料ダウンロードセクション ==================== -->
+        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+            授業プリント閲覧
+        </h2>
+        <ul class="space-y-3">
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-red-600 font-bold block text-lg">
+                    1年ガイダンス資料
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-red-600 font-bold block text-lg">
+                    2年ガイダンス資料
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-red-600 font-bold block text-lg">
+                    3年ガイダンス資料
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-red-600 font-bold block text-lg">
+                    評価について
+                    <span class="text-sm text-gray-500 block mt-1">全学年</span>
+                </a>
+            </li>
+            <!-- ==================== 下線 ==================== -->
+            <hr class="my-8 border-gray-300">
+
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href="" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-1
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-2
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-3
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-4
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-5
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-6
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-7
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-8
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-9
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-10
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-11
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-12
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-13
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                    木材加工-14
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <!-- ==================== 下線 ==================== -->
+            <hr class="my-8 border-gray-300">
+
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-1
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-2
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-3
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-4
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-5
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                    生物育成-6
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <!-- ==================== 下線 ==================== -->
+            <hr class="my-8 border-gray-300">
+
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-1
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-2
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-3
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-4
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-5
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-6
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-7
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-8
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-9
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-10
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-11
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                    エネルギー変換-12
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <!-- ==================== 下線 ==================== -->
+            <hr class="my-8 border-gray-300">
+
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-1
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-2
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-3
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-4
+                    <span class="text-sm text-gray-500 block mt-1">1年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-5
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-6
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-7
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-8
+                    <span class="text-sm text-gray-500 block mt-1">2年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-9
+                    <span class="text-sm text-gray-500 block mt-1">2～3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-10
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-11
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-12
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href=".pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                    情報-13
+                    <span class="text-sm text-gray-500 block mt-1">3年</span>
+                </a>
+            </li>
+        </ul>
+        <!-- ==================================================================== -->
+        
+        <footer class="mt-12 pt-4 border-t border-gray-300 text-center">
+            <!-- 免責事項を追加 -->
+            <p class="text-xs text-gray-500 mb-2">
+                【免責事項】本サイトは授業での利用を目的としています。本サイト内のリンクが正常に動作しない場合など、利用によって生じたいかなる損害についても作成者は責任を負いません。
+            </p>
+            <p class="text-gray-500"><small>&copy; 2025 久保田 / 授業用サイト集</small></p>
+        </footer>
+    </main>
+
+    <!-- ==================== パスワード入力モーダル ==================== -->
+    <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-2xl w-11/12 max-w-md">
+            <h3 class="text-xl font-bold mb-4 text-dark-heading">教員モード認証</h3>
+            <p class="mb-4 text-gray-600">教員モードを有効にするには、パスワードを入力してください。</p>
+            <input type="password" id="password-input" placeholder="パスワードを入力" 
+                   class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-primary-blue focus:border-primary-blue">
+            <div class="flex justify-end space-x-3">
+                <button id="cancel-button" 
+                        class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
+                    キャンセル
+                </button>
+                <button id="submit-password-button" 
+                        class="px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition">
+                    認証
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- ============================================================= -->
+
+    <!-- ==================== JavaScriptによる認証機能とメッセージ処理 ==================== -->
+    <script>
+        // 設定値はheadで定義したAPP_CONFIGオブジェクトから取得します。
+        
+        const teacherButton = document.getElementById('teacher-mode-button');
+        const teacherLinks = document.getElementById('teacher-only-links');
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('password-input');
+        const submitButton = document.getElementById('submit-password-button');
+        const cancelButton = document.getElementById('cancel-button');
+
+        /**
+         * alert()の代わりにモーダル風のメッセージボックスを表示する関数 (Tailwind版)
+         * @param {string} message - 表示するメッセージ
+         * @param {string} type - 'success' または 'error'
+         */
+        function alert_message(message, type) {
+            let container = document.getElementById('message-container');
+            
+            // メッセージボックスを作成
+            const box = document.createElement('div');
+            
+            // APP_CONFIGから背景色クラスを取得
+            let bgColor = APP_CONFIG.colors[type] || APP_CONFIG.colors.error;
+            
+            box.className = `p-3 rounded-lg text-white shadow-lg transition-opacity duration-500 ${bgColor}`;
+            box.textContent = message;
+            
+            container.appendChild(box);
+
+            // 4秒後にメッセージボックスを消去
+            setTimeout(() => {
+                box.style.opacity = '0';
+                // トランジション終了後にDOMから削除
+                box.addEventListener('transitionend', () => {
+                    if (container.contains(box)) {
+                        container.removeChild(box);
+                    }
+                });
+            }, 4000);
+        }
+
+        // 1. 教員モードボタンのクリックイベント (モーダル表示)
+        teacherButton.addEventListener('click', function() {
+            passwordModal.classList.remove('hidden');
+            passwordInput.value = ''; // 入力欄をクリア
+            passwordInput.focus();
+        });
+
+        // 2. キャンセルボタンのクリックイベント (モーダル非表示)
+        cancelButton.addEventListener('click', function() {
+            passwordModal.classList.add('hidden');
+        });
+        
+        // 3. 認証ボタンのクリックイベント (パスワードチェック)
+        submitButton.addEventListener('click', authenticate);
+        
+        // 4. Enterキーでの認証
+        passwordInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // フォーム送信を防ぐ
+                authenticate();
+            }
+        });
+
+        function authenticate() {
+            const password = passwordInput.value.trim();
+
+            if (password === APP_CONFIG.password) { // APP_CONFIGからパスワードを取得
+                // 認証成功
+                teacherLinks.classList.remove('hidden');
+                passwordModal.classList.add('hidden');
+                alert_message("教員モードが有効になりました。", "success");
+                teacherButton.classList.add('hidden'); // ボタンを非表示にする
+            } else {
+                // 認証失敗
+                passwordInput.value = ''; // パスワードをクリア
+                passwordInput.focus();
+                alert_message("パスワードが正しくありません。", "error");
+            }
+        }
+    </script>
+</body>
+</html>
