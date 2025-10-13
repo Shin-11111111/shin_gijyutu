@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>タッチで振るサイコロ</title>
+  <style>
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Hiragino Kaku Gothic ProN",Meiryo,sans-serif;background:linear-gradient(180deg,#e8f0ff,#ffffff);}
+    .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;box-sizing:border-box}
+    h1{font-size:18px;margin:0;color:#0b3b66}
+    #diceCanvas{touch-action:none;border-radius:18px;box-shadow:0 8px 24px rgba(11,59,102,0.12);background:transparent}
+    .hint{color:#43627a;font-size:14px;opacity:0.9}
+    .button{padding:10px 18px;border-radius:12px;background:#0b6cff;color:white;border:none;font-weight:600;box-shadow:0 6px 18px rgba(11,108,255,0.18)}
+    .footer{position:fixed;left:12px;right:12px;bottom:18px;text-align:center;color:#99a7b8;font-size:13px}
+    @media(min-width:600px){#diceCanvas{width:320px;height:320px}} 
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>タッチまたはクリックしてサイコロを振る</h1>
+    <canvas id="diceCanvas" width="240" height="240" aria-label="サイコロ"></canvas>
+    <div class="hint">下のボタンをクリックしても振ることができます</div>
+    <button id="rollBtn" class="button">振る</button>
+  </div>
+  <div class="footer">サイコロ（１～６）</div>
+
+  <script>
+    const canvas = document.getElementById('diceCanvas');
+    const ctx = canvas.getContext('2d');
+    const rollBtn = document.getElementById('rollBtn');
+
+    // 高解像度対応
+    function fitCanvas(){
+      const dpr = window.devicePixelRatio || 1;
+      const size = Math.min(window.innerWidth - 40, 360);
+      canvas.style.width = size + 'px';
+      canvas.style.height = size + 'px';
+      canvas.width = Math.floor(size * dpr);
+      canvas.height = Math.floor(size * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      drawDie(currentFace);
+    }
+    window.addEventListener('resize', fitCanvas);
+
+    // ピップの位置（正規化座標）
+    const pipPos = {
+      TL: [0.25,0.25], TC: [0.5,0.25], TR: [0.75,0.25],
+      ML: [0.25,0.5], MC: [0.5,0.5], MR: [0.75,0.5],
+      BL: [0.25,0.75], BC: [0.5,0.75], BR: [0.75,0.75]
+    };
+
+    // 指定の面（1-6）に対応するピップ配列
+    const faces = {
+      1: ['MC'],
+      2: ['TL','BR'],
+      3: ['TL','MC','BR'],
+      4: ['TL','TR','BL','BR'],
+      5: ['TL','TR','MC','BL','BR'],
+      6: ['TL','ML','BL','TR','MR','BR']
+    };
+
+    function drawRoundedRect(x,y,w,h,r){
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawDie(face){
+      const w = canvas.width / (window.devicePixelRatio || 1);
+      const h = canvas.height / (window.devicePixelRatio || 1);
+      const size = Math.min(w,h);
+      ctx.clearRect(0,0,w,h);
+
+      // 背景（白い角丸）
+      ctx.fillStyle = '#fff';
+      ctx.shadowColor = 'rgba(0,0,0,0.12)';
+      ctx.shadowBlur = 10;
+      const pad = size * 0.05;
+      const radius = Math.max(12, size * 0.06);
+      drawRoundedRect(pad,pad,size - pad*2,size - pad*2,radius);
+
+      // 内側の影をリセット
+      ctx.shadowBlur = 0;
+
+      // ピップ（黒）の描画
+      const pipRadius = Math.max(8, size * 0.06);
+      ctx.fillStyle = '#111827';
+      const ps = faces[face];
+      for(const key of ps){
+        const [nx,ny] = pipPos[key];
+        const cx = pad + nx * (size - pad*2);
+        const cy = pad + ny * (size - pad*2);
+        ctx.beginPath();
+        ctx.arc(cx,cy,pipRadius,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // ロールアニメーション
+    let rolling = false;
+    let currentFace = 1;
+
+    function rollDice(){
+      if(rolling) return;
+      rolling = true;
+      const duration = 700; // ms
+      const interval = 60; // ms
+      const steps = Math.ceil(duration / interval);
+      let count = 0;
+      const iv = setInterval(()=>{
+        currentFace = Math.floor(Math.random()*6)+1;
+        drawDie(currentFace);
+        count++;
+        if(count>=steps){
+          clearInterval(iv);
+          // 最終値を少しだけ減速して決める
+          setTimeout(()=>{
+            currentFace = Math.floor(Math.random()*6)+1;
+            drawDie(currentFace);
+            rolling = false;
+          }, 120);
+        }
+      }, interval);
+    }
+
+    // イベントハンドラ（タッチ・クリック両対応）
+    function onActivate(e){
+      e.preventDefault();
+      rollDice();
+    }
+
+    canvas.addEventListener('touchstart', onActivate, {passive:false});
+    canvas.addEventListener('click', onActivate);
+    rollBtn.addEventListener('click', onActivate);
+
+    // 初期セットアップ
+    fitCanvas();
+    drawDie(currentFace);
+  </script>
+</body>
+</html>

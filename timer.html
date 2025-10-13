@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>マルチタイマー</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      overflow: hidden;
+      width: 100vw;
+    }
+    #tabs {
+      width: 200px;
+      background: #333;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+    #tabs button {
+      background: #444;
+      border: none;
+      color: white;
+      padding: 15px;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    #tabs button.active {
+      background: #666;
+    }
+    #content {
+      flex: 1 1 auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      position: relative;
+      min-width: 0;
+    }
+    body.fullscreen #content {
+      flex: none;
+      width: 100vw;
+    }
+    .time-display {
+      font-size: 18vw;
+      text-align: center;
+      user-select: none;
+    }
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    button.control, input[type="time"], input[type="number"] {
+      padding: 10px 20px;
+      font-size: 18px;
+    }
+    .start-btn { background-color: #4CAF50; color: white; }
+    .pause-btn { background-color: #f0ad4e; color: white; }
+    .reset-btn { background-color: #d9534f; color: white; }
+    .fullscreen-btn { background-color: #0275d8; color: white; }
+    body.fullscreen #tabs,
+    body.fullscreen .controls {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #repeatTimer {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      padding: 20px;
+    }
+    #repeatTimerSettings {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 30px 0;
+      text-align: center;
+    }
+    .timer-box {
+      cursor: pointer;
+      padding: 10px 20px;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 20px;
+      transition: box-shadow 0.3s;
+    }
+    .timer-box.selected {
+      box-shadow: 0 0 15px 4px rgba(0, 128, 255, 0.7);
+      border-color: #007bff;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="tabs">
+    <button onclick="showTab('timer')">タイマー</button>
+    <button onclick="showTab('alarm')">アラーム</button>
+    <button onclick="showTab('stopwatch')">ストップウォッチ</button>
+    <button onclick="showTab('repeatTimer')">繰り返しタイマー</button>
+  </div>
+
+  <div id="content">
+    <!-- 通常のタイマー -->
+    <div id="timer">
+      <div class="time-display" id="timerDisplay">00:00</div>
+      <div class="controls">
+        <button class="control" onclick="addTime(300)">+5分</button>
+        <button class="control" onclick="addTime(60)">+1分</button>
+        <button class="control" onclick="addTime(10)">+10秒</button>
+        <button class="control" onclick="addTime(1)">+1秒</button>
+        <button class="control start-btn" onclick="startTimer()">開始</button>
+        <button class="control pause-btn" onclick="pauseTimer()">一時停止</button>
+        <button class="control reset-btn" onclick="resetTimer()">リセット</button>
+        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+      </div>
+    </div>
+
+    <!-- アラーム -->
+    <div id="alarm" style="display:none;">
+      <div class="time-display" id="alarmCountdown">--:--:--</div>
+      <div class="controls">
+        <input type="time" id="alarmTime">
+        <button class="control" onclick="setAlarm()">アラーム設定</button>
+        <button class="control" onclick="clearAlarm()">アラーム解除</button>
+        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+      </div>
+    </div>
+
+    <!-- ストップウォッチ -->
+    <div id="stopwatch" style="display:none;">
+      <div class="time-display" id="stopwatchDisplay">00:00:00</div>
+      <div class="controls">
+        <button class="control start-btn" onclick="startStopwatch()">開始</button>
+        <button class="control pause-btn" onclick="pauseStopwatch()">一時停止</button>
+        <button class="control reset-btn" onclick="resetStopwatch()">リセット</button>
+        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+      </div>
+    </div>
+
+    <!-- 繰り返しタイマー -->
+    <div id="repeatTimer" style="display:none; flex-direction: column; justify-content: center; align-items: center;">
+      <!-- 上段：タイマー表示 -->
+      <div class="time-display" id="repeatTimerDisplay">00:00</div>
+
+      <!-- 中段：設定表示 -->
+      <div id="repeatTimerSettings">
+        <div id="timer1Box" class="timer-box selected" onclick="selectTimer('timer1')">
+          タイマー①<br><span id="timer1Value">00:00</span>
+        </div>
+        <div id="timer2Box" class="timer-box" onclick="selectTimer('timer2')">
+          タイマー②<br><span id="timer2Value">00:00</span>
+        </div>
+        <div class="timer-box">
+          現在<br><span id="repeatProgress">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- 下段：操作 -->
+      <div class="controls">
+        <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
+        <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
+        <button class="control" onclick="addTimeToSelected(60)">+1分</button>
+        <button class="control" onclick="addTimeToSelected(300)">+5分</button>
+        <input type="number" id="repeatTimesInput" placeholder="繰り返し回数" style="width:120px;" oninput="updateRepeatCount()" />
+        <button class="control start-btn" onclick="startRepeatTimer()">開始</button>
+        <button class="control pause-btn" onclick="pauseRepeatTimer()">一時停止</button>
+        <button class="control reset-btn" onclick="resetRepeatTimer()">リセット</button>
+        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+      </div>
+    </div>
+
+
+
+  <audio id="alarmSound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg" />
+  </audio>
+
+  <script>
+    // タブ切り替え
+    let currentTab = 'timer';
+    function showTab(tabName) {
+      document.querySelectorAll('#tabs button').forEach(btn => btn.classList.remove('active'));
+      document.querySelector(`#tabs button[onclick="showTab('${tabName}')"]`).classList.add('active');
+      document.querySelectorAll('#content > div').forEach(div => div.style.display = 'none');
+      document.getElementById(tabName).style.display = 'flex';
+      currentTab = tabName;
+    }
+    showTab('timer');
+
+    // 通常タイマー
+    let totalTime = 0;
+    let timerId = null;
+    function updateTimerDisplay() {
+      let m = Math.floor(totalTime / 60);
+      let s = totalTime % 60;
+      document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+    function addTime(sec) { totalTime += sec; updateTimerDisplay(); }
+    function startTimer() {
+      if (timerId !== null) return;
+      timerId = setInterval(() => {
+        if (totalTime > 0) {
+          totalTime--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerId);
+          timerId = null;
+          playAlarm();
+        }
+      }, 1000);
+    }
+    function pauseTimer() { clearInterval(timerId); timerId = null; }
+    function resetTimer() { pauseTimer(); totalTime = 0; updateTimerDisplay(); }
+    updateTimerDisplay();
+
+    // アラーム
+    let alarmInterval = null;
+    let alarmTargetTime = null;
+    function setAlarm() {
+      clearAlarm();
+      const time = document.getElementById('alarmTime').value;
+      if (!time) { alert('時刻を設定してください'); return; }
+      const now = new Date();
+      const [h, m] = time.split(':').map(Number);
+      alarmTargetTime = new Date(); alarmTargetTime.setHours(h, m, 0, 0);
+      if (alarmTargetTime <= now) alarmTargetTime.setDate(alarmTargetTime.getDate() + 1);
+      updateAlarmCountdown();
+      alarmInterval = setInterval(updateAlarmCountdown, 1000);
+    }
+    function updateAlarmCountdown() {
+      const now = new Date();
+      const diff = Math.max(0, Math.floor((alarmTargetTime - now) / 1000));
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const s = diff % 60;
+      document.getElementById('alarmCountdown').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (diff <= 0) { clearInterval(alarmInterval); alarmInterval = null; playAlarm(); }
+    }
+    function clearAlarm() {
+      if (alarmInterval !== null) clearInterval(alarmInterval);
+      document.getElementById('alarmCountdown').textContent = '--:--:--';
+      alarmInterval = null;
+      alarmTargetTime = null;
+    }
+
+    // ストップウォッチ
+    let stopwatchTime = 0;
+    let stopwatchId = null;
+    function updateStopwatchDisplay() {
+      let h = Math.floor(stopwatchTime / 3600);
+      let m = Math.floor((stopwatchTime % 3600) / 60);
+      let s = stopwatchTime % 60;
+      document.getElementById('stopwatchDisplay').textContent = 
+        String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+    function startStopwatch() {
+      if (stopwatchId !== null) return;
+      stopwatchId = setInterval(() => {
+        stopwatchTime++;
+        updateStopwatchDisplay();
+      }, 1000);
+    }
+    function pauseStopwatch() { clearInterval(stopwatchId); stopwatchId = null; }
+    function resetStopwatch() { pauseStopwatch(); stopwatchTime = 0; updateStopwatchDisplay(); }
+    updateStopwatchDisplay();
+
+    // 繰り返しタイマー
+    let selectedTimer = 'timer1';
+    let timer1Seconds = 0;
+    let timer2Seconds = 0;
+    let repeatCount = 0;
+    let repeatTimerId = null;
+    let isTimer1Turn = true;
+    let repeatTimeLeft = 0;
+    let currentRepeat = 0;
+
+    function selectTimer(timer) { selectedTimer = timer; }
+    function addTimeToSelected(sec) {
+      if (selectedTimer === 'timer1') {
+        timer1Seconds += sec;
+        document.getElementById('timer1Value').textContent = timer1Seconds;
+      } else {
+        timer2Seconds += sec;
+        document.getElementById('timer2Value').textContent = timer2Seconds;
+      }
+    }
+    function updateRepeatCount() {
+      repeatCount = parseInt(document.getElementById('repeatTimesInput').value) || 0;
+      document.getElementById('repeatCountDisplay').textContent = repeatCount;
+    }
+    function updateRepeatTimerDisplay() {
+      const m = Math.floor(repeatTimeLeft / 60);
+      const s = repeatTimeLeft % 60;
+      document.getElementById('repeatTimerDisplay').textContent = 
+        String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+    function startRepeatTimer() {
+      if (repeatTimerId !== null) return;
+      if (timer1Seconds === 0 || timer2Seconds === 0 || repeatCount === 0) {
+        alert("すべての値を設定してください");
+        return;
+      }
+      currentRepeat = 0;
+      isTimer1Turn = true;
+      runNextRepeat();
+    }
+    function runNextRepeat() {
+      if (currentRepeat >= repeatCount * 2) { playAlarm(); resetRepeatTimer(); return; }
+      repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
+      updateRepeatTimerDisplay();
+      repeatTimerId = setInterval(() => {
+        if (repeatTimeLeft > 0) {
+          repeatTimeLeft--;
+          updateRepeatTimerDisplay();
+        } else {
+          playAlarm();
+          clearInterval(repeatTimerId);
+          repeatTimerId = null;
+          currentRepeat++;
+          isTimer1Turn = !isTimer1Turn;
+          runNextRepeat();
+        }
+      }, 1000);
+    }
+    function pauseRepeatTimer() { clearInterval(repeatTimerId); repeatTimerId = null; }
+    function resetRepeatTimer() {
+      pauseRepeatTimer();
+      repeatTimeLeft = 0;
+      currentRepeat = 0;
+      updateRepeatTimerDisplay();
+    }
+    // repeatTimer用のJavaScript（既存を置き換え）
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+    function selectTimer(timer) {
+      selectedTimer = timer;
+      document.getElementById('timer1Box').classList.toggle('selected', timer === 'timer1');
+      document.getElementById('timer2Box').classList.toggle('selected', timer === 'timer2');
+    }
+    function addTimeToSelected(sec) {
+      if (selectedTimer === 'timer1') {
+        timer1Seconds += sec;
+        document.getElementById('timer1Value').textContent = formatTime(timer1Seconds);
+      } else {
+        timer2Seconds += sec;
+        document.getElementById('timer2Value').textContent = formatTime(timer2Seconds);
+      }
+    }
+    function updateRepeatCount() {
+      repeatCount = parseInt(document.getElementById('repeatTimesInput').value) || 0;
+      document.getElementById('repeatProgress').textContent = `0 / ${repeatCount * 2}`;
+    }
+    function updateRepeatTimerDisplay() {
+      document.getElementById('repeatTimerDisplay').textContent = formatTime(repeatTimeLeft);
+      document.getElementById('repeatProgress').textContent = `${currentRepeat} / ${repeatCount * 2}`;
+    }
+    function startRepeatTimer() {
+      if (repeatTimerId !== null) return;
+      if (timer1Seconds === 0 || timer2Seconds === 0 || repeatCount === 0) {
+        alert("すべての値を設定してください");
+        return;
+      }
+      currentRepeat = 0;
+      isTimer1Turn = true;
+      runNextRepeat();
+    }
+    function runNextRepeat() {
+      if (currentRepeat >= repeatCount * 2) {
+        playAlarm();
+        resetRepeatTimer(false);
+        return;
+      }
+      repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
+      updateRepeatTimerDisplay();
+      repeatTimerId = setInterval(() => {
+        if (repeatTimeLeft > 0) {
+          repeatTimeLeft--;
+          updateRepeatTimerDisplay();
+        } else {
+          playAlarm();
+          clearInterval(repeatTimerId);
+          repeatTimerId = null;
+          currentRepeat++;
+          isTimer1Turn = !isTimer1Turn;
+          runNextRepeat();
+        }
+      }, 1000);
+    }
+    function pauseRepeatTimer() {
+      clearInterval(repeatTimerId);
+      repeatTimerId = null;
+    }
+    function resetRepeatTimer(clearAll = true) {
+      pauseRepeatTimer();
+      repeatTimeLeft = 0;
+      currentRepeat = 0;
+      updateRepeatTimerDisplay();
+      if (clearAll) {
+        timer1Seconds = 0;
+        timer2Seconds = 0;
+        repeatCount = 0;
+        document.getElementById('timer1Value').textContent = '00:00';
+        document.getElementById('timer2Value').textContent = '00:00';
+        document.getElementById('repeatTimesInput').value = '';
+        document.getElementById('repeatProgress').textContent = '0 / 0';
+      }
+    }
+
+    // フルスクリーン
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+        document.body.classList.add('fullscreen');
+      } else {
+        document.exitFullscreen();
+      }
+    }
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        document.body.classList.remove('fullscreen');
+      }
+    });
+
+    // アラーム音
+    function playAlarm() {
+      const sound = document.getElementById('alarmSound');
+      let count = 0, max = 5;
+      sound.pause(); sound.currentTime = 0;
+      sound.play().catch(() => {});
+      sound.onended = () => {
+        if (++count < max) {
+          sound.currentTime = 0;
+          sound.play().catch(() => {});
+        }
+      };
+    }
+  </script>
+</body>
+</html>

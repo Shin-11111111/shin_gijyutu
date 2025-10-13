@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ルーレット</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #f9f9f9;
+    font-family: sans-serif;
+    overflow-x: hidden;
+    text-align: center;
+  }
+  h1 {
+    margin: 10px 0;
+    font-size: 1.8rem;
+  }
+  #wheelContainer {
+    position: relative;
+    width: 65vmin; /* ルーレット大きさ */
+    height: 65vmin; /* ルーレット大きさ */
+    margin: auto;
+  }
+  #pointer {
+    position: absolute;
+    bottom: -30px; /* ← ルーレットの「下」に固定。ポインター高さ分だけ外に出す  top: 580px; ポインターの高さ */
+    left: calc(50% - 15px); /* ポインターの横 */
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 30px solid red; /* ポインターの上下の向き(border-top…下向き) */
+    z-index: 10;
+  }
+  #wheel {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 5px solid #333;
+    position: relative;
+    overflow: hidden;
+    transform: rotate(0deg);
+    transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  .segment {
+    position: absolute;
+    width: 50%;
+    height: 50%;
+    top: 50%;
+    left: 50%;
+    transform-origin: 0% 0%;
+    clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
+    display: flex;
+    align-items: stretch; /* セグメントテキスト縦方向 */
+    justify-content: start; /* セグメントテキスト横方向 */
+    color: #fff;
+    font-size: 1rem;
+    font-weight: bold;
+    text-align: center;
+    box-sizing: border-box;
+    transform: rotate(calc(var(--angle))) skewY(calc(90deg - var(--skew)));
+  }
+  .segment span {
+    font-size: 2rem;
+    transform: rotate(calc(var(--skew) / 2 * -1));
+    display: block;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    padding: 0 5px;
+  }
+  #controls {
+    margin: 10px auto;
+    max-width: 500px;
+  }
+  #segmentsInput {
+    width: 80%;
+    margin: 5px 0;
+    padding: 8px;
+    font-size: 1em;
+  }
+  button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 1em;
+    border-radius: 5px;
+    border: none;
+    background: #333;
+    color: #fff;
+    cursor: pointer;
+  }
+  #result {
+    margin-top: 15px;
+    font-size: 1.5em;
+    color: #333;
+    min-height: 1.5em;
+  }
+  small {
+    display: block;
+    color: #666;
+    font-size: 0.8em;
+    margin-top: 3px;
+  }
+</style>
+</head>
+<body>
+
+<h1>ルーレット</h1>
+
+<div id="wheelContainer">
+  <div id="pointer"></div>
+  <div id="wheel"></div>
+</div>
+
+<div id="controls">
+  <textarea id="segmentsInput" rows="3" placeholder="ここに入力してください。（例: あたり|#ff0000,はずれ|blue）  または 数字のみ（例: 10 を入力で 1〜10）"></textarea>
+  <small>半角カンマ（,）区切りで入力できます。例: あたり|red,はずれ|blue</small>
+  <small>または「数字」のみで「1〜数字」のルーレットが作成されます。</small><br>
+  <button onclick="spin()">スタート</button>
+</div>
+
+<div id="result"></div>
+
+<script>
+  let segments = [];
+  let wheel = document.getElementById('wheel');
+  let resultDiv = document.getElementById('result');
+  let rotation = 0;
+
+  function setupWheelFromInput() {
+    const input = document.getElementById('segmentsInput').value.trim();
+    localStorage.setItem('rouletteSegments', input);
+
+    segments = [];
+
+    // 数字のみの場合 → 1〜数字まで生成
+    if (/^\d+$/.test(input)) {
+      const num = parseInt(input);
+      for (let i = 1; i <= num; i++) {
+        segments.push({ label: String(i), color: null });
+      }
+    } else {
+      // カンマ区切り → 項目|色
+      segments = input.split(',').map(s => {
+        const [label, color] = s.split('|').map(x => x.trim());
+        return { label, color: color || null };
+      }).filter(s => s.label);
+    }
+
+    // セグメント描画
+    wheel.innerHTML = '';
+    const count = segments.length || 1;
+
+    segments.forEach((seg, i) => {
+      const segment = document.createElement('div');
+      segment.className = 'segment';
+      const angle = (360 / count) * i;
+      const skew = 360 / count;
+      segment.style.setProperty('--angle', `${angle}deg`);
+      segment.style.setProperty('--skew', `${skew}deg`);
+      segment.style.background = seg.color || `hsl(${i * (360 / count)}, 70%, 60%)`;
+      segment.innerHTML = `<span>${seg.label}</span>`;
+      wheel.appendChild(segment);
+    });
+
+    resultDiv.textContent = '';
+  }
+
+  function spin() {
+    if (segments.length === 0) return;
+
+    const spins = Math.floor(Math.random() * 3 + 5); // 5〜7回転
+    const randomDeg = Math.floor(Math.random() * 360);
+    rotation += spins * 360 + randomDeg;
+    wheel.style.transition = 'transform 5s cubic-bezier(0.33, 1, 0.68, 1)';
+    wheel.style.transform = `rotate(${rotation}deg)`;
+
+    setTimeout(() => {
+      const degree = rotation % 360;
+      const index = Math.floor(((360 - degree + (360 / segments.length) / 2) % 360) / (360 / segments.length));
+      resultDiv.textContent = `結果: ${segments[index].label}`;
+    }, 5000);
+  }
+
+  document.getElementById('segmentsInput').addEventListener('input', setupWheelFromInput);
+
+  window.onload = () => {
+    const saved = localStorage.getItem('rouletteSegments');
+    if (saved) {
+      document.getElementById('segmentsInput').value = saved;
+      setupWheelFromInput();
+    }
+  };
+</script>
+
+<div id="controls">
+  <small>結果はたまにずれますが、ルーレットの文字が見えないときのみ参考にしてみてください。</small><br>
+</div>
+
+</body>
+</html>

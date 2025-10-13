@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>技術科 HTMLをマスターしよう！</title>
+  <!-- Google Fonts: Interと日本語フォントのフォールバックを設定 -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    /*
+     * 全体レイアウトとフォントの設定
+     */
+    body {
+      font-family: 'Inter', "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #e9f5ff; /* 明るい水色背景 */
+      color: #333;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      width: 100%;
+      max-width: 900px; /* PCでの見やすさのために最大幅を設定 */
+      padding: 0;
+    }
+
+    /*
+     * 見出しスタイル
+     */
+    h1 {
+      color: #004c99; /* 濃い青 */
+      font-size: 2.2rem;
+      border-bottom: 4px solid #00aaff;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+      font-weight: 600;
+    }
+    h2 {
+      color: #0066cc; /* 標準的な青 */
+      font-size: 1.6rem;
+      margin-bottom: 15px;
+    }
+
+    /*
+     * セクション（カード）スタイル
+     */
+    section {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 立体感を出す影 */
+    }
+
+    /*
+     * テキストとリスト
+     */
+    p {
+      line-height: 1.8;
+      margin-bottom: 15px;
+    }
+    code {
+      background-color: #f0f0f0;
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-weight: bold;
+      color: #d9480f; /* オレンジ系のコード色 */
+    }
+    ul {
+      list-style-type: '・ '; /* 面白いリストスタイル */
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    strong {
+      color: #0066cc; /* 強調文字を青に */
+      font-weight: bold;
+    }
+
+    /*
+     * 実験コーナーのエディタとプレビュー
+     */
+    textarea {
+      width: 100%;
+      height: 180px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 14px;
+      padding: 10px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      resize: vertical;
+      margin-top: 10px;
+      box-sizing: border-box; /* paddingとborderをwidthに含める */
+    }
+    iframe {
+      width: 100%;
+      height: 200px;
+      background: #f0f8ff; /* プレビューを薄い水色に */
+      border: 1px solid #0066cc;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    button {
+      background-color: #00aaff; /* 明るい青のボタン */
+      color: white;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+    button:hover {
+      background-color: #0077cc; /* ホバーで少し濃い青 */
+    }
+
+    /* モバイル対応 (480px以下) */
+    @media (max-width: 480px) {
+        body {
+            padding: 10px;
+        }
+        h1 {
+            font-size: 1.8rem;
+        }
+        h2 {
+            font-size: 1.4rem;
+        }
+        section {
+            padding: 15px;
+        }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Webページづくりの第一歩！HTMLを学ぼう！</h1>
+
+    <section>
+      <h2>１　HTMLとは何だろう？</h2>
+      <p>
+        HTMLは "HyperText Markup Language" (ハイパーテキスト・マークアップ・ランゲージ) の略で、<strong>Webページを作るため</strong>の基本となる言語です。簡単に言うと、文章の構造や意味をコンピュータに伝えるためのルールです。
+      </p>
+      <p>
+        これは、私たちが読む文章（テキスト）に「構造」や「意味」を与える役割があります。Webページは、このHTMLを骨組みにして、見た目を整える "CSS" や、動きをつける "JavaScript" など、ほかの言語と組み合わせて作られることがあります。
+      </p>
+      <p>
+        HTMLのファイルは、ブラウザ（ChromeやEdge、Safariなど）が読み込むことで、画面に表示されます。
+      </p>
+    </section>
+
+    <section>
+      <h2>２　HTMLの仕組み</h2>
+      <p>HTMLは、Webページで次の３つの重要な役割を果たしています。</p>
+      <ul>
+        <li><strong>タグ</strong>: <strong>表示形式</strong>と<strong>範囲</strong>を指定するもの</li>
+        <li><strong>要素</strong>: Webページを構成する<strong>テキスト情報のかたまり</strong></li>
+        <li><strong>属性</strong>: 個々のタグに特定の性質や動作を与える記述</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>３　基本となるHTMLの「タグ」</h2>
+      <p>HTMLでは、文章を <code>&lt; &gt;</code> で囲まれた<strong>「タグ」</strong>で囲い、どこからどこまでがそのプログラムなのかを指定します。多くのタグは「開始タグ」と「終了タグ」でセットになっています。</p>
+
+      <ul>
+        <li><code>&lt;html&gt; ～ &lt;/html&gt;</code>：<strong>全てのHTML文書の始まりと終わり</strong>。文書全体を囲みます。</li>
+        <li><code>&lt;head&gt; ～ &lt;/head&gt;</code>：ページ設定情報（タイトルや文字コードなど、<strong>画面には見えない情報</strong>）を入れます。</li>
+        <li><code>&lt;body&gt; ～ &lt;/body&gt;</code>：<strong>実際にWebページに表示される全てのコンテンツ</strong>（文章、画像、ボタンなど）が入る、最も重要な部分です。</li>
+        <li><code>&lt;h1&gt; ～ &lt;/h1&gt;</code>：<strong>見出し</strong>を表します。数字が小さいほど（<code>&lt;h1&gt;</code>が大きく、<code>&lt;h6&gt;</code>が小さい）重要な見出しになります。</li>
+        <li><code>&lt;p&gt; ～ &lt;/p&gt;</code>：<strong>段落</strong>（パラグラフ）を表します。普通の文章はこのタグで囲みます。</li>
+        <li><code>&lt;a href="..."&gt; ～ &lt;/a&gt;</code>：<strong>リンク</strong>（アンカー）を作ります。<code>href</code>属性でURLを指定します。</li>
+        <li><code>&lt;img src="..."&gt;</code>：<strong>画像</strong>を表示します。終了タグが不要な「空要素」です。<code>src</code>属性で画像の場所を指定します。</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>４　実際にコードを書いてみよう！</h2>
+      <p>下の入力スペースにHTMLコードを書いて、「プレビュー」ボタンを押すと、プレビューエリアに記述したプログラムの結果が表示されます。</p>
+      <p>ボタンを押しても<strong>プレビュー画面が変わらない</strong>または<strong>タグも表示されている</strong>場合は、<strong>プログラムが間違っています。</strong> どこが間違っているか確認しましょう</p>
+
+      <textarea id="htmlInput" placeholder="例：
+<h1>タグで囲んで文字を入力してみましょう！</h1>
+<p>タグは半角（英語入力モード）で入力してください。</p>
+<p>タグを変えるとどうなるかな？試してみよう！タグの種類は上に載っています！</p>"></textarea>
+      <button onclick="previewHTML()">プレビュー</button>
+
+      <h3>プレビュー結果：</h3>
+      <iframe id="preview"></iframe>
+    </section>
+    
+    <section>
+      <h2>５　これからの授業（作成）の流れ</h2>
+      <p>みなさんに、実際にあったらいいなというwebサイトを作成してもらいます！</p>
+      
+      <ul>
+        <li>フローチャートを作成</li>
+        <li>AIを使用しながらHTMLを記述 <a href="https://gemini.google.com/app?hl=ja" target="_blank">→ここをクリックするとAIのサイトにとびます(Gemini)</a></li>
+        <li>Teamsに提出 <a href="https://teams.microsoft.com/v2/" target="_blank">→ここをクリックすると提出場所にとびます</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <script>
+    /**
+     * ユーザーが入力したHTMLコードをiframe内に表示する関数
+     */
+    function previewHTML() {
+    
+      // 1. textareaからコードを取得
+      const code = document.getElementById('htmlInput').value;
+
+      // 2. プレビュー用のiframe要素を取得
+      const previewFrame = document.getElementById('preview');
+
+      // 3. iframe内のドキュメントを取得
+      const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+
+      // 4. ドキュメントを開き、コードを書き込み、閉じる
+      doc.open();
+
+      // プレビュー内でタグが正しくレンダリングされるよう、簡単なCSSを埋め込みます
+      const styledCode = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <style>
+            /* プレビュー内の基本スタイルを定義 */
+            body { font-family: 'Inter', "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; padding: 15px; margin: 0; background-color: white; line-height: 1.6;}
+            h1 { color: #004c99; font-size: 1.5rem; }
+            p { color: #333; }
+            strong { color: #d9480f; }
+          </style>
+        </head>
+        <body>
+          ${code}
+        </body>
+        </html>
+      `;
+      doc.write(styledCode);
+      doc.close();
+    }
+
+    // ページロード時に簡単な初期コードを挿入し、一度プレビューを生成
+    window.onload = function() {
+        const initialCode = `<h1>Hello World!</h1>\n<p>HTMLのタグをいくつか試してみよう！（タグのみ）</p>\n<p><strong>太字で強調することもできます。</strong> 太文字のタグを使いました。</p>`;
+        document.getElementById('htmlInput').value = initialCode;
+        previewHTML(); // 初期コードで一度プレビューを生成
+    }
+  </script>
+
+</body>
+</html>
