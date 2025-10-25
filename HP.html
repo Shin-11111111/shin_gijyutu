@@ -19,9 +19,11 @@
                         // カスタムカラーを定義
                         'primary-blue': '#3498db',
                         'secondary-orange': '#e67e22',
+                        'third-green': 'green',
                         'dark-heading': '#2c3e50',
                         'teacher-bg': '#34495e',
-                        'contents': '#79a7d9'
+                        'contents': '#79a7d9',
+                        'table': '#79a7d9',
                     }
                 }
             }
@@ -334,6 +336,29 @@
         <h2 id="exam" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             定期考査対策
         </h2>
+
+        <!-- ==================== 表の挿入 ==================== -->
+        <h3 class="text-xl font-bold text-third-green border-l-4 border-third-green pl-3 mt-6 mb-3">
+            第4回定期考査 範囲
+        </h3>
+        <div class="p-4 bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
+            <table class="w-full text-left border-collapse table-auto">
+                <thead class="bg-table text-white">
+                    <tr>
+                        <th class="p-3 border-b border-gray-200 font-semibold text-sm rounded-tl-lg">1年生</th>
+                        <th class="p-3 border-b border-gray-200 font-semibold text-sm">2年生</th>
+                        <th class="p-3 border-b border-gray-200 font-semibold text-sm rounded-tr-lg">3年生</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="hover:bg-gray-100 transition duration-150">
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.</td>
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.</td>
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
@@ -824,7 +849,7 @@
                 alert_message("パスワードが正しくありません。", "error");
             }
         }
-        // ==================== 【追加】スムーズスクロール機能 ====================
+        // ==================== スムーズスクロール機能 ====================
         
         /**
          * ページ内のアンカーリンク（#から始まるURL）をスムーズにスクロールさせる
