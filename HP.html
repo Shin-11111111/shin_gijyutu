@@ -63,7 +63,7 @@
             </button>
         </div>
 
-        <h1 class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary-blue pb-3 mb-6">
+        <h1 id="top" class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary-blue pb-3 mb-6">
             久保田の技術授業の部屋
         </h1>
 
@@ -75,7 +75,7 @@
             </p>
         </div>
 
-        <!-- 目次 -->
+        <!-- 目次 …目次を作成するときは、h2にidを追加し、idに飛ぶようにする-->
         <h2 class="bg-contents text-white p-3 mb-4 rounded-lg font-bold text-xl">
             目次
         </h2>
@@ -97,6 +97,12 @@
             </a>
             <a href="#prints" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 授業プリント
+            </a>
+        </div>
+
+        <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <a href="#top" class="fixed bottom-5 right-5 table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                Topに戻る
             </a>
         </div>
 
@@ -166,6 +172,7 @@
         </h2>
         
         <!-- グリッドレイアウト: モバイル1列、タブレット2列、デスクトップ3列 -->
+        <!-- 追加は、コピーした後にhrefのURLとタイトル、サブタイトルを変更 -->
         <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
                        hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
@@ -817,7 +824,7 @@
                 alert_message("パスワードが正しくありません。", "error");
             }
         }
-        // ==================== スムーズスクロール機能 ====================
+        // ==================== 【追加】スムーズスクロール機能 ====================
         
         /**
          * ページ内のアンカーリンク（#から始まるURL）をスムーズにスクロールさせる
