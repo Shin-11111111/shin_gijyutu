@@ -1,0 +1,1705 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ホワイトボード</title>
+    <!-- Tailwind CSSの読み込み --><script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 'Inter'フォントを使用 */
+        body { font-family: 'Inter', sans-serif; }
+        
+        /* Canvasを黒板らしくするために、カーソルを十字に変更 */
+        #chalkboard {
+            cursor: crosshair; /* 描画/消しゴムモードのカーソル */
+            background-color: #ffffff; /* white */
+            border: 1px solid #e5e7eb;
+            touch-action: none; 
+        }
+        
+        /* 移動モード時のカーソル */
+        #chalkboard.pan-cursor { cursor: grab; }
+        #chalkboard.pan-cursor.grabbing { cursor: grabbing; }
+
+        /* 選択されている色ボタンのスタイル: 枠線を強調 */
+        .color-button.active {
+            @apply border-4 border-gray-800 shadow-md;
+        }
+        
+        /* モードボタンのアクティブスタイル */
+        .mode-button.active {
+            @apply ring-2 ring-offset-2;
+        }
+        #drawModeButton.active { @apply ring-green-500; }
+        #highlighterModeButton.active { @apply ring-yellow-500; } /* 蛍光ペン用 */
+        #eraserModeButton.active { @apply ring-red-500; }
+        #panModeButton.active { @apply ring-indigo-500; }
+        #textToolButton.active { @apply ring-purple-500; }
+        #imageToolButton.active { @apply ring-teal-500; }
+        
+        /* 全画面モード時のCanvasコンテナとCanvasのスタイル */
+        #canvasContainer:fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 100;
+            background-color: #ffffff;
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+        
+        /* 全画面モード時のCanvas自体のスタイル */
+        #canvasContainer:fullscreen #chalkboard {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center">
+
+    <div class="w-full max-w-7xl bg-white shadow-xl rounded-xl overflow-hidden p-4">
+        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">
+            <span class="text-green-600">ホワイトボード</span>
+        </h1>
+        
+        <!-- コントロールパネル -->
+        <div id="controls" class="flex flex-wrap flex-row items-center justify-center gap-3 p-3 bg-gray-50 rounded-lg shadow-inner mb-4">
+            
+            <!-- モード設定グループ -->
+            <div class="flex items-center gap-2 pr-3 border-r border-gray-300">
+                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">画面モード:</span>
+                <!-- ON/OFF トグルスイッチ -->
+                <label for="fixedModeToggle" class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="fixedModeToggle" value="" class="sr-only peer">
+                    <div class="w-11 h-6 bg-gray-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <span id="modeLabel" class="ms-3 text-sm font-medium text-gray-700">OFF (無制限)</span>
+                </label>
+            </div>
+            
+            <!-- 色の選択グループ -->
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-gray-700">色:</span>
+                <button id="colorBlack" class="color-button w-8 h-8 rounded-full bg-black border-2 border-gray-300 shadow hover:scale-105 transition-transform active:scale-95" title="黒"></button>
+                <button id="colorRed" class="color-button w-8 h-8 rounded-full bg-red-500 border-2 border-red-300 shadow hover:scale-105 transition-transform active:scale-95" title="赤"></button>
+                <button id="colorBlue" class="color-button w-8 h-8 rounded-full bg-blue-500 border-2 border-blue-300 shadow hover:scale-105 transition-transform active:scale-95" title="青"></button>
+                <button id="colorYellow" class="color-button w-8 h-8 rounded-full bg-yellow-400 border-2 border-yellow-300 shadow hover:scale-105 transition-transform active:scale-95" title="黄"></button>
+                <div class="relative group">
+                    <input type="color" id="colorPicker" value="#000000" class="color-button w-10 h-8 rounded-md border-2 border-gray-300 cursor-pointer shadow hover:scale-105 transition-transform active:scale-95" title="カスタム"></input>
+                    <span class="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 -bottom-8 left-1/2 transform -translate-x-1/2">カスタム</span>
+                </div>
+            </div>
+
+            <!-- ツール選択グループ -->
+            <div class="flex items-center gap-3 border-l pl-3 border-gray-300">
+                <!-- 描画モード -->
+                <button id="drawModeButton" class="mode-button px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors active:shadow-none active:bg-green-700">
+                    ペン
+                </button>
+                
+                <!-- 蛍光ペンモード -->
+                <button id="highlighterModeButton" class="mode-button px-4 py-2 bg-yellow-400 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-yellow-500 transition-colors active:shadow-none active:bg-yellow-600">
+                    蛍光ペン
+                </button>
+
+                <!-- 消しゴムモード -->
+                <button id="eraserModeButton" class="mode-button px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors active:shadow-none active:bg-red-700">
+                    消しゴム
+                </button>
+                
+                <!-- テキストツール -->
+                <button id="textToolButton" class="mode-button px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow-md hover:bg-purple-600 transition-colors active:shadow-none active:bg-purple-700">
+                    テキスト
+                </button>
+                
+                <!-- 画像ツール -->
+                <button id="imageToolButton" class="mode-button px-4 py-2 bg-teal-500 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-colors active:shadow-none active:bg-teal-700">
+                    画像
+                </button>
+            </div>
+
+            <!-- 太さ/サイズ選択 (バーと数値入力) -->
+            <div class="flex items-center gap-2 border-l pl-3 border-gray-300">
+                <label for="lineWidthRange" id="lineWidthLabel" class="text-sm font-medium text-gray-700 whitespace-nowrap">太さ:</label>
+                <input type="range" id="lineWidthRange" min="1" max="50" value="5" class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg">
+                <input type="number" id="lineWidthInput" min="1" max="50" value="5" class="w-14 p-1 border border-gray-300 rounded-md text-sm text-center focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- ズーム/パンコントロールグループ -->
+            <div class="flex items-center gap-2 border-l pl-3 border-gray-300">
+                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">ズーム/移動:</span>
+                <button id="zoomInButton" class="px-3 py-1 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-colors active:scale-95">+</button>
+                <button id="zoomOutButton" class="px-3 py-1 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-colors active:scale-95">-</button>
+                <button id="panModeButton" class="mode-button px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-600 transition-colors active:shadow-none active:bg-indigo-700">
+                    キャンバス/テキスト/画像 移動
+                </button>
+                <button id="resetViewButton" class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors active:shadow-none active:bg-gray-800">
+                    キャンバス位置リセット
+                </button>
+            </div>
+
+            <!-- アクションボタン -->
+            <div class="flex items-center gap-3 border-l pl-3 border-gray-300">
+                <button id="undoButton" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition-colors active:shadow-none active:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
+                    元に戻す
+                </button>
+                <button id="clearButton" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors active:shadow-none active:bg-red-700">
+                    すべてクリア
+                </button>
+                <button id="screenshotButton" class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors active:shadow-none active:bg-green-700">
+                    スクショ
+                </button>
+                <!-- 全画面モードボタン -->
+                <button id="fullscreenButton" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors active:shadow-none active:bg-blue-700">
+                    全画面
+                </button>
+            </div>
+            
+        </div>
+
+        <!-- Canvas描画エリアのコンテナ -->
+        <div id="canvasContainer" class="relative border-4 border-gray-800 rounded-lg overflow-hidden shadow-2xl">
+            <!-- Canvas要素 -->
+            <canvas id="chalkboard" class="w-full" width="800" height="450"></canvas>
+            
+            <!-- テキスト入力オーバーレイ -->
+            <textarea id="textInputOverlay" class="absolute hidden" style="font-size: 16px;"></textarea>
+            
+            <!-- 画像ファイル入力 (非表示) -->
+            <input type="file" id="imageFileInput" accept="image/*" class="hidden">
+
+            <!-- メッセージ表示エリア (アラートの代わり) -->
+            <div id="messageBox" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+        </div>
+        
+    </div>
+
+    <script>
+        // グローバル変数
+        let canvas, ctx;
+        let isDrawing = false;
+        let isPanning = false; 
+        let isObjectMoving = false; // オブジェクト移動中フラグ
+        let isResizing = false; // リサイズ中フラグ
+        let isRotating = false; // 回転中フラグ
+        let lastX = 0;
+        let lastY = 0;
+        let currentColor = '#000000'; 
+        
+        // 操作履歴の管理用配列
+        let history = [];
+        let currentHistoryIndex = -1;
+        const MAX_HISTORY = 50; // 最大履歴数
+        const blackboardBackgroundColor = '#ffffff'; 
+        // 'draw' (ペン), 'highlighter' (蛍光ペン), 'eraser', 'pan', 'text', 'image'
+        let currentMode = 'draw'; 
+        let selectedObject = null; // 現在選択中のオブジェクト (移動/サイズ変更対象)
+
+        // 描画オブジェクトを保持する配列 (ストローク、テキスト、画像)
+        let objects = [];
+        let currentStroke = null;
+        let editingTextObject = null; // 編集中のテキストオブジェクト
+
+        // ズーム・パン用の状態
+        let scale = 1.0;
+        let offsetX = 0;
+        let offsetY = 0;
+        const zoomFactor = 1.1;
+        const maxScale = 4.0;
+        const minScaleUnrestricted = 0.25; 
+        
+        // **モード設定の管理**
+        let currentModeSetting = 'unrestricted'; // 'unrestricted' (無制限) or 'fixed' (固定解像度)
+        const FIXED_WIDTH = 1920; 
+        const FIXED_HEIGHT = 1080; 
+        
+        // 蛍光ペン用の設定
+        const HIGHLIGHTER_DEFAULT_WIDTH = 20;
+        const HIGHLIGHTER_OPACITY = 0.5;
+        
+        // ペン/消しゴムモード用のデフォルト太さ
+        const DEFAULT_LINE_WIDTH = 5;
+        const DEFAULT_ERASER_WIDTH = 10;
+
+        // 画像のリサイズ/回転ハンドル設定
+        const HANDLE_SIZE = 10; // ハンドルの半径 (仮想座標)
+        const ROTATE_HANDLE_OFFSET = 30; // 回転ハンドルの中心から画像上辺までのオフセット
+        let activeHandle = null; // 現在操作中のハンドル (null, 'resize', 'rotate')
+
+        // DOM要素
+        const canvasContainer = document.getElementById('canvasContainer');
+        const colorPicker = document.getElementById('colorPicker');
+        const colorBlack = document.getElementById('colorBlack'); 
+        const colorRed = document.getElementById('colorRed');
+        const colorBlue = document.getElementById('colorBlue');
+        const colorYellow = document.getElementById('colorYellow');
+        const lineWidthRange = document.getElementById('lineWidthRange');
+        const lineWidthInput = document.getElementById('lineWidthInput');
+        const lineWidthLabel = document.getElementById('lineWidthLabel'); // 太さ/サイズラベル
+        const drawModeButton = document.getElementById('drawModeButton'); 
+        const highlighterModeButton = document.getElementById('highlighterModeButton'); 
+        const eraserModeButton = document.getElementById('eraserModeButton');
+        const textToolButton = document.getElementById('textToolButton');
+        const imageToolButton = document.getElementById('imageToolButton');
+        const clearButton = document.getElementById('clearButton');
+        const screenshotButton = document.getElementById('screenshotButton');
+        const messageBox = document.getElementById('messageBox');
+        const textInputOverlay = document.getElementById('textInputOverlay');
+        const imageFileInput = document.getElementById('imageFileInput'); 
+        const zoomInButton = document.getElementById('zoomInButton');
+        const zoomOutButton = document.getElementById('zoomOutButton');
+        const resetViewButton = document.getElementById('resetViewButton');
+        const panModeButton = document.getElementById('panModeButton'); 
+        const fixedModeToggle = document.getElementById('fixedModeToggle');
+        const modeLabel = document.getElementById('modeLabel');
+        const fullscreenButton = document.getElementById('fullscreenButton'); 
+
+        // ----------------------------------------------------
+        // 1. 初期設定とCanvasのセットアップ
+        // ----------------------------------------------------
+        window.onload = function() {
+            canvas = document.getElementById('chalkboard');
+            if (!canvas.getContext) {
+                showMessage('お使いのブラウザはCanvasに対応していません。');
+                return;
+            }
+            ctx = canvas.getContext('2d');
+
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            setModeSetting(false);
+            setupEventListeners();
+            setDrawMode(); 
+            colorBlack.classList.add('active');
+            
+            // 初期状態を履歴に保存
+            saveToHistory();
+        };
+
+        window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('fullscreenchange', resizeCanvas);
+
+        function resizeCanvas() {
+            const isFullscreen = document.fullscreenElement === canvasContainer;
+
+            if (isFullscreen) {
+                canvas.width = canvasContainer.clientWidth;
+                canvas.height = canvasContainer.clientHeight;
+            } else {
+                const containerWidth = canvasContainer.clientWidth;
+                
+                if (currentModeSetting === 'fixed') {
+                    canvas.width = FIXED_WIDTH;
+                    canvas.height = FIXED_HEIGHT;
+                    const displayHeight = containerWidth * (FIXED_HEIGHT / FIXED_WIDTH);
+                    canvas.style.height = `${displayHeight}px`;
+                    
+                } else { // unrestricted
+                    canvas.width = containerWidth;
+                    canvas.height = containerWidth * (9 / 16); 
+                    canvas.style.height = `auto`; 
+                }
+            }
+            redrawCanvas();
+        }
+        
+        function setModeSetting(isFixed) {
+            currentModeSetting = isFixed ? 'fixed' : 'unrestricted';
+            
+            if (isFixed) {
+                modeLabel.textContent = 'ON (固定)';
+                showMessage(`モード: キャンバスの大きさ固定 (1920x1080)`, '#10b981'); 
+            } else {
+                modeLabel.textContent = 'OFF (無制限)';
+                showMessage(`モード: キャンバスの大きさ無制限`, '#3b82f6'); 
+            }
+            resetView(); 
+            resizeCanvas();
+        }
+
+
+        // ----------------------------------------------------
+        // 2. イベントリスナーの設定
+        // ----------------------------------------------------
+        // 履歴に状態を保存する関数
+        function saveToHistory() {
+            // 現在の履歴インデックス以降の履歴を削除（新しい分岐を作成）
+            history = history.slice(0, currentHistoryIndex + 1);
+            
+            // 新しい状態を保存（ディープコピー）
+            const currentState = JSON.parse(JSON.stringify(objects));
+            
+            // 履歴に追加
+            history.push(currentState);
+            
+            // 最大履歴数を超えた場合、古い履歴を削除
+            if (history.length > MAX_HISTORY) {
+                history.shift();
+            }
+            
+            // 現在の履歴インデックスを更新
+            currentHistoryIndex = history.length - 1;
+            
+            // 元に戻すボタンの状態を更新
+            updateUndoButtonState();
+        }
+
+        // 元に戻す処理
+        function undo() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                objects = JSON.parse(JSON.stringify(history[currentHistoryIndex]));
+                redrawCanvas();
+                showMessage('操作を元に戻しました');
+            }
+            updateUndoButtonState();
+        }
+
+        // 元に戻すボタンの状態を更新
+        function updateUndoButtonState() {
+            const undoButton = document.getElementById('undoButton');
+            if (undoButton) {
+                undoButton.disabled = currentHistoryIndex <= 0;
+            }
+        }
+
+        function setupEventListeners() {
+            fixedModeToggle.addEventListener('change', (e) => setModeSetting(e.target.checked));
+            
+            // 元に戻すボタンのイベントリスナー
+            const undoButton = document.getElementById('undoButton');
+            if (undoButton) {
+                undoButton.addEventListener('click', undo);
+            }
+
+            // 色選択ボタンのイベントリスナー
+            document.getElementById('colorBlack').addEventListener('click', () => selectColor('#000000', colorBlack));
+            colorRed.addEventListener('click', () => selectColor('#ef4444', colorRed));
+            colorBlue.addEventListener('click', () => selectColor('#3b82f6', colorBlue));
+            colorYellow.addEventListener('click', () => selectColor('#facc15', colorYellow));
+            colorPicker.addEventListener('input', (e) => selectColor(e.target.value, colorPicker));
+            
+            // マウス/タッチイベント
+            canvas.addEventListener('mousedown', handleStart);
+            canvas.addEventListener('mousemove', handleMove);
+            canvas.addEventListener('mouseup', handleEnd);
+            canvas.addEventListener('mouseleave', handleEnd);
+            canvas.addEventListener('wheel', handleZoomWheel); 
+
+            canvas.addEventListener('touchstart', handleStart);
+            canvas.addEventListener('touchmove', handleMove);
+            canvas.addEventListener('touchend', handleEnd);
+            canvas.addEventListener('touchcancel', handleEnd);
+            
+            // テキスト入力オーバーレイのイベント
+            textInputOverlay.addEventListener('blur', stopEditingText);
+            textInputOverlay.addEventListener('input', updateTextObject);
+            textInputOverlay.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    stopEditingText();
+                }
+            });
+
+            imageFileInput.addEventListener('change', handleImageFileSelect);
+
+            // コントロールイベント
+            document.getElementById('colorBlack').addEventListener('click', () => selectColor('#000000', colorBlack));
+            colorRed.addEventListener('click', () => selectColor('#ef4444', colorRed));
+            colorBlue.addEventListener('click', () => selectColor('#3b82f6', colorBlue));
+            colorPicker.addEventListener('input', (e) => selectColor(e.target.value, colorPicker));
+            
+            lineWidthRange.addEventListener('input', updateLineWidth);
+            lineWidthInput.addEventListener('input', updateLineWidth);
+
+            // モードボタン
+            drawModeButton.addEventListener('click', setDrawMode);
+            highlighterModeButton.addEventListener('click', setHighlighterMode); 
+            eraserModeButton.addEventListener('click', setEraserMode);
+            panModeButton.addEventListener('click', setPanMode);
+            textToolButton.addEventListener('click', setTextMode);
+            imageToolButton.addEventListener('click', setImageMode); 
+
+            clearButton.addEventListener('click', clearCanvas);
+            screenshotButton.addEventListener('click', takeScreenshot);
+            
+            fullscreenButton.addEventListener('click', toggleFullscreen);
+
+            // ズーム/パンイベント
+            zoomInButton.addEventListener('click', () => zoom(zoomFactor));
+            zoomOutButton.addEventListener('click', () => zoom(1 / zoomFactor));
+            resetViewButton.addEventListener('click', resetView);
+
+            
+            // 【★追加】キーボードイベントでオブジェクトを削除するリスナーを追加
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        
+        function toggleFullscreen() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+                fullscreenButton.textContent = '全画面';
+                showMessage('全画面表示を終了しました');
+            } else {
+                canvasContainer.requestFullscreen()
+                    .then(() => {
+                        showMessage('全画面表示を開始しました', '#3b82f6');
+                    })
+                    .catch(err => {
+                        showMessage(`全画面表示エラー: ${err.message}`, '#dc2626');
+                    });
+            }
+        }
+
+
+        // ----------------------------------------------------
+        // 3. 描画データの操作と再描画
+        // ----------------------------------------------------
+
+        function drawStroke(stroke) {
+            if (stroke.points.length < 1) return;
+
+            ctx.beginPath();
+            ctx.strokeStyle = stroke.color;
+            ctx.lineWidth = stroke.width / scale;
+            
+            if (stroke.isHighlighter) {
+                ctx.globalAlpha = HIGHLIGHTER_OPACITY; 
+            } else {
+                ctx.globalAlpha = 1.0; 
+            }
+
+            ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+            for (let i = 1; i < stroke.points.length; i++) {
+                ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+            }
+            ctx.stroke();
+            
+            ctx.globalAlpha = 1.0; 
+        }
+        
+        function drawText(textObject) {
+            ctx.fillStyle = textObject.color;
+            
+            const lines = textObject.content.split('\n');
+            let y = textObject.y;
+            const baseFontSize = parseInt(textObject.font);
+            const actualFontSize = baseFontSize / scale; 
+            const lineHeight = actualFontSize * 1.2; 
+            
+            ctx.font = `${actualFontSize}px Inter`;
+
+            lines.forEach(line => {
+                ctx.fillText(line, textObject.x, y);
+                y += lineHeight;
+            });
+            
+            if (selectedObject === textObject && !editingTextObject) {
+                ctx.strokeStyle = '#3b82f6'; // Blue
+                ctx.lineWidth = 2 / scale;
+                
+                let textWidths = lines.map(line => ctx.measureText(line).width * scale);
+                const maxWidth = Math.max(...textWidths) / scale;
+                const totalHeight = lines.length * lineHeight;
+                
+                ctx.strokeRect(textObject.x - 2/scale, textObject.y - actualFontSize - 2/scale, maxWidth + 4/scale, totalHeight + 4/scale);
+                
+                textObject.width = maxWidth;
+                textObject.height = totalHeight;
+            }
+        }
+
+        function drawImage(imageObject) {
+            // 回転の中心
+            const centerX = imageObject.x + imageObject.width / 2;
+            const centerY = imageObject.y + imageObject.height / 2;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(imageObject.rotation || 0);
+            ctx.translate(-centerX, -centerY);
+
+            if (imageObject.img && imageObject.img.complete) {
+                ctx.drawImage(
+                    imageObject.img, 
+                    imageObject.x, 
+                    imageObject.y, 
+                    imageObject.width, 
+                    imageObject.height
+                );
+            } else {
+                ctx.fillStyle = '#f3f4f6'; 
+                ctx.fillRect(imageObject.x, imageObject.y, imageObject.width, imageObject.height);
+                
+                ctx.strokeStyle = '#9ca3af'; 
+                ctx.lineWidth = 2 / scale;
+                ctx.strokeRect(imageObject.x, imageObject.y, imageObject.width, imageObject.height);
+
+                ctx.fillStyle = '#6b7280'; 
+                ctx.font = `${16 / scale}px Inter`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(
+                    'ローカル画像', 
+                    imageObject.x + imageObject.width / 2, 
+                    imageObject.y + imageObject.height / 2
+                );
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            }
+            
+            // 選択中の画像にハイライト
+            if (selectedObject === imageObject) {
+                ctx.strokeStyle = '#3b82f6'; // Blue
+                ctx.lineWidth = 2 / scale;
+                ctx.strokeRect(imageObject.x, imageObject.y, imageObject.width, imageObject.height);
+                
+                // リサイズハンドルと回転ハンドルを描画
+                drawImageHandles(imageObject);
+            }
+            ctx.restore();
+        }
+
+        // 画像の四隅にリサイズハンドル、上部に回転ハンドルを描画する
+        function drawImageHandles(imageObject) {
+            const handleSize = HANDLE_SIZE / scale; 
+            
+            // リサイズハンドル
+            ctx.fillStyle = '#3b82f6'; 
+            ctx.strokeStyle = '#ffffff'; 
+            ctx.lineWidth = 1 / scale;
+
+            // 画像の四隅の座標を計算（回転なし）
+            const corners = [
+                {x: imageObject.x, y: imageObject.y},
+                {x: imageObject.x + imageObject.width, y: imageObject.y},
+                {x: imageObject.x + imageObject.width, y: imageObject.y + imageObject.height},
+                {x: imageObject.x, y: imageObject.y + imageObject.height}
+            ];
+
+            // 回転ハンドルの基準点を計算（回転なし）
+            const rotateHandleY = imageObject.y - ROTATE_HANDLE_OFFSET / scale;
+            const rotateHandleX = imageObject.x + imageObject.width / 2;
+
+            // 画像の中心点
+            const centerX = imageObject.x + imageObject.width / 2;
+            const centerY = imageObject.y + imageObject.height / 2;
+
+            // 保存された回転状態を一時的に解除
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(imageObject.rotation);
+            ctx.translate(-centerX, -centerY);
+
+            // リサイズハンドルを描画
+            corners.forEach(corner => {
+                ctx.beginPath();
+                ctx.arc(corner.x, corner.y, handleSize, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            // 回転ハンドルを描画
+            ctx.beginPath();
+            ctx.arc(rotateHandleX, rotateHandleY, handleSize, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 回転ハンドルと画像上部中央を結ぶ線
+            ctx.beginPath();
+            const topCenterX = imageObject.x + imageObject.width / 2;
+            const topCenterY = imageObject.y;
+            
+            ctx.moveTo(topCenterX, topCenterY);
+            ctx.lineTo(rotateHandleX, rotateHandleY);
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 1 / scale;
+            ctx.stroke();
+
+            // 回転状態を元に戻す
+            ctx.restore();
+        }
+
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+
+            objects.forEach(obj => {
+                if (obj.type === 'stroke') {
+                    drawStroke(obj);
+                } else if (obj.type === 'text') {
+                    if (obj !== editingTextObject) {
+                        drawText(obj);
+                    }
+                } else if (obj.type === 'image') {
+                    drawImage(obj);
+                }
+            });
+
+            if (isDrawing && currentStroke) {
+                drawStroke(currentStroke);
+            }
+
+            ctx.restore(); 
+        }
+
+        // ----------------------------------------------------
+        // 4. ズーム・パン処理と制約
+        // ----------------------------------------------------
+
+        function constrainView() {
+            if (currentModeSetting !== 'fixed' ) {
+                return;
+            }
+
+            if (scale <= 1.0) {
+                 offsetX = 0;
+                 offsetY = 0;
+                 return;
+            }
+
+            const maxPanX = (canvas.width * (scale - 1)) / 2; 
+            const maxPanY = (canvas.height * (scale - 1)) / 2;
+
+            offsetX = Math.min(Math.max(offsetX, -maxPanX), maxPanX);
+            offsetY = Math.min(Math.max(offsetY, -maxPanY), maxPanY);
+        }
+
+        function zoom(ratio) {
+            stopEditingText();
+            
+            let minScale = minScaleUnrestricted;
+            if (currentModeSetting === 'fixed') {
+                minScale = 1.0; 
+            }
+            
+            const newScale = Math.min(Math.max(scale * ratio, minScale), maxScale);
+            if (newScale === scale) return; 
+
+            const zoomCenterX = canvas.width / 2;
+            const zoomCenterY = canvas.height / 2;
+
+            const virtualCenterX = (zoomCenterX - offsetX) / scale;
+            const virtualCenterY = (zoomCenterY - offsetY) / scale;
+
+            offsetX = zoomCenterX - virtualCenterX * newScale;
+            offsetY = zoomCenterY - virtualCenterY * newScale;
+            scale = newScale;
+            
+            constrainView();
+
+            redrawCanvas();
+            showMessage(`ズーム: ${Math.round(scale * 100)}%`);
+        }
+        
+        function handleZoomWheel(e) {
+            e.preventDefault(); 
+            stopEditingText();
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const canvasX = mouseX * (canvas.width / rect.width);
+            const canvasY = mouseY * (canvas.height / rect.height);
+
+            const virtualXBefore = (canvasX - offsetX) / scale;
+            const virtualYBefore = (canvasY - offsetY) / scale;
+            
+            let minScale = minScaleUnrestricted;
+            if (currentModeSetting === 'fixed') {
+                minScale = 1.0; 
+            }
+
+            const ratio = e.deltaY < 0 ? zoomFactor : 1 / zoomFactor;
+            const newScale = Math.min(Math.max(scale * ratio, minScale), maxScale);
+            if (newScale === scale) return;
+
+            scale = newScale;
+
+            offsetX = canvasX - virtualXBefore * scale;
+            offsetY = canvasY - virtualYBefore * scale;
+            
+            constrainView();
+
+            redrawCanvas();
+            showMessage(`ズーム: ${Math.round(scale * 100)}%`);
+        }
+
+        function resetView() {
+            stopEditingText();
+            scale = 1.0;
+            offsetX = 0;
+            offsetY = 0;
+            redrawCanvas();
+            showMessage('キャンバス位置をリセットしました');
+        }
+
+        // ----------------------------------------------------
+        // 5. 描画・オブジェクト操作のハンドラ
+        // ----------------------------------------------------
+        
+        function getVirtualCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+            
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            const clientXRel = clientX - rect.left;
+            const clientYRel = clientY - rect.top;
+
+            const rawX = clientXRel * (canvas.width / rect.width);
+            const rawY = clientYRel * (canvas.height / rect.height);
+            
+            return {
+                x: (rawX - offsetX) / scale,
+                y: (rawY - offsetY) / scale,
+                rawX: rawX, 
+                rawY: rawY
+            };
+        }
+
+        function getObjectAt(virtualX, virtualY) {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                if (obj.type === 'text' || obj.type === 'image') {
+                    
+                    // 回転している画像の場合、逆回転して衝突判定を行う
+                    if (obj.type === 'image' && obj.rotation) {
+                        const centerX = obj.x + obj.width / 2;
+                        const centerY = obj.y + obj.height / 2;
+                        const rotatedVirtualX = centerX + (virtualX - centerX) * Math.cos(-obj.rotation) - (virtualY - centerY) * Math.sin(-obj.rotation);
+                        const rotatedVirtualY = centerY + (virtualX - centerX) * Math.sin(-obj.rotation) + (virtualY - centerY) * Math.cos(-obj.rotation);
+                        
+                        if (rotatedVirtualX >= obj.x && rotatedVirtualX <= obj.x + obj.width &&
+                            rotatedVirtualY >= obj.y && rotatedVirtualY <= obj.y + obj.height) {
+                            return obj;
+                        }
+                    } else if (obj.type === 'text') { // テキスト
+                        const baseFontSize = parseInt(obj.font);
+                        const lineHeight = baseFontSize * 1.2; 
+                        const numLines = obj.content.split('\n').length;
+                        
+                        let yOffsetStart = obj.y - baseFontSize * 1.2; 
+                        let height = numLines * lineHeight;
+
+                        if (virtualX >= obj.x && virtualX <= obj.x + obj.width &&
+                            virtualY >= yOffsetStart && virtualY <= yOffsetStart + height) {
+                            return obj;
+                        }
+                    } else { // 回転していない画像
+                         if (virtualX >= obj.x && virtualX <= obj.x + obj.width &&
+                            virtualY >= obj.y && virtualY <= obj.y + obj.height) {
+                            return obj;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        // リサイズハンドルの座標と衝突判定
+        function getResizeHandleAt(virtualX, virtualY, imageObject) {
+            if (!imageObject || imageObject.type !== 'image') return null;
+
+            const handleSize = HANDLE_SIZE / scale; 
+            const centerX = imageObject.x + imageObject.width / 2;
+            const centerY = imageObject.y + imageObject.height / 2;
+
+            const corners = [
+                {x: imageObject.x, y: imageObject.y, name: 'topLeft'},
+                {x: imageObject.x + imageObject.width, y: imageObject.y, name: 'topRight'},
+                {x: imageObject.x + imageObject.width, y: imageObject.y + imageObject.height, name: 'bottomRight'},
+                {x: imageObject.x, y: imageObject.y + imageObject.height, name: 'bottomLeft'}
+            ];
+
+            for (const corner of corners) {
+                const rotatedX = centerX + (corner.x - centerX) * Math.cos(imageObject.rotation) - (corner.y - centerY) * Math.sin(imageObject.rotation);
+                const rotatedY = centerY + (corner.x - centerX) * Math.sin(imageObject.rotation) + (corner.y - centerY) * Math.cos(imageObject.rotation);
+                
+                const distance = Math.sqrt(Math.pow(virtualX - rotatedX, 2) + Math.pow(virtualY - rotatedY, 2));
+                if (distance <= handleSize) {
+                    return corner.name;
+                }
+            }
+            return null;
+        }
+
+        // 回転ハンドルの座標と衝突判定
+        function getRotateHandleAt(virtualX, virtualY, imageObject) {
+            if (!imageObject || imageObject.type !== 'image') return null;
+
+            const handleSize = HANDLE_SIZE / scale;
+            const rotateHandleY = imageObject.y - ROTATE_HANDLE_OFFSET / scale;
+            const rotateHandleX = imageObject.x + imageObject.width / 2;
+            
+            const centerX = imageObject.x + imageObject.width / 2;
+            const centerY = imageObject.y + imageObject.height / 2;
+            
+            const rotatedRotateHandleX = centerX + (rotateHandleX - centerX) * Math.cos(imageObject.rotation) - (rotateHandleY - centerY) * Math.sin(imageObject.rotation);
+            const rotatedRotateHandleY = centerY + (rotateHandleX - centerX) * Math.sin(imageObject.rotation) + (rotateHandleY - centerY) * Math.cos(imageObject.rotation);
+
+            const distance = Math.sqrt(Math.pow(virtualX - rotatedRotateHandleX, 2) + Math.pow(virtualY - rotatedRotateHandleY, 2));
+            if (distance <= handleSize) {
+                return 'rotate';
+            }
+            return null;
+        }
+
+
+        function handleStart(e) {
+            e.preventDefault();
+            const { x, y, rawX, rawY } = getVirtualCoordinates(e);
+            
+            if(editingTextObject) stopEditingText();
+
+            // パンモード以外で、まずハンドルの操作をチェック
+            if (currentMode === 'pan' && selectedObject && selectedObject.type === 'image') {
+                activeHandle = getResizeHandleAt(x, y, selectedObject);
+                if (activeHandle) {
+                    isResizing = true;
+                    isObjectMoving = false;
+                    isPanning = false;
+                    [lastX, lastY] = [x, y];
+                    canvas.classList.remove('grabbing');
+                    showMessage(`画像リサイズ (${activeHandle})`);
+                    return;
+                }
+                
+                activeHandle = getRotateHandleAt(x, y, selectedObject);
+                if (activeHandle === 'rotate') {
+                    isRotating = true;
+                    isObjectMoving = false;
+                    isPanning = false;
+                    [lastX, lastY] = [x, y];
+                    canvas.classList.remove('grabbing');
+                    showMessage('画像回転');
+                    return;
+                }
+            }
+
+
+            // オブジェクトの選択を試みる
+            selectedObject = getObjectAt(x, y); 
+            
+            // UIの「太さ」をテキストサイズ変更モードに切り替えるかどうかチェック
+            updateLineWidthLabel();
+
+            // UIカラーピッカーを現在のオブジェクトの色に同期
+            updateColorPickerUI();
+
+            // CASE 1: 移動モード (Pan Mode) または 2本指タッチ (Pan)
+            if (currentMode === 'pan' || (e.touches && e.touches.length === 2)) {
+                
+                if (selectedObject && (selectedObject.type === 'text' || selectedObject.type === 'image')) {
+                    // オブジェクトの上をクリック -> オブジェクト移動モードに移行
+                    isObjectMoving = true;
+                    isPanning = false; 
+                    [lastX, lastY] = [x, y];
+                    canvas.classList.remove('grabbing'); 
+                    redrawCanvas(); 
+                    
+                    if (selectedObject.type === 'text') {
+                        const currentFontSize = parseInt(selectedObject.font); 
+                        const lineWidthUIValue = Math.min(Math.max(Math.round(currentFontSize / 3), 1), 50); 
+                        lineWidthRange.value = lineWidthUIValue;
+                        lineWidthInput.value = lineWidthUIValue;
+                        showMessage(`フォントサイズ: ${currentFontSize}px (太さコントロールで変更可能)`);
+                    }
+
+                } else {
+                    // オブジェクトのない場所をクリック -> キャンバスパンモードに移行
+                    isPanning = true;
+                    isObjectMoving = false;
+                    selectedObject = null; // オブジェクト選択を解除
+                    updateLineWidthLabel(); // ラベルをリセット
+                    updateColorPickerUI(); // カラーピッカーを初期状態にリセット
+                    [lastX, lastY] = [rawX, rawY]; 
+                    canvas.classList.add('grabbing'); 
+                    redrawCanvas();
+                }
+                return;
+            }
+            
+            // CASE 2: テキストモード (Creation or Edit)
+            if (currentMode === 'text') {
+                if (selectedObject && selectedObject.type === 'text') {
+                    startEditingText(selectedObject);
+                } else {
+                    insertText(x, y);
+                }
+                selectedObject = null; 
+                return;
+            }
+            
+            // CASE 3: 画像モード (Creation)
+            if (currentMode === 'image') {
+                selectedObject = null;
+                return;
+            }
+            
+            // CASE 4: 描画/蛍光ペン/消しゴムモード
+            if (currentMode === 'draw' || currentMode === 'eraser' || currentMode === 'highlighter') {
+                isDrawing = true;
+                selectedObject = null;
+                updateLineWidthLabel(); // ラベルを「太さ」に戻す
+                updateColorPickerUI(); // カラーピッカーを現在の描画色に同期
+                
+                let strokeColor = currentColor;
+                let strokeWidth = parseInt(lineWidthRange.value);
+                let isHighlighter = false;
+
+                if (currentMode === 'eraser') {
+                    strokeColor = blackboardBackgroundColor;
+                } else if (currentMode === 'highlighter') {
+                    isHighlighter = true;
+                    strokeColor = hexToRgba(currentColor, HIGHLIGHTER_OPACITY); 
+                    strokeWidth = HIGHLIGHTER_DEFAULT_WIDTH;
+                }
+                
+                currentStroke = {
+                    type: 'stroke',
+                    points: [{ x, y }],
+                    color: strokeColor,
+                    width: strokeWidth,
+                    isEraser: currentMode === 'eraser',
+                    isHighlighter: isHighlighter 
+                };
+                
+                [lastX, lastY] = [x, y];
+                redrawCanvas(); 
+            }
+        }
+
+        function handleMove(e) {
+            e.preventDefault(); 
+            const { x, y, rawX, rawY } = getVirtualCoordinates(e);
+
+            if (isResizing && selectedObject && selectedObject.type === 'image') {
+                resizeImage(x, y);
+                [lastX, lastY] = [x, y];
+                redrawCanvas();
+                return;
+            }
+            
+            if (isRotating && selectedObject && selectedObject.type === 'image') {
+                rotateImage(x, y);
+                [lastX, lastY] = [x, y];
+                redrawCanvas();
+                return;
+            }
+
+
+            if (isPanning) {
+                const dx = rawX - lastX;
+                const dy = rawY - lastY;
+                offsetX += dx;
+                offsetY += dy;
+                [lastX, lastY] = [rawX, rawY];
+                
+                constrainView();
+                
+                redrawCanvas();
+                return;
+            }
+            
+            if (isObjectMoving && selectedObject) {
+                const dx = x - lastX;
+                const dy = y - lastY;
+                
+                selectedObject.x += dx;
+                selectedObject.y += dy;
+                
+                [lastX, lastY] = [x, y];
+                redrawCanvas();
+                return;
+            }
+            
+            if (!isDrawing) return;
+
+            currentStroke.points.push({ x, y });
+            redrawCanvas();
+
+            [lastX, lastY] = [x, y];
+        }
+
+        function handleEnd(e) {
+            if (isPanning) {
+                isPanning = false;
+                canvas.classList.remove('grabbing');
+                return;
+            }
+            
+            if (isObjectMoving) {
+                isObjectMoving = false;
+                // 移動完了後もオブジェクトは選択されたままにする (サイズ変更のため)
+                redrawCanvas(); 
+                return;
+            }
+
+            if (isResizing) {
+                isResizing = false;
+                activeHandle = null;
+                redrawCanvas();
+                return;
+            }
+
+            if (isRotating) {
+                isRotating = false;
+                activeHandle = null;
+                redrawCanvas();
+                return;
+            }
+
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            if (currentStroke && currentStroke.points.length >= 1) { 
+                objects.push(currentStroke);
+                saveToHistory(); // 描画操作を履歴に保存
+            }
+            currentStroke = null;
+            
+            redrawCanvas();
+        }
+        
+        // ----------------------------------------------------
+        // 6. オブジェクト機能 (テキスト・画像)
+        // ----------------------------------------------------
+
+        function insertText(x, y) {
+            const newText = {
+                type: 'text',
+                x: x,
+                y: y,
+                content: '新しいテキスト',
+                font: `${parseInt(lineWidthRange.value) * 3}px Inter`, 
+                color: currentColor,
+                width: 150, 
+                height: 40 
+            };
+            objects.push(newText);
+            startEditingText(newText);
+            redrawCanvas();
+        }
+
+        function startEditingText(textObject) {
+            editingTextObject = textObject;
+            selectedObject = null; 
+
+            const rect = canvas.getBoundingClientRect();
+            
+            const screenX = textObject.x * scale + offsetX;
+            const screenY = textObject.y * scale + offsetY;
+            
+            const baseFontSize = parseInt(textObject.font);
+            const actualFontSize = baseFontSize * scale * (rect.width / canvas.width); 
+            
+            textInputOverlay.style.left = `${rect.left + screenX * (rect.width / canvas.width)}px`;
+            textInputOverlay.style.top = `${rect.top + (screenY - baseFontSize * 1.2 * scale) * (rect.height / canvas.height)}px`; 
+            
+            textInputOverlay.style.color = textObject.color;
+            textInputOverlay.style.fontSize = `${actualFontSize}px`;
+            textInputOverlay.value = textObject.content;
+            
+            textInputOverlay.style.width = `${textObject.width * scale * (rect.width / canvas.width)}px`;
+            textInputOverlay.style.height = `${textObject.height * scale * (rect.height / canvas.height)}px`;
+            
+            textInputOverlay.style.position = 'absolute';
+            textInputOverlay.style.display = 'block';
+            textInputOverlay.focus();
+            
+            redrawCanvas(); 
+        }
+
+        function updateTextObject() {
+            if (editingTextObject) {
+                editingTextObject.content = textInputOverlay.value;
+
+                const rect = canvas.getBoundingClientRect();
+                
+                const virtualScaleFactor = (canvas.width / rect.width) * (1 / scale);
+                
+                editingTextObject.width = textInputOverlay.offsetWidth * virtualScaleFactor;
+                editingTextObject.height = textInputOverlay.offsetHeight * virtualScaleFactor;
+
+                redrawCanvas();
+            }
+        }
+
+        function stopEditingText() {
+            if (editingTextObject) {
+                editingTextObject.content = textInputOverlay.value.trim() || ' ';
+                updateTextObject(); 
+                
+                textInputOverlay.style.display = 'none';
+                editingTextObject = null;
+                saveToHistory(); // テキスト編集を履歴に保存
+                redrawCanvas();
+                setPanMode(); // 移動モードに切り替え
+                selectedObject = objects[objects.length - 1]; // 挿入したテキストを選択状態に
+            }
+        }
+        
+        function handleImageFileSelect(e) {
+            const file = e.target.files[0];
+            
+            if (!file) {
+                setDrawMode(); 
+                return;
+            }
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const virtualX = (centerX - offsetX) / scale;
+            const virtualY = (centerY - offsetY) / scale;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const aspectRatio = img.width / img.height;
+                    const initialWidth = 150;
+                    const initialHeight = initialWidth / aspectRatio;
+                    
+                    const newImage = {
+                        type: 'image',
+                        x: virtualX - initialWidth / 2, 
+                        y: virtualY - initialHeight / 2, 
+                        url: 'local_file', 
+                        width: initialWidth,
+                        height: initialHeight,
+                        originalWidth: initialWidth, // リサイズ計算用
+                        originalHeight: initialHeight, // リサイズ計算用
+                        rotation: 0, // 初期角度
+                        img: img
+                    };
+                    objects.push(newImage);
+                    saveToHistory(); // 画像挿入を履歴に保存
+                    redrawCanvas();
+                    showMessage('ローカル画像を挿入しました。移動やリサイズが可能です', '#059669'); 
+                    
+                    imageFileInput.value = null; 
+                    setPanMode(); // 移動モードに切り替え
+                    selectedObject = newImage; // 挿入した画像を選択状態に
+                };
+                img.onerror = () => {
+                    showMessage('画像ファイルの読み込みに失敗しました', '#dc2626');
+                    imageFileInput.value = null; 
+                    setDrawMode();
+                };
+                img.src = e.target.result; 
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // 画像のリサイズ処理
+        function resizeImage(currentX, currentY) {
+            if (!selectedObject || selectedObject.type !== 'image' || !activeHandle) return;
+
+            const img = selectedObject;
+            const originalX = img.x;
+            const originalY = img.y;
+            const originalWidth = img.width;
+            const originalHeight = img.height;
+            const aspectRatio = img.img.width / img.img.height;
+            
+            // 回転を考慮した中心座標
+            const centerX = img.x + img.width / 2;
+            const centerY = img.y + img.height / 2;
+
+            // マウス座標を画像の基準座標系に逆回転変換
+            const rotatedMouseX = centerX + (currentX - centerX) * Math.cos(-img.rotation) - (currentY - centerY) * Math.sin(-img.rotation);
+            const rotatedMouseY = centerY + (currentX - centerX) * Math.sin(-img.rotation) + (currentY - centerY) * Math.cos(-img.rotation);
+
+            let newWidth, newHeight, newX, newY;
+
+            // ハンドルの位置に応じて新しい幅と高さを計算
+            switch (activeHandle) {
+                case 'topLeft':
+                    newWidth = originalWidth - (rotatedMouseX - originalX);
+                    newHeight = newWidth / aspectRatio;
+                    newX = originalX + (originalWidth - newWidth);
+                    newY = originalY + (originalHeight - newHeight);
+                    break;
+                case 'topRight':
+                    newWidth = rotatedMouseX - originalX;
+                    newHeight = newWidth / aspectRatio;
+                    newX = originalX;
+                    newY = originalY + (originalHeight - newHeight);
+                    break;
+                case 'bottomRight':
+                    newWidth = rotatedMouseX - originalX;
+                    newHeight = newWidth / aspectRatio;
+                    newX = originalX;
+                    newY = originalY;
+                    break;
+                case 'bottomLeft':
+                    newWidth = originalWidth - (rotatedMouseX - originalX);
+                    newHeight = newWidth / aspectRatio;
+                    newX = originalX + (originalWidth - newWidth);
+                    newY = originalY;
+                    break;
+                default:
+                    return;
+            }
+
+            // 最小サイズ制約
+            const minSize = 20; 
+            if (newWidth < minSize || newHeight < minSize) {
+                return;
+            }
+
+            // 更新
+            img.width = newWidth;
+            img.height = newHeight;
+            img.x = newX;
+            img.y = newY;
+        }
+
+        // 画像の回転処理
+        function rotateImage(currentX, currentY) {
+            if (!selectedObject || selectedObject.type !== 'image' || activeHandle !== 'rotate') return;
+
+            const img = selectedObject;
+            const centerX = img.x + img.width / 2;
+            const centerY = img.y + img.height / 2;
+
+            // 中心からマウスまでのベクトル
+            const dx = currentX - centerX;
+            const dy = currentY - centerY;
+
+            // 新しい角度を計算 (Math.atan2 は -PI から PI の範囲)
+            const newRotation = Math.atan2(dy, dx) + Math.PI / 2; // 画像の「上」がY軸と揃うように調整
+
+            img.rotation = newRotation;
+        }
+
+
+        // ----------------------------------------------------
+        // 7. コントロール機能 (モード切替/太さ)
+        // ----------------------------------------------------
+        
+        function hexToRgba(hex, alpha) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!result) return `rgba(0, 0, 0, ${alpha})`;
+            
+            const r = parseInt(result[1], 16);
+            const g = parseInt(result[2], 16);
+            const b = parseInt(result[3], 16);
+            
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+
+        // カラーピッカーUIの状態を更新する
+        function updateColorPickerUI() {
+            let activeColor = currentColor;
+
+            if (selectedObject && selectedObject.type === 'text') {
+                activeColor = selectedObject.color;
+            }
+            // 画像は色を持たないのでcurrentColorのまま
+
+            // すべてのアクティブ状態を解除
+            document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
+
+            // カスタムカラーピッカーの値を更新
+            colorPicker.value = activeColor;
+            
+            // プリセットボタンがあれば、それもアクティブにする
+            if (activeColor === '#000000') colorBlack.classList.add('active');
+            else if (activeColor === '#ef4444') colorRed.classList.add('active');
+            else if (activeColor === '#3b82f6') colorBlue.classList.add('active');
+            else if (activeColor === '#facc15') colorYellow.classList.add('active');
+            else colorPicker.classList.add('active'); // カスタムカラーが選択された場合
+
+            // 現在のモードに応じてボタンの背景色を変更
+            if (currentMode === 'highlighter') {
+                highlighterModeButton.style.backgroundColor = activeColor;
+                highlighterModeButton.style.color = isColorLight(activeColor) ? '#000000' : '#ffffff';
+                drawModeButton.style.backgroundColor = '';
+                drawModeButton.style.color = '';
+            } else if (currentMode === 'draw') {
+                drawModeButton.style.backgroundColor = activeColor;
+                drawModeButton.style.color = isColorLight(activeColor) ? '#000000' : '#ffffff';
+                highlighterModeButton.style.backgroundColor = '';
+                highlighterModeButton.style.color = '';
+            } else {
+                // その他のモードの場合は両方のボタンをデフォルトに戻す
+                drawModeButton.style.backgroundColor = '';
+                drawModeButton.style.color = '';
+                highlighterModeButton.style.backgroundColor = '';
+                highlighterModeButton.style.color = '';
+            }
+        }
+
+        // 色の明るさを判定する関数
+        function isColorLight(color) {
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            return brightness > 155;
+        }
+
+        function selectColor(color, activeElement) {
+            // テキストオブジェクトが選択されている場合は、その色を変更
+            if (selectedObject && selectedObject.type === 'text') {
+                selectedObject.color = color;
+                redrawCanvas();
+                showMessage('テキストの色を変更しました', color);
+            } else {
+                // それ以外の場合は、現在の描画色を変更
+                currentColor = color;
+                
+                if (currentMode === 'highlighter') {
+                showMessage(`蛍光ペンの色を変更: ${color}`, color);
+            } else if (currentMode !== 'pan' && currentMode !== 'text' && currentMode !== 'image') {
+                setDrawMode();
+            }
+            }
+            updateColorPickerUI(); // UIを更新
+        }
+        
+        function updateLineWidthLabel() {
+            if (selectedObject && selectedObject.type === 'text') {
+                lineWidthLabel.textContent = 'サイズ:';
+            } else {
+                lineWidthLabel.textContent = '太さ:';
+            }
+        }
+
+        function updateLineWidth(e) {
+            let newWidth = parseInt(e.target.value);
+            
+            if (newWidth < 1) newWidth = 1;
+            if (newWidth > 50) newWidth = 50;
+            
+            lineWidthRange.value = newWidth;
+            lineWidthInput.value = newWidth;
+
+            if (selectedObject && selectedObject.type === 'text') {
+                const newFontSize = newWidth * 3;
+                selectedObject.font = `${newFontSize}px Inter`;
+                
+                redrawCanvas();
+                showMessage(`フォントサイズ: ${newFontSize}px`);
+            }
+        }
+        
+        function deactivateModeButtons() {
+            document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function setDrawMode() {
+            currentMode = 'draw';
+            
+            deactivateModeButtons();
+            drawModeButton.classList.add('active');
+            
+            canvas.classList.remove('pan-cursor', 'grabbing'); 
+            canvas.style.cursor = 'crosshair';
+            
+            selectedObject = null; 
+            redrawCanvas();
+            
+            lineWidthRange.value = DEFAULT_LINE_WIDTH;
+            lineWidthInput.value = DEFAULT_LINE_WIDTH;
+            updateLineWidthLabel(); 
+            updateColorPickerUI(); // 描画色に同期
+
+            showMessage(`ペンモード - ${currentColor}`, currentColor);
+        }
+        
+        function setHighlighterMode() {
+            currentMode = 'highlighter';
+            
+            // 現在選択されている色を維持
+            
+            lineWidthRange.value = HIGHLIGHTER_DEFAULT_WIDTH;
+            lineWidthInput.value = HIGHLIGHTER_DEFAULT_WIDTH;
+
+            deactivateModeButtons();
+            highlighterModeButton.classList.add('active');
+            
+            canvas.classList.remove('pan-cursor', 'grabbing'); 
+            canvas.style.cursor = 'crosshair';
+            
+            selectedObject = null; 
+            redrawCanvas();
+            updateLineWidthLabel(); 
+            updateColorPickerUI(); // 現在の色を維持
+            showMessage(`蛍光ペンモード - ${currentColor}`, currentColor);
+        }
+
+
+        function setEraserMode() {
+            currentMode = 'eraser';
+            
+            deactivateModeButtons();
+            eraserModeButton.classList.add('active');
+            
+            document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
+            
+            canvas.classList.remove('pan-cursor', 'grabbing'); 
+            canvas.style.cursor = 'crosshair';
+            
+            selectedObject = null; 
+            redrawCanvas();
+            
+            lineWidthRange.value = DEFAULT_ERASER_WIDTH;
+            lineWidthInput.value = DEFAULT_ERASER_WIDTH;
+            updateLineWidthLabel(); 
+            // 消しゴムは色を持たないのでcurrentColorは維持、UIはそのまま
+            
+            showMessage('消しゴムモード');
+        }
+        
+        function setPanMode() {
+            currentMode = 'pan';
+            
+            deactivateModeButtons();
+            panModeButton.classList.add('active');
+            
+            canvas.classList.add('pan-cursor');
+            canvas.classList.remove('grabbing');
+            canvas.style.cursor = 'grab';
+
+            // selectedObjectの状態を維持 (移動/サイズ変更のため)
+            redrawCanvas();
+            updateLineWidthLabel(); 
+            updateColorPickerUI(); 
+            showMessage('移動モード (キャンバス/テキスト/画像)', '#4f46e5'); 
+        }
+        
+        function setTextMode() {
+            currentMode = 'text';
+            
+            deactivateModeButtons();
+            textToolButton.classList.add('active');
+            
+            canvas.classList.remove('pan-cursor', 'grabbing'); 
+            canvas.style.cursor = 'text';
+            
+            selectedObject = null; 
+            redrawCanvas();
+            updateLineWidthLabel(); 
+            updateColorPickerUI(); 
+            showMessage('テキスト挿入モード', '#8b5cf6'); 
+        }
+        
+        function setImageMode() {
+            stopEditingText();
+            currentMode = 'image';
+            
+            deactivateModeButtons();
+            imageToolButton.classList.add('active');
+            
+            canvas.classList.remove('pan-cursor', 'grabbing'); 
+            canvas.style.cursor = 'wait'; 
+
+            selectedObject = null; 
+            redrawCanvas();
+            updateLineWidthLabel(); 
+            updateColorPickerUI(); 
+
+            imageFileInput.click();
+            showMessage('画像をアップロードしてください', '#14b8a6'); 
+        }
+
+        function clearCanvas() {
+            stopEditingText();
+            objects = [];
+            currentStroke = null;
+            redrawCanvas(); 
+            resetView(); 
+            showMessage('ボードをクリアしました');
+        }
+
+        function takeScreenshot() {
+            let originalScale, originalOffsetX, originalOffsetY, originalWidth, originalHeight;
+            let finalCanvas = canvas;
+            
+            originalScale = scale;
+            originalOffsetX = offsetX;
+            originalOffsetY = offsetY;
+            originalWidth = canvas.width;
+            originalHeight = canvas.height;
+
+            finalCanvas = document.createElement('canvas');
+            finalCanvas.width = FIXED_WIDTH;
+            finalCanvas.height = FIXED_HEIGHT;
+            const tempCtx = finalCanvas.getContext('2d');
+            
+            let virtualViewX, virtualViewY, virtualViewWidth, virtualViewHeight;
+
+            if (currentModeSetting === 'fixed') {
+                virtualViewX = 0;
+                virtualViewY = 0;
+                virtualViewWidth = originalWidth;
+                virtualViewHeight = originalHeight;
+            } else {
+                virtualViewX = -originalOffsetX / originalScale;
+                virtualViewY = -originalOffsetY / originalScale;
+                virtualViewWidth = originalWidth / originalScale;
+                virtualViewHeight = originalHeight / originalScale;
+            }
+
+            const targetScaleX = finalCanvas.width / virtualViewWidth;
+            const targetScaleY = finalCanvas.height / virtualViewHeight;
+            const renderScale = Math.min(targetScaleX, targetScaleY); 
+
+            tempCtx.save();
+            
+            tempCtx.scale(renderScale, renderScale);
+            tempCtx.translate(-virtualViewX, -virtualViewY);
+            
+            tempCtx.lineCap = 'round';
+            tempCtx.lineJoin = 'round';
+            objects.forEach(obj => {
+                if (obj.type === 'stroke') {
+                    if (obj.isHighlighter) {
+                        tempCtx.globalAlpha = HIGHLIGHTER_OPACITY; 
+                    } else {
+                        tempCtx.globalAlpha = 1.0; 
+                    }
+
+                    tempCtx.beginPath();
+                    tempCtx.strokeStyle = obj.color;
+                    tempCtx.lineWidth = obj.width; 
+                    tempCtx.moveTo(obj.points[0].x, obj.points[0].y);
+
+                    for (let i = 1; i < obj.points.length; i++) {
+                        tempCtx.lineTo(obj.points[i].x, obj.points[i].y);
+                    }
+                    tempCtx.stroke();
+                    tempCtx.globalAlpha = 1.0; 
+                    
+                } else if (obj.type === 'text') {
+                    tempCtx.fillStyle = obj.color;
+                    const baseFontSize = parseInt(obj.font);
+                    tempCtx.font = `${baseFontSize}px Inter`; 
+
+                    const lines = obj.content.split('\n');
+                    let y = obj.y;
+                    const lineHeight = baseFontSize * 1.2;
+
+                    lines.forEach(line => {
+                        tempCtx.fillText(line, obj.x, y);
+                        y += lineHeight;
+                    });
+
+                } else if (obj.type === 'image') {
+                     // 画像の回転を考慮して描画
+                    const centerX = obj.x + obj.width / 2;
+                    const centerY = obj.y + obj.height / 2;
+
+                    tempCtx.save();
+                    tempCtx.translate(centerX, centerY);
+                    tempCtx.rotate(obj.rotation || 0);
+                    tempCtx.translate(-centerX, -centerY);
+
+                    if (obj.img && obj.img.complete) {
+                        tempCtx.drawImage(obj.img, obj.x, obj.y, obj.width, obj.height);
+                    }
+                    tempCtx.restore();
+                }
+            });
+            
+            tempCtx.restore();
+
+            
+            const dataURL = finalCanvas.toDataURL('image/png'); 
+            
+            const a = document.createElement('a');
+            a.href = dataURL;
+            a.download = `${currentModeSetting}_whiteboard_drawing_1920x1080.png`; 
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            scale = originalScale;
+            offsetX = originalOffsetX;
+            offsetY = originalOffsetY;
+            redrawCanvas(); 
+
+            showMessage('画像を保存しました', '#10b981');
+        }
+
+        function showMessage(text, color = '#f59e0b') { 
+            messageBox.textContent = text;
+            messageBox.style.backgroundColor = color;
+            
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            messageBox.style.color = brightness > 180 ? '#000000' : '#ffffff';
+
+            messageBox.style.opacity = 1;
+            
+            setTimeout(() => {
+                messageBox.style.opacity = 0;
+            }, 2000);
+        }
+        
+        // キーボードイベント処理
+        function handleKeyDown(event) {
+            // テキスト入力オーバーレイが非表示の場合、つまりテキスト入力中でない場合のみ処理
+            if (textInputOverlay.style.display !== 'block') {
+                
+                // Backspace (event.key === 'Backspace') または Delete (event.key === 'Delete') が押されたかチェック
+                if (event.key === 'Backspace' || event.key === 'Delete') {
+                    
+                    if (selectedObject) {
+                        // ブラウザのデフォルトの戻る/削除動作を防ぐ
+                        event.preventDefault(); 
+                        
+                        // 選択中のオブジェクトを削除
+                        deleteSelectedObject();
+                        showMessage('オブジェクトを削除しました', '#ef4444'); // Red
+                    } else if (currentMode === 'draw' || currentMode === 'highlighter' || currentMode === 'eraser') {
+                        // 描画モードでBackSpaceが押された場合、直前のストロークを削除（オプション）
+                        // ※今回は選択オブジェクトの削除に特化するため、このロジックはコメントアウトします。
+                        // undoLastStroke();
+                    }
+                }
+            }
+        }
+
+        // 【★追加】選択されたオブジェクトの削除処理
+        function deleteSelectedObject() {
+            if (selectedObject) {
+                // objects配列内でselectedObjectのインデックスを見つける
+                const index = objects.indexOf(selectedObject);
+
+                if (index > -1) {
+                    // spliceメソッドでそのインデックスから1つ要素を削除
+                    objects.splice(index, 1);
+                }
+
+                // 削除後、選択を解除
+                selectedObject = null;
+                // Canvasを再描画して、削除されたオブジェクトを消す
+                redrawCanvas();
+            }
+        }
+    </script>
+</body>
+</html>
