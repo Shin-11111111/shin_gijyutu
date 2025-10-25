@@ -21,10 +21,12 @@
                         'secondary-orange': '#e67e22',
                         'dark-heading': '#2c3e50',
                         'teacher-bg': '#34495e',
+                        'contents': '#79a7d9'
                     }
                 }
             }
         }
+        
     </script>
 
     <!--
@@ -65,12 +67,37 @@
             久保田の技術授業の部屋
         </h1>
 
-        <!-- お知らせセクション: H1タグの後に続きます -->
+        <!-- お知らせセクション -->
         <div class="border-2 border-red-500 bg-red-50 p-4 mb-6 rounded-lg text-red-700 shadow-md">
             <strong class="block text-xl mb-1">お知らせ（10/19更新）</strong>
             <p>
                 要望や、このサイトのタイトルを募集中…（今「久保田の技術授業の部屋」と書いてあるところ）。また、授業プリントも少しずつ追加中…
             </p>
+        </div>
+
+        <!-- 目次 -->
+        <h2 class="bg-contents text-white p-3 mb-4 rounded-lg font-bold text-xl">
+            目次
+        </h2>
+        <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <a href="#link-list" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                サイト一覧
+            </a>
+            <a href="#tools" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                便利ツール
+            </a>
+            <a href="#classes" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                授業使用サイト
+            </a>
+            <a href="#exam" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                定期考査対策
+            </a>
+            <a href="#skill" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                技能関係の評価規準
+            </a>
+            <a href="#prints" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                授業プリント
+            </a>
         </div>
 
         <!-- ==================== ★ 教員専用リンクセクション（初期非表示） ★ ==================== -->
@@ -134,7 +161,7 @@
         
 
         <!-- ==================== よく使うリンク（グリッドセクション） ==================== -->
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="link-list" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             よく使うサイト一覧（外部のサイト）
         </h2>
         
@@ -208,7 +235,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="tools" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             便利ツール（手作りプログラム）
         </h2>
 
@@ -241,7 +268,7 @@
 
         <!-- ==================== 分類別リスト（通常縦並び） ==================== -->
         
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="classes" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             木材加工
         </h2>
         <ul class="space-y-3">
@@ -297,7 +324,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="exam" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             定期考査対策
         </h2>
 
@@ -313,7 +340,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="skill" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             技能関係の評価規準
         </h2>
 
@@ -360,7 +387,7 @@
         <hr class="my-8 border-gray-300">
 
         <!-- ==================== 資料ダウンロードセクション ==================== -->
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="prints" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
             授業プリント閲覧
         </h2>
         <ul class="space-y-3">
@@ -790,24 +817,32 @@
                 alert_message("パスワードが正しくありません。", "error");
             }
         }
+        // ==================== スムーズスクロール機能 ====================
+        
+        /**
+         * ページ内のアンカーリンク（#から始まるURL）をスムーズにスクロールさせる
+         * @param {Event} event - クリックイベント
+         */
+        function smoothScroll(event) {
+            // ページ内リンクで、かつ外部サイトへのリンクではないかチェック
+            if (this.hash !== "" && this.getAttribute('href').startsWith('#')) {
+                event.preventDefault(); // デフォルトのジャンプ動作をキャンセル
+                const hash = this.hash;
+
+                // スムーズスクロールを実行
+                document.querySelector(hash).scrollIntoView({
+                    behavior: 'smooth' // スムーズスクロールを指定
+                });
+            }
+        }
+
+        // 全てのページ内リンク（hrefが'#'で始まるもの）に対してイベントリスナーを設定
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            // 教員モードボタンは除外 (認証モーダルを開くための特殊な動作のため)
+            if (anchor.id !== 'teacher-mode-button') {
+                 anchor.addEventListener('click', smoothScroll);
+            }
+        });
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
