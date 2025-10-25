@@ -2,187 +2,377 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
+  <!-- ビューポート設定を追加し、レスポンシブ対応を強化 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>マルチタイマー</title>
   <style>
+    /*
+     * 1. ベースレイアウト（Tailwind CSSの代替としてCSSを調整）
+     */
     html, body {
       height: 100%;
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: 'Inter', sans-serif;
+      /* 背景色をダークテーマに戻す */
+      background-color: #1e293b; /* Slate-800 */
+      color: #f8fafc; /* Slate-50 */
       display: flex;
+      flex-direction: column; /* デフォルトを縦方向にして、タブを上部に配置しやすくする */
       overflow: hidden;
       width: 100vw;
+      transition: background-color 0.3s;
     }
+
+    /*
+     * 2. タブバーのレスポンシブ対応
+     * 縦画面（モバイル）では上部水平、横画面（PC/タブレット）では左側垂直に切り替え
+     */
     #tabs {
-      width: 200px;
-      background: #333;
+      background: #334155; /* Slate-700 */
       color: white;
       display: flex;
-      flex-direction: column;
+      flex-direction: row; /* モバイル優先: デフォルトは横並び */
+      width: 100%;
       z-index: 10;
+      padding: 0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      flex-shrink: 0; /* タブは縮小しない */
     }
+
     #tabs button {
-      background: #444;
+      background: #334155; /* Slate-700 */
       border: none;
-      color: white;
-      padding: 15px;
-      font-size: 18px;
+      color: #94a3b8; /* Slate-400 */
+      padding: 1rem;
+      font-size: 1rem;
       cursor: pointer;
+      flex-grow: 1; /* 横並びのときに均等に幅を広げる */
+      transition: background-color 0.2s, color 0.2s;
     }
+
+    #tabs button:hover {
+      background: #475569; /* Slate-600 */
+      color: #f8fafc;
+    }
+
     #tabs button.active {
-      background: #666;
+      background: #0ea5e9; /* Sky-500 (ハイライトカラー) */
+      color: white;
+      font-weight: 600;
     }
-    #content {
+
+    /* PC/タブレット（広い画面）用のスタイル - 左側垂直タブに戻す */
+    @media (min-width: 768px) {
+      body {
+        flex-direction: row; /* 広い画面では左右に分割 */
+      }
+      #tabs {
+        width: 200px;
+        flex-direction: column; /* 垂直に戻す */
+        height: 100%;
+        box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.1);
+      }
+      #tabs button {
+        flex-grow: 0; /* 幅いっぱいには広がらない */
+      }
+    }
+
+    /*
+     * 3. メインコンテンツのスタイリング
+     */
+    #content-container {
+      /* bodyがflex-direction: column/rowのどちらでもうまく中央に配置するためにコンテナを導入 */
       flex: 1 1 auto;
+      display: flex;
+      justify-content: center; /* コンテンツ全体を中央揃え */
+      align-items: center; /* コンテンツ全体を中央揃え */
+      min-width: 0;
+      overflow: auto; /* コンテンツがはみ出た場合にスクロールを許可 */
+    }
+
+    #content {
+      /* 各タイマー/アラームのコンテンツエリア */
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
+      flex-direction: column; /* 表示とボタンを上下に配置 */
       position: relative;
-      min-width: 0;
+      /* 最大幅を設定してPC画面で広がりすぎないようにする */
+      max-width: 90%;
+      width: 100%;
+      padding: 2rem;
+      box-sizing: border-box;
     }
-    body.fullscreen #content {
-      flex: none;
-      width: 100vw;
-    }
+
     .time-display {
-      font-size: 18vw;
+      font-size: 15vw; /* モバイルで大きすぎないように調整 */
+      font-weight: 700;
       text-align: center;
       user-select: none;
+      color: #0ea5e9; /* Sky-500 */
+      text-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+      transition: font-size 0.3s;
+      margin-bottom: 2rem;
     }
+
+    @media (min-width: 768px) {
+      .time-display {
+        font-size: 8vw; /* PCでは少し小さめに */
+      }
+    }
+
+    /*
+     * 4. コントロールボタンのデザイン改善
+     */
     .controls {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
+      /* 中央配置 */
+      position: relative;
+      width: 100%;
+      max-width: 600px;
       display: flex;
       flex-wrap: wrap;
       justify-content: center;
-      gap: 10px;
+      gap: 15px; /* ボタン間のスペースを広げる */
+      padding: 1rem;
+      margin-top: 1rem;
     }
+    
     button.control, input[type="time"], input[type="number"] {
-      padding: 10px 20px;
-      font-size: 18px;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border-radius: 8px; /* 角を丸くする */
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.1s, box-shadow 0.1s, background-color 0.2s;
+      box-shadow: 0 4px #00000030; /* 立体感を出すためのシャドウ */
+      color: black;
     }
-    .start-btn { background-color: #4CAF50; color: white; }
-    .pause-btn { background-color: #f0ad4e; color: white; }
-    .reset-btn { background-color: #d9534f; color: white; }
-    .fullscreen-btn { background-color: #0275d8; color: white; }
-    body.fullscreen #tabs,
-    body.fullscreen .controls {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
+
+    button.control:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px #00000030;
     }
-    #repeatTimer {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      flex: 1;
-      padding: 20px;
+    
+    .start-btn { background-color: #10b981; } /* Emerald-500 */
+    .start-btn:hover { background-color: #059669; }
+
+    .pause-btn { background-color: #f59e0b; } /* Amber-500 */
+    .pause-btn:hover { background-color: #d97706; }
+
+    .reset-btn { background-color: #ef4444; } /* Red-500 */
+    .reset-btn:hover { background-color: #dc2626; }
+
+    .fullscreen-btn { background-color: #3b82f6; } /* Blue-500 */
+    .fullscreen-btn:hover { background-color: #2563eb; }
+
+    input[type="time"], input[type="number"] {
+      background-color: #475569; /* Slate-600 */
+      color: white;
+      border: 2px solid #64748b; /* Slate-500 */
+      /* iOSで`input[type="time"]`のスタイルが崩れるのを防ぐ */
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      text-align: center;
+      width: 150px;
     }
+
+    /* 繰り返しタイマーの設定エリア */
     #repeatTimerSettings {
       display: flex;
       justify-content: center;
-      gap: 30px;
-      margin: 30px 0;
+      gap: 20px;
+      margin: 20px 0 40px;
       text-align: center;
+      width: 100%;
+      flex-wrap: wrap;
     }
     .timer-box {
       cursor: pointer;
-      padding: 10px 20px;
-      border: 2px solid #ccc;
-      border-radius: 10px;
+      padding: 10px 15px;
+      border: 2px solid #475569;
+      border-radius: 12px;
       text-align: center;
-      font-size: 20px;
-      transition: box-shadow 0.3s;
+      font-size: 1rem;
+      background-color: #334155;
+      transition: box-shadow 0.3s, border-color 0.3s, transform 0.1s;
+      flex-grow: 1;
+      max-width: 150px;
+    }
+    .timer-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     }
     .timer-box.selected {
-      box-shadow: 0 0 15px 4px rgba(0, 128, 255, 0.7);
-      border-color: #007bff;
+      box-shadow: 0 0 15px 4px rgba(14, 165, 233, 0.5); /* Sky-500のシャドウ */
+      border-color: #0ea5e9;
+      color: #0ea5e9;
+      background-color: #1e293b;
+    }
+    .timer-box span {
+      font-size: 1.5rem;
+      font-weight: 700;
+      display: block;
+    }
+    
+    /* フルスクリーン時のスタイル修正 */
+    body.fullscreen {
+        /* 全画面時はbodyが画面全体を占める */
+        width: 100vw; 
+        height: 100vh;
+        flex-direction: column !important; /* 常に縦方向に強制 */
+    }
+
+    body.fullscreen #content-container {
+        /* コンテナを画面いっぱいに広げ、flexで中央に配置する設定はそのまま */
+        width: 100%;
+        height: 100%;
+        flex: none; /* 拡大を固定 */
+    }
+    
+    body.fullscreen #content {
+      /* #content自体も親コンテナに合わせる */
+      width: 100%;
+      height: 100%;
+      max-width: none; /* 最大幅制限を解除 */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative; 
+      z-index: 9999;
+      background-color: #1e293b; /* 背景色を維持 */
+      margin: 0;
+      padding: 0;
+    }
+    
+    /* 全画面時にタブと操作ボタンを隠す */
+    body.fullscreen #tabs,
+    body.fullscreen .controls {
+      display: none !important; /* 強制的に非表示 */
+    }
+    
+    /* 全画面時のメイン表示の文字サイズを調整 */
+    body.fullscreen .time-display {
+      font-size: 20vw; /* 全画面時に見切れないようサイズを縮小 */
+      margin-bottom: 0;
+    }
+
+    /* ---------------------------------------------------------------- */
+    /* 追加: showMessageのためのカスタムメッセージコンテナのスタイル */
+    /* ---------------------------------------------------------------- */
+    .custom-message {
+        position: fixed;
+        bottom: 20px; /* 画面下部からの位置 */
+        left: 50%;
+        transform: translateX(-50%) translateY(100px); /* 画面外に初期配置 */
+        padding: 12px 20px;
+        background-color: rgba(239, 68, 68, 0.9); /* Red-500, 透明度0.9 */
+        color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        font-size: 1rem;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s, transform 0.3s;
+        min-width: 250px;
+        text-align: center;
+        /* メッセージタイプによる色変更 */
+        &.info { background-color: rgba(14, 165, 233, 0.9); } /* Sky-500 */
+        &.success { background-color: rgba(16, 185, 129, 0.9); } /* Emerald-500 */
+    }
+    
+    .custom-message.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0); /* 表示時にはY軸移動なし */
     }
 
   </style>
 </head>
 <body>
 
+  <!-- タブの構造は維持 -->
   <div id="tabs">
     <button onclick="showTab('timer')">タイマー</button>
     <button onclick="showTab('alarm')">アラーム</button>
     <button onclick="showTab('stopwatch')">ストップウォッチ</button>
-    <button onclick="showTab('repeatTimer')">繰り返しタイマー</button>
+    <button onclick="showTab('repeatTimer')">繰り返し</button>
   </div>
 
-  <div id="content">
-    <!-- 通常のタイマー -->
-    <div id="timer">
-      <div class="time-display" id="timerDisplay">00:00</div>
-      <div class="controls">
-        <button class="control" onclick="addTime(300)">+5分</button>
-        <button class="control" onclick="addTime(60)">+1分</button>
-        <button class="control" onclick="addTime(10)">+10秒</button>
-        <button class="control" onclick="addTime(1)">+1秒</button>
-        <button class="control start-btn" onclick="startTimer()">開始</button>
-        <button class="control pause-btn" onclick="pauseTimer()">一時停止</button>
-        <button class="control reset-btn" onclick="resetTimer()">リセット</button>
-        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
-      </div>
-    </div>
+  <!-- コンテンツ全体を中央揃えするためのコンテナを追加 -->
+  <div id="content-container">
+    <div id="content">
 
-    <!-- アラーム -->
-    <div id="alarm" style="display:none;">
-      <div class="time-display" id="alarmCountdown">--:--:--</div>
-      <div class="controls">
-        <input type="time" id="alarmTime">
-        <button class="control" onclick="setAlarm()">アラーム設定</button>
-        <button class="control" onclick="clearAlarm()">アラーム解除</button>
-        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
-      </div>
-    </div>
-
-    <!-- ストップウォッチ -->
-    <div id="stopwatch" style="display:none;">
-      <div class="time-display" id="stopwatchDisplay">00:00:00</div>
-      <div class="controls">
-        <button class="control start-btn" onclick="startStopwatch()">開始</button>
-        <button class="control pause-btn" onclick="pauseStopwatch()">一時停止</button>
-        <button class="control reset-btn" onclick="resetStopwatch()">リセット</button>
-        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
-      </div>
-    </div>
-
-    <!-- 繰り返しタイマー -->
-    <div id="repeatTimer" style="display:none; flex-direction: column; justify-content: center; align-items: center;">
-      <!-- 上段：タイマー表示 -->
-      <div class="time-display" id="repeatTimerDisplay">00:00</div>
-
-      <!-- 中段：設定表示 -->
-      <div id="repeatTimerSettings">
-        <div id="timer1Box" class="timer-box selected" onclick="selectTimer('timer1')">
-          タイマー①<br><span id="timer1Value">00:00</span>
-        </div>
-        <div id="timer2Box" class="timer-box" onclick="selectTimer('timer2')">
-          タイマー②<br><span id="timer2Value">00:00</span>
-        </div>
-        <div class="timer-box">
-          現在<br><span id="repeatProgress">0 / 0</span>
+      <!-- 通常のタイマー -->
+      <div id="timer">
+        <div class="time-display" id="timerDisplay">00:00</div>
+        <div class="controls">
+          <button class="control" onclick="addTime(300)">+5分</button>
+          <button class="control" onclick="addTime(60)">+1分</button>
+          <button class="control" onclick="addTime(10)">+10秒</button>
+          <button class="control" onclick="addTime(1)">+1秒</button>
+          <button class="control start-btn" onclick="startTimer()">開始</button>
+          <button class="control pause-btn" onclick="pauseTimer()">一時停止</button>
+          <button class="control reset-btn" onclick="resetTimer()">リセット</button>
+          <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
         </div>
       </div>
 
-      <!-- 下段：操作 -->
-      <div class="controls">
-        <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
-        <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
-        <button class="control" onclick="addTimeToSelected(60)">+1分</button>
-        <button class="control" onclick="addTimeToSelected(300)">+5分</button>
-        <input type="number" id="repeatTimesInput" placeholder="繰り返し回数" style="width:120px;" oninput="updateRepeatCount()" />
-        <button class="control start-btn" onclick="startRepeatTimer()">開始</button>
-        <button class="control pause-btn" onclick="pauseRepeatTimer()">一時停止</button>
-        <button class="control reset-btn" onclick="resetRepeatTimer()">リセット</button>
-        <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+      <!-- アラーム -->
+      <div id="alarm" style="display:none;">
+        <div class="time-display" id="alarmCountdown">--:--:--</div>
+        <div class="controls">
+          <input type="time" id="alarmTime">
+          <button class="control start-btn" onclick="setAlarm()">アラーム設定</button>
+          <button class="control reset-btn" onclick="clearAlarm()">アラーム解除</button>
+          <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+        </div>
+      </div>
+
+      <!-- ストップウォッチ -->
+      <div id="stopwatch" style="display:none;">
+        <div class="time-display" id="stopwatchDisplay">00:00:00</div>
+        <div class="controls">
+          <button class="control start-btn" onclick="startStopwatch()">開始</button>
+          <button class="control pause-btn" onclick="pauseStopwatch()">一時停止</button>
+          <button class="control reset-btn" onclick="resetStopwatch()">リセット</button>
+          <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+        </div>
+      </div>
+
+      <!-- 繰り返しタイマー -->
+      <div id="repeatTimer" style="display:none; flex-direction: column; justify-content: center; align-items: center;">
+        <!-- 上段：タイマー表示 -->
+        <div class="time-display" id="repeatTimerDisplay">00:00</div>
+
+        <!-- 中段：設定表示 -->
+        <div id="repeatTimerSettings">
+          <div id="timer1Box" class="timer-box selected" onclick="selectTimer('timer1')">
+            タイマー①<br><span id="timer1Value">00:00</span>
+          </div>
+          <div id="timer2Box" class="timer-box" onclick="selectTimer('timer2')">
+            タイマー②<br><span id="timer2Value">00:00</span>
+          </div>
+          <div class="timer-box">
+            進捗<br><span id="repeatProgress">0 / 0</span>
+          </div>
+        </div>
+
+        <!-- 下段：操作 -->
+        <div class="controls">
+          <input type="number" id="repeatTimesInput" placeholder="繰り返し回数" min="1" style="width:120px;" oninput="updateRepeatCount()" />
+          <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
+          <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
+          <button class="control" onclick="addTimeToSelected(60)">+1分</button>
+          <button class="control" onclick="addTimeToSelected(300)">+5分</button>
+          <button class="control start-btn" onclick="startRepeatTimer()">開始</button>
+          <button class="control pause-btn" onclick="pauseRepeatTimer(true)">一時停止</button>
+          <button class="control reset-btn" onclick="resetRepeatTimer(true, true)">リセット</button>
+          <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+        </div>
       </div>
     </div>
-
+  </div>
 
 
   <audio id="alarmSound" preload="auto">
@@ -190,17 +380,54 @@
   </audio>
 
   <script>
+    // 既存のJavaScriptコードは、基本的なロジックはそのまま維持します。
+
+    /**
+     * カスタムメッセージ表示（alert()の代替）
+     * 画面下部中央に表示するように修正
+     * @param {string} message - 表示するメッセージ
+     * @param {string} type - メッセージの種類 ('error', 'info', 'success')
+     */
+    function showMessage(message, type = 'error') {
+        // 既存のメッセージボックスがあれば削除
+        const existingMessageBox = document.querySelector('.custom-message');
+        if (existingMessageBox) {
+            existingMessageBox.remove();
+        }
+
+        const messageBox = document.createElement('div');
+        messageBox.classList.add('custom-message', type);
+        messageBox.textContent = message;
+        document.body.appendChild(messageBox);
+
+        // 表示 (CSSの.showクラスを使用)
+        setTimeout(() => messageBox.classList.add('show'), 10);
+
+        // 3秒後に非表示
+        setTimeout(() => {
+            messageBox.classList.remove('show');
+            // トランジション完了後に要素を削除
+            messageBox.addEventListener('transitionend', () => messageBox.remove());
+        }, 3000);
+    }
+
     // タブ切り替え
     let currentTab = 'timer';
     function showTab(tabName) {
       document.querySelectorAll('#tabs button').forEach(btn => btn.classList.remove('active'));
       document.querySelector(`#tabs button[onclick="showTab('${tabName}')"]`).classList.add('active');
+      
+      // #content内の要素ではなく、直接子要素を操作するように修正
       document.querySelectorAll('#content > div').forEach(div => div.style.display = 'none');
-      document.getElementById(tabName).style.display = 'flex';
+
+      // すべてのコンテンツをflexで表示するように統一し、#contentのflex-direction: columnで上下配置を実現
+      const tabElement = document.getElementById(tabName);
+      tabElement.style.display = 'flex';
+      tabElement.style.flexDirection = 'column'; // 各タイマー要素も縦並びを明示
+
       currentTab = tabName;
     }
-    showTab('timer');
-
+    
     // 通常タイマー
     let totalTime = 0;
     let timerId = null;
@@ -209,9 +436,17 @@
       let s = totalTime % 60;
       document.getElementById('timerDisplay').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
-    function addTime(sec) { totalTime += sec; updateTimerDisplay(); }
+    function addTime(sec) {
+      totalTime = Math.max(0, totalTime + sec); // マイナスにならないように
+      updateTimerDisplay();
+    }
     function startTimer() {
       if (timerId !== null) return;
+      if (totalTime <= 0) {
+        showMessage('時間を設定してください', 'error');
+        return;
+      }
+      showMessage('タイマーを開始しました', 'success');
       timerId = setInterval(() => {
         if (totalTime > 0) {
           totalTime--;
@@ -223,9 +458,17 @@
         }
       }, 1000);
     }
-    function pauseTimer() { clearInterval(timerId); timerId = null; }
-    function resetTimer() { pauseTimer(); totalTime = 0; updateTimerDisplay(); }
-    updateTimerDisplay();
+    function pauseTimer() { 
+      clearInterval(timerId); 
+      timerId = null; 
+      showMessage('タイマーを一時停止しました', 'info');
+    }
+    function resetTimer() { 
+      pauseTimer(); 
+      totalTime = 0; 
+      updateTimerDisplay(); 
+      showMessage('タイマーをリセットしました', 'info');
+    }
 
     // アラーム
     let alarmInterval = null;
@@ -233,25 +476,46 @@
     function setAlarm() {
       clearAlarm();
       const time = document.getElementById('alarmTime').value;
-      if (!time) { alert('時刻を設定してください'); return; }
+      if (!time) { showMessage('時刻を設定してください', 'error'); return; }
+      
       const now = new Date();
       const [h, m] = time.split(':').map(Number);
-      alarmTargetTime = new Date(); alarmTargetTime.setHours(h, m, 0, 0);
-      if (alarmTargetTime <= now) alarmTargetTime.setDate(alarmTargetTime.getDate() + 1);
+      alarmTargetTime = new Date(); 
+      alarmTargetTime.setHours(h, m, 0, 0);
+      
+      // 現在時刻より前なら翌日に設定
+      if (alarmTargetTime <= now) {
+         alarmTargetTime.setDate(alarmTargetTime.getDate() + 1);
+      }
+      
       updateAlarmCountdown();
+      showMessage(`アラームを${time}に設定しました`, 'success');
       alarmInterval = setInterval(updateAlarmCountdown, 1000);
     }
     function updateAlarmCountdown() {
       const now = new Date();
       const diff = Math.max(0, Math.floor((alarmTargetTime - now) / 1000));
+      
+      if (diff <= 0 && alarmTargetTime) { 
+        clearInterval(alarmInterval); 
+        alarmInterval = null; 
+        playAlarm(); 
+        document.getElementById('alarmCountdown').textContent = 'アラーム時刻です！';
+        alarmTargetTime = null; // アラーム鳴動後はリセット
+        return;
+      }
+      
       const h = Math.floor(diff / 3600);
       const m = Math.floor((diff % 3600) / 60);
       const s = diff % 60;
-      document.getElementById('alarmCountdown').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-      if (diff <= 0) { clearInterval(alarmInterval); alarmInterval = null; playAlarm(); }
+      document.getElementById('alarmCountdown').textContent = 
+        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
     function clearAlarm() {
-      if (alarmInterval !== null) clearInterval(alarmInterval);
+      if (alarmInterval !== null) {
+        clearInterval(alarmInterval);
+        showMessage('アラームを解除しました', 'info');
+      }
       document.getElementById('alarmCountdown').textContent = '--:--:--';
       alarmInterval = null;
       alarmTargetTime = null;
@@ -269,14 +533,23 @@
     }
     function startStopwatch() {
       if (stopwatchId !== null) return;
+      showMessage('ストップウォッチを開始しました', 'success');
       stopwatchId = setInterval(() => {
         stopwatchTime++;
         updateStopwatchDisplay();
       }, 1000);
     }
-    function pauseStopwatch() { clearInterval(stopwatchId); stopwatchId = null; }
-    function resetStopwatch() { pauseStopwatch(); stopwatchTime = 0; updateStopwatchDisplay(); }
-    updateStopwatchDisplay();
+    function pauseStopwatch() { 
+      clearInterval(stopwatchId); 
+      stopwatchId = null; 
+      showMessage('ストップウォッチを一時停止しました', 'info');
+    }
+    function resetStopwatch() { 
+      pauseStopwatch(); 
+      stopwatchTime = 0; 
+      updateStopwatchDisplay(); 
+      showMessage('ストップウォッチをリセットしました', 'info');
+    }
 
     // 繰り返しタイマー
     let selectedTimer = 'timer1';
@@ -286,109 +559,80 @@
     let repeatTimerId = null;
     let isTimer1Turn = true;
     let repeatTimeLeft = 0;
-    let currentRepeat = 0;
+    let currentRepeat = 0; // 現在何回目のサイクルか（1と2の合計）
 
-    function selectTimer(timer) { selectedTimer = timer; }
-    function addTimeToSelected(sec) {
-      if (selectedTimer === 'timer1') {
-        timer1Seconds += sec;
-        document.getElementById('timer1Value').textContent = timer1Seconds;
-      } else {
-        timer2Seconds += sec;
-        document.getElementById('timer2Value').textContent = timer2Seconds;
-      }
-    }
-    function updateRepeatCount() {
-      repeatCount = parseInt(document.getElementById('repeatTimesInput').value) || 0;
-      document.getElementById('repeatCountDisplay').textContent = repeatCount;
-    }
-    function updateRepeatTimerDisplay() {
-      const m = Math.floor(repeatTimeLeft / 60);
-      const s = repeatTimeLeft % 60;
-      document.getElementById('repeatTimerDisplay').textContent = 
-        String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-    }
-    function startRepeatTimer() {
-      if (repeatTimerId !== null) return;
-      if (timer1Seconds === 0 || timer2Seconds === 0 || repeatCount === 0) {
-        alert("すべての値を設定してください");
-        return;
-      }
-      currentRepeat = 0;
-      isTimer1Turn = true;
-      runNextRepeat();
-    }
-    function runNextRepeat() {
-      if (currentRepeat >= repeatCount * 2) { playAlarm(); resetRepeatTimer(); return; }
-      repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
-      updateRepeatTimerDisplay();
-      repeatTimerId = setInterval(() => {
-        if (repeatTimeLeft > 0) {
-          repeatTimeLeft--;
-          updateRepeatTimerDisplay();
-        } else {
-          playAlarm();
-          clearInterval(repeatTimerId);
-          repeatTimerId = null;
-          currentRepeat++;
-          isTimer1Turn = !isTimer1Turn;
-          runNextRepeat();
-        }
-      }, 1000);
-    }
-    function pauseRepeatTimer() { clearInterval(repeatTimerId); repeatTimerId = null; }
-    function resetRepeatTimer() {
-      pauseRepeatTimer();
-      repeatTimeLeft = 0;
-      currentRepeat = 0;
-      updateRepeatTimerDisplay();
-    }
-    // repeatTimer用のJavaScript（既存を置き換え）
     function formatTime(sec) {
       const m = Math.floor(sec / 60);
       const s = sec % 60;
       return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     }
     function selectTimer(timer) {
+      if (repeatTimerId !== null) return; // 実行中は選択変更不可
       selectedTimer = timer;
       document.getElementById('timer1Box').classList.toggle('selected', timer === 'timer1');
       document.getElementById('timer2Box').classList.toggle('selected', timer === 'timer2');
     }
     function addTimeToSelected(sec) {
+      if (repeatTimerId !== null) return; // 実行中は設定変更不可
+      let targetSeconds = selectedTimer === 'timer1' ? timer1Seconds : timer2Seconds;
+      targetSeconds = Math.max(0, targetSeconds + sec);
+
       if (selectedTimer === 'timer1') {
-        timer1Seconds += sec;
+        timer1Seconds = targetSeconds;
         document.getElementById('timer1Value').textContent = formatTime(timer1Seconds);
       } else {
-        timer2Seconds += sec;
-        document.getElementById('timer2Value').textContent = formatTime(timer2Seconds);
+        timer2Seconds = targetSeconds;
+        document.getElementById('timer2Value').textContent = formatTime(targetSeconds); // 修正: targetSecondsを使用
       }
     }
     function updateRepeatCount() {
       repeatCount = parseInt(document.getElementById('repeatTimesInput').value) || 0;
-      document.getElementById('repeatProgress').textContent = `0 / ${repeatCount * 2}`;
+      document.getElementById('repeatProgress').textContent = `${Math.ceil(currentRepeat / 2)} / ${repeatCount}`;
     }
     function updateRepeatTimerDisplay() {
       document.getElementById('repeatTimerDisplay').textContent = formatTime(repeatTimeLeft);
-      document.getElementById('repeatProgress').textContent = `${currentRepeat} / ${repeatCount * 2}`;
+      document.getElementById('repeatProgress').textContent = `${Math.ceil(currentRepeat / 2)} / ${repeatCount}`;
+      
+      // 現在実行中のタイマーをハイライト
+      document.getElementById('timer1Box').classList.toggle('selected', repeatTimerId !== null && isTimer1Turn);
+      document.getElementById('timer2Box').classList.toggle('selected', repeatTimerId !== null && !isTimer1Turn);
+      
+      // 停止中は設定中のタイマーをハイライト
+      if (repeatTimerId === null) {
+          document.getElementById('timer1Box').classList.toggle('selected', selectedTimer === 'timer1');
+          document.getElementById('timer2Box').classList.toggle('selected', selectedTimer === 'timer2');
+      }
     }
     function startRepeatTimer() {
       if (repeatTimerId !== null) return;
-      if (timer1Seconds === 0 || timer2Seconds === 0 || repeatCount === 0) {
-        alert("すべての値を設定してください");
+      if (timer1Seconds <= 0 || timer2Seconds <= 0 || repeatCount <= 0) {
+        showMessage("タイマー時間と繰り返し回数を設定してください", 'error');
         return;
       }
-      currentRepeat = 0;
-      isTimer1Turn = true;
+      
+      // 初回実行時のみ初期化
+      if (currentRepeat === 0) {
+          isTimer1Turn = true;
+          currentRepeat = 1;
+      }
+      
       runNextRepeat();
     }
     function runNextRepeat() {
-      if (currentRepeat >= repeatCount * 2) {
+      // 繰り返し回数に達したら終了 (currentRepeatは1から始まるため)
+      if (Math.ceil(currentRepeat / 2) > repeatCount) {
         playAlarm();
-        resetRepeatTimer(false);
+        resetRepeatTimer(false, false); // 設定値はクリアしない, メッセージも非表示
+        document.getElementById('repeatTimerDisplay').textContent = '完了';
+        showMessage('繰り返しタイマーが完了しました', 'success');
         return;
       }
+      
       repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
       updateRepeatTimerDisplay();
+      
+      showMessage(isTimer1Turn ? `タイマー① 開始 (${formatTime(timer1Seconds)})` : `タイマー② 開始 (${formatTime(timer2Seconds)})`, 'info');
+
       repeatTimerId = setInterval(() => {
         if (repeatTimeLeft > 0) {
           repeatTimeLeft--;
@@ -397,18 +641,34 @@
           playAlarm();
           clearInterval(repeatTimerId);
           repeatTimerId = null;
-          currentRepeat++;
+          
           isTimer1Turn = !isTimer1Turn;
+          currentRepeat++;
           runNextRepeat();
         }
       }, 1000);
     }
-    function pauseRepeatTimer() {
+    
+    /**
+     * 繰り返しタイマーを一時停止する
+     * @param {boolean} showMessageOnPause - 一時停止時にメッセージを表示するか (デフォルトはtrue)
+     */
+    function pauseRepeatTimer(showMessageOnPause = true) {
       clearInterval(repeatTimerId);
       repeatTimerId = null;
+      if (showMessageOnPause) {
+          showMessage('繰り返しタイマーを一時停止しました', 'info');
+      }
     }
-    function resetRepeatTimer(clearAll = true) {
-      pauseRepeatTimer();
+    
+    /**
+     * 繰り返しタイマーをリセットし、メッセージ表示を制御する
+     * @param {boolean} clearAll - タイマー設定値と回数をクリアするか
+     * @param {boolean} showMessageOnReset - リセット時にメッセージを表示するか (デフォルトはtrue)
+     */
+    function resetRepeatTimer(clearAll = true, showMessageOnReset = true) {
+      // **修正ポイント**: ここで pauseRepeatTimer(false) を呼び出し、初期化時のメッセージを防ぐ
+      pauseRepeatTimer(false); 
       repeatTimeLeft = 0;
       currentRepeat = 0;
       updateRepeatTimerDisplay();
@@ -421,13 +681,25 @@
         document.getElementById('repeatTimesInput').value = '';
         document.getElementById('repeatProgress').textContent = '0 / 0';
       }
+      // リセット後にデフォルトの選択状態に戻す
+      selectTimer('timer1');
+      
+      // メッセージ表示を制御
+      if (showMessageOnReset) {
+         showMessage('繰り返しタイマーをリセットしました', 'info');
+      }
     }
 
     // フルスクリーン
     function toggleFullScreen() {
+      const body = document.body;
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-        document.body.classList.add('fullscreen');
+        // 修正: document.documentElement (ページ全体)を全画面にする
+        document.documentElement.requestFullscreen().then(() => {
+          body.classList.add('fullscreen');
+        }).catch(err => {
+          showMessage(`フルスクリーンモードにできませんでした: ${err.message}`, 'error');
+        });
       } else {
         document.exitFullscreen();
       }
@@ -442,15 +714,42 @@
     function playAlarm() {
       const sound = document.getElementById('alarmSound');
       let count = 0, max = 5;
-      sound.pause(); sound.currentTime = 0;
-      sound.play().catch(() => {});
-      sound.onended = () => {
-        if (++count < max) {
-          sound.currentTime = 0;
-          sound.play().catch(() => {});
+      
+      // 既存のアラームを停止してリセット
+      sound.pause(); 
+      sound.currentTime = 0;
+      
+      function loopPlay() {
+        if (++count <= max) {
+          // Promiseを処理して、再生エラーを防ぐ
+          sound.play().catch(e => console.error("Audio play failed:", e));
+        } else {
+          sound.onended = null; // ループ終了後はイベントを解除
         }
-      };
+      }
+
+      // play()はユーザー操作がないと失敗する可能性があるためcatchを追加
+      sound.onended = loopPlay;
+      loopPlay(); // 初回再生
+      showMessage('時間です！', 'success');
     }
+    
+    // ページロード時の初期設定
+    window.onload = () => {
+        showTab('timer');
+        updateTimerDisplay();
+        updateStopwatchDisplay();
+        
+        // **修正ポイント**: 初期ロード時はメッセージを表示しない
+        // resetRepeatTimer(clearAll: false, showMessageOnReset: false) を呼び出すことで、
+        // 内部で呼び出される pauseRepeatTimer(false) もメッセージを表示しない
+        resetRepeatTimer(false, false); 
+        updateRepeatCount();
+        
+        // 繰り返しタイマーの一時停止ボタンのonclickイベントを修正
+        // HTML側で`onclick="pauseRepeatTimer(true)"`として、ボタンクリック時のみメッセージを表示するように変更済み
+    }
+
   </script>
 </body>
 </html>
