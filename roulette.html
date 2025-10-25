@@ -2,202 +2,308 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ルーレット</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルーレットシミュレーター</title>
+<!-- Tailwind CSSを読み込み -->
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #f9f9f9;
-    font-family: sans-serif;
-    overflow-x: hidden;
-    text-align: center;
+  /* Interフォントを使用 */
+  @layer base {
+    html, body {
+      font-family: 'Inter', sans-serif;
+    }
   }
-  h1 {
-    margin: 10px 0;
-    font-size: 1.8rem;
-  }
+  
+  /* ルーレットコンテナ: 以前のデザインのvminベースの幅を採用 */
   #wheelContainer {
     position: relative;
-    width: 65vmin; /* ルーレット大きさ */
-    height: 65vmin; /* ルーレット大きさ */
-    margin: auto;
+    /* モバイル・縦画面では70vmin、横画面では親の幅に合わせる */
+    width: 70vmin; 
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
+    flex-shrink: 0; /* 親がflexでも縮まないようにする */
   }
+  
+  /* ポインター（12時方向）: 以前のデザインを採用 */
   #pointer {
     position: absolute;
-    bottom: -30px; /* ← ルーレットの「下」に固定。ポインター高さ分だけ外に出す  top: 580px; ポインターの高さ */
-    left: calc(50% - 15px); /* ポインターの横 */
+    top: -25px; 
+    left: calc(50% - 15px);
     width: 0;
     height: 0;
     border-left: 15px solid transparent;
     border-right: 15px solid transparent;
-    border-bottom: 30px solid red; /* ポインターの上下の向き(border-top…下向き) */
+    border-top: 30px solid #ef4444; /* 赤色のポインター */
     z-index: 10;
   }
-  #wheel {
+  
+  #wheel { /* IDをロジックに合わせて 'wheel' に統一 */
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    border: 5px solid #333;
+    border: 8px solid #333;
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
     position: relative;
     overflow: hidden;
-    transform: rotate(0deg);
-    transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1);
   }
-  .segment {
-    position: absolute;
-    width: 50%;
-    height: 50%;
-    top: 50%;
-    left: 50%;
-    transform-origin: 0% 0%;
-    clip-path: polygon(0% 0%, 100% 0%, 0% 100%);
-    display: flex;
-    align-items: stretch; /* セグメントテキスト縦方向 */
-    justify-content: start; /* セグメントテキスト横方向 */
-    color: #fff;
-    font-size: 1rem;
-    font-weight: bold;
-    text-align: center;
-    box-sizing: border-box;
-    transform: rotate(calc(var(--angle))) skewY(calc(90deg - var(--skew)));
-  }
-  .segment span {
-    font-size: 2rem;
-    transform: rotate(calc(var(--skew) / 2 * -1));
-    display: block;
+
+  /* Canvas要素自体がコンテナにフィットするように */
+  canvas {
     width: 100%;
-    text-align: center;
-    white-space: nowrap;
-    padding: 0 5px;
+    height: 100%;
+    border-radius: 50%;
   }
-  #controls {
-    margin: 10px auto;
-    max-width: 500px;
-  }
-  #segmentsInput {
-    width: 80%;
-    margin: 5px 0;
-    padding: 8px;
-    font-size: 1em;
-  }
-  button {
-    margin: 5px;
-    padding: 10px 15px;
-    font-size: 1em;
-    border-radius: 5px;
-    border: none;
-    background: #333;
-    color: #fff;
-    cursor: pointer;
-  }
-  #result {
-    margin-top: 15px;
-    font-size: 1.5em;
-    color: #333;
-    min-height: 1.5em;
-  }
-  small {
-    display: block;
-    color: #666;
-    font-size: 0.8em;
-    margin-top: 3px;
+
+  /* モバイル向け調整 */
+  @media (max-width: 1023px) {
+    /* 縦画面ではルーレットを中央に配置 */
+    #wheelContainer { width: 90vmin; }
   }
 </style>
 </head>
-<body>
+<!-- bodyから垂直中央寄せ(justify-center)を削除。h1は上部に固定される -->
+<body class="bg-gray-100 p-6 min-h-screen flex flex-col items-center">
 
-<h1>ルーレット</h1>
+<!-- h1は固定で上部に表示される -->
+<h1 class="text-3xl font-bold mb-6 text-gray-800 w-full text-center flex-shrink-0">ルーレットシミュレーター</h1>
 
-<div id="wheelContainer">
-  <div id="pointer"></div>
-  <div id="wheel"></div>
+<!-- メインコンテンツをラップするコンテナ。残りのスペースを使い(flex-grow)、内容を垂直中央に配置(justify-center) -->
+<div class="flex-grow w-full max-w-6xl flex justify-center items-center">
+
+  <!-- 柔軟なレイアウトコンテナ (元々あったもの) -->
+  <div class="w-full max-w-6xl lg:flex lg:space-x-12">
+    
+    <!-- 左側: ルーレット表示エリア -->
+    <div class="lg:w-1/2 flex justify-center items-center mb-8 lg:mb-0">
+      <div id="wheelContainer">
+        <div id="pointer"></div>
+        <canvas id="wheel"></canvas>
+      </div>
+    </div>
+
+    <!-- 右側: 入力と結果表示エリア - justify-centerを追加して、内部要素を垂直中央に配置 -->
+    <div class="lg:w-1/2 flex flex-col items-center lg:items-start justify-center"> 
+      
+      <!-- 入力とボタン -->
+      <div class="w-full max-w-md lg:max-w-full">
+        <textarea id="segmentsInput" rows="3" class="border rounded-lg w-full p-3 shadow-md focus:border-red-500 focus:ring focus:ring-red-500 focus:ring-opacity-50" placeholder="例: あたり|#22c55e,はずれ|#ef4444,再挑戦|#facc15"></textarea>
+        <button id="spinButton" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-lg disabled:opacity-50">
+          スタート
+        </button>
+      </div>
+      
+      <!-- 結果表示エリア -->
+      <div id="result" class="mt-6 p-4 bg-white border border-red-300 text-red-700 text-4xl font-extrabold rounded-lg shadow-inner w-full max-w-md lg:max-w-full text-center">
+        項目を入力してください
+      </div>
+    </div>
+
+  </div>
 </div>
-
-<div id="controls">
-  <textarea id="segmentsInput" rows="3" placeholder="ここに入力してください。（例: あたり|#ff0000,はずれ|blue）  または 数字のみ（例: 10 を入力で 1〜10）"></textarea>
-  <small>半角カンマ（,）区切りで入力できます。例: あたり|red,はずれ|blue</small>
-  <small>または「数字」のみで「1〜数字」のルーレットが作成されます。</small><br>
-  <button onclick="spin()">スタート</button>
-</div>
-
-<div id="result"></div>
 
 <script>
-  let segments = [];
-  let wheel = document.getElementById('wheel');
-  let resultDiv = document.getElementById('result');
-  let rotation = 0;
+// --- 初期設定とDOM要素の取得 ---
+const canvas = document.getElementById('wheel');
+const ctx = canvas.getContext('2d');
+const segmentsInput = document.getElementById('segmentsInput');
+const spinButton = document.getElementById('spinButton');
+const resultDiv = document.getElementById('result');
 
-  function setupWheelFromInput() {
-    const input = document.getElementById('segmentsInput').value.trim();
-    localStorage.setItem('rouletteSegments', input);
+let segments = [];
+let rotation = 0; // 累積回転角度 (度)
+let spinning = false;
 
-    segments = [];
+// --- Canvasのリサイズと高解像度対応 ---
+function resizeCanvas() {
+  const rect = canvas.getBoundingClientRect(); 
+  canvas.width = rect.width * window.devicePixelRatio;
+  canvas.height = rect.height * window.devicePixelRatio;
+  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  drawWheel();
+}
 
-    // 数字のみの場合 → 1〜数字まで生成
-    if (/^\d+$/.test(input)) {
-      const num = parseInt(input);
-      for (let i = 1; i <= num; i++) {
-        segments.push({ label: String(i), color: null });
-      }
-    } else {
-      // カンマ区切り → 項目|色
-      segments = input.split(',').map(s => {
-        const [label, color] = s.split('|').map(x => x.trim());
-        return { label, color: color || null };
-      }).filter(s => s.label);
+window.addEventListener('resize', resizeCanvas);
+
+// --- ヘルパー関数 ---
+function getRandomBrightColor(i, total) {
+  const hue = (i * (360 / total)) % 360;
+  return `hsl(${hue}, 80%, 60%)`;
+}
+
+// --- ルーレットの設定 (入力に基づいて項目を生成) ---
+function setupWheel() {
+  const input = segmentsInput.value.trim();
+  localStorage.setItem('rouletteSegments', input);
+  segments = [];
+  
+  if (!input) {
+    resultDiv.textContent = '項目を入力してください';
+    drawWheel();
+    spinButton.disabled = true;
+    return;
+  }
+  spinButton.disabled = false;
+
+  // 「数字のみ」の場合
+  if (/^\d+$/.test(input)) {
+    const num = parseInt(input);
+    for (let i = 0; i < num; i++) { // 0始まりに変更
+      segments.push({ label: String(i + 1), color: getRandomBrightColor(i, num) });
     }
+  // 「項目|色コード,...」の場合
+  } else {
+    const parts = input.split(',').map(s => s.split('|'));
+    segments = parts.map((p, i) => ({ 
+      label: p[0].trim(), 
+      color: p[1] ? p[1].trim() : getRandomBrightColor(i, parts.length) 
+    })).filter(s => s.label);
+  }
+  drawWheel();
+}
 
-    // セグメント描画
-    wheel.innerHTML = '';
-    const count = segments.length || 1;
+segmentsInput.addEventListener('input', setupWheel);
 
-    segments.forEach((seg, i) => {
-      const segment = document.createElement('div');
-      segment.className = 'segment';
-      const angle = (360 / count) * i;
-      const skew = 360 / count;
-      segment.style.setProperty('--angle', `${angle}deg`);
-      segment.style.setProperty('--skew', `${skew}deg`);
-      segment.style.background = seg.color || `hsl(${i * (360 / count)}, 70%, 60%)`;
-      segment.innerHTML = `<span>${seg.label}</span>`;
-      wheel.appendChild(segment);
-    });
+// --- Canvas描画処理 ---
+function drawWheel() {
+  if (!segments.length) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  
+  const rect = canvas.getBoundingClientRect(); 
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+  const radius = Math.min(cx, cy);
+  
+  const segmentAngleRad = 2 * Math.PI / segments.length;
 
-    resultDiv.textContent = '';
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation * Math.PI / 180);
+
+  segments.forEach((seg, i) => {
+    const start = i * segmentAngleRad;
+    const end = start + segmentAngleRad;
+    
+    // --- セグメントの描画 ---
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, start, end);
+    ctx.closePath();
+    
+    ctx.fillStyle = seg.color;
+    ctx.fill();
+    
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2; 
+    ctx.stroke();
+
+    // --- ラベルの描画 (Canvas内) ---
+    ctx.save();
+    
+    // ラベルの中心位置まで回転
+    ctx.rotate(start + segmentAngleRad / 2);
+    
+    // ラベルの位置調整とスタイル
+    ctx.textAlign = 'right'; 
+    ctx.fillStyle = '#000';
+    
+    // フォントサイズを動的に設定（半径の約10%） - 文字を大きくする対応
+    const fontSize = Math.max(18, radius * 0.1); // 最小18pxを保証
+    ctx.font = `bold ${fontSize}px sans-serif`;
+    
+    // テキストオフセットも動的に
+    const textOffset = Math.max(10, radius * 0.03); 
+
+    // 半径の内側、中心から少し離れた位置にテキストを描画
+    ctx.fillText(seg.label, radius - textOffset, 5); 
+    
+    ctx.restore(); // ラベル回転の解除
+  });
+  
+  ctx.restore(); // 全体回転の解除と原点位置の復元
+}
+
+// --- スピン処理 ---
+function spin() {
+  if (spinning || !segments.length) return;
+  spinning = true;
+  spinButton.disabled = true;
+  resultDiv.textContent = '回転中...';
+
+  const segmentAngleDeg = 360 / segments.length; // 度数法
+  const targetIndex = Math.floor(Math.random() * segments.length);
+  
+  // ----------------------------------------------------
+  // 【ポインターと結果の一致ロジック】
+  
+  // 停止目標角度: 12時方向（270度）に、targetIndex番目のセグメントの中心が合うようにする。
+  const targetCenterAngle = targetIndex * segmentAngleDeg + (segmentAngleDeg / 2);
+  let finalAngleOffset = 270 - targetCenterAngle; 
+  
+  finalAngleOffset = finalAngleOffset % 360;
+  if (finalAngleOffset < 0) {
+    finalAngleOffset += 360;
   }
 
-  function spin() {
-    if (segments.length === 0) return;
-
-    const spins = Math.floor(Math.random() * 3 + 5); // 5〜7回転
-    const randomDeg = Math.floor(Math.random() * 360);
-    rotation += spins * 360 + randomDeg;
-    wheel.style.transition = 'transform 5s cubic-bezier(0.33, 1, 0.68, 1)';
-    wheel.style.transform = `rotate(${rotation}deg)`;
-
-    setTimeout(() => {
-      const degree = rotation % 360;
-      const index = Math.floor(((360 - degree + (360 / segments.length) / 2) % 360) / (360 / segments.length));
-      resultDiv.textContent = `結果: ${segments[index].label}`;
-    }, 5000);
+  const currentRelativeRotation = rotation % 360;
+  let angleDifference = finalAngleOffset - currentRelativeRotation;
+  if (angleDifference < 0) {
+    angleDifference += 360;
   }
+  
+  // 5〜8回転（ランダム）
+  const spins = 5 + Math.random() * 3;
+  
+  const targetRotation = rotation + (spins * 360) + angleDifference;
+  // ----------------------------------------------------
+  
+  const start = rotation;
+  const duration = 5000;
+  const startTime = performance.now();
 
-  document.getElementById('segmentsInput').addEventListener('input', setupWheelFromInput);
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    const ease = 1 - Math.pow(1 - progress, 3);
+    
+    rotation = start + (targetRotation - start) * ease;
+    
+    drawWheel();
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      rotation %= 360; 
+      
+      const resultLabel = segments[targetIndex].label;
+      //resultDiv.textContent = `結果: ${resultLabel}`;
+      resultDiv.textContent = `結果`;
+      
+      spinning = false;
+      spinButton.disabled = false;
+    }
+  }
+  requestAnimationFrame(animate);
+}
 
-  window.onload = () => {
+document.getElementById('spinButton').addEventListener('click', spin);
+
+// ページロード時の初期設定
+window.onload = () => {
     const saved = localStorage.getItem('rouletteSegments');
     if (saved) {
-      document.getElementById('segmentsInput').value = saved;
-      setupWheelFromInput();
+      segmentsInput.value = saved;
+    } else {
+        // 初期値の例
+        segmentsInput.value = 'あたり|#22c55e,はずれ|#ef4444,再挑戦|#facc15';
     }
-  };
+    resizeCanvas();
+    setupWheel();
+};
 </script>
-
-<div id="controls">
-  <small>結果はたまにずれますが、ルーレットの文字が見えないときのみ参考にしてみてください。</small><br>
-</div>
-
 </body>
 </html>
