@@ -111,7 +111,7 @@
         goalInputsContainer.innerHTML = `<label class="block text-sm font-medium text-gray-700 mb-1">ゴール結果 (${numColumns}個)</label>`;
         goalLabels.length = numColumns; // 配列のサイズを調整
         for (let i = 0; i < numColumns; i++) {
-            const goalValue = goalLabels[i] || `ハズレ ${i + 1}`;
+            const goalValue = goalLabels[i] || `ハズレ ${i}`;
             goalInputsContainer.innerHTML += `
                 <input type="text" id="goalInput${i}" value="${goalValue}" placeholder="ゴール ${i + 1}"
                        class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150">
@@ -539,4 +539,5 @@
 </script>
 </body>
 </html>
+
 
