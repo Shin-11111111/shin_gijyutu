@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>バドミントン部</title>
+    <!-- Tailwind CSS CDNを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Google Fonts - Inter を使用 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* スムーズなスクロールを有効にする */
+        html {
+            scroll-behavior: smooth;
+        }
+        /* アンカーリンクで移動した際に、固定ヘッダーでコンテンツが隠れるのを防止 */
+        #announcement, 
+        #pdf-viewer, 
+        #results, /* IDの位置を更新 */
+        #schedule, 
+        #checklist {
+            /* 固定ヘッダー(タイトル, ナビ, バナー)の合計の高さより少し大きく設定 */
+            scroll-margin-top: 10rem; 
+        }
+
+        /* 大会やイベント行のスタイル */
+        .event-row {
+            background-color: #fef2f2; /* Red-50 */
+        }
+        .event-row:hover {
+            background-color: #fee2e2; /* Red-100 */
+        }
+        /* アクティブな PDF 選択ボタンのスタイル */
+        .pdf-button.active {
+            background-color: #1e40af; /* Blue-800 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* PDFビューアコンテナのスタイル修正 */
+        #pdfViewerContainer {
+            padding-top: calc(100% * 1.414); 
+            height: 0;
+            position: relative;
+            max-height: 842px; /* A4サイズ（842px）を上限とする（デスクトップ向け） */
+        }
+        
+        #pdfViewerContainer iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <!-- ヘッダーセクション -->
+    <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="text-2xl font-extrabold tracking-tight">
+                増戸中学校
+            </div>
+            <h1 class="text-xl sm:text-2xl font-semibold hidden md:block">
+                【バドミントン部】公式サイト
+            </h1>
+        </div>
+    </header>
+
+    <!-- ナビゲーション -->
+    <nav class="bg-white shadow-md sticky top-[68px] md:top-[76px] z-10" id="main-nav">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 py-2">
+                <!-- ナビゲーションの順番を更新 -->
+                <a href="#announcement" class="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">お知らせ</a>
+                <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">月予定</a>
+                <a href="#results" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会結果</a>
+                <a href="#schedule" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会予定</a>
+                <a href="#checklist" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">持ち物チェック</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 【重要】予定変更のお知らせバナー -->
+    <div id="alertBannerContainer" class="sticky top-[160px] md:top-[116px] z-10 transition-all duration-300">
+        <div id="alertBanner" class="bg-red-600 text-white p-3 shadow-xl transition-all duration-300 hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between">
+                <p id="alertMessage" class="font-bold text-lg flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    【重要】予定表をオンラインで確認できるようになりました
+                </p>
+                <div class="flex items-center space-x-4 mt-2 sm:mt-0">
+                    <a href="announcement" class="underline font-semibold hover:text-blue-100 transition duration-150 whitespace-nowrap">詳細を確認</a>
+                    <button 
+                        onclick="hideAlert()"
+                        class="p-1 rounded-full hover:bg-blue-500 transition duration-150"
+                        aria-label="閉じる"
+                    >
+                        <!-- クロスアイコン (X) -->
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /【重要】お知らせバナー -->
+
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+
+        <!-- お知らせ -->
+        <section id="announcement" class="mb-4 p-6 bg-white rounded-xl shadow-lg">
+            <!-- 赤系 -->
+            <h2 class="text-3xl font-bold text-red-700 mb-4 border-b-2 border-red-300 pb-2">
+                お知らせ
+            </h2>
+            <p class="text-gray-700">予定表をオンラインで確認できるようになりました。ブックマークに登録すれば、いつでも予定表を確認することができます。ぜひ御活用ください！</p>
+        </section>
+
+        <!-- PDF資料閲覧セクション (位置を維持) -->
+        <section id="pdf-viewer" class="mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+            <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
+                部活動 月予定表
+            </h2>
+            
+            <p class="text-gray-600 mb-4">以下のボタンから閲覧したい月の予定表を選択してください。下に予定表が表示されます。</p>
+
+            <!-- PDF選択ボタンのコンテナ -->
+            <div class="flex flex-wrap gap-3 mb-6" id="pdfSelectorContainer">
+                <!-- JavaScriptによりボタンがここに挿入 -->
+            </div>
+
+            <div id="pdfMessage" class="text-red-500 mb-4 font-medium hidden"></div>
+
+            <!-- PDFビューアを埋め込むためのコンテナ -->
+            <div id="pdfViewerContainer" class="mt-8 border-4 border-blue-600 rounded-xl overflow-hidden shadow-2xl bg-gray-100">
+                <iframe 
+                    id="pdfViewerFrame" 
+                    src="" 
+                    class="w-full h-full" 
+                    frameborder="0"
+                    title="PDF Document Viewer"
+                >
+                </iframe>
+            </div>
+            
+            <!-- ダウンロードリンク -->
+            <p class="p-4 text-center text-gray-600 bg-blue-50 rounded-lg mt-4 border border-blue-200">
+                <span class="font-bold">PDFを直接閲覧できない場合：</span>
+                <a id="pdfDownloadLink" href="#" target="_blank" class="text-blue-600 underline font-bold hover:text-blue-800 transition duration-150">現在選択中のPDFを新しいタブで開きます</a>
+            </p>
+            <p class="mt-4 text-sm text-gray-500">※資料が表示されない場合は、上記のリンクを御利用ください。</p>
+        </section>
+
+        <!-- 大会結果セクション (位置を移動) -->
+        <section id="results" class="mb-12 p-6 bg-white rounded-xl shadow-lg border-2 border-red-400">
+            <h2 class="text-3xl font-bold text-red-700 mb-6 border-b-2 border-red-300 pb-2">
+                大会結果・実績
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- 結果カード 1: 都大会出場 -->
+                <div class="p-5 bg-red-50 rounded-lg shadow-xl border border-red-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-red-600 bg-red-200 px-3 py-1 rounded-full">
+                            NEW!
+                        </span>
+                        <span class="text-sm text-gray-500">令和7年度 新人大会</span>
+                    </div>
+                    
+                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
+                    <p class="text-4xl sm:text-5xl font-extrabold text-red-800 leading-tight">
+                        団体戦 都大会出場決定！
+                    </p>
+                    
+                    <!-- 詳細 -->
+                    <div class="mt-4 border-t pt-3 border-red-200">
+                        <p class="text-base text-gray-700 font-semibold mb-1">【団体戦】</p>
+                        <p class="text-lg text-red-700 font-bold ml-2">ベスト４（都大会出場）</p>
+                        <p class="text-base text-gray-700 font-semibold mt-3 mb-1">【個人戦】</p>
+                        <p class="text-lg text-red-700 font-bold ml-2">ダブルス２ペア ベスト8（次回の順位決定戦で都大会出場が決まります）</p>
+                    </div>
+                </div>
+
+                <!-- 結果カード 2: 〇〇地区優勝 -->
+                <div class="p-5 bg-yellow-50 rounded-lg shadow-xl border border-yellow-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-yellow-600 bg-yellow-200 px-3 py-1 rounded-full">
+                            3年生
+                        </span>
+                        <span class="text-sm text-gray-500">令和7年度 選手権大会</span>
+                    </div>
+                    
+                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
+                    <p class="text-4xl sm:text-5xl font-extrabold text-yellow-800 leading-tight">
+                        団体戦 都大会出場
+                    </p>
+                    
+                    <!-- 詳細 -->
+                    <div class="mt-4 border-t pt-3 border-yellow-200">
+                        <p class="text-base text-gray-700 font-semibold mb-1">【団体戦】</p>
+                        <p class="text-lg text-yellow-700 font-bold ml-2">ベスト4（都大会出場）</p>
+                    </div>
+                </div>
+
+                <!-- 結果カード 3: シンプルな個人戦結果 -->
+                <div class="p-5 bg-blue-50 rounded-lg shadow-xl border border-blue-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-200 px-3 py-1 rounded-full">
+                            昨年度結果
+                        </span>
+                        <span class="text-sm text-gray-500">令和6年度 冬季大会</span>
+                    </div>
+                    
+                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
+                    <p class="text-4xl sm:text-5xl font-extrabold text-blue-800 leading-tight">
+                        個人戦 都大会出場
+                    </p>
+                    
+                    <!-- 詳細 -->
+                    <div class="mt-4 border-t pt-3 border-blue-200">
+                        <p class="text-base text-gray-700 font-semibold mb-1">【個人戦】</p>
+                        <p class="text-lg text-blue-700 font-bold ml-2">ダブルス ベスト4（都大会出場）</p>
+                        <!-- <p class="text-sm text-gray-500 mt-2">※その他にも多数入賞しました。</p> -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 p-4 bg-red-100 border-l-4 border-red-500 text-red-800 rounded-lg">
+                <p class="font-semibold">今後の大会での活躍にもご期待ください！</p>
+            </div>
+        </section>
+        
+        <!-- 活動予定セクション (青系を維持) -->
+        <section id="schedule" class="mb-12 p-6 bg-white rounded-xl shadow-lg">
+            <h2 class="text-3xl font-bold text-blue-700 mb-4 border-b-2 border-blue-300 pb-2">
+                令和７年度 大会予定（随時更新）
+            </h2>
+            <p class="text-gray-600 mb-4">予定は変更になる場合がありますので、最新の情報は配布資料や中体連公式ホームページを御覧ください。</p>
+
+            <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-4/12">大会名</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">団体戦予選</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">個人戦予選</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">団体・個人戦決勝</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        <!-- 練習日 (通常行) -->
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-3 py-3 text-sm text-gray-900">選手権大会</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-3 py-3 text-sm text-gray-900">１，２年生大会（シングルスのみ）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">行われません</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-3 py-3 text-sm text-gray-900">新人大会</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/2（日）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/3（月・祝）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/9（日）</td>
+                        </tr>
+                        <tr class="hover:bg-gray-50 transition duration-150">
+                            <td class="px-3 py-3 text-sm text-gray-900">冬季大会</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">行われません</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!-- 大会・イベント日 (このセクションの強調行は赤系のまま維持) -->
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-blue-600 text-white">
+                        <tr>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">日付</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-4/12">活動内容</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">種目</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">時間</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">場所</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        <tr class="event-row border-l-4 border-red-500 transition duration-150">
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold text-red-700">7/23（水）</td>
+                            <td class="px-3 py-3 text-sm text-red-700 font-bold">都 選手権大会</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">団体戦</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">9:30～</td>
+                            <td class="px-3 py-3 text-sm text-red-700">駒沢オリンピック公園総合運動場屋内球技場</td>
+                        </tr>
+                        <tr class="event-row border-l-4 border-red-500 transition duration-150">
+                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold text-red-700">11/22（土）</td>
+                            <td class="px-3 py-3 text-sm text-red-700 font-bold">都 新人大会</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">団体戦</td>
+                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">??:00～</td>
+                            <td class="px-3 py-3 text-sm text-red-700">葛飾区奥戸総合スポーツセンター</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="mt-4 text-sm text-gray-500">※詳細は部活動のミーティング内で冊子を配布します。</p>
+            <a href="https://www.tokyo-ctr-badminton.com/" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
+                大会の詳細はこちら（クリックすると中体連の公式HPにアクセスします）
+            </a>
+        </section>
+
+        <!-- 大会持ち物チェックリスト -->
+        <section id="checklist" class="mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+            <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
+                大会の持ち物 チェックリスト
+            </h2>
+            <!-- ユーザーID表示要素を完全に削除 -->
+            <p class="text-gray-600 mb-6">大会前日の最終確認にご利用ください。忘れ物のないように注意しましょう。</p>
+
+            <div id="checklistContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-red-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-xl font-semibold text-red-700 mb-3 border-b border-red-300 pb-2">1 出場生徒</h3>
+                    <ul id="list-equipment" class="space-y-3">
+                        <!-- Items will be inserted here by JS -->
+                    </ul>
+                </div>
+                <div class="bg-blue-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-3 border-b border-blue-300 pb-2">2 応援生徒（＋出場生徒）</h3>
+                    <ul id="list-clothing" class="space-y-3">
+                        <!-- Items will be inserted here by JS -->
+                    </ul>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg shadow-inner">
+                    <h3 class="text-xl font-semibold text-green-700 mb-3 border-b border-green-300 pb-2">3 その他</h3>
+                    <ul id="list-documents" class="space-y-3">
+                        <!-- Items will be inserted here by JS -->
+                    </ul>
+                </div>
+            </div>
+
+            <p class="text-gray-600 mb-6">服装は練習着・体操服、短パン、必要に応じてジャージ・ウィンドブレーカー<br />応援生徒も引率の有無にかかわらず、学校指定の服装で来てください。</p>
+
+            <!-- チェックリストをリセットするボタンを追加 -->
+            <div class="mt-6 flex flex-col sm:flex-row items-center justify-between">
+                <button 
+                    onclick="resetChecklist()"
+                    class="px-5 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md w-full sm:w-auto"
+                >
+                    チェックリストをリセット
+                </button>
+                <p id="resetMessage" class="mt-3 sm:mt-0 text-green-600 font-bold hidden"></p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- フッター -->
+    <footer class="bg-gray-800 text-white py-6 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            &copy; 2025 久保田【バドミントン部】
+        </div>
+    </footer>
+
+    <!-- Firebase SDKの読み込み -->
+    <script type="module">
+        // グローバル変数として外部に公開（チェックボックス操作のために必要）
+        window.currentChecklist = {};
+        window.handleCheck = handleCheck;
+        window.resetChecklist = resetChecklist;
+
+
+        // 【重要】バナー表示/非表示の切り替え設定
+        // true に設定するとバナーが表示され、false に設定すると非表示になります
+        const showAlertBanner = true;
+        // バナーに表示するメッセージとリンク先（バナー内の「詳細を確認」の飛び先）
+        const alertConfig = {
+            message: "【重要】予定表をオンラインで確認できるようになりました！",
+            link: "#announcement"
+        };
+        // PDF資料のリスト
+        // PDF資料のタイトルとURLを保持する配列
+        const pdfDocuments = [
+            { title: "R7 11月", url: "https://shin-11111111.github.io/shin_gijyutu/club/11.pdf#navpanes=0" }, 
+        ];
+
+        // 大会持ち物チェックリストの初期データ
+        const defaultChecklistItems = {
+            equipment: [
+                { id: '1', label: 'ユニフォーム', checked: false },
+                { id: '2', label: 'ゼッケン', checked: false },
+                { id: '3', label: '安全ピン(4つ)', checked: false },
+                { id: '4', label: '着替え', checked: false },
+                { id: '5', label: 'シャトル(学校から持っていく)', checked: false },
+            ],
+            clothing: [
+                { id: '6', label: '昼食・軽食・水筒', checked: false },
+                { id: '7', label: 'タオル', checked: false },
+                { id: '8', label: 'シューズ', checked: false },
+                { id: '9', label: '靴を入れる袋', checked: false },
+                { id: '10', label: '交通費(カード型ICか現金)', checked: false },
+                { id: '11', label: 'トーナメント冊子', checked: false },
+                { id: '12', label: 'ラケット', checked: false },
+            ],
+            documents: [
+                { id: '13', label: '筆記用具・バドミントンノート', checked: false },
+                { id: '14', label: '暑さ対策(日傘、冷感タオル、氷のう など)', checked: false },
+                { id: '15', label: '寒さ対策(カイロ・マフラー など)', checked: false },
+                { id: '16', label: 'マスク(感染症対策、特に冬場)', checked: false },
+                { id: '17', label: '折り畳み傘・傘袋・着替えの靴下・着替え', checked: false },
+            ]
+        };
+
+        /**
+         * チェックリストアイテムのチェック状態を更新し、UIを再描画
+         * @param {string} category - カテゴリ ('equipment', 'clothing', 'documents')
+         * @param {string} id - アイテムID ('racket', 'uniform', etc.)
+         * @param {boolean} isChecked - 新しいチェック状態
+         */
+        function handleCheck(category, id, isChecked) {
+            // currentChecklistが初期化されていない場合のガード
+            if (!window.currentChecklist || !window.currentChecklist[category]) {
+                console.error('Checklist not initialized.');
+                return;
+            }
+
+            const item = window.currentChecklist[category].find(i => i.id === id);
+            if (item) {
+                item.checked = isChecked;
+                // UIを即時更新
+                renderChecklist(window.currentChecklist); 
+            }
+        }
+
+        /**
+         * チェックリストを初期状態に戻し、UIを再描画
+         */
+        function resetChecklist() {
+            // 各カテゴリのチェックボックスを全てfalseにリセット
+            ['equipment', 'clothing', 'documents'].forEach(category => {
+                if (window.currentChecklist[category]) {
+                    window.currentChecklist[category].forEach(item => {
+                        item.checked = false;
+                    });
+                }
+            });
+            
+            // UIを再描画
+            renderChecklist(window.currentChecklist);
+
+            // リセットメッセージの表示
+            const resetMessage = document.getElementById('resetMessage');
+            if (resetMessage) {
+                resetMessage.textContent = "チェックリストがリセットされました！";
+                resetMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    resetMessage.classList.add('hidden');
+                }, 3000);
+            }
+        }
+
+        /**
+         * 読み込まれたデータに基づいてチェックリストのHTMLを生成
+         * @param {Object} checklistData - 現在のチェックリストデータ
+         */
+        function renderChecklist(checklistData) {
+            ['equipment', 'clothing', 'documents'].forEach(category => {
+                const ul = document.getElementById(`list-${category}`);
+                if (ul) {
+                    ul.innerHTML = ''; // リストをクリア
+                    
+                    if (checklistData[category]) {
+                        checklistData[category].forEach(item => {
+                            const li = document.createElement('li');
+                            li.className = "flex items-center space-x-3";
+                            
+                            // チェックボックス
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.id = `${category}-${item.id}`;
+                            checkbox.checked = item.checked;
+                            // チェックボックスの色を青系に変更
+                            checkbox.className = "h-5 w-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 cursor-pointer";
+                            
+                            // イベントハンドラを設定
+                            checkbox.onchange = (e) => handleCheck(category, item.id, e.target.checked);
+
+                            // ラベル
+                            const label = document.createElement('label');
+                            label.htmlFor = `${category}-${item.id}`;
+                            label.textContent = item.label;
+                            // 💡 チェックされたら line-through と text-gray-400 を適用
+                            label.className = `text-gray-700 font-medium select-none cursor-pointer transition duration-200 ${item.checked ? 'line-through text-gray-400' : ''}`;
+                            
+                            li.appendChild(checkbox);
+                            li.appendChild(label);
+                            ul.appendChild(li);
+                        });
+                    }
+                }
+            });
+        }
+        
+        /**
+         * アプリケーションの初期設定を行います。
+         */
+        function initializeApp() {
+            // 初期データをセットして描画
+            window.currentChecklist = defaultChecklistItems;
+            renderChecklist(window.currentChecklist);
+
+            initializePdfSelector();
+            initializeAlertBanner();
+        }
+
+        // --- 既存のPDFロジック ---
+
+        /**
+         * 指定されたURLのPDFをiframeに表示し、アクティブなボタンを切り替えます。
+         * @param {string} url - 表示するPDFのURL
+         */
+        function displayPdf(url, buttonElement) {
+            const iframeElement = document.getElementById('pdfViewerFrame');
+            const downloadLinkElement = document.getElementById('pdfDownloadLink');
+            const buttons = document.querySelectorAll('.pdf-button');
+
+            // 1. ボタンのアクティブ状態をリセット
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // 2. 新しいボタンをアクティブにする
+            if (buttonElement) {
+                buttonElement.classList.add('active');
+            }
+
+            // 3. iframeとダウンロードリンクを更新
+            iframeElement.src = url;
+            
+            if (downloadLinkElement) {
+                // PDFのURLに #navpanes=0 が含まれている場合、ダウンロードURLには不要なため削除する
+                const cleanUrl = url.split('#')[0]; 
+                downloadLinkElement.href = cleanUrl;
+            } else {
+                console.error("Error: The download link element with id 'pdfDownloadLink' was not found.");
+            }
+        }
+
+        /**
+         * PDF選択ボタンを生成し、最初のPDFを初期表示します。
+         */
+        function initializePdfSelector() {
+            const container = document.getElementById('pdfSelectorContainer');
+            
+            if (pdfDocuments.length > 0) {
+                pdfDocuments.forEach((doc, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = doc.title;
+                    button.className = "pdf-button px-4 py-2 text-sm bg-blue-100 text-blue-800 font-semibold rounded-lg hover:bg-blue-200 transition duration-150 shadow-md transform hover:scale-[1.01] active:scale-[0.99]";
+                    
+                    button.onclick = () => displayPdf(doc.url, button);
+                    
+                    container.appendChild(button);
+
+                    if (index === 0) {
+                        displayPdf(doc.url, button);
+                    }
+                });
+            } else {
+                 const message = document.createElement('p');
+                 message.textContent = "現在公開中の資料はありません。";
+                 message.className = "text-gray-500 italic";
+                 container.appendChild(message);
+            }
+        }
+
+        /**
+         * 重要なお知らせバナーの表示/非表示を制御する
+         */
+        function initializeAlertBanner() {
+            const bannerContainer = document.getElementById('alertBannerContainer');
+            const banner = document.getElementById('alertBanner');
+            const messageElement = document.getElementById('alertMessage');
+            const linkElement = banner.querySelector('a');
+            
+            // バナーを一時的に非表示にしてから、設定に基づいて表示を決定
+            banner.classList.add('hidden');
+            bannerContainer.style.display = 'none';
+
+            if (showAlertBanner) {
+                // バナーを表示し、内容を設定
+                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>${alertConfig.message}`;
+                linkElement.href = alertConfig.link;
+                
+                bannerContainer.style.display = 'block';
+                banner.classList.remove('hidden');
+            } 
+        }
+
+        /**
+         * バナーを非表示にする（ユーザーが閉じた場合）
+         */
+        window.hideAlert = function() {
+            const banner = document.getElementById('alertBanner');
+            // アニメーションで非表示にする
+            banner.style.maxHeight = '0px';
+            banner.style.paddingTop = '0px';
+            banner.style.paddingBottom = '0px';
+            banner.style.overflow = 'hidden';
+            banner.style.opacity = '0';
+        }
+
+        // 初期化処理
+        window.onload = function() {
+            // Firebase関連の初期化を削除し、純粋なアプリ初期化関数を呼び出す
+            initializeApp(); 
+        }
+
+    </script>
+</body>
+</html>
