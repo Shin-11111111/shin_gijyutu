@@ -8,53 +8,121 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Interフォントを使用 -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .canvas-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        /* 画面全体を使用し、スクロールを制御するための設定 */
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f3f4f6; 
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* body全体のスクロールを禁止 */
+        }
+        
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* 画面の高さに固定 */
+            padding: 1rem 1.5rem; 
+        }
+
+        /* コンテンツラッパーが残りの高さを占有し、全体のスクロールを抑える */
+        .content-wrapper {
+            flex-grow: 1; /* 修正: flex-grow = 1 -> flex-grow: 1 */
+            overflow: hidden; /* 子要素がはみ出さないようにクリップ */
+        }
+        
+        /* デスクトップで左右配置するためのFlex設定 */
+        @media (min-width: 768px) {
+            .content-wrapper {
+                flex-direction: row;
+            }
+            /* 左側の設定パネル: 最大幅を制限し、縦スクロールを許可 */
+            .settings-panel {
+                max-width: 350px; 
+                height: 100%;
+                overflow-y: auto; /* 設定パネル内のみスクロール可能 */
+            }
+            /* 右側の描画エリア: 残りのスペースを埋め、スクロール禁止 */
+            .amida-display {
+                flex-grow: 1; /* 修正: flex-grow = 1 -> flex-grow: 1 */
+                overflow: hidden; /* スクロール禁止 */
+                display: flex;
+                flex-direction: column;
+                justify-content: center; /* 垂直方向中央寄せ */
+                align-items: center; /* 水平方向中央寄せ */
+            }
+            /* キャンバスコンテナの幅と高さを制限 */
+            .canvas-container {
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+
+        .canvas-container { 
+            position: relative; 
+            width: 100%; 
+            max-width: 600px; /* PC画面での最大幅を維持 */
+            margin: 0 auto; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+        }
         canvas { display: block; border-radius: 0.75rem; background-color: #ffffff; }
     </style>
 </head>
 <body>
 
-<div class="p-4 sm:p-6 min-h-screen">
-    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">あみだくじ</h1>
-
-    <!-- あみだくじ描画エリア -->
-    <div class="canvas-container">
-        <canvas id="amidaCanvas"></canvas>
-        <div id="messageBox" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white text-xl font-bold rounded-xl hidden p-4">
-            <!-- 結果メッセージが表示されます -->
-        </div>
-        <button id="generateButton"
-                class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-            あみだを生成 / リセット
-        </button>
-    </div>
+<div class="main-container">
+    <h1 class="text-3xl font-bold text-center mb-4 text-gray-800 flex-shrink-0">あみだくじ</h1>
     
-    <!-- 説明 -->
-    <p class="text-center text-gray-500 text-sm mt-4">上のスタート、または下のゴールの文字をクリックして、あみだくじの結果を確認できます。</p>
-    <p class="text-center text-gray-500 text-sm mt-4"></p>
+    <!-- 設定パネルと描画エリアを囲むコンテナ (md:flex-rowで左右配置) -->
+    <div class="content-wrapper flex flex-col md:flex-row gap-6">
 
-    <!-- 設定パネル -->
-    <div class="bg-white p-4 rounded-xl shadow-lg mb-6 max-w-lg mx-auto">
-        <h2 class="text-xl font-semibold mb-3 text-indigo-600">設定</h2>
+        <!-- 左: 設定パネル (スクロール可能) -->
+        <div class="settings-panel bg-white p-4 rounded-xl shadow-lg md:mb-0 mb-6 flex-shrink-0">
+            <h2 class="text-xl font-semibold mb-3 text-indigo-600">設定</h2>
 
-        <!-- 選択肢（列）の数 -->
-        <div class="mb-4">
-            <label for="columnCount" class="block text-sm font-medium text-gray-700 mb-1">選択肢（列）の数 (3〜10)</label>
-            <input type="number" id="columnCount" value="5" min="3" max="10"
-                   class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
-        </div>
+            <!-- 選択肢（列）の数 -->
+            <div class="mb-4">
+                <label for="columnCount" class="block text-sm font-medium text-gray-700 mb-1">選択肢（列）の数 (3〜10)</label>
+                <input type="number" id="columnCount" value="5" min="3" max="10"
+                       class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition duration-150">
+            </div>
 
-        <!-- ゴール（結果）の入力 -->
-        <div id="goalInputs" class="mb-4 space-y-2">
-            <!-- ゴール入力フィールドがここに動的に挿入されます -->
+            <!-- ゴール（結果）の入力 -->
+            <div id="goalInputs" class="mb-4 space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">ゴール結果 (5個)</label>
+                <!-- ゴール入力フィールドがここに動的に挿入されます -->
+            </div>
+            
+            <!-- スタート（項目）の入力 -->
+            <div id="startInputs" class="mb-4 space-y-2">
+                <label class="block text-sm font-medium text-gray-700 mb-1">スタートの選択 (5個)</label>
+                <!-- スタート入力フィールドがここに動的に挿入されます -->
+            </div>
+
+            <button id="generateButton"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition duration-300 ease-in-out transform hover:scale-105 shadow-md mt-2">
+                あみだを生成 / リセット
+            </button>
+            <!-- スクロールを確認するためのダミーコンテンツ -->
+            <div class="h-6 mt-4 text-gray-400 text-xs md:hidden">（モバイルではここに設定パネルの終点があります）</div>
+            <div class="mt-4 p-2 bg-gray-50 rounded-lg text-sm text-gray-600 hidden md:block">
+                <p class="font-semibold mb-1">💡 ヒント:</p>
+                <p>あみだくじの線がない場所をクリックしても、アニメーションは実行されません。</p>
+            </div>
         </div>
         
-        <!-- スタート（項目）の入力 -->
-        <div id="startInputs" class="mb-6 space-y-2">
-            <label class="block text-sm font-medium text-gray-700 mb-1">スタートの選択</label>
-            <!-- スタート入力フィールドがここに動的に挿入されます -->
+        <!-- 右: あみだくじ描画エリア (スクロール禁止) -->
+        <div class="amida-display">
+            <div class="canvas-container">
+                <canvas id="amidaCanvas"></canvas>
+                <div id="messageBox" class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-70 text-white text-xl font-bold rounded-xl hidden p-4">
+                    <!-- 結果メッセージが表示されます -->
+                </div>
+            </div>
+            
+            <!-- 説明 -->
+            <p class="text-center text-gray-500 text-sm mt-4 flex-shrink-0">上のスタート、または下のゴールの文字をクリックして、あみだくじの結果を確認できます。</p>
         </div>
+        
     </div>
 </div>
 
@@ -65,6 +133,8 @@
     const MARGIN_X = 50;
     const MARGIN_Y = 100;
     const RUNG_COUNT = 15; // 縦線一本あたりの横線の数（ランダム配置）
+    const ANIMATION_DURATION = 2500; // 2.5秒
+    const HORIZONTAL_STEP_COUNT = 10; // 横移動を分割するステップ数
 
     // DOM要素
     const canvas = document.getElementById('amidaCanvas');
@@ -74,29 +144,71 @@
     const startInputsContainer = document.getElementById('startInputs');
     const messageBox = document.getElementById('messageBox');
     const generateButton = document.getElementById('generateButton');
+    const canvasContainer = document.querySelector('.canvas-container');
+    const amidaDisplay = document.querySelector('.amida-display'); 
 
     // State (状態管理)
     let numColumns = 5;
     let rungs = []; // 横線の情報: [{col: 0, y: 100}, ...]
     let startLabels = ['ユーザー 1', 'ユーザー 2', 'ユーザー 3', 'ユーザー 4', 'ユーザー 5'];
-    let goalLabels = ['当たり', 'ハズレ 1', 'ハズレ 2', 'ハズレ 3', 'ハズレ 4'];
+    let goalLabels = ['当たり', 'ハズレ', 'ハズレ', 'ハズレ', 'ハズレ'];
     let columnPositions = [];
-    let pathHistory = [];
 
-    // キャンバスの初期設定
+    // Animation states
+    let animationFrameId = null; // requestAnimationFrame ID
+    let pathCoordinates = []; // 経路全体の座標データ [{x: ..., y: ...}, ...]
+    let animationStartTime = null; // アニメーション開始時間
+    let currentTrace = {
+        from: null, // 'start' or 'goal'
+        startCol: -1, 
+        endCol: -1 
+    };
+
+    /**
+     * キャンバスの初期設定とリサイズ処理
+     */
     function setupCanvas() {
-        // レスポンシブ対応のためにCSSサイズと描画解像度を設定
+        // 描画解像度を設定
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
-        const container = canvas.parentElement;
+        
+        // レスポンシブ対応のためにCSSサイズを設定
         const resize = () => {
-            const containerWidth = container.clientWidth;
-            // 描画がぼやけないよう、CSSサイズをコンテナに合わせる
-            canvas.style.width = containerWidth + 'px';
-            canvas.style.height = (containerWidth * (CANVAS_HEIGHT / CANVAS_WIDTH)) + 'px';
+            const containerWidth = amidaDisplay.clientWidth;
+            const containerHeight = amidaDisplay.clientHeight; 
+            
+            const aspectRatio = CANVAS_HEIGHT / CANVAS_WIDTH;
+
+            let cssWidth;
+            let cssHeight;
+
+            const heightBasedOnWidth = containerWidth * aspectRatio;
+            
+            if (heightBasedOnWidth <= containerHeight) {
+                // 幅基準で計算した高さがコンテナの高さを超えない場合
+                cssWidth = containerWidth;
+                cssHeight = heightBasedOnWidth;
+            } else {
+                // 幅基準で計算した高さがコンテナの高さを超える場合 (高さに合わせる)
+                cssHeight = containerHeight;
+                cssWidth = containerHeight / aspectRatio;
+            }
+
+            // 最大サイズは、中央配置されたキャンバスコンテナの親要素（amida-display）の80%程度に制限し、
+            // 設定パネルとのバランスを取る。ただし、ここでは100%を維持し、CSSで制約している。
+            
+            // CSSサイズを適用
+            canvas.style.width = cssWidth + 'px';
+            canvas.style.height = cssHeight + 'px';
+            
+            canvasContainer.style.width = cssWidth + 'px';
+            canvasContainer.style.height = cssHeight + 'px';
         };
+        
         window.addEventListener('resize', resize);
         resize();
+        
+        updateLadder();
     }
 
     /**
@@ -108,27 +220,33 @@
         numColumns = count;
 
         // ゴール入力の生成
-        goalInputsContainer.innerHTML = `<label class="block text-sm font-medium text-gray-700 mb-1">ゴール結果 (${numColumns}個)</label>`;
-        goalLabels.length = numColumns; // 配列のサイズを調整
-        for (let i = 0; i < numColumns; i++) {
-            const goalValue = goalLabels[i] || `ハズレ ${i}`;
-            goalInputsContainer.innerHTML += `
-                <input type="text" id="goalInput${i}" value="${goalValue}" placeholder="ゴール ${i + 1}"
-                       class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150">
-            `;
-        }
+        goalInputsContainer.querySelector('label').textContent = `ゴール結果 (${numColumns}個)`;
+        // 現在の値を保持しながら新しい入力フィールドを生成
+        const currentGoalLabels = Array.from(goalInputsContainer.querySelectorAll('input')).map(input => input.value);
+        goalLabels = currentGoalLabels.slice(0, numColumns);
+        
+        const newGoalInputsHTML = Array(numColumns).fill(0).map((_, i) => {
+            const val = goalLabels[i] || (i < currentGoalLabels.length ? currentGoalLabels[i] : `ゴール ${i + 1}`);
+            return `<input type="text" id="goalInput${i}" value="${val}" placeholder="ゴール ${i + 1}"
+                       class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150">`;
+        }).join('');
+        Array.from(goalInputsContainer.children).filter(el => el.tagName !== 'LABEL').forEach(el => el.remove());
+        goalInputsContainer.insertAdjacentHTML('beforeend', newGoalInputsHTML);
+
 
         // スタート入力の生成
         startInputsContainer.querySelector('label').textContent = `スタートの選択 (${numColumns}個)`;
-        startInputsContainer.querySelectorAll('input').forEach(input => input.remove());
-        startLabels.length = numColumns; // 配列のサイズを調整
-        for (let i = 0; i < numColumns; i++) {
-            const startValue = startLabels[i] || `ユーザー ${i + 1}`;
-            startInputsContainer.innerHTML += `
-                <input type="text" id="startInput${i}" value="${startValue}" placeholder="スタート ${i + 1}"
-                       class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150">
-            `;
-        }
+        // 現在の値を保持しながら新しい入力フィールドを生成
+        const currentStartLabels = Array.from(startInputsContainer.querySelectorAll('input')).map(input => input.value);
+        startLabels = currentStartLabels.slice(0, numColumns);
+
+        const newStartInputsHTML = Array(numColumns).fill(0).map((_, i) => {
+            const val = startLabels[i] || (i < currentStartLabels.length ? currentStartLabels[i] : `ユーザー ${i + 1}`);
+            return `<input type="text" id="startInput${i}" value="${val}" placeholder="スタート ${i + 1}"
+                       class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150">`;
+        }).join('');
+        Array.from(startInputsContainer.children).filter(el => el.tagName !== 'LABEL').forEach(el => el.remove());
+        startInputsContainer.insertAdjacentHTML('beforeend', newStartInputsHTML);
     }
 
     /**
@@ -141,7 +259,6 @@
             const startInput = document.getElementById(`startInput${i}`);
             const goalInput = document.getElementById(`goalInput${i}`);
             
-            // 入力がない場合はデフォルト値を使用
             startLabels.push(startInput ? startInput.value.trim() || `ユーザー ${i + 1}` : `ユーザー ${i + 1}`);
             goalLabels.push(goalInput ? goalInput.value.trim() || `ゴール ${i + 1}` : `ゴール ${i + 1}`);
         }
@@ -152,34 +269,28 @@
      */
     function generateRungs() {
         rungs = [];
-        pathHistory = [];
         const rungHeight = (CANVAS_HEIGHT - 2 * MARGIN_Y) / RUNG_COUNT;
         
-        // rungsMap[col][rungIndex] = true/false (横線があるか)
         const rungsMap = Array(numColumns - 1).fill(0).map(() => Array(RUNG_COUNT).fill(false));
 
         for (let col = 0; col < numColumns - 1; col++) {
             for (let i = 0; i < RUNG_COUNT; i++) {
-                // 50%の確率で横線を引く
                 if (Math.random() < 0.5) {
-                    // 左隣に横線がないことを確認
                     if (col > 0 && rungsMap[col - 1][i]) {
-                        continue; 
+                        continue; // 隣接する横線がすでに存在する場合はスキップ
                     }
                     rungsMap[col][i] = true;
-                    // 横線のY座標を計算
                     const y = MARGIN_Y + (i + 0.5) * rungHeight; 
                     rungs.push({ col, y });
                 }
             }
         }
-        console.log(`生成された横線の数: ${rungs.length}`);
     }
 
     /**
-     * あみだくじ全体を描画します。
+     * あみだくじの静的な部分（縦線、横線、ラベル）を描画します。
      */
-    function drawLadder() {
+    function drawStaticLadder() {
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
         const availableWidth = CANVAS_WIDTH - 2 * MARGIN_X;
@@ -201,7 +312,7 @@
 
             // スタートラベル (上部)
             ctx.textAlign = 'center';
-            ctx.font = '18px Inter, sans-serif';
+            ctx.font = '20px Inter, sans-serif';
             ctx.fillStyle = '#1f2937'; // Gray-800
             ctx.fillText(startLabels[i], x, MARGIN_Y - 30);
             
@@ -223,43 +334,47 @@
             ctx.lineWidth = 4;
             ctx.stroke();
         });
-
-        // 3. 軌跡の描画
-        drawPath();
     }
 
     /**
-     * あみだくじの軌跡（Path）を計算し、結果の列インデックスを返します。（順方向：上から下）
-     * @param {number} startCol 0から始まる開始列のインデックス
-     * @returns {number} 0から始まる結果の列インデックス
+     * あみだくじ全体を描画します。（静的な部分のみを描画し、アニメーション中でない場合は最終パスを描画）
      */
-    function tracePath(startCol) {
-        pathHistory = [];
+    function drawLadder() {
+        drawStaticLadder();
+        
+        // アニメーションが停止していて、かつ一度トレースが完了している場合は、最終結果パスを描画する
+        if (animationFrameId === null && pathCoordinates.length > 0) {
+            drawInstantPath(pathCoordinates);
+        }
+    }
+
+    /**
+     * あみだくじの軌跡（Path）を計算し、結果の列インデックスと詳細な経路座標を返します。（順方向：上から下）
+     */
+    function calculatePathForward(startCol) {
+        let path = [];
         let currentCol = startCol;
         let y = MARGIN_Y;
         const endY = CANVAS_HEIGHT - MARGIN_Y;
-        const step = 5; // トレースのY軸ステップ
-        const rungHitTolerance = 5; // 横線判定の許容誤差
+        const V_STEP = 5; 
+        const rungHitTolerance = 5;
 
-        pathHistory.push({ x: columnPositions[currentCol], y: y });
+        path.push({ x: columnPositions[currentCol], y: y, startCol: startCol, finalCol: -1 });
 
-        // Y座標でソートされた横線のリストを準備し、使用済みのものを削除していく
         let remainingRungs = Array.from(rungs).sort((a, b) => a.y - b.y);
 
         while (y < endY) {
-            y += step;
+            y += V_STEP;
             if (y > endY) y = endY;
 
             let nextRungIndex = -1;
 
-            // 現在の列に接続する、まだ通過していない横線を探す
+            // 1. 横線にぶつかるかチェック
             for (let i = 0; i < remainingRungs.length; i++) {
                 const rung = remainingRungs[i];
-                
                 const isConnected = (rung.col === currentCol) || (rung.col + 1 === currentCol);
                 
-                // yがrung.yを初めて超えたときにヒットさせる
-                if (isConnected && rung.y > y - step && rung.y <= y + rungHitTolerance) { 
+                if (isConnected && rung.y > y - V_STEP && rung.y <= y + rungHitTolerance) { 
                     nextRungIndex = i;
                     break;
                 }
@@ -270,60 +385,70 @@
                 const rungY = nextRung.y;
 
                 y = rungY;
-                pathHistory.push({ x: columnPositions[currentCol], y: y });
+                path.push({ x: columnPositions[currentCol], y: y }); // 横線手前の座標を記録
 
-                // 列を切り替える
+                let targetCol;
                 if (nextRung.col === currentCol) {
-                    currentCol++; // 右へ移動
+                    targetCol = currentCol + 1; // 右へ移動
                 } else {
-                    currentCol--; // 左へ移動
+                    targetCol = currentCol - 1; // 左へ移動
                 }
 
-                pathHistory.push({ x: columnPositions[currentCol], y: y });
+                const x1 = columnPositions[currentCol];
+                const x2 = columnPositions[targetCol];
+                const dx = x2 - x1;
+                
+                // 2. 横移動を分割して経路に記録
+                for (let i = 1; i <= HORIZONTAL_STEP_COUNT; i++) {
+                    const stepX = x1 + dx * (i / HORIZONTAL_STEP_COUNT);
+                    path.push({ x: stepX, y: rungY });
+                }
 
+                currentCol = targetCol;
                 remainingRungs.splice(nextRungIndex, 1);
                 
                 y += 1; 
             }
             
-            pathHistory.push({ x: columnPositions[currentCol], y: y });
+            path.push({ x: columnPositions[currentCol], y: y }); // 縦線上の座標を記録
         }
-
-        return currentCol;
+        
+        path[path.length - 1].finalCol = currentCol;
+        return { finalCol: currentCol, path: path };
     }
     
     /**
-     * あみだくじの軌跡（Path）を計算し、結果の列インデックスを返します。（逆方向：下から上）
+     * あみだくじの軌跡（Path）を計算し、結果の列インデックスと詳細な経路座標を返します。（逆方向：下から上）
      * @param {number} endCol 0から始まる終了列のインデックス
-     * @returns {number} 0から始まる開始列のインデックス
+     * @returns {{startCol: number, path: Array<{x: number, y: number}>}}
      */
-    function tracePathBackward(endCol) {
-        pathHistory = [];
+    function calculatePathBackward(endCol) {
+        let path = [];
         let currentCol = endCol;
         let y = CANVAS_HEIGHT - MARGIN_Y;
         const startY = MARGIN_Y;
-        const step = 5; // トレースのY軸ステップ
-        const rungHitTolerance = 5; // 横線判定の許容誤差
+        const V_STEP = 5; 
+        const rungHitTolerance = 5;
 
-        pathHistory.push({ x: columnPositions[currentCol], y: y });
+        // 最初の点 (ゴール地点)
+        path.push({ x: columnPositions[currentCol], y: y, startCol: -1, finalCol: endCol });
 
-        // Y座標で降順にソートされた横線のリストを準備 (下から上へたどるため)
-        let remainingRungs = Array.from(rungs).sort((a, b) => b.y - a.y);
+        // Y座標で降順にソートされた残りの横線リスト
+        let remainingRungs = Array.from(rungs).sort((a, b) => b.y - a.y); 
 
         while (y > startY) {
-            y -= step;
+            y -= V_STEP;
             if (y < startY) y = startY;
 
             let nextRungIndex = -1;
 
-            // 現在の列に接続する、まだ通過していない横線を探す
+            // 1. 横線にぶつかるかチェック
             for (let i = 0; i < remainingRungs.length; i++) {
                 const rung = remainingRungs[i];
-                
                 const isConnected = (rung.col === currentCol) || (rung.col + 1 === currentCol);
 
-                // yがrung.yを初めて下回ったときにヒットさせる
-                if (isConnected && rung.y < y + step && rung.y >= y - rungHitTolerance) {
+                // 上向きに移動中に横線に到達したか
+                if (isConnected && rung.y < y + V_STEP && rung.y >= y - rungHitTolerance) {
                     nextRungIndex = i;
                     break;
                 }
@@ -334,49 +459,60 @@
                 const rungY = nextRung.y;
 
                 y = rungY;
-                pathHistory.push({ x: columnPositions[currentCol], y: y });
+                path.push({ x: columnPositions[currentCol], y: y }); // 横線手前の座標を記録
 
-                // 列を切り替える
+                let targetCol;
                 if (nextRung.col === currentCol) {
-                    currentCol++; // 右にあった縦線へ移動
+                    targetCol = currentCol + 1; // 右にあった縦線へ移動
                 } else {
-                    currentCol--; // 左にあった縦線へ移動
+                    targetCol = currentCol - 1; // 左にあった縦線へ移動
+                }
+                
+                const x1 = columnPositions[currentCol];
+                const x2 = columnPositions[targetCol];
+                const dx = x2 - x1;
+
+                // 2. 横移動を分割して経路に記録 (下から上なので、X座標は x1 から x2 へ向かう)
+                for (let i = 1; i <= HORIZONTAL_STEP_COUNT; i++) {
+                    const stepX = x1 + dx * (i / HORIZONTAL_STEP_COUNT);
+                    path.push({ x: stepX, y: rungY });
                 }
 
-                pathHistory.push({ x: columnPositions[currentCol], y: y });
-
+                currentCol = targetCol;
                 remainingRungs.splice(nextRungIndex, 1);
                 
                 y -= 1; 
             }
             
-            pathHistory.push({ x: columnPositions[currentCol], y: y });
+            path.push({ x: columnPositions[currentCol], y: y }); // 縦線上の座標を記録
         }
-
-        return currentCol;
+        
+        path[path.length - 1].startCol = currentCol;
+        
+        // 配列は「底 -> 頂」の順で構築されているため、このままアニメーション関数に渡す
+        return { startCol: currentCol, path: path }; 
     }
 
 
     /**
-     * 軌跡を描画します。
+     * 経路座標を瞬時に描画します。（アニメーション終了後の最終表示に使用）
      */
-    function drawPath() {
-        if (pathHistory.length === 0) return;
+    function drawInstantPath(path) {
+        if (path.length === 0) return;
 
         ctx.strokeStyle = '#ef4444'; // Red-500
         ctx.lineWidth = 5;
         ctx.lineCap = 'round';
 
         ctx.beginPath();
-        ctx.moveTo(pathHistory[0].x, pathHistory[0].y);
-        for (let i = 1; i < pathHistory.length; i++) {
-            // スムーズなパス描画のため、直線として描画
-            ctx.lineTo(pathHistory[i].x, pathHistory[i].y);
+        ctx.moveTo(path[0].x, path[0].y);
+        for (let i = 1; i < path.length; i++) {
+            ctx.lineTo(path[i].x, path[i].y);
         }
         ctx.stroke();
 
         // 終点に円を描画
-        const endPoint = pathHistory[pathHistory.length - 1];
+        const endPoint = path[path.length - 1];
         ctx.fillStyle = '#ef4444'; // Red-500
         ctx.beginPath();
         ctx.arc(endPoint.x, endPoint.y, 8, 0, Math.PI * 2);
@@ -384,25 +520,144 @@
     }
 
     /**
+     * アニメーション用の経路描画関数
+     */
+    function drawAnimatedPath(pathSegment) {
+        if (pathSegment.length === 0) return;
+
+        ctx.strokeStyle = '#ef4444'; 
+        ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+
+        ctx.beginPath();
+        ctx.moveTo(pathSegment[0].x, pathSegment[0].y);
+        for (let i = 1; i < pathSegment.length; i++) {
+            ctx.lineTo(pathSegment[i].x, pathSegment[i].y);
+        }
+        ctx.stroke();
+        
+        // 現在のアニメーション位置に点を描画
+        const currentPoint = pathSegment[pathSegment.length - 1];
+        ctx.fillStyle = '#ef4444'; 
+        ctx.beginPath();
+        ctx.arc(currentPoint.x, currentPoint.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    /**
+     * あみだくじの軌跡アニメーションを実行します。
+     */
+    function animatePath(timestamp) {
+        if (!animationStartTime) {
+            animationStartTime = timestamp;
+        }
+
+        const elapsed = timestamp - animationStartTime;
+        const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
+        
+        const currentPathIndex = Math.floor(progress * (pathCoordinates.length - 1));
+
+        // 1. 静的な梯子を描画（背景）
+        drawStaticLadder();
+
+        // 2. アニメーション中のパスを描画
+        drawAnimatedPath(pathCoordinates.slice(0, currentPathIndex + 1));
+
+        if (progress < 1) {
+            animationFrameId = requestAnimationFrame(animatePath);
+        } else {
+            // アニメーション完了
+            cancelAnimation();
+
+            // 最終結果表示
+            // スタートからのトレース (上から下)
+            if (currentTrace.from === 'start') {
+                displayResult(currentTrace.startCol, currentTrace.endCol);
+            } 
+            // ゴールからのトレース (下から上)
+            else if (currentTrace.from === 'goal') {
+                displayResult(currentTrace.startCol, currentTrace.endCol);
+            }
+            
+            // 描画を一度更新し、最終的なパスを完全に表示する
+            drawLadder(); 
+        }
+    }
+    
+    /**
+     * アニメーションフレームをキャンセルし、状態をリセットします。
+     */
+    function cancelAnimation() {
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        animationStartTime = null;
+    }
+    
+    /**
+     * 結果をメッセージボックスに表示します。
+     */
+    function displayResult(startCol, endCol) {
+        let resultText;
+        if (currentTrace.from === 'start') {
+            // 順方向 (スタート -> ゴール)
+            resultText = `
+                <div class="text-center">
+                    <p class="text-3xl mb-2 text-white">${startLabels[startCol]}</p>
+                    <p class="text-5xl font-extrabold text-yellow-300">の結果は...</p>
+                    <p class="text-6xl mt-4 text-green-400 animate-pulse">${goalLabels[endCol]}</p>
+                    <p class="text-xl mt-4 text-gray-200">もう一度タップしてリセット</p>
+                </div>
+            `;
+        } else if (currentTrace.from === 'goal') {
+             // 逆方向 (ゴール -> スタート)
+            resultText = `
+                <div class="text-center">
+                    <p class="text-3xl mb-2 text-green-400">${goalLabels[endCol]}</p>
+                    <p class="text-5xl font-extrabold text-yellow-300">に対応するのは...</p>
+                    <p class="text-6xl mt-4 text-white animate-pulse">${startLabels[startCol]}</p>
+                    <p class="text-xl mt-4 text-gray-200">もう一度タップしてリセット</p>
+                </div>
+            `;
+        } else {
+            return;
+        }
+        
+        messageBox.innerHTML = resultText;
+        messageBox.classList.remove('hidden');
+    }
+
+
+    /**
      * あみだくじエリアのクリックイベントを処理します。
-     * @param {MouseEvent} event 
      */
     function handleCanvasClick(event) {
         
-        // メッセージボックスが表示されている場合は、クリックはメッセージボックス側で処理されるため、ここでは何もしない。
+        // メッセージボックスが表示されている場合は非表示にする（リセット処理）
+        if (!messageBox.classList.contains('hidden')) {
+            hideMessageBoxAndClearPath();
+            return; 
+        }
+
+        // アニメーション実行中は新しいクリックを無視する
+        if (animationFrameId !== null) {
+             return; 
+        }
 
         // クリック座標をキャンバス内の座標に変換
         const rect = canvas.getBoundingClientRect();
-        // スケーリングを考慮してクリック座標を取得
+        // タッチイベントの場合はe.touches[0]を使用
+        const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+        const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+        
         const scaleX = canvas.width / rect.width;
-        const clickX = (event.clientX - rect.left) * scaleX;
-        const clickY = (event.clientY - rect.top) * scaleX;
+        const clickX = (clientX - rect.left) * scaleX;
+        const clickY = (clientY - rect.top) * scaleX;
 
-        // どのエリアがクリックされたか判定
         let clickedCol = -1;
         let minDistance = Infinity;
 
-        // 縦線に最も近い列をチェック
         for (let i = 0; i < numColumns; i++) {
             const colX = columnPositions[i];
             const distance = Math.abs(clickX - colX);
@@ -413,49 +668,51 @@
             }
         }
 
-        // 判定が縦線の間隔の半分以内であること
-        const isNearColumn = minDistance < (columnPositions[1] - columnPositions[0]) / 2;
+        const isNearColumn = columnPositions.length > 1 ? minDistance < (columnPositions[1] - columnPositions[0]) / 2 : minDistance < MARGIN_X;
         
-        // ----------------------------------------------------
-        // 1. スタート項目（上部）がクリックされた場合
-        // ----------------------------------------------------
-        if (isNearColumn && clickY >= MARGIN_Y - 50 && clickY <= MARGIN_Y + 50) {
-            const resultCol = tracePath(clickedCol);
-            drawLadder(); // 軌跡を描画して再描画
+        if (!isNearColumn) {
+            if (pathCoordinates.length > 0) {
+                hideMessageBoxAndClearPath();
+            }
+            return;
+        }
 
-            // 結果を表示 (スタート -> ゴール)
-            const resultText = `
-                <div class="text-center">
-                    <p class="text-3xl mb-2 text-white">${startLabels[clickedCol]}</p>
-                    <p class="text-5xl font-extrabold text-yellow-300">の結果は...</p>
-                    <p class="text-6xl mt-4 text-green-400 animate-pulse">${goalLabels[resultCol]}</p>
-                    <p class="text-xl mt-4 text-gray-200">もう一度タップしてリセット</p>
-                </div>
-            `;
-            messageBox.innerHTML = resultText;
-            messageBox.classList.remove('hidden');
+        // ----------------------------------------------------
+        // 1. スタート項目（上部）がクリックされた場合 -> アニメーション開始 (上から下)
+        // ----------------------------------------------------
+        // クリック範囲: MARGIN_Y の上下50px以内
+        if (clickY >= MARGIN_Y - 50 && clickY <= MARGIN_Y + 50) {
+            cancelAnimation(); 
+
+            const { finalCol, path } = calculatePathForward(clickedCol);
+            
+            pathCoordinates = path;
+            currentTrace.from = 'start';
+            currentTrace.startCol = clickedCol;
+            currentTrace.endCol = finalCol;
+
+            // アニメーション開始
+            animationStartTime = null;
+            animationFrameId = requestAnimationFrame(animatePath);
+
         } 
         // ----------------------------------------------------
-        // 2. ゴール項目（下部）がクリックされた場合
+        // 2. ゴール項目（下部）がクリックされた場合 -> アニメーション開始 (下から上)
         // ----------------------------------------------------
-        else if (isNearColumn && clickY >= CANVAS_HEIGHT - MARGIN_Y - 50 && clickY <= CANVAS_HEIGHT - MARGIN_Y + 50) {
-            const startCol = tracePathBackward(clickedCol);
-            drawLadder(); // 軌跡を描画して再描画
-
-            // 結果を表示 (ゴール -> スタート)
-            const resultText = `
-                <div class="text-center">
-                    <p class="text-3xl mb-2 text-green-400">${goalLabels[clickedCol]}</p>
-                    <p class="text-5xl font-extrabold text-yellow-300">に対応するのは...</p>
-                    <p class="text-6xl mt-4 text-white animate-pulse">${startLabels[startCol]}</p>
-                    <p class="text-xl mt-4 text-gray-200">もう一度タップしてリセット</p>
-                </div>
-            `;
-            messageBox.innerHTML = resultText;
-            messageBox.classList.remove('hidden');
-
-        } else {
-            console.log('クリックがスタートまたはゴールの近くにありません。');
+        // クリック範囲: CANVAS_HEIGHT - MARGIN_Y の上下50px以内
+        else if (clickY >= CANVAS_HEIGHT - MARGIN_Y - 50 && clickY <= CANVAS_HEIGHT - MARGIN_Y + 50) {
+            cancelAnimation(); 
+            
+            const { startCol, path } = calculatePathBackward(clickedCol);
+            
+            pathCoordinates = path;
+            currentTrace.from = 'goal';
+            currentTrace.startCol = startCol;
+            currentTrace.endCol = clickedCol;
+            
+            // アニメーション開始
+            animationStartTime = null;
+            animationFrameId = requestAnimationFrame(animatePath);
         }
     }
     
@@ -463,61 +720,55 @@
      * あみだくじを更新（設定変更時）し、描画します。
      */
     function updateLadder() {
-        // 結果画面が表示されていたら、ここで非表示にし、軌跡をクリアする
         hideMessageBoxAndClearPath();
         
         const currentCount = parseInt(columnCountInput.value);
         if (isNaN(currentCount) || currentCount < 3 || currentCount > 10) {
-            // エラー処理の代わりに、メッセージボックスを使用してユーザーに通知
             messageBox.innerHTML = '<p class="text-3xl text-red-500">エラー: 列数は3から10の間で指定してください。</p>';
             messageBox.classList.remove('hidden');
             return;
         }
 
-        // 既存の入力値をStateに保存してから、新しいUIを生成
-        updateLabelsFromInputs();
-        
-        // UIを更新
+        // numColumnsが変更された可能性があるので、まずdynamicInputsを更新し、
+        // その後で新しい入力値に基づいてラベルを更新する。
         generateDynamicInputs();
-        
-        // Stateを更新（再確認）
         updateLabelsFromInputs(); 
 
-        // ロジックを再生成
+        // 梯子の構造を再生成
         generateRungs();
-        
-        // 描画
         drawLadder();
     }
 
     // メッセージボックスを非表示にし、軌跡をクリアして再描画するヘルパー関数
     function hideMessageBoxAndClearPath() {
+        cancelAnimation(); 
+        
         if (messageBox.classList.contains('hidden')) return; 
         
         messageBox.classList.add('hidden');
         
-        // 軌跡をクリアし、あみだくじを再描画
-        pathHistory = [];
+        pathCoordinates = [];
         drawLadder();
     }
 
     // 初期化処理
     document.addEventListener('DOMContentLoaded', () => {
-        setupCanvas();
+        // setupCanvasはDOMのレンダリング後にクライアントサイズを取得
         generateDynamicInputs();
         updateLadder(); // 初期描画
+        setupCanvas(); 
         
         // イベントリスナーの設定
-        columnCountInput.addEventListener('change', generateDynamicInputs);
+        columnCountInput.addEventListener('change', updateLadder); // 変更時に即座に再描画と入力更新
         generateButton.addEventListener('click', updateLadder); 
         
         canvas.addEventListener('click', handleCanvasClick);
         canvas.addEventListener('touchstart', (e) => {
-             // タッチイベントでもクリックと同じ処理を行う
             if (e.touches.length === 1) {
+                e.preventDefault(); 
+                // タッチイベントのデータ構造を模擬
                 handleCanvasClick({
-                    clientX: e.touches[0].clientX,
-                    clientY: e.touches[0].clientY,
+                    touches: e.touches,
                     preventDefault: () => e.preventDefault(),
                     target: e.target
                 });
@@ -528,16 +779,13 @@
         messageBox.addEventListener('click', hideMessageBoxAndClearPath);
         
         messageBox.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // タッチ操作による画面スクロールなどを防ぐ
+            e.preventDefault(); 
             hideMessageBoxAndClearPath();
         });
         
-        // ウィンドウサイズの変更時にキャンバスサイズを調整
-        window.addEventListener('resize', drawLadder);
+        window.addEventListener('resize', setupCanvas); 
     });
 
 </script>
 </body>
 </html>
-
-
