@@ -16,14 +16,21 @@
                         sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
                     },
                     colors: {
-                        // カスタムカラーを定義 ※secondary-orangeをe67e22,third-greenをgreenから変更
-                        'primary-blue': '#3498db',
-                        'secondary-orange': '#101841',
-                        'third-green': '#144da0',
-                        'dark-heading': '#2c3e50',
-                        'teacher-bg': '#34495e',
-                        'contents': '#79a7d9',
-                        'table': '#79a7d9',
+                        // カスタムカラーを定義
+                        'primary': '#3498db', // メインカラー(文字色・枠線)
+                        'secondary': '#0074f5', // 見出し
+                        'third': '#00aef5', // サブ見出し
+                        'button1': '#d1e7ff', // よく使うサイトのボタン背景色
+                        'button1-h': '#b5d5f7', // よく使うサイトのボタン背景色（ホバー時）
+                        'button2': '#b3f3ff', // 便利ツールのボタン背景色
+                        'button2-h': '#7aeaff', // 便利ツールのボタン背景色（ホバー時）
+                        'dark-heading': '#2c3e50', // タイトル・リンク文字色
+                        'teacher-button': '#2ecc71', // 教員モードボタンの背景色
+                        'teacher-button-h': '#27ae60', // 教員モードボタンの背景色（ホバー時）
+                        'teacher': '#34495e', // 教員専用セクションの背景色
+                        'content': '#005ca8', // 目次とボタン
+                        'content-h': '#003d70', // 目次とボタン（ホバー時）
+                        'table': '#0066e6', // 表のヘッダー
                     }
                 }
             }
@@ -33,7 +40,7 @@
 
     <!--
     ==================================================
-    【重要】JavaScript設定まとめ（パスワードと色定義）
+    【重要】JavaScript設定
     ==================================================
     -->
     <script>
@@ -60,12 +67,12 @@
         <!-- 教員モードボタン: 右寄せコンテナ内に配置 -->
         <div class="flex justify-end mb-4">
             <button id="teacher-mode-button" 
-                    class="bg-[#2ecc71] hover:bg-[#27ae60] text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#2ecc71]/50">
+                    class="bg-teacher-button hover:bg-teacher-button-h text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher-button/50">
                 教員モードに切り替える
             </button>
         </div>
 
-        <h1 id="top" class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary-blue pb-3 mb-6">
+        <h1 id="top" class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary pb-3 mb-6">
             久保田の技術部屋
         </h1>
 
@@ -78,39 +85,39 @@
         </div>
 
         <!-- 目次 …目次を作成するときは、h2にidを追加し、idに飛ぶようにする-->
-        <h2 class="bg-contents text-white p-3 mb-4 rounded-lg font-bold text-xl">
+        <h2 class="bg-content text-white p-3 mb-4 rounded-lg font-bold text-xl">
             目次
         </h2>
         <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <a href="#link-list" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                サイト一覧
+            <a href="#link-list" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                外部サイト一覧
             </a>
-            <a href="#tools" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+            <a href="#tools" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 便利ツール
             </a>
-            <a href="#classes" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+            <a href="#classes" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 授業使用サイト
             </a>
-            <a href="#exam" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+            <a href="#exam" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 定期考査対策
             </a>
-            <a href="#skill" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+            <a href="#skill" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 技能関係の評価規準
             </a>
-            <a href="#prints" class="table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+            <a href="#prints" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 授業プリント
             </a>
         </div>
 
         <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <a href="#top" class="fixed bottom-5 right-5 table-of-contents-button bg-secondary-orange hover:bg-orange-600 text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center z-50">
+            <a href="#top" class="fixed bottom-5 right-5 table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center z-50">
                 Topに戻る
             </a>
         </div>
 
         <!-- ==================== ★ 教員専用リンクセクション（初期非表示） ★ ==================== -->
         <div id="teacher-only-links" class="hidden">
-            <h2 class="bg-teacher-bg text-white p-3 mb-4 rounded-lg font-bold text-xl">
+            <h2 class="bg-teacher text-white p-3 mb-4 rounded-lg font-bold text-xl">
                 【教員専用】管理・授業支援サイト
             </h2>
             <ul class="space-y-3">
@@ -121,49 +128,49 @@
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://masuko-akiruno.simple-edu.co.jp/#/dm/sign_in" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://masuko-akiruno.simple-edu.co.jp/#/dm/sign_in" target="_blank" class="text-primary font-bold block">
                         百問繚乱
                         <span class="text-sm text-gray-500 block mt-1">自動採点ツール</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://miraiseed5.benesse.ne.jp/seed/start/" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://miraiseed5.benesse.ne.jp/seed/start/" target="_blank" class="text-primary font-bold block">
                         ミライシード
                         <span class="text-sm text-gray-500 block mt-1">教員・管理者用 意見交換やレポートなど</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://mirai-pf.jp/user/index.html" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://mirai-pf.jp/user/index.html" target="_blank" class="text-primary font-bold block">
                         みらいスクールプラットフォーム
                         <span class="text-sm text-gray-500 block mt-1">道徳用デジタル教科書</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://www.lentrance.com/school/login" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://www.lentrance.com/school/login" target="_blank" class="text-primary font-bold block">
                         Lentrance
                         <span class="text-sm text-gray-500 block mt-1">デジタル教科書</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://sw131.tsho.jp/07jk/gi/" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://sw131.tsho.jp/07jk/gi/" target="_blank" class="text-primary font-bold block">
                         新編 新しい技術・家庭（技術分野）
                         <span class="text-sm text-gray-500 block mt-1">教科書のツール</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://sw91.tsho.jp/07jk/gix/scl/" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://sw91.tsho.jp/07jk/gix/scl/" target="_blank" class="text-primary font-bold block">
                         中学指導書コンテンツライブラリー（技術・家庭）
                         <span class="text-sm text-gray-500 block mt-1">教科書のツール</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://forms.office.com/" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://forms.office.com/" target="_blank" class="text-primary font-bold block">
                         Microsoft Forms
                         <span class="text-sm text-gray-500 block mt-1">アンケート作成・集計</span>
                     </a>
                 </li>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                    <a href="https://www.nhk.or.jp/school/" target="_blank" class="text-primary-blue font-bold block">
+                    <a href="https://www.nhk.or.jp/school/" target="_blank" class="text-primary font-bold block">
                         NHK for School
                         <span class="text-sm text-gray-500 block mt-1">授業用の動画</span>
                     </a>
@@ -175,43 +182,43 @@
         
 
         <!-- ==================== よく使うリンク（グリッドセクション） ==================== -->
-        <h2 id="link-list" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
-            よく使うサイト一覧（外部のサイト）
+        <h2 id="link-list" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+            よく使うサイト一覧（外部サイト）
         </h2>
         
         <!-- グリッドレイアウト: モバイル1列、タブレット2列、デスクトップ3列 -->
         <!-- 追加は、コピーした後にhrefのURLとタイトル、サブタイトルを変更 -->
         <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button1 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button1-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://miraiseed5.benesse.ne.jp/seed/start/5AYEmcdr" target="_blank" class="text-dark-heading font-bold text-lg block">
                     ミライシード
                     <span class="text-sm text-gray-600 block mt-1">※URLをクリックしてエンターを押す</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button1 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button1-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://teams.microsoft.com/" target="_blank" class="text-dark-heading font-bold text-lg block">
                     Microsoft Teams
                     <span class="text-sm text-gray-600 block mt-1">Web版 課題の提出など</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button1 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button1-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://akirunogiga-my.sharepoint.com/my" target="_blank" class="text-dark-heading font-bold text-lg block">
                     Microsoft OneDrive
                     <span class="text-sm text-gray-600 block mt-1">Web版 クラウドファイル</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button1 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button1-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://kaihatuiinkai.jp/time_shift/index.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     タイムシフトカメラ
                     <span class="text-sm text-gray-600 block mt-1">数秒遅れで動画を閲覧</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button1 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button1-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://sushida.net/" target="_blank" class="text-dark-heading font-bold text-lg block">
                     寿司打
                     <span class="text-sm text-gray-600 block mt-1">タイピング練習</span>
@@ -222,55 +229,55 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="tools" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
-            便利ツール（手作りプログラム）
+        <h2 id="tools" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+            便利ツール（久保田手作りプログラム）
         </h2>
 
         <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/timer.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     マルチタイマー
                     <span class="text-sm text-gray-600 block mt-1">4種のタイマー</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/dice.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     サイコロ
                     <span class="text-sm text-gray-600 block mt-1">1～6のランダムな数字</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/roulette.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     ルーレット
                     <span class="text-sm text-gray-600 block mt-1">選択肢を指定できます</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/amida.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     あみだくじ
                     <span class="text-sm text-gray-600 block mt-1">人数、選択肢を指定できます</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/whiteboard.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     ホワイトボード
                     <span class="text-sm text-gray-600 block mt-1">手書きやテキストなどで作成</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/flowchart.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     フローチャート作成
                     <span class="text-sm text-gray-600 block mt-1">手順を示すツール</span>
                 </a>
             </li>
-            <li class="bg-[#d1e7ff] p-5 text-center rounded-xl border-2 border-primary-blue 
-                       hover:bg-[#b5d5f7] hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/regi_Local.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     レジ
                     <span class="text-sm text-gray-600 block mt-1">おままごとせっと</span>
@@ -283,65 +290,68 @@
 
         <!-- ==================== 分類別リスト（通常縦並び） ==================== -->
         
-        <h2 id="classes" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
-            木材加工
+        <h2 id="classes" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+            授業で使用するサイト
         </h2>
+        <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+            木材加工
+        </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a tabindex="-1" class="text-red-500 font-bold block text-lg">
+                <a tabindex="-1" class="text-green-500 font-bold block text-lg">
                     久保田の技術部屋 - 動画ギャラリー
                     <span class="text-sm text-gray-500 block mt-1">木材加工の実習で分からなくなったら閲覧！</span>
                 </a>
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://www.petitcad.com/login" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://www.petitcad.com/login" target="_blank" class="text-primary font-bold block text-lg">
                     プチキャド
                     <span class="text-sm text-gray-500 block mt-1">木材用3D CAD（パスワードは授業中に説明します）</span>
                 </a>
             </li>
         </ul>
 
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
             エネルギー変換
-        </h2>
+        </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://www.tinkercad.com/" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://www.tinkercad.com/" target="_blank" class="text-primary font-bold block text-lg">
                     Tinkercad
                     <span class="text-sm text-gray-500 block mt-1">3D CADと回路のシミュレーション</span>
                 </a>
                 <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://energy-kyoiku.meti.go.jp/balance_game/" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://energy-kyoiku.meti.go.jp/balance_game/" target="_blank" class="text-primary font-bold block text-lg">
                     電力バランスゲーム
                     <span class="text-sm text-gray-500 block mt-1">時間があるときにやってみてください</span>
                 </a>
             </li>
         </ul>
             
-        <h2 class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
             情報
-        </h2>
+        </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a tabindex="-1" class="text-red-500 font-bold block text-lg">
+                <a tabindex="-1" class="text-green-500 font-bold block text-lg">
                     皆さんの作成した作品
                     <span class="text-sm text-gray-500 block mt-1">クリックしたら学年・組・番号を入力</span>
                 </a>
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/HTML_guidance" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/HTML_guidance" target="_blank" class="text-primary font-bold block text-lg">
                     HTMLガイダンス
                     <span class="text-sm text-gray-500 block mt-1">HTMLの授業を行うときに使用します</span>
                 </a>
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://makecode.microbit.org/" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://makecode.microbit.org/" target="_blank" class="text-primary font-bold block text-lg">
                     micro:bit
                     <span class="text-sm text-gray-500 block mt-1">実機のプログラミング</span>
                 </a>
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://scratch.mit.edu/" target="_blank" class="text-primary-blue font-bold block text-lg">
+                <a href="https://scratch.mit.edu/" target="_blank" class="text-primary font-bold block text-lg">
                     Scratch
                     <span class="text-sm text-gray-500 block mt-1">プログラミングのサイト</span>
                 </a>
@@ -351,12 +361,12 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="exam" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="exam" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             定期考査対策
         </h2>
 
         <!-- ==================== 表の挿入 ==================== -->
-        <h3 class="text-xl font-bold text-third-green border-l-4 border-third-green pl-3 mt-6 mb-3">
+        <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
             第4回定期考査 範囲
         </h3>
         <div class="p-4 bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
@@ -370,9 +380,9 @@
                 </thead>
                 <tbody>
                     <tr class="hover:bg-gray-100 transition duration-150">
-                        <td class="p-3 border-b border-gray-200">学習プリントNo.木材-7〜11<br />（下のサイトだと12番までです）<br />＋対策プリント</td>
-                        <td class="p-3 border-b border-gray-200">学習プリントNo.エネ-3〜7<br />＋対策プリント</td>
-                        <td class="p-3 border-b border-gray-200">学習プリントNo.生物-1〜<span style=”color:red;”>3</span><br />＋<span style=”color:red;”>情報-12</span><br />＋対策プリント</td>
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.木材-7〜11<br/>（下のサイトだと12番までです）<br/>＋対策プリント</td>
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.エネ-3〜7<br/>＋対策プリント</td>
+                        <td class="p-3 border-b border-gray-200">学習プリントNo.生物-1〜3<br/>＋情報-12<br/>＋対策プリント</td>
                     </tr>
                 </tbody>
             </table>
@@ -414,7 +424,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="skill" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
+        <h2 id="skill" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             技能関係の評価規準
         </h2>
 
@@ -461,9 +471,23 @@
         <hr class="my-8 border-gray-300">
 
         <!-- ==================== 資料ダウンロードセクション ==================== -->
-        <h2 id="prints" class="text-2xl font-bold text-secondary-orange border-l-4 border-secondary-orange pl-3 mt-8 mb-4">
-            授業プリント閲覧
+        <h2 id="prints" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+            授業プリント
         </h2>
+        <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <a href="#wood" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                木材加工
+            </a>
+            <a href="#biology" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                生物育成
+            </a>
+            <a href="#energy" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                エネルギー変換
+            </a>
+            <a href="#info" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                情報
+            </a>
+        </div>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/ガイダンス/1年ガイダンス.pdf" target="_blank" class="text-red-600 font-bold block text-lg">
@@ -485,12 +509,16 @@
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/ガイダンス/評価・定期考査.pdf" target="_blank" class="text-red-600 font-bold block text-lg">
-                    評価・定期考査について
+                    評価・評定・定期考査について
                     <span class="text-sm text-gray-500 block mt-1">全学年</span>
                 </a>
             </li>
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
+
+            <h3 id="wood" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+                木材加工
+            </h3>
 
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/1.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
@@ -579,6 +607,9 @@
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
 
+            <h3 id="biology" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+                生物育成
+            </h3>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/1.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
                     生物育成-1
@@ -623,6 +654,10 @@
             </li>
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
+
+            <h3 id="energy" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+                エネルギー変換
+            </h3>
 
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/1.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
@@ -698,6 +733,10 @@
             </li>
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
+
+            <h3 id="info" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+                情報
+            </h3>
 
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/情報/1.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
@@ -795,14 +834,14 @@
             <h3 class="text-xl font-bold mb-4 text-dark-heading">教員モード認証</h3>
             <p class="mb-4 text-gray-600">教員モードを有効にするには、パスワードを入力してください。</p>
             <input type="password" id="password-input" placeholder="パスワードを入力" 
-                   class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-primary-blue focus:border-primary-blue">
+                   class="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-primary focus:border-primary">
             <div class="flex justify-end space-x-3">
                 <button id="cancel-button" 
                         class="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition">
                     キャンセル
                 </button>
                 <button id="submit-password-button" 
-                        class="px-4 py-2 bg-primary-blue text-white rounded-lg hover:bg-blue-600 transition">
+                        class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition">
                     認証
                 </button>
             </div>
@@ -920,9 +959,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
