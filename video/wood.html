@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>久保田の技術部屋 動画編</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+
+        :root {
+            font-family: 'Inter', sans-serif;
+        }
+        /* 動画カードのコンテナ。レスポンシブな間隔を設定 */
+        .video-card-container {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            scroll-margin-top: 3rem; /* 目次からのジャンプ時にヘッダーに隠れないよう、上部にマージンを設定 */
+        }
+        .video-card-container:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* 目次リンクのカスタムスタイル - テーマカラーに合わせて調整 */
+        .toc-link {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 8px;
+            background-color: #e0f2fe; /* light blue-100 */
+            color: #1d4ed8; /* blue-700 */
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            border: 1px solid #93c5fd; /* blue-300 */
+        }
+        .toc-link:hover {
+            background-color: #bfdbfe; /* blue-200 on hover */
+            color: #1e40af; /* blue-800 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-color: #60a5fa; /* blue-400 */
+        }
+        .toc-link i {
+            margin-right: 8px;
+            color: #2563eb; /* blue-600 */
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen p-4 md:p-8">
+
+    <header class="text-center py-6 mb-8 bg-blue-700 text-white shadow-lg rounded-xl">
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight">
+            久保田の技術部屋 - 動画ギャラリー
+        </h1>
+        <p class="mt-2 text-sm md:text-base text-blue-200">
+            進捗に応じて動画を視聴し、理解を深めましょう。
+        </p>
+    </header>
+
+    <!-- 視覚的に強化された目次 (Table of Contents) セクション --><nav class="max-w-6xl mx-auto mb-10 bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-xl shadow-lg border border-blue-300">
+        <h3 class="text-2xl font-bold text-blue-800 mb-5 border-b-2 border-blue-400 pb-3 flex items-center">
+            <i class="fas fa-list-alt mr-3 text-blue-600"></i> コンテンツ一覧
+        </h3>
+        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <li><a href="#video-1" class="toc-link"><i class="fas fa-play-circle"></i> けがき</a></li>
+            <li><a href="#video-2" class="toc-link"><i class="fas fa-play-circle"></i> 切断</a></li>
+            <li><a href="#video-3" class="toc-link"><i class="fas fa-play-circle"></i> 部品加工</a></li>
+            <li><a href="#video-4" class="toc-link"><i class="fas fa-play-circle"></i> 組み立て</a></li>
+        </ul>
+    </nav>
+
+    <main class="max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 gap-10">
+
+            <!-- 動画カード 1 -->
+            <div id="video-1" class="video-card-container bg-white p-6 rounded-xl shadow-lg border border-blue-100">
+                <h2 class="text-2xl font-bold mb-4 text-blue-800">けがき</h2>
+                <div class="max-w-4xl mx-auto aspect-video bg-blue-100 rounded-lg overflow-hidden border border-blue-200">
+                    <!-- コピペしたとき： src属性をMP4ファイルのパスに置き換え・動画idの設定（video が2か所ある）、h2とpタグの変更 -->
+                    <video controls class="w-full h-full object-cover rounded-lg" data-video-id="video1">
+                        <source src="https://github.com/Shin-11111111/shin_gijyutu/raw/refs/heads/main/video/けがき.mp4" type="video/mp4">
+                        あなたのブラウザは動画タグをサポートしていません。
+                    </video>
+                </div>
+                <p class="text-base text-blue-700 mt-4">
+                    必要な物：さしがね、（えんぴつ）
+                </p>
+            </div>
+
+            <!-- 動画カード 2 -->
+            <div id="video-2" class="video-card-container bg-white p-6 rounded-xl shadow-lg border border-blue-100">
+                <h2 class="text-2xl font-bold mb-4 text-blue-800">切断</h2>
+                <div class="max-w-4xl mx-auto aspect-video bg-blue-100 rounded-lg overflow-hidden border border-blue-200">
+                    <!-- コピペしたとき： src属性をMP4ファイルのパスに置き換え・動画idの設定（video が2か所ある）、h2とpタグの変更 -->
+                    <video controls class="w-full h-full object-cover rounded-lg" data-video-id="video2">
+                        <source src="https://github.com/Shin-11111111/shin_gijyutu/raw/refs/heads/main/video/切断.mp4" type="video/mp4">
+                        あなたのブラウザは動画タグをサポートしていません。
+                    </video>
+                </div>
+                <p class="text-base text-blue-700 mt-4">
+                    必要な物：のこぎり、（万力または、いす）
+                </p>
+            </div>
+
+            <!-- 動画カード 3 -->
+            <div id="video-3" class="video-card-container bg-white p-6 rounded-xl shadow-lg border border-blue-100">
+                <h2 class="text-2xl font-bold mb-4 text-blue-800">部品加工</h2>
+                <div class="max-w-4xl mx-auto aspect-video bg-blue-100 rounded-lg overflow-hidden border border-blue-200">
+                    <!-- コピペしたとき： src属性をMP4ファイルのパスに置き換え・動画idの設定（video が2か所ある）、h2とpタグの変更 -->
+                    <video controls class="w-full h-full object-cover rounded-lg" data-video-id="video3">
+                        <source src="https://github.com/Shin-11111111/shin_gijyutu/raw/refs/heads/main/video/部品加工.mp4" type="video/mp4">
+                        あなたのブラウザは動画タグをサポートしていません。
+                    </video>
+                </div>
+                <p class="text-base text-blue-700 mt-4">
+                    必要な物：やすり（ドレッサーなど）、（万力）
+                </p>
+            </div>
+            
+            <!-- 動画カード 4 -->
+            <div id="video-4" class="video-card-container bg-white p-6 rounded-xl shadow-lg border border-blue-100">
+                <h2 class="text-2xl font-bold mb-4 text-blue-800">組み立て</h2>
+                <div class="max-w-4xl mx-auto aspect-video bg-blue-100 rounded-lg overflow-hidden border border-blue-200">
+                    <!-- コピペしたとき： src属性をMP4ファイルのパスに置き換え・動画idの設定（video が2か所ある）、h2とpタグの変更 -->
+                    <video controls class="w-full h-full object-cover rounded-lg" data-video-id="video4">
+                        <source src="https://github.com/Shin-11111111/shin_gijyutu/raw/refs/heads/main/video/組み立て.mp4" type="video/mp4">
+                        あなたのブラウザは動画タグをサポートしていません。
+                    </video>
+                </div>
+                <p class="text-base text-blue-700 mt-4">
+                    必要な物：くぎ、げんのう、くぎ締め、きり、ボンド、（補助：垂直クランプ、マスキングテープ）<br/>失敗したとき：くぎ抜き、あて木、（パテ）、ボンドがはみ出た時はぬれ雑巾
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center mt-12 py-4 text-blue-500 text-sm">
+        &copy; 2025 久保田
+    </footer>
+
+    <script>
+        // JavaScript: 別の動画が再生されたときに、他の動画を一時停止する機能を追加します
+        document.addEventListener('DOMContentLoaded', () => {
+            const videos = document.querySelectorAll('video');
+
+            videos.forEach(currentVideo => {
+                currentVideo.addEventListener('play', () => {
+                    videos.forEach(otherVideo => {
+                        // 現在再生している動画以外の動画を一時停止します
+                        if (otherVideo !== currentVideo && !otherVideo.paused) {
+                            otherVideo.pause();
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
