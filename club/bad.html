@@ -55,6 +55,29 @@
             width: 100%;
             height: 100%;
         }
+
+        /* カスタムスタイル: モバイルでの表の文字サイズ調整 */
+        .schedule-table th, .schedule-table td {
+            /* 基本のパディングを維持しつつ、モバイルでは文字サイズを小さく */
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+            font-size: 0.875rem;
+            /* モバイルで日付や結果を潰さないための最小幅設定 */
+            min-width: 100px;
+        }
+        @media (min-width: 640px) {
+            .schedule-table th, .schedule-table td {
+                font-size: 1rem;
+            }
+        }
+        .schedule-table .min-w-custom-sm {
+            min-width: 120px; /* 大会名など少し長めの列の最小幅 */
+        }
+        .schedule-table .min-w-custom-lg {
+             min-width: 250px; /* 場所などかなり長くなる可能性のある列の最小幅 */
+        }
     </style>
 </head>
 <body class="text-gray-800">
@@ -90,20 +113,20 @@
         <div id="alertBanner" class="bg-red-600 text-white p-3 shadow-xl transition-all duration-300 hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between">
                 <p id="alertMessage" class="font-bold text-lg flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
                     【重要】予定表をオンラインで確認できるようになりました
                 </p>
                 <div class="flex items-center space-x-4 mt-2 sm:mt-0">
-                    <a href="announcement" class="underline font-semibold hover:text-blue-100 transition duration-150 whitespace-nowrap">詳細を確認</a>
+                    <a href="#announcement" class="underline font-semibold hover:text-blue-100 transition duration-150 whitespace-nowrap">詳細を確認</a>
                     <button 
-                        onclick="hideAlert()"
+                        id="closeAlertBtn"
                         class="p-1 rounded-full hover:bg-blue-500 transition duration-150"
                         aria-label="閉じる"
                     >
                         <!-- クロスアイコン (X) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
                     </button>
@@ -148,7 +171,6 @@
                     id="pdfViewerFrame" 
                     src="" 
                     class="w-full h-full" 
-                    frameborder="0"
                     title="PDF Document Viewer"
                 >
                 </iframe>
@@ -247,71 +269,72 @@
             <p class="text-gray-600 mb-4">予定は変更になる場合がありますので、最新の情報は配布資料や中体連公式ホームページを御覧ください。</p>
 
             <!-- 修正点: overflow-x-auto を適用したコンテナ内に、全てのテーブルを配置 -->
-            <!-- min-w-full をテーブルに適用することで、モバイルで横スクロールを可能にする -->
             <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
                 <!-- 大会予定のテーブル -->
-                <table class="min-w-full divide-y divide-gray-200">
+                <table class="min-w-full divide-y divide-gray-200 schedule-table">
                     <thead class="bg-blue-600 text-white">
                         <tr>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-4/12">大会名</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">団体戦予選</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">個人戦予選</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">団体・個人戦決勝</th>
+                            <!-- モバイルで文字が潰れないように min-width を適用 -->
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">大会名</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">団体戦予選</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">個人戦予選</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">団体・個人戦決勝</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
                         <!-- 練習日 (通常行) -->
                         <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="px-3 py-3 text-sm text-gray-900">選手権大会</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="text-gray-900">選手権大会</td>
+                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
+                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
+                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
                         </tr>
                         <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="px-3 py-3 text-sm text-gray-900">１，２年生大会（シングルスのみ）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">行われません</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">〇/〇（〇）</td>
+                            <td class="text-gray-900">１，２年生大会（シングルスのみ）</td>
+                            <td class="whitespace-nowrap text-gray-600">行われません</td>
+                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
+                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
                         </tr>
                         <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="px-3 py-3 text-sm text-gray-900">新人大会</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/2（日）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/3（月・祝）</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">11/9（日）</td>
+                            <td class="text-gray-900">新人大会</td>
+                            <td class="whitespace-nowrap text-gray-600">11/2（日）</td>
+                            <td class="whitespace-nowrap text-gray-600">11/3（月・祝）</td>
+                            <td class="whitespace-nowrap text-gray-600">11/9（日）</td>
                         </tr>
                         <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="px-3 py-3 text-sm text-gray-900">冬季大会</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">行われません</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">【1部】12/20（土）21（日）<br/>【2部】2月中</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-600">後日通知</td>
+                            <td class="text-gray-900">冬季大会</td>
+                            <td class="whitespace-nowrap text-gray-600">行われません</td>
+                            <td class="whitespace-nowrap text-gray-600">【1部】12/20（土）21（日）<br/>【2部】2月中</td>
+                            <td class="whitespace-nowrap text-gray-600">後日通知</td>
                         </tr>
                     </tbody>
                 </table>
                 <!-- 大会・イベント日のテーブル (min-w-full を適用) -->
-                <table class="min-w-full divide-y divide-gray-200 mt-6">
+                <table class="min-w-full divide-y divide-gray-200 mt-6 schedule-table">
                     <thead class="bg-blue-600 text-white">
                         <tr>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">日付</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-4/12">活動内容</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">種目</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">時間</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider w-2/12">場所</th>
+                            <!-- モバイルで文字が潰れないように min-width を適用 -->
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">日付</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-lg">活動内容</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">種目</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">時間</th>
+                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-lg">場所</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
                         <tr class="event-row border-l-4 border-red-500 transition duration-150">
-                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold text-red-700">7/23（水）</td>
-                            <td class="px-3 py-3 text-sm text-red-700 font-bold">都 選手権大会</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">団体戦</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">9:30～</td>
-                            <td class="px-3 py-3 text-sm text-red-700">駒沢オリンピック公園総合運動場屋内球技場</td>
+                            <td class="whitespace-nowrap font-bold text-red-700">7/23（水）</td>
+                            <td class="text-red-700 font-bold">都 選手権大会</td>
+                            <td class="whitespace-nowrap text-red-700">団体戦</td>
+                            <td class="whitespace-nowrap text-red-700">9:30～</td>
+                            <td class="text-red-700">駒沢オリンピック公園総合運動場屋内球技場</td>
                         </tr>
                         <tr class="event-row border-l-4 border-red-500 transition duration-150">
-                            <td class="px-3 py-3 whitespace-nowrap text-sm font-bold text-red-700">11/22（土）</td>
-                            <td class="px-3 py-3 text-sm text-red-700 font-bold">都 新人大会</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">団体戦</td>
-                            <td class="px-3 py-3 whitespace-nowrap text-sm text-red-700">9:00～</td>
-                            <td class="px-3 py-3 text-sm text-red-700">葛飾区奥戸総合スポーツセンター</td>
+                            <td class="whitespace-nowrap font-bold text-red-700">11/22（土）</td>
+                            <td class="text-red-700 font-bold">都 新人大会</td>
+                            <td class="whitespace-nowrap text-red-700">団体戦</td>
+                            <td class="whitespace-nowrap text-red-700">9:00～</td>
+                            <td class="text-red-700">葛飾区奥戸総合スポーツセンター</td>
                         </tr>
                     </tbody>
                 </table>
@@ -356,7 +379,7 @@
             <!-- チェックリストをリセットするボタンを追加 -->
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-between">
                 <button 
-                    onclick="resetChecklist()"
+                    id="resetChecklistBtn"
                     class="px-5 py-2 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition duration-150 shadow-md w-full sm:w-auto"
                 >
                     チェックリストをリセット
@@ -599,7 +622,7 @@
 
             if (showAlertBanner) {
                 // バナーを表示し、内容を設定
-                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>${alertConfig.message}`;
                 linkElement.href = alertConfig.link;
@@ -612,7 +635,7 @@
         /**
          * バナーを非表示にする（ユーザーが閉じた場合）
          */
-        window.hideAlert = function() {
+        function hideAlert() {
             const banner = document.getElementById('alertBanner');
             // アニメーションで非表示にする
             banner.style.maxHeight = '0px';
@@ -621,11 +644,29 @@
             banner.style.overflow = 'hidden';
             banner.style.opacity = '0';
         }
+        window.hideAlert = hideAlert;
 
         // 初期化処理
-        window.onload = function() {
+        function initializeOnLoad() {
             // Firebase関連の初期化を削除し、純粋なアプリ初期化関数を呼び出す
-            initializeApp(); 
+            initializeApp();
+            
+            // イベントリスナーを設定
+            const closeBtn = document.getElementById('closeAlertBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', hideAlert);
+            }
+            
+            const resetBtn = document.getElementById('resetChecklistBtn');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetChecklist);
+            }
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeOnLoad);
+        } else {
+            initializeOnLoad();
         }
 
     </script>
