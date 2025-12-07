@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>てこクランク機構 シミュレーション</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* 既存のCSS設定は残しつつ、フォント設定をオーバーライドまたは追加 */
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;margin:0;padding:20px;background:#f7f9fc;color:#111}
+    /* 追加するフォント設定 */
+    :root {
+        font-family: 'Inter', 'Noto Sans JP', sans-serif;
+    }
+    /* 既存のbodyフォント設定を上書きして、より広範囲に適用 */
+    body {
+        font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        margin:0;padding:20px;background:#f7f9fc;color:#111; /* 既存の設定を再定義 */
+    }
+    
+    h1{font-size:24px;margin-bottom:15px;color:#0b69ff;}
+    .container{
+        display:flex;
+        gap:20px;
+        max-width:1200px;
+        margin:0 auto;
+    }
+    .controls{
+        width:360px;
+        padding:20px;
+        background:#fff;
+        border-radius:12px;
+        box-shadow:0 8px 24px rgba(10,20,40,0.1);
+        height:fit-content;
+    }
+    .canvas-wrap{
+        flex:1;
+        min-width:500px;
+        padding:0;
+        background:#fff;border-radius:12px;
+        box-shadow:0 8px 24px rgba(10,20,40,0.08);
+        display:flex;align-items:center;
+        justify-content:center;
+        overflow:hidden;
+    }
+    label{
+        display:block;
+        margin-top:12px;
+        font-size:14px;
+        font-weight:600;
+        color:#333;
+    }
+    input[type=range]{
+      width:100%;
+      margin-top:8px;
+      height: 8px;
+      cursor: pointer;
+      /* Reset default appearance for compatibility */
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background: transparent;
+    }
+    input[type=range]::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 8px;
+        background: var(--link-color, #ccc);
+        border-radius: 4px;
+        border: 1px solid #ddd;
+        transition: background 0.2s;
+    }
+    input[type=range]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        border: 3px solid #fff;
+        height: 18px;width: 18px;
+        border-radius: 50%;
+        background: var(--link-color, #888);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        margin-top: -6px;
+    }
+    input[type=range]::-moz-range-track {
+        width: 100%;
+        height: 8px;
+        background: var(--link-color, #ccc);
+        border-radius: 4px;
+        border: 1px solid #ddd;
+    }
+    input[type=range]::-moz-range-thumb {
+        border: 3px solid #fff;
+        height: 18px;
+        width: 18px;
+        border-radius: 50%;
+        background: var(--link-color, #888);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .row{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        margin-top:20px;
+        padding-top:10px;
+        border-top:1px solid #eee;
+    }
+    .btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        padding:10px 16px;
+        border-radius:8px;
+        border:1px solid #dfe6f0;
+        background:#fff;cursor:pointer;
+        font-weight:500;
+        transition:all 0.2s;
+    }
+    .btn:hover{
+        background:#f0f3f8;
+    }
+    .btn.primary{
+        background:#0b69ff;
+        color:#fff;
+        border-color:transparent;
+    }
+    .btn.primary:hover{
+        background:#0957d5;
+    }
+    
+    /* === リセットボタンの赤色スタイルを追加 (Danger) === */
+    .btn.danger {
+        background: #ef4444; /* Tailwind red-500 */
+        color: #fff;
+        border-color: transparent;
+    }
+    .btn.danger:hover {
+        background: #dc2626; /* Tailwind red-600 */
+    }
+    /* ================================================= */
+
+    svg{background:linear-gradient(180deg,#eef4ff 0%, #ffffff 80%);border-radius:12px;width:100%;height:100%;}
+    .info{font-size:13px;margin-top:15px;color:#444;line-height:1.5;}
+
+    /* エラーメッセージ用クラス */
+    .error-message {
+        display: none; /* 初期状態では非表示 */
+        color: #d90429; /* 赤系の色 */
+        font-weight: 700;
+        margin-top: 10px;
+        padding: 10px;
+        border: 1px solid #d90429;
+        border-radius: 8px;
+        background-color: #fcebeb;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="text-3xl font-extrabold mb-2 text-center">てこクランク機構 シミュレーション</h1>
+  <div class="container">
+    <div class="controls">
+      <div>
+        <div><strong>リンク長さの設定</strong></div>
+        <label>クランク AB : <span id="len1Val">60</span></label>
+        <input id="len1" type="range" min="10" max="300" step="10" value="60">
+        <label>リンク BC : <span id="len2Val">150</span></label>
+        <input id="len2" type="range" min="10" max="300" step="10" value="150">
+        <label>リンク CD : <span id="len3Val">120</span></label>
+        <input id="len3" type="range" min="10" max="300" step="10" value="120">
+        <label>固定リンク DA : <span id="len4Val">180</span></label>
+        <input id="len4" type="range" min="20" max="400" step="10" value="180">
+      </div>
+      <div class="row">
+        <button id="play" class="btn primary">再生</button>
+        <button id="pause" class="btn">一時停止</button>
+        <button id="reset" class="btn danger">リセット</button>
+      </div>
+      <!-- エラーメッセージ表示用のdivを追加 -->
+      <div id="errorMessage" class="error-message"></div>
+      <div class="info">リンクの長さを変更して再生してみましょう。<br/>動きがどのように変わるでしょうか？</div>
+    </div>
+
+    <div class="canvas-wrap">
+      <svg id="svg" width="900" height="600" viewBox="0 0 900 600"></svg>
+    </div>
+  </div>
+
+  <script>
+    const LINK_COLORS = { l1: { line: '#ff4444', joint: '#cc0000' }, l2: { line: '#33cc33', joint: '#009900' }, l3: { line: '#4444ff', joint: '#0000cc' }, l4: { line: '#333333', joint: '#333333' } };
+    const FIXED_SPEED = 1.0;
+    function $(id){ return document.getElementById(id); }
+    const svg = $('svg');
+    const len1 = $('len1'); const len2 = $('len2'); const len3 = $('len3'); const len4 = $('len4');
+    const len1Val = $('len1Val'); const len2Val = $('len2Val'); const len3Val = $('len3Val'); const len4Val = $('len4Val');
+    const playBtn = $('play'); const pauseBtn = $('pause'); const resetBtn = $('reset');
+    
+    // エラーメッセージ要素を取得
+    const errorMessageDiv = $('errorMessage'); 
+
+    function create(tag, attrs){ const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+    // Clear existing SVG children safely to avoid browser warnings about using innerHTML on SVG
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+    const edgesG = create('g',{}); svg.appendChild(edgesG);
+    const edgeElems = [ create('line', {stroke: LINK_COLORS.l1.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l2.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l3.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l4.line, 'stroke-width':4, 'stroke-linecap':'round', 'stroke-dasharray':'8 4'}) ];
+    const jointElems = [ create('circle',{r:10,fill:'#fff',stroke:LINK_COLORS.l4.joint,'stroke-width':3}), create('circle',{r:8,fill:'#fff',stroke:LINK_COLORS.l1.joint,'stroke-width':3}), create('circle',{r:8,fill:'#fff',stroke:LINK_COLORS.l2.joint,'stroke-width':3}), create('circle',{r:10,fill:'#fff',stroke:LINK_COLORS.l4.joint,'stroke-width':3}) ];
+    const labels = [ create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l4.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l1.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l2.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l4.joint}) ];
+    edgeElems.forEach(e=>edgesG.appendChild(e)); jointElems.forEach(j=>edgesG.appendChild(j)); labels.forEach(t=>svg.appendChild(t));
+
+    var A = {x:220,y:300};
+    var l1 = +len1.value; var l2 = +len2.value; var l3 = +len3.value; var l4 = +len4.value;
+    var D = {x: A.x + l4, y: A.y};
+    var theta = 0; var raf = null;
+
+    function setLinkColorsToSliders() { len1.style.setProperty('--link-color', LINK_COLORS.l1.line); len2.style.setProperty('--link-color', LINK_COLORS.l2.line); len3.style.setProperty('--link-color', LINK_COLORS.l3.line); len4.style.setProperty('--link-color', LINK_COLORS.l4.line); }
+    function updateLabels(){ len1Val.textContent = Math.round(len1.value); len2Val.textContent = Math.round(len2.value); len3Val.textContent = Math.round(len3.value); len4Val.textContent = Math.round(len4.value); }
+
+    function circleIntersection(p1,p2,r1,r2){
+      const dx = p2.x - p1.x; const dy = p2.y - p1.y; const d = Math.hypot(dx,dy);
+      if(d < 1e-9) return [];
+      if(d > r1 + r2 + 1e-6) return [];
+      if(d < Math.abs(r1 - r2) - 1e-6) return [];
+      const a = (r1*r1 - r2*r2 + d*d) / (2*d);
+      const h2 = r1*r1 - a*a;
+      const xm = p1.x + a * dx / d; const ym = p1.y + a * dy / d;
+      const h = Math.sqrt(Math.max(0,h2));
+      const rx = -dy * (h/d); const ry = dx * (h/d);
+      return [{x: xm + rx, y: ym + ry}, {x: xm - rx, y: ym - ry}];
+    }
+
+    // C点選択ロジックを変更: 可能であれば常にAD線（A.y）の下側 (y > A.y) を選ぶ
+    function chooseNearest(cands, prev){
+      if(cands.length===0) return null;
+      if(cands.length===1) return cands[0];
+
+      // 1) prev がある場合は連続性を優先して最も近い点をまず候補にする
+      if(prev){
+        let best=cands[0]; let bd=Math.hypot(cands[0].x-prev.x, cands[0].y-prev.y);
+        for(let i=1;i<cands.length;i++){ const d=Math.hypot(cands[i].x-prev.x, cands[i].y-prev.y); if(d<bd){best=cands[i]; bd=d;} }
+        // もし選ばれた点がADの上（y <= A.y）で、もう一方がADの下（y > A.y）なら下側を優先
+        const other = (best === cands[0]) ? cands[1] : cands[0];
+        if(best.y <= A.y && other.y > A.y) return other;
+        return best;
+      }
+
+      // prev が無い（初回/リセット時）は、ADの下側 (y > A.y) を優先して選択
+      const below = cands.filter(c => c.y > A.y);
+      if(below.length === 1) return below[0];
+      if(below.length === 2) return (below[0].y > below[1].y) ? below[0] : below[1];
+
+      // どちらもADの上側なら、Y座標が大きい（より下）方を選ぶ
+      return cands[0].y > cands[1].y ? cands[0] : cands[1];
+    }
+
+    /**
+     * グラーショフの法則の不成立条件をチェックする
+     * l1: AB (クランク), l2: BC (連結), l3: CD (てこ), l4: DA (固定)
+     * @returns {boolean} グラーショフ不成立（クランク回転不可）の場合 true
+     */
+    function checkGrashofFailure(l1, l2, l3, l4) {
+      // リンク長を配列にし、ソートして最短(s)、最長(l)、中間(p, q)を取得
+      const links = [l1, l2, l3, l4].sort((a, b) => a - b);
+      const s = links[0]; // shortest
+      const l = links[3]; // longest
+      const p = links[1]; // intermediate 1
+      const q = links[2]; // intermediate 2
+      
+      // グラーショフの法則が不成立となる条件: s + l > p + q
+      // 許容誤差 1e-6 を追加
+      const isGrashofFailure = (s + l > p + q + 1e-6);
+      
+      return isGrashofFailure;
+    }
+
+    // エラー表示/非表示関数を修正
+    function showError(msg, disablePlay = true){ 
+        console.error('リンク機構が再現不可能: ' + msg); 
+        errorMessageDiv.textContent = 'エラー: ' + msg; 
+        errorMessageDiv.style.display = 'block'; 
+        stop(); 
+        if (disablePlay) {
+            playBtn.disabled = true;
+            playBtn.classList.remove('primary'); // 色をリセット
+        }
+    }
+    function hideError(){
+        errorMessageDiv.textContent = '';
+        errorMessageDiv.style.display = 'none';
+        playBtn.disabled = false; // エラー解消時に再生ボタンを有効化
+    }
+
+
+    function computeAndDraw(){
+      l1 = +len1.value; l2 = +len2.value; l3 = +len3.value; l4 = +len4.value;
+      
+      // 1. グラーショフ不成立条件をチェック
+      if (checkGrashofFailure(l1, l2, l3, l4)) {
+          // グラーショフの法則が不成立の場合
+          showError('リンクの長さが不適切です。クランク機構として回転できません。', true);
+      } else {
+          // グラーショフの法則が成立
+          hideError();
+          
+          // 2. 幾何学的計算を実行
+          D.x = A.x + l4; D.y = A.y;
+          updateLabels();
+
+          const B = { x: A.x + l1 * Math.cos(theta), y: A.y + l1 * Math.sin(theta) };
+          const cands = circleIntersection(B, D, l2, l3);
+          
+          if(cands.length===0){ 
+              // 幾何学的に交点が存在しない（三角形の不等式不成立）
+              showError('BCとCDの交点が存在しません。リンク長が長すぎるか短すぎます。', true); 
+              return; 
+          }
+
+          // 3. 描画と状態更新
+          const C = chooseNearest(cands, computeAndDraw.prevC);
+          computeAndDraw.prevC = C;
+
+          // 描画処理 (既存のコードをそのまま使用)
+          edgeElems[0].setAttribute('x1', A.x); edgeElems[0].setAttribute('y1', A.y); edgeElems[0].setAttribute('x2', B.x); edgeElems[0].setAttribute('y2', B.y);
+          edgeElems[1].setAttribute('x1', B.x); edgeElems[1].setAttribute('y1', B.y); edgeElems[1].setAttribute('x2', C.x); edgeElems[1].setAttribute('y2', C.y);
+          edgeElems[2].setAttribute('x1', C.x); edgeElems[2].setAttribute('y1', C.y); edgeElems[2].setAttribute('x2', D.x); edgeElems[2].setAttribute('y2', D.y);
+          edgeElems[3].setAttribute('x1', D.x); edgeElems[3].setAttribute('y1', D.y); edgeElems[3].setAttribute('x2', A.x); edgeElems[3].setAttribute('y2', A.y);
+
+          jointElems[0].setAttribute('cx', A.x); jointElems[0].setAttribute('cy', A.y);
+          jointElems[1].setAttribute('cx', B.x); jointElems[1].setAttribute('cy', B.y);
+          jointElems[2].setAttribute('cx', C.x); jointElems[2].setAttribute('cy', C.y);
+          jointElems[3].setAttribute('cx', D.x); jointElems[3].setAttribute('cy', D.y);
+
+          jointElems[0].setAttribute('fill', LINK_COLORS.l4.joint);
+          jointElems[3].setAttribute('fill', LINK_COLORS.l4.joint);
+
+          labels[0].setAttribute('x', A.x - 15); labels[0].setAttribute('y', A.y - 15); labels[0].textContent='A';
+          labels[1].setAttribute('x', B.x + 15); labels[1].setAttribute('y', B.y - 15); labels[1].textContent='B';
+          labels[2].setAttribute('x', C.x + 15); labels[2].setAttribute('y', C.y - 15); labels[2].textContent='C';
+          labels[3].setAttribute('x', D.x + 15); labels[3].setAttribute('y', D.y - 15); labels[3].textContent='D';
+      }
+    }
+
+    function step(ts){ theta += FIXED_SPEED * 0.03; computeAndDraw(); raf = requestAnimationFrame(step); }
+    function start(){ 
+        if (playBtn.disabled) return; // 無効化されている場合は再生しない
+        playBtn.classList.remove('primary'); 
+        pauseBtn.classList.add('primary'); 
+        if(!raf) raf = requestAnimationFrame(step); 
+    }
+    function stop(){ 
+        playBtn.classList.add('primary'); 
+        pauseBtn.classList.remove('primary'); 
+        if(raf){ cancelAnimationFrame(raf); raf = null; } 
+    }
+
+    playBtn.addEventListener('click', ()=> start()); 
+    pauseBtn.addEventListener('click', ()=> stop()); 
+    resetBtn.addEventListener('click', ()=>{ 
+        stop(); 
+        theta = 0; 
+        computeAndDraw.prevC = null; 
+        hideError(); 
+        computeAndDraw(); 
+    });
+
+    [len1,len2,len3,len4].forEach(el=>el.addEventListener('input',()=>{ 
+        computeAndDraw.prevC = null; 
+        updateLabels(); 
+        computeAndDraw(); 
+    }));
+
+    let dragging = null;
+    const getSvgCoords = (e) => { const r = svg.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+
+    svg.addEventListener('mousedown', (e)=>{ const {x, y} = getSvgCoords(e); if(Math.hypot(x-A.x,y-A.y) < 20) dragging = 'A'; else if(Math.hypot(x-D.x,y-D.y) < 20) dragging = 'D'; });
+    window.addEventListener('mousemove', (e)=>{ if(!dragging) return; const {x, y} = getSvgCoords(e); if(dragging === 'A'){ A.x = x; A.y = y; D.x = A.x + (+len4.value); D.y = A.y; } else if(dragging === 'D'){ D.x = x; D.y = A.y; const newL4 = Math.round(Math.abs(D.x - A.x)); len4.value = newL4; } computeAndDraw.prevC = null; updateLabels(); computeAndDraw(); });
+    window.addEventListener('mouseup', ()=>{ dragging = null; });
+
+    svg.addEventListener('touchstart', (e) => { e.preventDefault(); const touch = e.touches[0]; const {x, y} = getSvgCoords(touch); if(Math.hypot(x-A.x,y-A.y) < 20) dragging = 'A'; else if(Math.hypot(x-D.x,y-D.y) < 20) dragging = 'D'; }, { passive: false });
+    window.addEventListener('touchmove', (e) => { if(!dragging) return; e.preventDefault(); const touch = e.touches[0]; const {x, y} = getSvgCoords(touch); if(dragging === 'A'){ A.x = x; A.y = y; D.x = A.x + (+len4.value); D.y = A.y; } else if(dragging === 'D'){ D.x = x; D.y = A.y; const newL4 = Math.round(Math.abs(D.x - A.x)); len4.value = newL4; } computeAndDraw.prevC = null; updateLabels(); computeAndDraw(); }, { passive: false });
+    window.addEventListener('touchend', () => { dragging = null; });
+
+    setLinkColorsToSliders(); updateLabels(); computeAndDraw(); start();
+  </script>
+</body>
+</html>
