@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二次元コードリーダー＆ジェネレーター</title>
+    <!-- Tailwind CSSを読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Interフォントの設定 -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+        /* ビデオとキャンバスのスタイル */
+        #video, #canvas {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.75rem; /* rounded-xl */
+        }
+        /* QRコードのバウンディングボックスのスタイル */
+        .highlight-box {
+            position: absolute;
+            border: 5px solid #10b981; /* emerald-500 */
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.8);
+        }
+        /* QRコード生成エリアのスタイル調整 */
+        #qrcodeContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* qrcode.jsの出力要素（CanvasまたはImg）がこの中央に配置されます */
+            min-height: 250px; 
+            padding: 1rem;
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+        /* QRコード生成結果の画像サイズ調整 */
+        #qrcodeContainer canvas, #qrcodeContainer img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        /* タブのアクティブスタイル */
+        .tab-active {
+            border-color: #10b981 !important; /* emerald-500 */
+            color: #10b981 !important;
+        }
+        /* 結果表示エリアのスタイル */
+        .result-box {
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: pre-wrap;
+            background-color: #ecfdf5; /* emerald-50 */
+            border: 1px solid #a7f3d0; /* emerald-200 */
+            color: #065f46; /* emerald-700 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+    <!-- QRコードリーダーライブラリをjsQRに置き換え -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <!-- QRコード生成ライブラリを qrcode.js に置き換え -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body class="p-4 sm:p-6 md:p-8 min-h-screen flex flex-col">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">二次元コードリーダー＆ジェネレーター</h1>
+
+        <!-- タブナビゲーション -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button id="tabReader" class="tab-button flex-1 py-2 px-4 text-center text-sm font-medium border-b-2 border-transparent hover:border-emerald-400 text-gray-600 transition duration-150 ease-in-out tab-active" data-tab="reader">
+                リーダー
+            </button>
+            <button id="tabGenerator" class="tab-button flex-1 py-2 px-4 text-center text-sm font-medium border-b-2 border-transparent hover:border-emerald-400 text-gray-600 transition duration-150 ease-in-out" data-tab="generator">
+                ジェネレーター
+            </button>
+        </div>
+
+        <!-- リーダービュー -->
+        <div id="readerView" class="tab-content">
+            <div class="relative w-full sm:w-3/4 md:w-2/3 mx-auto bg-gray-900 rounded-xl shadow-xl overflow-hidden mb-4">
+                <video id="video" class="w-full h-96 object-contain"></video>
+                <canvas id="canvas" class="hidden w-full h-96 object-contain"></canvas>
+                <!-- QRコード検出時のハイライト表示エリア -->
+                <div id="highlightContainer" class="absolute inset-0"></div>
+                <!-- ビデオスキャン開始前のメッセージオーバーレイ -->
+                <div id="videoOverlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 transition-opacity duration-300">
+                    <p class="text-white text-lg font-semibold" id="overlayMessage">カメラを起動するか、画像をアップロードしてください。</p>
+                </div>
+            </div>
+
+            <!-- ボタンと結果表示エリア -->
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mb-6">
+                <button id="startButton" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                    <span id="startStopText">カメラを起動</span>
+                </button>
+                <button id="fileButton" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                    画像をアップロード
+                </button>
+                <input type="file" id="fileInput" accept="image/*, application/pdf" class="hidden">
+                <button id="stopButton" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out hidden">
+                    カメラを停止
+                </button>
+            </div>
+
+            <div id="resultBox" class="result-box mt-4">
+                ここに読み取り結果が表示されます。
+            </div>
+        </div>
+
+        <!-- ジェネレータービュー -->
+        <div id="generatorView" class="tab-content hidden">
+            <div class="bg-white p-6 rounded-xl shadow-xl">
+                <label for="qrText" class="block text-sm font-medium text-gray-700 mb-2">QRコードに含めるURLまたはテキスト:</label>
+                <textarea id="qrText" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 mb-4" placeholder="サイトのURL または テキスト"></textarea>
+
+                <div class="flex space-x-3 mb-6">
+                    <button id="generateQrBtn" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                        QRコードを生成
+                    </button>
+                    <button id="downloadJpgBtn" disabled class="flex-1 bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out disabled:opacity-50" title="生成後にダウンロード可能になります">
+                        JPEGでダウンロード
+                    </button>
+                </div>
+
+                <div id="qrcodeContainer" class="mt-4">
+                    <!-- 生成されたQRコードが表示されます -->
+                    <p class="text-gray-500">生成ボタンを押すと、ここにQRコードが表示されます。</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ------------------------------------
+        // 1. 変数と要素の取得
+        // ------------------------------------
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const resultBox = document.getElementById('resultBox');
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const fileInput = document.getElementById('fileInput');
+        const fileButton = document.getElementById('fileButton');
+        const highlightContainer = document.getElementById('highlightContainer');
+        const videoOverlay = document.getElementById('videoOverlay');
+        const overlayMessage = document.getElementById('overlayMessage');
+        const startStopText = document.getElementById('startStopText');
+
+        const tabReader = document.getElementById('tabReader');
+        const tabGenerator = document.getElementById('tabGenerator');
+        const readerView = document.getElementById('readerView');
+        const generatorView = document.getElementById('generatorView');
+
+        // Generator elements
+        const qrText = document.getElementById('qrText');
+        const generateQrBtn = document.getElementById('generateQrBtn');
+        const downloadJpgBtn = document.getElementById('downloadJpgBtn');
+        const qrcodeContainer = document.getElementById('qrcodeContainer');
+        
+        // カメラが起動しているか
+        let isCameraActive = false;
+        let animationFrameId = null; // スキャンループ制御用
+
+        // ビデオフレーム処理用のオフスクリーンキャンバス
+        const scanCanvas = document.createElement('canvas');
+        const scanContext = scanCanvas.getContext('2d');
+
+
+        // ------------------------------------
+        // 2. 共通機能: 結果表示
+        // ------------------------------------
+        function displayResult(text, isError = false) {
+            resultBox.textContent = text;
+            if (isError) {
+                resultBox.classList.remove('bg-ecfdf5', 'border-a7f3d0', 'text-065f46');
+                resultBox.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
+            } else {
+                resultBox.classList.add('bg-ecfdf5', 'border-a7f3d0', 'text-065f46');
+                resultBox.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
+            }
+        }
+
+        function clearHighlight() {
+            highlightContainer.innerHTML = '';
+        }
+
+        // ------------------------------------
+        // 3. リーダー機能: カメラ操作とスキャン (jsQRバージョン)
+        // ------------------------------------
+        
+        function scanLoop() {
+            if (!isCameraActive) return;
+
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                // 1. ビデオのサイズに合わせてスキャン用キャンバスを調整
+                scanCanvas.width = video.videoWidth;
+                scanCanvas.height = video.videoHeight;
+                
+                // 2. ビデオフレームをキャンバスに描画
+                scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+                
+                // 3. 画像データを取得
+                const imageData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+
+                // 4. jsQRでスキャン
+                if (typeof jsQR !== 'undefined') {
+                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                        inversionAttempts: "dontInvert", // スキャン速度を考慮
+                    });
+
+                    // 5. 結果処理
+                    if (code) {
+                        // カメラからの読み取りの場合、自動でウェブサイトを開き、カメラを停止する
+                        handleScanResult(code.data, code.location, true);
+                        return; // スキャンを停止したため、次のrequestAnimationFrameは呼ばれない
+                    } else {
+                        // QRコードが検出されなかった場合、ハイライトをクリア
+                        clearHighlight();
+                    }
+                } else {
+                    console.error("jsQRライブラリがロードされていません。");
+                    stopCamera();
+                    displayResult('スキャンライブラリの読み込みに失敗しました。', true);
+                    return;
+                }
+            }
+
+            // 6. 次のフレームを要求
+            animationFrameId = requestAnimationFrame(scanLoop);
+        }
+
+        async function startCamera() {
+            if (isCameraActive) {
+                stopCamera();
+                return;
+            }
+
+            // UIリセット
+            displayResult('カメラを起動中...');
+            clearHighlight();
+            video.classList.remove('hidden');
+            canvas.classList.add('hidden');
+            videoOverlay.classList.remove('hidden');
+            overlayMessage.textContent = 'カメラを起動中...';
+            startButton.disabled = true;
+
+            try {
+                // ユーザーのカメラストリームを取得
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true); // iOS/Safari対応
+                video.play();
+                
+                // ビデオ再生開始を待つ
+                await new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        resolve();
+                    };
+                });
+                
+                isCameraActive = true;
+                startButton.disabled = false;
+                startStopText.textContent = 'スキャン中 (タップで停止)';
+                stopButton.classList.remove('hidden');
+                startButton.classList.remove('bg-emerald-500', 'hover:bg-emerald-600');
+                startButton.classList.add('bg-yellow-600', 'hover:bg-yellow-700');
+                videoOverlay.classList.add('hidden');
+                displayResult('カメラが起動しました。QRコードをかざしてください。');
+                
+                // スキャンループ開始
+                scanLoop(); 
+
+            } catch (err) {
+                // エラー処理（ユーザーが許可しなかった場合など）
+                isCameraActive = false;
+                startButton.disabled = false;
+                startButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+                startButton.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+                startStopText.textContent = 'カメラを起動';
+                stopButton.classList.add('hidden');
+                videoOverlay.classList.remove('hidden');
+                
+                let errorMessage = 'カメラの起動に失敗しました。';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'カメラの使用が許可されませんでした。ブラウザの設定を確認してください。';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = '利用可能なカメラが見つかりませんでした。';
+                }
+                overlayMessage.textContent = 'カメラの起動に失敗しました。';
+                displayResult(errorMessage, true);
+                console.error('カメラ起動エラー:', err);
+            }
+        }
+
+        function stopCamera() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            if (video.srcObject) {
+                // ストリームのトラックを停止して解放
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            isCameraActive = false;
+            
+            // UIを初期状態に戻す
+            startStopText.textContent = 'カメラを起動';
+            startButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+            startButton.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
+            stopButton.classList.add('hidden');
+            videoOverlay.classList.remove('hidden');
+            overlayMessage.textContent = 'カメラを起動するか、画像またはPDFをアップロードしてください。';
+            displayResult('スキャンを停止しました。');
+            clearHighlight();
+        }
+
+        /**
+         * スキャン結果を処理し、URLであれば新しいタブで開く
+         * @param {string} data - 読み取られたデータ
+         * @param {object} location - 読み取られたQRコードの位置情報
+         * @param {boolean} isFromCamera - カメラからの読み取りかどうか
+         */
+        function handleScanResult(data, location, isFromCamera = false) {
+            // 1. 結果表示
+            displayResult(`読み取り結果: ${data}`);
+            
+            // 2. ハイライト表示
+            if (location && location.topLeft) {
+                const points = [
+                    location.topLeft, location.topRight, location.bottomRight, location.bottomLeft,
+                ];
+                
+                const minX = Math.min(...points.map(p => p.x));
+                const minY = Math.min(...points.map(p => p.y));
+                const maxX = Math.max(...points.map(p => p.x));
+                const maxY = Math.max(...points.map(p => p.y));
+
+                const targetElement = isFromCamera ? video : canvas;
+                showHighlight(minX, minY, maxX, maxY, targetElement);
+            }
+            
+            // 3. URLチェックと自動オープン
+            // http:// または https:// で始まる文字列を有効なURLと見なす
+            const urlPattern = /^https?:\/\//i;
+            if (urlPattern.test(data)) {
+                // カメラからのスキャンの場合、連続オープンを防ぐためにカメラを停止する
+                if (isFromCamera) {
+                    stopCamera();
+                }
+
+                displayResult(`読み取り結果: ${data}。新しいタブで開きます...`);
+                // 新しいタブで開く
+                window.open(data, '_blank'); 
+            }
+        }
+
+        // ------------------------------------
+        // 4. リーダー機能: ファイルからのスキャン (jsQRバージョン)
+        // ------------------------------------
+        fileButton.addEventListener('click', () => {
+            if (isCameraActive) {
+                // カメラが起動している場合は一旦停止
+                stopCamera();
+            }
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // UIリセット
+            displayResult('ファイルをスキャン中...');
+            clearHighlight();
+            canvas.classList.remove('hidden');
+            video.classList.add('hidden');
+            videoOverlay.classList.add('hidden');
+            startButton.classList.add('hidden'); 
+
+            try {
+                if (file.type === 'application/pdf') {
+                    displayResult('PDFファイルは直接スキャンできません。PDF内のQRコードを画像として保存してからアップロードしてください。', true);
+                    return;
+                }
+                
+                if (typeof jsQR === 'undefined') {
+                    throw new Error("jsQRライブラリがロードされていません。");
+                }
+
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.src = url;
+
+                // 画像のロードを待つ
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                });
+                
+                // キャンバスに画像を描画
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                
+                // 画像データを取得
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                
+                // jsQRでスキャン
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+                // 成功時
+                if (code) {
+                    // ファイルからの読み取りの場合、isFromCamera=false
+                    handleScanResult(code.data, code.location, false);
+                } else {
+                    displayResult('ファイルからQRコードを検出できませんでした。', true);
+                }
+
+                URL.revokeObjectURL(url); // オブジェクトURLを解放
+
+            } catch (err) {
+                let errorMessage = 'スキャン中にエラーが発生しました。ファイルが破損しているか、ライブラリの読み込みに問題があります。';
+                displayResult(errorMessage, true);
+                console.error('ファイルスキャンエラー:', err);
+            } finally {
+                // ファイル入力のリセットとUIの戻し
+                e.target.value = null;
+                startButton.classList.remove('hidden');
+            }
+        });
+
+
+        // ------------------------------------
+        // 5. リーダー機能: QRコード検出時のハイライト表示
+        // ------------------------------------
+        function showHighlight(minX, minY, maxX, maxY, element) {
+            clearHighlight();
+
+            // ビデオ要素の実際の表示サイズと内側のピクセルサイズを取得
+            const rect = element.getBoundingClientRect();
+            // videoWidth/Heightが取得できない場合は、rectのサイズを使用 (ただし比率計算は不正確になる)
+            const naturalWidth = element.videoWidth || element.width || rect.width;
+            const naturalHeight = element.videoHeight || element.height || rect.height;
+
+            // 要素のサイズと画像のサイズから比率を計算
+            const ratioX = rect.width / naturalWidth;
+            const ratioY = rect.height / naturalHeight;
+
+            // バウンディングボックスの座標を画面上のピクセルに変換
+            const padding = 10;
+            const left = (minX * ratioX) - padding;
+            const top = (minY * ratioY) - padding;
+            const width = ((maxX - minX) * ratioX) + (2 * padding);
+            const height = ((maxY - minY) * ratioY) + (2 * padding);
+
+            const highlight = document.createElement('div');
+            highlight.classList.add('highlight-box');
+            highlight.style.left = `${left}px`;
+            highlight.style.top = `${top}px`;
+            highlight.style.width = `${width}px`;
+            highlight.style.height = `${height}px`;
+            
+            highlightContainer.appendChild(highlight);
+        }
+
+
+        // ------------------------------------
+        // 6. ジェネレーター機能: QRコード生成とダウンロード
+        // ------------------------------------
+
+        // QRコード生成
+        generateQrBtn.addEventListener('click', () => {
+            const text = qrText.value;
+            if (!text) {
+                displayResult('QRコードに含めるURLまたはテキストを入力してください。', true);
+                return;
+            }
+
+            try {
+                // qrcode.jsのコンストラクタが存在するかチェック
+                if (typeof QRCode === 'undefined') {
+                    throw new Error("QRCodeライブラリがロードされていません。");
+                }
+                
+                // 既存のQRコードをクリア
+                qrcodeContainer.innerHTML = '';
+                
+                // qrcode.jsでQRコードを生成 (Canvas要素が qrcodeContainer の子として生成される)
+                new QRCode(qrcodeContainer, {
+                    text: text,
+                    width: 256, 
+                    height: 256,
+                    colorDark : "#000000",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.M 
+                });
+                
+                // UI更新
+                downloadJpgBtn.disabled = false;
+                downloadJpgBtn.classList.remove('bg-gray-400', 'disabled:opacity-50');
+                downloadJpgBtn.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                displayResult('QRコードが正常に生成されました。');
+                
+            } catch(e) {
+                console.error('QR生成に失敗しました:', e);
+                qrcodeContainer.innerHTML = `<p class="text-red-500 p-4">QRコードの生成に失敗しました。入力内容が長すぎるか、ライブラリの読み込みに問題があります。</p>`;
+                downloadJpgBtn.disabled = true;
+                downloadJpgBtn.classList.add('bg-gray-400', 'disabled:opacity-50');
+                downloadJpgBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                displayResult('QRコードの生成に失敗しました。', true);
+            }
+        });
+
+        // JPEGダウンロード
+        downloadJpgBtn.addEventListener('click', () => {
+            // qrcode.jsが生成したCanvas要素を取得
+            const canvas = qrcodeContainer.querySelector('canvas');
+            
+            if (!canvas) {
+                 displayResult('ダウンロードするQRコードが見つかりません。', true);
+                 return;
+            }
+
+            // dataURL を作ってダウンロード
+            // Canvasから直接JPEG形式のデータURLを取得
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.92); // 0.92 = 品質
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `qr-code-${Date.now()}.jpg`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+
+        // ------------------------------------
+        // 7. 初期設定とタブ切り替え
+        // ------------------------------------
+        
+        function switchTab(tabName) {
+            if (tabName === 'reader') {
+                readerView.classList.remove('hidden');
+                generatorView.classList.add('hidden');
+                tabReader.classList.add('tab-active');
+                tabGenerator.classList.remove('tab-active');
+                
+                // リーダービューに戻ったら、カメラボタンを表示
+                startButton.classList.remove('hidden');
+                // カメラが停止していることを確認
+                if (!isCameraActive) {
+                    video.classList.remove('hidden');
+                    canvas.classList.add('hidden');
+                    videoOverlay.classList.remove('hidden');
+                    overlayMessage.textContent = 'カメラを起動するか、画像をアップロードしてください。';
+                    displayResult('カメラを起動するか、画像をアップロードしてください。');
+                }
+            } else if (tabName === 'generator') {
+                readerView.classList.add('hidden');
+                generatorView.classList.remove('hidden');
+                tabReader.classList.remove('tab-active');
+                tabGenerator.classList.add('tab-active');
+
+                // ジェネレータービューに切り替わったらカメラを停止
+                if (isCameraActive) {
+                    stopCamera();
+                }
+                // カメラボタンを非表示
+                startButton.classList.add('hidden'); 
+            }
+        }
+        
+        // イベントリスナーのセットアップ
+        startButton.addEventListener('click', startCamera); // startButtonはstart/stopを兼ねる
+        stopButton.addEventListener('click', stopCamera);
+        tabReader.addEventListener('click', () => switchTab('reader'));
+        tabGenerator.addEventListener('click', () => switchTab('generator'));
+        
+        // ウィンドウリサイズ時にハイライトをクリア
+        window.addEventListener('resize', clearHighlight);
+        
+        window.onload = () => {
+             // ページロード時はリーダービューをデフォルト表示
+             switchTab('reader'); 
+        };
+
+        console.log("QR Code Reader & Generator Initialized.");
+
+    </script>
+</body>
+</html>
