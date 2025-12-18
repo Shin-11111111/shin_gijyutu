@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>技術科 HTMLをマスターしよう！</title>
+  <title>久保田の技術部屋 HTMLマスター編</title>
   <!-- Google Fonts: Interと日本語フォントのフォールバックを設定 -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -117,6 +117,10 @@
     button:hover {
       background-color: #0077cc; /* ホバーで少し濃い青 */
     }
+    button:focus {
+      outline: 3px solid #ffd54f; /* フォーカス可視化 */
+      outline-offset: 2px;
+    }
 
     /* モバイル対応 (480px以下) */
     @media (max-width: 480px) {
@@ -137,15 +141,15 @@
 </head>
 <body>
   <div class="container">
-    <h1>Webページづくりの第一歩！HTMLを学ぼう！</h1>
+    <h1>久保田の技術部屋 - HTMLマスター編</h1>
 
     <section>
-      <h2>１　HTMLとは何だろう？</h2>
+      <h2>１　HTMLとは？</h2>
       <p>
-        HTMLは "HyperText Markup Language" (ハイパーテキスト・マークアップ・ランゲージ) の略で、<strong>Webページを作るため</strong>の基本となる言語です。簡単に言うと、文章の構造や意味をコンピュータに伝えるためのルールです。
+        HTMLは "HyperText Markup Language" (ハイパーテキスト・マークアップ・ランゲージ) の略で、<strong>Webページを作るためのプログラミング言語</strong>です。
       </p>
       <p>
-        これは、私たちが読む文章（テキスト）に「構造」や「意味」を与える役割があります。Webページは、このHTMLを骨組みにして、見た目を整える "CSS" や、動きをつける "JavaScript" など、ほかの言語と組み合わせて作られることがあります。
+        これは、私たちが読む文章に<strong>「構造（箇条書きやリストなど）」</strong>や<strong>「意味（URLなど）」</strong>を与える役割があります。
       </p>
       <p>
         HTMLのファイルは、ブラウザ（ChromeやEdge、Safariなど）が読み込むことで、画面に表示されます。
@@ -153,13 +157,19 @@
     </section>
 
     <section>
-      <h2>２　HTMLの仕組み</h2>
-      <p>HTMLは、Webページで次の３つの重要な役割を果たしています。</p>
-      <ul>
-        <li><strong>タグ</strong>: <strong>表示形式</strong>と<strong>範囲</strong>を指定するもの</li>
-        <li><strong>要素</strong>: Webページを構成する<strong>テキスト情報のかたまり</strong></li>
-        <li><strong>属性</strong>: 個々のタグに特定の性質や動作を与える記述</li>
-      </ul>
+      <h2>２　その他の言語との組み合わせ</h2>
+      <p>
+        Webページは、このHTMLを骨組みにして、<strong>"CSS"</strong>や、<strong>"JavaScript"</strong>などのプログラミング言語と組み合わせて作られることが多いです。
+      </p>
+      <p>
+        <strong>CSS</strong>： Webページのデザインやレイアウトを設定するプログラミング言語です。Webページの見た目を整えることができます。
+      </p>
+      <p>
+        <strong>JavaScript</strong>： Webページに動きを付けることができるプログラミング言語です。スクロールをしたらアニメーションが動いたり、ボタンを押したら画像が変わったりするときに使われます。
+      </p>
+      <p>
+        見やすく、使いやすいWebページを考えて作成しましょう。
+      </p>
     </section>
 
     <section>
@@ -178,7 +188,26 @@
     </section>
 
     <section>
-      <h2>４　実際にコードを書いてみよう！</h2>
+      <h2>４　HTMLの例</h2>
+      <p>以下は、HTML文書の例です。このコードをブラウザで開くと、「こんにちは」という見出しと、「ここをクリック！」というテキストにGoogleのリンクが埋め込まれています。<br><br></p>
+        <pre>&lt;html lang="ja"&gt;
+&lt;body&gt;
+    &lt;h1&gt;こんにちは&lt;/h1&gt;
+    &lt;a href="https://www.google.com"&gt;ここをクリック！&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+      <p><br>上記のコードを実際にブラウザで表示すると、以下のようになります：</p>
+      <iframe srcdoc='&lt;html lang="ja"&gt;
+&lt;body&gt;
+    &lt;h1&gt;こんにちは&lt;/h1&gt;
+    &lt;a href="https://www.google.com"&gt;ここをクリック！&lt;/a&gt;
+&lt;/body&gt;
+&lt;/html&gt;'></iframe>
+
+    </section>
+
+    <section>
+      <h2>５　実際にコードを書いてみよう！</h2>
       <p>下の入力スペースにHTMLコードを書いて、「プレビュー」ボタンを押すと、プレビューエリアに記述したプログラムの結果が表示されます。</p>
       <p>ボタンを押しても<strong>プレビュー画面が変わらない</strong>または<strong>タグも表示されている</strong>場合は、<strong>プログラムが間違っています。</strong> どこが間違っているか確認しましょう</p>
 
@@ -193,18 +222,39 @@
     </section>
     
     <section>
-      <h2>５　これからの授業（作成）の流れ</h2>
-      <p>みなさんに、実際にあったらいいなというwebサイトを作成してもらいます！</p>
+      <h2>６　これからの授業（作成）の流れ</h2>
+      <p>みなさんに、実際にあったらいいなというwebサイトを作成します</p>
       
       <ul>
-        <li>フローチャートを作成</li>
-        <li>AIを使用しながらHTMLを記述 <a href="https://gemini.google.com/app?hl=ja" target="_blank">→ここをクリックするとAIのサイトにとびます(Gemini)</a></li>
-        <li>Teamsに提出 <a href="https://teams.microsoft.com/v2/" target="_blank">→ここをクリックすると提出場所にとびます</a></li>
+        <li>Webサイトの構想</li>
+        <li>AIを使用しながらHTMLを記述</li>
+        <button type="button" onclick="openExternalURL('https://gemini.google.com/app?hl=ja')" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md" aria-label="Gemini のサイトを新しいタブで開く" title="Gemini を新しいタブで開く">
+            サイトに移動（Gemini）
+        </button>
+        <p>製作が終わったらTeamsに提出してください。</p>
+        <button type="button" onclick="openExternalURL('https://teams.microsoft.com/v2/')" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md" aria-label="Teams のサイトを新しいタブで開く" title="Teams を新しいタブで開く">
+            サイトに移動（Teams）
+        </button>
       </ul>
+    </section>
+
+    <section>
+        <h2>７　AIのプロンプトの書き方</h2>
+        <p>AIを使用するときは、<strong>指示の出し方</strong>に注意してください。</p>
+        <p>例：<strong>「Webサイトを作成したいので、HTMLコードを作成してください。<br>HTMLとCSS、JavaScriptは同じファイルとして保存できるようにしてください。<br>Webサイトのテーマは〇〇〇で、条件は…。機能は…。」</strong></p>
+        <p>具体的に指示を出すことで、より良いコードが生成されます。</p>
     </section>
   </div>
 
   <script>
+    /**
+     * 外部サイトを新しいタブで安全に開くヘルパー関数
+     */
+    function openExternalURL(url) {
+      const win = window.open(url, '_blank');
+      if (win) win.opener = null;
+    }
+
     /**
      * ユーザーが入力したHTMLコードをiframe内に表示する関数
      */
