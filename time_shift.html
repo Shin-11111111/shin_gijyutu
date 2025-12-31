@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>タイムシフトカメラ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background-color: #000;
+            color: #f8fafc;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            overflow: hidden;
+            touch-action: none; /* 防止ズーム/スクロール */
+        }
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            /* 初期状態は反転なし */
+            transform: scaleX(1);
+        }
+        /* 横長でスリムなコントロールバー */
+        .controls {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            padding: 0.5rem 2rem;
+            border-radius: 5rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 90%;
+            max-width: 900px; /* 横長に拡張 */
+            z-index: 10;
+            transition: opacity 0.3s, transform 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+        .controls.hidden {
+            opacity: 0;
+            transform: translate(-50%, 40px);
+            pointer-events: none;
+        }
+        .status-badge {
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            background: rgba(239, 68, 68, 0.6);
+            font-weight: bold;
+            font-size: 0.75rem;
+            pointer-events: none;
+            z-index: 5;
+        }
+        /* 操作しやすい太いスライダー */
+        input[type=range] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+            width: 100%;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+        /* スライダーの溝 */
+        input[type=range]::-webkit-slider-runnable-track {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            height: 12px; /* 少し太くしてタップしやすく */
+        }
+        /* スライダーのつまみ */
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            margin-top: -10px; /* 溝の中心に合わせる */
+            background-color: #3b82f6;
+            border-radius: 50%;
+            height: 32px; /* 大きくして掴みやすく */
+            width: 32px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="video-container" id="container">
+        <video id="liveVideo" autoplay playsinline muted style="display:none;"></video>
+        <canvas id="outputCanvas"></canvas>
+        
+        <div id="status" class="status-badge">DELAY REC</div>
+
+        <div class="controls" id="controls">
+            <!-- 再生/停止 -->
+            <button id="toggleBtn" class="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center transition shrink-0 shadow-lg">
+                <span id="toggleIcon" class="text-white text-xl">II</span>
+            </button>
+
+            <!-- スライダー部分（横長） -->
+            <div class="flex flex-col flex-grow">
+                <div class="flex justify-between items-center px-1 mb-1">
+                    <span class="text-[10px] text-gray-300 uppercase font-black tracking-widest">Delay Time</span>
+                    <span id="delayDisplay" class="text-xl font-mono text-blue-400 font-bold">10.0s</span>
+                </div>
+                <!-- デフォルト10秒、最大30秒に設定 -->
+                <input type="range" id="delayRange" min="0.5" max="30" step="0.5" value="10" 
+                    class="w-full">
+            </div>
+
+            <!-- 反転ボタン -->
+            <button id="flipBtn" class="bg-slate-700 hover:bg-slate-600 px-5 py-3 rounded-full text-xs font-bold transition shrink-0 border border-white/10 shadow-lg">
+                鏡像反転
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const liveVideo = document.getElementById('liveVideo');
+        const outputCanvas = document.getElementById('outputCanvas');
+        const ctx = outputCanvas.getContext('2d');
+        const delayRange = document.getElementById('delayRange');
+        const delayDisplay = document.getElementById('delayDisplay');
+        const controls = document.getElementById('controls');
+        const toggleBtn = document.getElementById('toggleBtn');
+        const toggleIcon = document.getElementById('toggleIcon');
+        const flipBtn = document.getElementById('flipBtn');
+        const statusBadge = document.getElementById('status');
+        const container = document.getElementById('container');
+
+        let buffer = [];
+        let isRunning = true;
+        let isFlipped = false;
+
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: "environment",
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }, 
+                    audio: false 
+                });
+                liveVideo.srcObject = stream;
+                liveVideo.onloadedmetadata = () => {
+                    outputCanvas.width = liveVideo.videoWidth;
+                    outputCanvas.height = liveVideo.videoHeight;
+                    // 起動時は黒く塗りつぶす
+                    clearCanvas();
+                    requestAnimationFrame(processFrame);
+                };
+            } catch (err) {
+                console.error("Camera error:", err);
+            }
+        }
+
+        // 画面を黒く塗りつぶす関数
+        function clearCanvas() {
+            ctx.fillStyle = "#000000";
+            ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
+        }
+
+        function processFrame() {
+            if (!isRunning) return;
+
+            createImageBitmap(liveVideo).then(bitmap => {
+                const timestamp = performance.now();
+                buffer.push({ img: bitmap, time: timestamp });
+
+                const delayMs = parseFloat(delayRange.value) * 1000;
+                const targetTime = timestamp - delayMs;
+                
+                // バッファ管理
+                while (buffer.length > 0 && buffer[0].time < targetTime - 100) {
+                    const oldFrame = buffer.shift();
+                    oldFrame.img.close();
+                }
+
+                if (buffer.length > 0 && buffer[0].time <= targetTime + 50) {
+                    // 遅延時間に達している場合のみ描画
+                    ctx.drawImage(buffer[0].img, 0, 0);
+                } else {
+                    // 遅延データが溜まるまでは黒画面
+                    clearCanvas();
+                }
+
+                requestAnimationFrame(processFrame);
+            });
+        }
+
+        delayRange.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            delayDisplay.textContent = val.toFixed(1) + 's';
+        });
+
+        toggleBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); 
+            isRunning = !isRunning;
+            if (isRunning) {
+                toggleIcon.textContent = "II";
+                toggleBtn.classList.replace('bg-green-600', 'bg-blue-600');
+                statusBadge.style.display = "block";
+                // バッファをリセットして再開
+                buffer.forEach(f => f.img.close());
+                buffer = []; 
+                clearCanvas();
+                processFrame();
+            } else {
+                toggleIcon.textContent = "▶";
+                toggleBtn.classList.replace('bg-blue-600', 'bg-green-600');
+                statusBadge.style.display = "none";
+                // 停止時はバッファをクリアし、画面を黒くする
+                buffer.forEach(f => f.img.close());
+                buffer = [];
+                clearCanvas();
+            }
+        });
+
+        flipBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isFlipped = !isFlipped;
+            outputCanvas.style.transform = isFlipped ? "scaleX(-1)" : "scaleX(1)";
+        });
+
+        // 画面タップでコントロールの表示/非表示を切り替え
+        container.addEventListener('click', () => {
+            controls.classList.toggle('hidden');
+        });
+
+        window.onload = initCamera;
+    </script>
+</body>
+</html>
