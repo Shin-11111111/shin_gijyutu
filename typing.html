@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイピング練習（技術科編）</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-pink: #ff00ff;
+            --neon-green: #00ff88;
+            --neon-red: #ff3131;
+        }
+        body {
+            background-color: #0a0a0c;
+            color: #fff;
+            font-family: 'Noto Sans JP', 'JetBrains Mono', monospace;
+            overflow: hidden;
+            user-select: none;
+        }
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .char {
+            display: inline-block;
+            transition: all 0.1s ease;
+            position: relative;
+            color: rgba(255, 255, 255, 0.2);
+        }
+        .char.done {
+            color: var(--neon-green);
+            text-shadow: 0 0 8px var(--neon-green);
+        }
+        .char.next {
+            color: #fff;
+            border-bottom: 2px solid var(--neon-blue);
+            text-shadow: 0 0 5px #fff;
+        }
+        .char.miss {
+            color: var(--neon-red);
+            animation: shake 0.2s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .screen-shake {
+            animation: screen-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes screen-shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+
+        #monster-container {
+            animation: floating 3s ease-in-out infinite;
+            will-change: transform;
+        }
+        .monster-hit {
+            animation: monster-hit-anim 0.1s ease-in-out;
+        }
+        @keyframes monster-hit-anim {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.15) brightness(2); }
+            100% { transform: scale(1) brightness(1); }
+        }
+        .monster-death {
+            animation: monster-death-anim 0.5s ease-out forwards;
+        }
+        @keyframes monster-death-anim {
+            0% { transform: scale(1); opacity: 1; filter: brightness(5); }
+            100% { transform: scale(1.5); opacity: 0; filter: blur(10px); }
+        }
+
+        .damage-popup {
+            position: absolute;
+            color: var(--neon-pink);
+            font-weight: bold;
+            font-family: 'Orbitron';
+            pointer-events: none;
+            animation: damage-float 1.0s ease-out forwards;
+            z-index: 50;
+        }
+        @keyframes damage-float {
+            0% { transform: translateY(0) scale(1.5); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; }
+        }
+
+        /* HP Bars */
+        .hp-bar-container {
+            height: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .hp-bar-fill {
+            height: 100%;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #enemy-hp-fill { background: linear-gradient(90deg, var(--neon-pink), var(--neon-red)); box-shadow: 0 0 10px var(--neon-red); }
+        #player-hp-fill { background: linear-gradient(90deg, #0088ff, var(--neon-blue)); box-shadow: 0 0 10px var(--neon-blue); }
+
+        .combo-text {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(to bottom, #fff, var(--neon-blue));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .combo-animate {
+            animation: combo-pop 1.5s ease-out forwards;
+        }
+        @keyframes combo-pop {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.2); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        #hidden-input {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+            ime-mode: disabled;
+        }
+        
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .btn-neon:hover {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-blue);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        #monster-container {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .monster-shake {
+            animation: monster-shake-anim 0.1s ease-in-out !important;
+        }
+
+        @keyframes monster-shake-anim {
+            0% { transform: translate(0, 0) rotate(0deg); filter: brightness(1) sepia(0); }
+            20% { transform: translate(-8px, 4px) rotate(-6deg); filter: brightness(2) sepia(1) saturate(5) hue-rotate(-50deg); }
+            40% { transform: translate(8px, -4px) rotate(6deg); }
+            60% { transform: translate(-8px, -2px) rotate(-3deg); }
+            80% { transform: translate(8px, 2px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); filter: brightness(1) sepia(0); }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="fixed inset-0 pointer-events-none opacity-20">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[150px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-500 rounded-full blur-[150px]"></div>
+    </div>
+
+    <div id="game-container" class="max-w-4xl w-full px-6 z-10">
+        
+        <!-- Top Stats -->
+        <div class="grid grid-cols-4 gap-4 mb-6 orbitron text-sm">
+            <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-blue-400">
+                <p class="text-[10px] uppercase text-blue-400">Time</p>
+                <p id="timer-display" class="text-xl font-bold">60s</p>
+            </div>
+            <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-green-400">
+                <p class="text-[10px] uppercase text-green-400">Score</p>
+                <p id="score-display" class="text-xl font-bold text-green-400">0</p>
+            </div>
+            <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-purple-400">
+                <p class="text-[10px] uppercase text-purple-400">Accuracy</p>
+                <p id="accuracy-display" class="text-xl font-bold">0%</p>
+            </div>
+            <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-red-400">
+                <p class="text-[10px] uppercase text-red-400">Slayed</p>
+                <p id="slayed-display" class="text-xl font-bold">0</p>
+            </div>
+        </div>
+
+        <!-- Main Battle Arena -->
+        <div class="relative glass-panel rounded-3xl p-8 overflow-hidden min-h-[420px] flex flex-col items-center justify-center">
+            <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center mb-6">
+                <div id="combo-display" class="absolute top-0 combo-text orbitron">0 COMBO!</div>
+                
+                <!-- Enemy Side -->
+                <div id="monster-container" class="w-32 h-32 mb-4 opacity-0 transition-opacity duration-500">
+                    <svg id="monster-svg" viewBox="0 0 100 100" class="w-full h-full">
+                        <rect id="monster-body" x="20" y="20" width="60" height="60" fill="rgba(255,0,255,0.2)" stroke="#ff00ff" stroke-width="2" />
+                        <rect x="30" y="40" width="10" height="5" fill="#ff00ff" />
+                        <rect x="60" y="40" width="10" height="5" fill="#ff00ff" />
+                    </svg>
+                </div>
+                
+                <!-- Enemy HP -->
+                <div id="enemy-hp-container" class="w-64 opacity-0 transition-opacity">
+                    <p class="orbitron text-[8px] text-pink-500 uppercase tracking-widest text-center mb-1">Target HP</p>
+                    <div class="hp-bar-container">
+                        <div id="enemy-hp-fill" class="hp-bar-fill w-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Text Display -->
+            <div id="display-area" class="w-full text-center z-10 flex flex-col items-center">
+                <div id="title-container" class="mb-8">
+                    <h1 class="orbitron text-6xl md:text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
+                        TECH<span class="text-pink-500">-</span>STRIKE
+                    </h1>
+                    <p class="text-blue-400 font-bold tracking-[0.5em] mt-2 text-sm ml-2">久保田の技術部屋<span class="text-pink-500">ー</span>タイピング戦線</p>
+                </div>
+                
+                <div id="ready-msg" class="orbitron text-4xl font-black italic tracking-widest text-white mb-4" style="display: none;">READY?</div>
+                
+                <div id="jp-display" class="text-xl md:text-2xl text-white/50 mb-2 h-8"></div>
+                <div id="roma-display" class="text-3xl md:text-4xl font-bold tracking-[0.1em] orbitron min-h-[3rem]"></div>
+            </div>
+
+            <!-- Player Side Status (Bottom of Display) -->
+            <div id="player-hp-container" class="w-full mt-12 opacity-0 transition-opacity">
+                <div class="flex justify-between items-end mb-1">
+                    <p class="orbitron text-[10px] text-blue-400 font-bold tracking-widest uppercase">Player HP</p>
+                    <p id="player-hp-text" class="orbitron text-[10px] text-blue-400">100%</p>
+                </div>
+                <div class="hp-bar-container">
+                    <div id="player-hp-fill" class="hp-bar-fill w-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" lang="en" />
+
+        <div class="mt-8 flex flex-col items-center gap-4">
+            <button id="start-btn" class="btn-neon px-12 py-3 rounded-full text-lg font-bold orbitron tracking-widest">START MISSION</button>
+            <p id="hint-text" class="text-gray-500 text-xs animate-pulse font-mono uppercase tracking-widest">Press Space or Enter to begin</p>
+        </div>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 hidden items-center justify-center z-[100] p-6">
+        <div class="max-w-md w-full text-center space-y-8 fade-in">
+            <h2 class="text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white/5 p-4 rounded-2xl border border-red-500/30">
+                    <p class="text-red-400 text-[10px] uppercase mb-1">Slayed</p>
+                    <p id="final-slayed" class="text-4xl font-bold">0</p>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl border border-pink-500/30">
+                    <p class="text-pink-400 text-[10px] uppercase mb-1">Total Slayed</p>
+                    <p id="final-keys" class="text-4xl font-bold">0</p>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl border border-blue-500/30">
+                    <p class="text-blue-400 text-[10px] uppercase mb-1">Score</p>
+                    <p id="final-score" class="text-4xl font-bold">0</p>
+                </div>
+                <div class="bg-white/5 p-4 rounded-2xl border border-green-500/30">
+                    <p class="text-green-400 text-[10px] uppercase mb-1">Accuracy</p>
+                    <p id="final-accuracy" class="text-4xl font-bold">0%</p>
+                </div>
+            </div>
+            <button id="retry-btn" class="w-full btn-neon py-5 rounded-2xl text-xl font-bold orbitron">RETRY</button>
+        </div>
+    </div>
+
+    <script>
+        const words = [
+            { jp: "コンピュータ", roma: "konpyu-ta" },
+            { jp: "インターネット", roma: "inta-netto" },
+            { jp: "プログラミング", roma: "puroguramingu" },
+            { jp: "アルゴリズム", roma: "arugorizumu" },
+            { jp: "データ", roma: "de-ta" },
+            { jp: "デジタル", roma: "dejitaru" },
+            { jp: "アナログ", roma: "anarogu" },
+            { jp: "ソフトウェア", roma: "sofutowea" },
+            { jp: "ハードウェア", roma: "ha-dowea" },
+            { jp: "ネットワーク", roma: "nettowa-ku" },
+            { jp: "セキュリティ", roma: "sekyurithi" },
+            { jp: "ログインパスワード", roma: "roguinpasuwa-do" },
+            { jp: "アカウント", roma: "akaunto" },
+            { jp: "ログイン", roma: "roguin" },
+            { jp: "ログアウト", roma: "roguauto" },
+            { jp: "ブラウザ", roma: "burauza" },
+            { jp: "アプリ", roma: "apuri" },
+            { jp: "ウィンドウ", roma: "windou" },
+            { jp: "ビット", roma: "bitto" },
+            { jp: "バイト", roma: "baito" },
+            { jp: "キロバイト", roma: "kirobaito" },
+            { jp: "メガバイト", roma: "megabaito" },
+            { jp: "ギガバイト", roma: "gigabaito" },
+            { jp: "テラバイト", roma: "terabaito" },
+            { jp: "ファイル", roma: "fairu" },
+            { jp: "フォルダ", roma: "foruda" },
+            { jp: "クラウド", roma: "kuraudo" },
+            { jp: "データベース", roma: "de-tabe-su" },
+            { jp: "シミュレーション", roma: "shimyure-syon" },
+            { jp: "フローチャート", roma: "furo-cha-to" },
+            { jp: "条件分岐", roma: "joukenbunki" },
+            { jp: "入力", roma: "nyuuryoku" },
+            { jp: "出力", roma: "shutsuryoku" },
+            { jp: "処理", roma: "shori" },
+            { jp: "変数", roma: "hensuu" },
+            { jp: "著作権", roma: "thosakuken" },
+            { jp: "肖像権", roma: "shouzouken" },
+            { jp: "特許権", roma: "tokkyoken" },
+            { jp: "商標権", roma: "syouhyouken" },
+            { jp: "意匠権", roma: "isyouken" },
+            { jp: "実用新案権", roma: "zituyousinnanken" },
+            { jp: "知的財産権", roma: "titekizaisanken" },
+            { jp: "産業財産権", roma: "sangyouzaisanken" },
+            { jp: "情報モラル", roma: "zyouhoumoraru" },
+            { jp: "ネット依存", roma: "nettoizon" },
+            { jp: "デジタルタトゥー", roma: "dejitarutatwu-" },
+            { jp: "個人情報", roma: "kojinnzyouhou" },
+            { jp: "不正アクセス", roma: "fuseiakusesu" },
+            { jp: "ウイルス", roma: "uirusu" },
+            { jp: "マルウェア", roma: "maruwea" },
+
+            { jp: "SNSの使い方には注意が必要だ!", roma: "snsnotukaikatanihatyuuigahituyouda!" },
+            { jp: "タイピングはやりすぎていませんか?", roma: "taipinguhayarisugiteimasenka?" }
+        ];
+
+
+        let currentWord = {};
+        let currentRomaArray = [];
+        let charIndex = 0;
+        let score = 0;
+        let slayed = 0;
+        let timeLeft = 60;
+        let timer = null;
+        let isPlaying = false;
+        let totalTyped = 0;
+        let missCount = 0;
+        let combo = 0;
+        let playerHp = 100;
+        let highScore = 0;
+        let totalSlayedCount = 0;
+
+        const timerEl = document.getElementById('timer-display');
+        const scoreEl = document.getElementById('score-display');
+        const accuracyEl = document.getElementById('accuracy-display');
+        const slayedEl = document.getElementById('slayed-display');
+        const jpEl = document.getElementById('jp-display');
+        const romaEl = document.getElementById('roma-display');
+        const hiddenInput = document.getElementById('hidden-input');
+        const monsterContainer = document.getElementById('monster-container');
+        const monsterBody = document.getElementById('monster-body');
+        const enemyHpFill = document.getElementById('enemy-hp-fill');
+        const playerHpFill = document.getElementById('player-hp-fill');
+        const playerHpText = document.getElementById('player-hp-text');
+        const comboDisplay = document.getElementById('combo-display');
+        const resultModal = document.getElementById('result-modal');
+        const startBtn = document.getElementById('start-btn');
+        const enemyHpContainer = document.getElementById('enemy-hp-container');
+        const playerHpContainer = document.getElementById('player-hp-container');
+        const readyMsg = document.getElementById('ready-msg');
+
+        const neonColors = ['#00f3ff', '#ff00ff', '#00ff88', '#ffff00', '#ff3131'];
+
+        const titleContainer = document.getElementById('title-container');
+
+        // 短い攻撃音を生成して鳴らす関数
+        function playHitSound() {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = 'square'; // ファミコン風の音
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 音の高さ
+            oscillator.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.1); // 音を下げる
+
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+
+        function initGame() {
+            titleContainer.style.display = 'none';
+            startBtn.style.display = 'none';
+            document.getElementById('hint-text').style.display = 'none';
+
+            monsterContainer.classList.remove('monster-hit', 'monster-shake', 'monster-death');
+            void monsterContainer.offsetWidth;
+            
+            score = 0;
+            slayed = 0;
+            timeLeft = 60;
+            totalTyped = 0;
+            missCount = 0;
+            combo = 0;
+            playerHp = 100;
+            updateStats();
+            updatePlayerHp();
+            
+            readyMsg.style.display = 'block';
+            readyMsg.classList.remove('hidden');
+
+            setTimeout(() => {
+                readyMsg.style.display = 'none'; // READYを消す
+                
+                enemyHpContainer.style.display = 'block';
+                playerHpContainer.style.display = 'block';
+                monsterContainer.style.display = 'block';
+
+                // ゲーム要素を表示
+                enemyHpContainer.style.opacity = '1';
+                playerHpContainer.style.opacity = '1';
+                monsterContainer.style.opacity = '1';
+
+                nextWord();
+                isPlaying = true;
+                hiddenInput.focus();
+
+                // タイマー開始
+                clearInterval(timer);
+                timer = setInterval(() => {
+                    timeLeft--;
+                    timerEl.textContent = timeLeft + "s";
+                    if (timeLeft <= 0) endGame(false);
+                }, 1000);
+            }, 1000);
+        }
+
+        function nextWord() {
+            currentWord = words[Math.floor(Math.random() * words.length)];
+            currentRomaArray = currentWord.roma.split("");
+            charIndex = 0;
+            jpEl.textContent = currentWord.jp;
+            renderRoma();
+            updateEnemyHp();
+            spawnMonster();
+        }
+
+        function renderRoma() {
+            let html = "";
+            for (let i = 0; i < currentRomaArray.length; i++) {
+                let statusClass = "";
+                if (i < charIndex) statusClass = "done";
+                else if (i === charIndex) statusClass = "next";
+                
+                html += `<span class="char ${statusClass}">${currentRomaArray[i]}</span>`;
+            }
+            romaEl.innerHTML = html;
+        }
+
+        function spawnMonster() {
+            monsterContainer.classList.remove('monster-death', 'monster-hit', 'monster-shake');
+            void monsterContainer.offsetWidth;
+            const color = neonColors[Math.floor(Math.random() * neonColors.length)];
+            monsterBody.setAttribute('stroke', color);
+            monsterBody.setAttribute('fill', color + '33');
+            document.querySelectorAll('#monster-svg circle').forEach(c => c.setAttribute('fill', color));
+            document.querySelectorAll('#monster-svg path:not(#monster-body)').forEach(p => p.setAttribute('stroke', color));
+        }
+
+        function updateEnemyHp() {
+            const progress = (charIndex / currentRomaArray.length) * 100;
+            enemyHpFill.style.width = (100 - progress) + "%";
+        }
+
+        function updatePlayerHp() {
+            playerHpFill.style.width = playerHp + "%";
+            playerHpText.textContent = playerHp + "%";
+            if (playerHp < 30) {
+                playerHpFill.style.background = 'var(--neon-red)';
+                playerHpText.style.color = 'var(--neon-red)';
+            } else {
+                playerHpFill.style.background = 'linear-gradient(90deg, #0088ff, var(--neon-blue))';
+                playerHpText.style.color = 'var(--neon-blue)';
+            }
+        }
+
+        function triggerHit(points) {
+            playHitSound();
+            
+            // 1. 一旦クラスを削除
+            monsterContainer.classList.remove('monster-hit', 'monster-shake');
+            
+            // 2. ブラウザに「今の状態を一度描画せよ」と強制（これがないとアニメが再発火しません）
+            void monsterContainer.offsetWidth; 
+            
+            // 3. 再びクラスを追加
+            monsterContainer.classList.add('monster-hit', 'monster-shake');
+
+            // ダメージポップアップの生成
+            const popup = document.createElement('div');
+            popup.className = 'damage-popup';
+            popup.innerText = "+" + points; 
+            popup.style.left = `50%`;
+            popup.style.marginLeft = `${(Math.random() - 0.5) * 100}px`; 
+            popup.style.top = `30%`;
+            document.getElementById('battle-stage').appendChild(popup);
+            setTimeout(() => popup.remove(), 800);
+        }
+
+        function triggerMiss() {
+            document.getElementById('game-container').classList.add('screen-shake');
+            setTimeout(() => document.getElementById('game-container').classList.remove('screen-shake'), 300);
+            
+            const chars = romaEl.querySelectorAll('.char');
+            if (chars[charIndex]) {
+                chars[charIndex].classList.add('miss');
+                setTimeout(() => chars[charIndex].classList.remove('miss'), 200);
+            }
+            
+            playerHp = Math.max(0, playerHp - 5);
+            updatePlayerHp();
+        }
+
+        function showCombo() {
+            // 10コンボごと（10, 20, 30...）かつ 0より大きい場合のみ表示
+            if (combo > 0 && combo % 10 === 0) {
+                comboDisplay.innerText = combo + " COMBO!";
+                comboDisplay.classList.remove('combo-animate');
+                void comboDisplay.offsetWidth; // アニメーションのリセット用
+                comboDisplay.classList.add('combo-animate');
+            }
+        }
+
+        function updateStats() {
+            scoreEl.textContent = score;
+            slayedEl.textContent = slayed;
+            
+            // 正解率の計算ロジック
+            let accuracy = 0;
+            if (totalTyped > 0) {
+                // 1文字以上打っている場合のみ計算
+                accuracy = Math.round(((totalTyped - missCount) / totalTyped) * 100);
+            }
+            
+            accuracyEl.textContent = accuracy + "%";
+        }
+
+        function endGame(isGameOver = false) {
+            isPlaying = false;
+            clearInterval(timer);
+            hiddenInput.blur();
+
+            if (score > highScore) {
+                highScore = score;
+            }
+
+            const resultTitle = resultModal.querySelector('h2');
+
+            // 条件判定：HPが0になった、または1体も倒せなかった場合は失敗
+            if (isGameOver || slayed === 0) {
+                resultTitle.textContent = "MISSION FAILED";
+                resultTitle.style.color = "var(--neon-red)";
+                resultTitle.classList.add('animate-pulse');
+            } else {
+                // 1体以上倒して時間切れになった場合は成功
+                resultTitle.textContent = "MISSION COMPLETE";
+                resultTitle.style.color = "#fff";
+                resultTitle.classList.remove('animate-pulse');
+                // 紙吹雪を飛ばす
+                confetti({ 
+                    particleCount: 150, 
+                    spread: 70, 
+                    origin: { y: 0.6 }, 
+                    colors: neonColors 
+                });
+            }
+
+            // リザルト数値の反映
+            document.getElementById('final-slayed').textContent = slayed;
+            document.getElementById('final-score').textContent = score;
+            document.getElementById('final-accuracy').textContent = accuracyEl.textContent;
+            document.getElementById('final-keys').textContent = totalSlayedCount;
+            
+            resultModal.style.display = 'flex';
+        }
+
+        hiddenInput.addEventListener('input', (e) => {
+            if (!isPlaying) {
+                hiddenInput.value = "";
+                return;
+            }
+
+            let val = e.target.value;
+            if (/[^\x20-\x7E]/.test(val)) {
+                e.target.value = val.replace(/[^\x20-\x7E]/g, "");
+                return;
+            }
+
+            if (val.length === 0) return;
+            const typedChar = val.slice(-1).toLowerCase();
+            totalTyped++;
+
+            let isCorrect = false;
+            let expected = currentRomaArray[charIndex];
+
+            // --- 判定ロジック ---
+            if (typedChar === expected) {
+                isCorrect = true;
+                
+                // 「ん」の制御：nが入力された時の動的補完
+                if (expected === 'n') {
+                    const nextChar = currentRomaArray[charIndex + 1];
+                    const needDoubleN = ['a','i','u','e','o','y','n'];
+
+                    if (nextChar && needDoubleN.includes(nextChar)) {
+                        // 何もしない → nnを待つ
+                    } else {
+                        // nn不要 → 自動でnを補う
+                        if (currentRomaArray[charIndex - 1] !== 'n') {
+                            currentRomaArray.splice(charIndex + 1, 0, 'n');
+                        }
+                    }
+                }
+
+            } else {
+                // --- 特殊入力の互換性対応 ---
+                
+                // 1. 「つ」: tu <-> tsu
+                if (!isCorrect && expected === 'u' && typedChar === 's' && currentRomaArray[charIndex - 1] === 't') {
+                    currentRomaArray.splice(charIndex, 0, 's');
+                    isCorrect = true;
+                } else if (!isCorrect && expected === 's' && typedChar === 'u' && currentRomaArray[charIndex - 1] === 't' && currentRomaArray[charIndex + 1] === 'u') {
+                    currentRomaArray.splice(charIndex, 1);
+                    isCorrect = true;
+                }
+
+                // 2. 「し」: si <-> shi
+                if (!isCorrect && expected === 'i' && typedChar === 'h' && currentRomaArray[charIndex - 1] === 's') {
+                    currentRomaArray.splice(charIndex, 0, 'h');
+                    isCorrect = true;
+                } else if (!isCorrect && expected === 'h' && typedChar === 'i' && currentRomaArray[charIndex - 1] === 's' && currentRomaArray[charIndex + 1] === 'i') {
+                    currentRomaArray.splice(charIndex, 1);
+                    isCorrect = true;
+                }
+
+                // 3. 「ち」: ti <-> chi
+                if (!isCorrect && expected === 'i' && typedChar === 'h' && currentRomaArray[charIndex - 1] === 'c') {
+                    currentRomaArray.splice(charIndex, 0, 'h');
+                    isCorrect = true;
+                } else if (!isCorrect && expected === 'h' && typedChar === 'i' && currentRomaArray[charIndex - 1] === 'c' && currentRomaArray[charIndex + 1] === 'i') {
+                    currentRomaArray.splice(charIndex, 1);
+                    isCorrect = true;
+                } else if (!isCorrect && expected === 'c' && typedChar === 't' && currentRomaArray[charIndex + 1] === 'h' && currentRomaArray[charIndex + 2] === 'i') {
+                    currentRomaArray[charIndex] = 't';
+                    currentRomaArray.splice(charIndex + 1, 1);
+                    isCorrect = true;
+                }
+
+                // 4. 「ふ」: hu <-> fu
+                if (!isCorrect) {
+                    if (expected === 'h' && typedChar === 'f') { currentRomaArray[charIndex] = 'f'; isCorrect = true; }
+                    else if (expected === 'f' && typedChar === 'h') { currentRomaArray[charIndex] = 'h'; isCorrect = true; }
+                }
+
+                // 5. 「じ」: zi <-> ji
+                if (!isCorrect) {
+                    if (expected === 'z' && typedChar === 'j') { currentRomaArray[charIndex] = 'j'; isCorrect = true; }
+                    else if (expected === 'j' && typedChar === 'z') { currentRomaArray[charIndex] = 'z'; isCorrect = true; }
+                }
+
+                // 6. 「ず」: zu <-> du
+                if (!isCorrect && expected === 'z' && typedChar === 'd') {
+                    currentRomaArray[charIndex] = 'd';
+                    isCorrect = true;
+                }
+
+                // 7. 「しゃ・しゅ・しょ」: sya/syu/syo <-> sha/shu/sho
+                if (!isCorrect) {
+                    const prev = currentRomaArray[charIndex - 1];
+                    const next = currentRomaArray[charIndex + 1];
+                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
+
+                    // 先頭が s から始まる場合
+                    if (prev === 's' || expected === 's') {
+                        
+                        // --- 2文字目 (y <-> h) の入れ替え ---
+                        if (isVowel) {
+                            if ((expected === 'y' && typedChar === 'h') || (expected === 'h' && typedChar === 'y')) {
+                                currentRomaArray[charIndex] = typedChar;
+                                isCorrect = true;
+                            }
+                            // sha/sya -> sa (yやhを飛ばして母音を打った場合、y/hを削除)
+                            // ※「さ」と重複しますが、タイピングゲームの救済措置として含める場合
+                            else if ((expected === 'y' || expected === 'h') && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
+                                currentRomaArray.splice(charIndex, 1);
+                                isCorrect = true;
+                            }
+                            // sa -> sya/sha (母音の前にyやhを挿入した場合)
+                            else if (prev === 's' && (expected === 'a' || expected === 'u' || expected === 'o') && (typedChar === 'y' || typedChar === 'h')) {
+                                currentRomaArray.splice(charIndex, 0, typedChar);
+                                isCorrect = true;
+                            }
+                        }
+                    }
+                }
+
+                // 8. 「ちゃ・ちゅ・ちょ」: tya/tyu/tyo <-> cha/chu/cho
+                if (!isCorrect) {
+                    const prev = currentRomaArray[charIndex - 1];
+                    const next = currentRomaArray[charIndex + 1];
+                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
+
+                    // 先頭が t, c のいずれかから始まる場合
+                    if (prev === 't' || prev === 'c' || expected === 't' || expected === 'c') {
+                        
+                        // --- 1文字目 (t <-> c) の入れ替え ---
+                        if ((expected === 't' && typedChar === 'c') || (expected === 'c' && typedChar === 't')) {
+                            currentRomaArray[charIndex] = typedChar;
+                            isCorrect = true;
+                        }
+                        
+                        // --- 2文字目 (y <-> h) の入れ替え、または省略/挿入 ---
+                        else if (isVowel) {
+                            // ty/cy -> ch (yをhに書き換え、かつ先頭をcに補正)
+                            if (expected === 'y' && typedChar === 'h') {
+                                currentRomaArray[charIndex - 1] = 'c';
+                                currentRomaArray[charIndex] = 'h';
+                                isCorrect = true;
+                            }
+                            // ch -> ty (hをyに書き換え、かつ先頭をtに補正)
+                            else if (expected === 'h' && typedChar === 'y') {
+                                currentRomaArray[charIndex - 1] = 't';
+                                currentRomaArray[charIndex] = 'y';
+                                isCorrect = true;
+                            }
+                            // cha/tya -> ca/ta (yやhを飛ばして母音を打った場合)
+                            else if ((expected === 'y' || expected === 'h') && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
+                                currentRomaArray.splice(charIndex, 1);
+                                isCorrect = true;
+                            }
+                            // ca/ta -> cya/tya (母音の前にyを挿入した場合)
+                            else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                                currentRomaArray.splice(charIndex, 0, 'y');
+                                isCorrect = true;
+                            }
+                        }
+                    }
+                }
+
+                // 9. 「じゃ・じゅ・じょ」: jya/jyu/jyo <-> ja/ju/jo <-> zya/zyu/zyo
+                if (!isCorrect) {
+                    const prev = currentRomaArray[charIndex - 1];
+                    const next = currentRomaArray[charIndex + 1];
+                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
+
+                    // 先頭が z, j のいずれかから始まる場合
+                    if (prev === 'z' || prev === 'j' || expected === 'z' || expected === 'j') {
+                        
+                        // --- 1文字目 (z <-> j) の入れ替え ---
+                        if ((expected === 'z' && typedChar === 'j') || (expected === 'j' && typedChar === 'z')) {
+                            currentRomaArray[charIndex] = typedChar;
+                            isCorrect = true;
+                        }
+                        
+                        // --- 2文字目 (y) の省略・挿入判定 ---
+                        else if (isVowel) {
+                            // jya/zya -> ja/za (yを飛ばして母音を打った場合、yを削除)
+                            if (expected === 'y' && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
+                                currentRomaArray.splice(charIndex, 1);
+                                isCorrect = true;
+                            }
+                            // ja -> jya (母音の前にyを挿入した場合、yを割り込ませる)
+                            else if ((prev === 'j' || prev === 'z') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                                currentRomaArray.splice(charIndex, 0, 'y');
+                                isCorrect = true;
+                            }
+                        }
+                    }
+                }
+
+                // 10. 「ん」確定中の救済（nnの2文字目待ちで次の文字が打たれた場合）
+                if (!isCorrect && charIndex > 0 && currentRomaArray[charIndex] === 'n' && currentRomaArray[charIndex - 1] === 'n') {
+                    currentRomaArray.splice(charIndex, 1);
+                    expected = currentRomaArray[charIndex]; 
+                    if (typedChar === expected) isCorrect = true;
+                }
+            }
+
+            if (isCorrect) {
+                charIndex++;
+                const comboBonus = combo * 10;
+                const currentHitScore = 100 + comboBonus;
+                score += currentHitScore;
+                combo++;
+                triggerHit(currentHitScore);
+                showCombo();
+                renderRoma();
+                updateEnemyHp();
+                updateStats();
+
+                if (charIndex === currentRomaArray.length) {
+                    slayed++;
+                    updateStats();
+                    totalSlayedCount++;
+                    // 揺れを止めて、死亡アニメーションに切り替える
+                    monsterContainer.classList.remove('monster-shake', 'monster-hit');
+                    void monsterContainer.offsetWidth; // リセット
+                    monsterContainer.classList.add('monster-death');
+                    setTimeout(nextWord, 400);
+                }
+            } else {
+                // ミス時の処理
+                missCount++;
+                combo = 0;
+                triggerMiss(); // この中でHPが減少します
+                updateStats();
+
+                // HPが0になったら強制終了
+                if (playerHp <= 0) {
+                    endGame(true); // 引数trueでゲームオーバーとして終了
+                    return;
+                }
+            }
+            hiddenInput.value = "";
+        });
+
+        startBtn.addEventListener('click', initGame);
+        document.getElementById('retry-btn').addEventListener('click', () => {
+            resultModal.style.display = 'none';
+            startBtn.style.display = 'block';
+            document.getElementById('hint-text').style.display = 'block';
+            readyMsg.style.display = 'block';
+            enemyHpContainer.style.opacity = '0';
+            playerHpContainer.style.opacity = '0';
+            monsterContainer.style.opacity = '0';
+            jpEl.textContent = "";
+            romaEl.textContent = "";
+            updatePlayerHp();
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                // ゲーム中でない場合のみ判定
+                if (!isPlaying) {
+                    e.preventDefault(); // スクロール等の既定動作を防止
+
+                    // リザルト画面が表示されているなら、リトライ処理を実行
+                    if (resultModal.style.display === 'flex') {
+                        // リトライボタンのクリックイベントと同じ処理を呼び出す
+                        retryGame(); 
+                    } else {
+                        // タイトル画面（スタート前）なら、そのまま開始
+                        initGame();
+                    }
+                }
+            }
+            // ゲーム中のバックスペースやタブの無効化
+            if (isPlaying && (e.code === 'Backspace' || e.code === 'Tab')) e.preventDefault();
+        });
+
+        // リトライボタンの処理を関数として独立させると管理しやすいため、以下のように調整します
+        function retryGame() {
+            // 1. 全てのゲーム進行要素を物理的に隠し、透明度を戻す
+            enemyHpContainer.style.display = 'none';
+            playerHpContainer.style.display = 'none';
+            monsterContainer.style.display = 'none';
+            enemyHpContainer.style.opacity = '0';
+            playerHpContainer.style.opacity = '0';
+            monsterContainer.style.opacity = '0';
+
+            // 2. 画面のレイアウトを初期状態（タイトル画面）に戻す
+            resultModal.style.display = 'none';
+            startBtn.style.display = 'block';
+            document.getElementById('hint-text').style.display = 'block';
+            titleContainer.style.display = ''; // 'block'ではなく空文字にしてCSS定義を優先
+            readyMsg.style.display = 'none';
+
+            // 3. 表示テキストと進捗のリセット
+            jpEl.textContent = "";
+            romaEl.textContent = "";
+            charIndex = 0;
+            
+            // 4. 統計情報の表示を「0」の初期状態に統一
+            timerEl.textContent = "60s";
+            scoreEl.textContent = highScore;
+            accuracyEl.textContent = "0%";
+            slayedEl.textContent = totalSlayedCount;
+
+            // 5. 内部数値データのリセット
+            score = 0;
+            slayed = 0;
+            totalTyped = 0;
+            missCount = 0;
+            combo = 0;
+            playerHp = 100;
+            
+            // 6. プレイヤーHPバーの見た目をリセット
+            updatePlayerHp();
+        }
+
+        // ボタン側のクリックイベントもこの関数を使うように変更
+        document.getElementById('retry-btn').addEventListener('click', retryGame);
+
+        document.addEventListener('click', () => { if (isPlaying) hiddenInput.focus(); });
+    </script>
+</body>
+</html>
