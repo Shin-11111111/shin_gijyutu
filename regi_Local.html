@@ -157,22 +157,34 @@
             <h1 class="text-white text-xl font-extrabold mb-6 px-3 text-center hidden md:block">POS System</h1>
             <!-- タブ切り替えボタン -->
             <button data-tab="pos" onclick="switchTab('pos')" class="tab-button active-tab">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m4 0h6a2 2 0 002-2v-3m-6 3l-6-6m-2 2l4 4m6 0l4-4"></path></svg>
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
                 <span class="hidden md:inline">レジ</span>
                 <span class="inline md:hidden">レジ</span>
             </button>
             <button data-tab="settings" onclick="switchTab('settings')" class="tab-button">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
                 <span class="hidden md:inline">設定</span>
                 <span class="inline md:hidden">設定</span>
             </button>
             <button data-tab="history" onclick="switchTab('history')" class="tab-button">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
                 <span class="hidden md:inline">販売履歴</span>
                 <span class="inline md:hidden">履歴</span>
             </button>
              <button data-tab="calculator" onclick="switchTab('calculator')" class="tab-button">
-                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 16l-4-4m0 0l4-4m-4 4h14m-5 4h5a2 2 0 002-2v-5a2 2 0 00-2-2H9m-4 4h4"></path></svg>
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="16" y1="14" x2="16" y2="18"></line>
+                    <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"></path>
+                </svg>
                 <span class="hidden md:inline">電卓</span>
                 <span class="inline md:hidden">電卓</span>
             </button>
@@ -240,7 +252,7 @@
 
             <!-- 2. 設定タブ (商品編集 + 支払い方法編集) -->
             <div data-content="settings" class="tab-content w-full h-full p-4 md:p-6 flex flex-col hidden overflow-y-auto no-scrollbar">
-                <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">アプリケーション設定・管理</h3>
+                <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">販売設定・管理</h3>
 
                 <!-- 2.1 支払い方法の管理 (新しいセクション) -->
                 <div class="p-4 mb-6 bg-green-50 rounded-xl shadow-md border border-green-200">
@@ -278,7 +290,7 @@
 
                 <!-- 2.3. 編集リスト -->
                 <div class="flex-grow overflow-y-auto no-scrollbar">
-                    <h4 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">すでに追加されている商品の編集</h4>
+                    <h4 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">商品一覧・編集</h4>
                     <ul id="edit-list" class="space-y-3">
                         <!-- ヘッダー -->
                         <li class="hidden md:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-500 border-b pb-2 px-2">
@@ -369,12 +381,6 @@
                     </div>
                 </div>
             </div>
-            
-        </div>
-
-        <!-- ステータスとUser ID表示 -->
-        <div class="w-full bg-white border-t border-gray-200 p-2 flex justify-between text-xs text-gray-500 absolute bottom-0 max-w-[1200px] md:max-w-none">
-            <span id="status-message">初期化中...</span>
         </div>
     </div>
 
@@ -455,21 +461,22 @@
     </div>
 
     <script type="module">
-        // 新しいグローバル変数
-        window.inventory = [];
-        window.cart = [];
-        window.paymentMethods = ["現金", "二次元コード決済", "クレジットカード", "その他"];
-        window.dbInitialized = true; // DB接続は不要なので常にtrueとする
-
-        // ローカルストレージキー
+        // --- 設定・定数 ---
         const LS_KEYS = {
             MENU: 'pos_menu_items',
             HISTORY: 'pos_sales_history',
             PAYMENT: 'pos_payment_methods'
         };
-        // --- ローカルストレージ ユーティリティ関数 ---
 
-        // データをローカルストレージから読み込む
+        // --- 状態管理 ---
+        window.inventory = [];
+        window.cart = [];
+        window.paymentMethods = [];
+        window.currentTotal = 0;
+        window.currentSubtotal = 0;
+        window.currentDiscount = 0;
+
+        // --- ユーティリティ ---
         const loadFromLocalStorage = (key, defaultValue) => {
             try {
                 const data = localStorage.getItem(key);
@@ -480,7 +487,6 @@
             }
         };
 
-        // データをローカルストレージに保存する
         const saveToLocalStorage = (key, data) => {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
@@ -489,11 +495,7 @@
             }
         };
 
-        // 一意なIDを生成するシンプルな関数
         const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 5);
-
-
-        // --- ユーティリティ関数 ---
         const formatYen = (amount) => `¥${Math.max(0, Math.floor(amount)).toLocaleString()}`;
 
         const showMessage = (message) => {
@@ -547,7 +549,7 @@
             grid.innerHTML = '';
 
             if (inventory.length === 0) {
-                grid.innerHTML = '<div class="col-span-full text-center p-8 text-gray-500 bg-white rounded-lg">メニューアイテムがありません。「設定」タブから追加してください。</div>';
+                grid.innerHTML = '<div class="col-span-full text-center p-8 text-gray-500 bg-white rounded-lg">メニューアイテムがありません。<br/>「設定」タブから追加してください。</div>';
                 return;
             }
 
@@ -564,7 +566,7 @@
         };
 
         // --- カートロジック (POSタブ) ---
-        const addToCart = (item) => {
+        window.addToCart = (item) => {
             const existingItem = cart.find(cartItem => cartItem.docId === item.docId); 
             if (existingItem) {
                 existingItem.quantity++;
@@ -580,7 +582,7 @@
             updateCart();
         };
         
-        const updateQuantity = (docId, change) => {
+        window.updateQuantity = (docId, change) => {
             const itemIndex = cart.findIndex(item => item.docId === docId);
             if (itemIndex > -1) {
                 const item = cart[itemIndex];
@@ -611,7 +613,7 @@
             return 0;
         };
 
-        const updateCart = () => {
+        window.updateCart = () => {
             const cartListElement = document.getElementById('cart-list');
             const emptyMessage = document.getElementById('empty-cart-message');
             const paymentButton = document.getElementById('payment-button');
@@ -653,9 +655,9 @@
             const total = subtotal - discountAmount;
 
             document.getElementById('subtotal-display').textContent = formatYen(subtotal);
-            if (discountDisplay) {
-                discountDisplay.textContent = `- ${formatYen(discountAmount)}`;
-            }
+            
+            discountDisplay.textContent = `- ${formatYen(discountAmount)}`;
+            
             document.getElementById('total-display').textContent = formatYen(total);
             
             window.currentTotal = total;
@@ -663,10 +665,10 @@
             window.currentDiscount = discountAmount;
         };
         
-        const clearCart = () => {
+        window.clearCart = () => {
             if (cart.length > 0 || window.currentDiscount > 0) {
                 cart = [];
-                document.getElementById('discount-input').value = '0';
+                document.getElementById('discount-input').value = '';
                 updateCart();
                 showMessage('カートをクリアしました');
             } else {
@@ -676,7 +678,7 @@
 
 
         // --- 支払いモーダルロジック ---
-        const showPaymentModal = () => {
+        window.showPaymentModal = () => {
             if (window.currentTotal <= 0) {
                 showMessage('合計金額が0円以下です。会計できません。');
                 return;
@@ -701,11 +703,11 @@
             modal.classList.remove('hidden');
         };
 
-        const hidePaymentModal = () => {
+        window.hidePaymentModal = () => {
             document.getElementById('payment-modal').classList.add('hidden');
         };
         
-        const updateChange = () => {
+        window.updateChange = () => {
             const inputElement = document.getElementById('cash-tendered-input');
             const changeDisplay = document.getElementById('change-display');
             const total = window.currentTotal;
@@ -718,7 +720,7 @@
             changeDisplay.classList.toggle('text-green-600', change >= 0);
         };
 
-        const updatePaymentStatus = () => {
+        window.updatePaymentStatus = () => {
             const methodSelect = document.getElementById('payment-method-select');
             const tenderedInput = document.getElementById('cash-tendered-input');
             const completeButton = document.getElementById('complete-payment-button');
@@ -741,7 +743,7 @@
             tenderedInput.disabled = (selectedMethod !== "現金");
         };
 
-        const processPayment = () => {
+        window.processPayment = () => {
             const methodSelect = document.getElementById('payment-method-select');
             const tenderedInput = document.getElementById('cash-tendered-input');
             
@@ -905,7 +907,7 @@
         /**
          * 履歴リセットの確認ダイアログを表示
          */
-        const confirmResetHistory = () => {
+        window.confirmResetHistory = () => {
             if (confirm("【警告】 全ての販売履歴を完全に削除します。この操作は元に戻せません。よろしいですか？")) {
                 resetHistory();
             }
@@ -914,7 +916,7 @@
         /**
          * 履歴をリセット（削除）する
          */
-        const resetHistory = () => {
+        window.resetHistory = () => {
             try {
                 // ローカルストレージから履歴キーを削除
                 localStorage.removeItem(LS_KEYS.HISTORY);
@@ -940,14 +942,14 @@
         };
 
         // 今日以外の履歴をリセットするための確認処理
-        const confirmResetOthersResetHistory = () => {
+        window.confirmResetOthersResetHistory = () => {
             if (confirm("【警告】今日以外の販売履歴を完全に削除します。この操作は元に戻せません。よろしいですか？")) {
                 resetOthersResetHistory();
             }
         };
 
         // 今日以外の履歴をリセットする処理
-        const resetOthersResetHistory = () => {
+        window.resetOthersResetHistory = () => {
             try {
                 let historyData = loadFromLocalStorage(LS_KEYS.HISTORY, []);
                 
@@ -973,7 +975,7 @@
         /**
          * 商品別販売個数モーダルを表示
          */
-        const showItemStatsModal = () => {
+        window.showItemStatsModal = () => {
             const modal = document.getElementById('item-stats-modal');
             const tableBody = document.getElementById('item-stats-table-body');
             
@@ -1009,7 +1011,7 @@
         /**
          * 商品別販売個数モーダルを非表示
          */
-        const hideItemStatsModal = () => {
+        window.hideItemStatsModal = () => {
             document.getElementById('item-stats-modal').classList.add('hidden');
         };
 
@@ -1055,7 +1057,7 @@
             });
         };
 
-        const addNewItem = () => {
+        window.addNewItem = () => {
             const nameInput = document.getElementById('new-item-name');
             const priceInput = document.getElementById('new-item-price');
             const name = nameInput.value.trim();
@@ -1080,7 +1082,7 @@
             window.renderMenu(); // メニューの再描画
         };
 
-        const updateItem = (docId) => {
+        window.updateItem = (docId) => {
             const name = document.getElementById(`edit-name-${docId}`).value.trim();
             const price = parseInt(document.getElementById(`edit-price-${docId}`).value, 10);
 
@@ -1101,14 +1103,14 @@
                 saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
 
                 showMessage(`${name} の情報を更新しました`);
-                window.renderMenu(); // POS画面を更新
+                window.renderMenu();
             } catch (e) {
                 console.error("Failed to update item locally:", e);
                 showMessage(`エラー: 商品情報の更新に失敗しました`);
             }
         };
 
-        const toggleItemVisibility = (docId, isChecked) => {
+        window.toggleItemVisibility = (docId, isChecked) => {
             const newHiddenState = !isChecked;
 
             try {
@@ -1123,14 +1125,14 @@
                 
                 const itemName = window.inventory[itemIndex]?.name || '商品';
                 showMessage(`${itemName} を ${newHiddenState ? '非表示' : '表示'}にしました`);
-                window.renderMenu(); // POS画面を更新
+                window.renderMenu();
             } catch (e) {
                 console.error("Failed to toggle visibility locally:", e);
                 showMessage(`エラー: 表示設定の更新に失敗しました`);
             }
         };
 
-        const deleteItem = (docId, itemName) => {
+        window.deleteItem = (docId, itemName) => {
             if (!confirm(`本当に「${itemName}」をメニューから削除しますか？`)) { 
                 return;
             }
@@ -1145,7 +1147,7 @@
                     saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
                     showMessage(`${itemName} を削除しました`);
                     window.renderEditList(); // 編集リストを更新
-                    window.renderMenu(); // POS画面を更新
+                    window.renderMenu();
                 } else {
                     showMessage(`エラー: ${itemName}が見つかりませんでした`);
                 }
@@ -1183,7 +1185,7 @@
             }
         };
 
-        const addPaymentMethod = () => {
+        window.addPaymentMethod = () => {
             const nameInput = document.getElementById('new-payment-method-name');
             const newName = nameInput.value.trim();
 
@@ -1208,7 +1210,7 @@
             updatePaymentStatus(); // モーダルの状態を更新
         };
 
-        const deletePaymentMethod = (methodName) => {
+        window.deletePaymentMethod = (methodName) => {
             if (!confirm(`本当に「${methodName}」を削除しますか？`)) { 
                 return;
             }
@@ -1255,7 +1257,7 @@
             return num.toString();
         }
 
-        const calcAction = (type, value) => {
+        window.calcAction = (type, value) => {
             switch(type) {
                 case 'clear':
                     currentDisplay = '0';
@@ -1333,59 +1335,35 @@
         
         window.fetchData = () => {
             // 1. メニューアイテム
-            window.inventory = loadFromLocalStorage(LS_KEYS.MENU, []);
-            if (window.inventory.length === 0) {
-                window.inventory = [
-                    { docId: generateId(), name: "クレープ", price: 300, isHidden: false },
-                    { docId: generateId(), name: "サイダー", price: 250, isHidden: false },
-                    { docId: generateId(), name: "アイス", price: 450, isHidden: false }
-                ];
-                saveToLocalStorage(LS_KEYS.MENU, window.inventory);
-            }
+            window.initApp = () => {
+            // 1. データの読み込み
+            window.inventory = loadFromLocalStorage(LS_KEYS.MENU, [
+                { docId: generateId(), name: "クレープ", price: 300, isHidden: false },
+                { docId: generateId(), name: "サイダー", price: 250, isHidden: false },
+                { docId: generateId(), name: "アイス", price: 450, isHidden: false }
+            ]);
             
-            // 2. 支払い方法
             window.paymentMethods = loadFromLocalStorage(LS_KEYS.PAYMENT, ["現金", "二次元コード決済", "クレジットカード"]);
-            
-            // 描画をトリガー
+
+            // 2. 初回描画
             window.renderMenu();
-            window.renderEditList();
-            window.renderPaymentEditSection();
-            document.getElementById('status-message').textContent = 'ローカルストレージで動作中 (準備完了)';
+            window.updateCart();
+            
+            // 3. 初期タブの設定
+            window.switchTab('pos');
         };
 
-        const setupListeners = () => {
+        // ページ読み込み完了時に実行
+        window.addEventListener('load', window.initApp);
+        };
+
+        window.fetchData();     // データの読み込み
+        window.switchTab('pos'); // 最初の画面を表示
+
+        window.setupListeners = () => {
             window.fetchData(); 
             updateCart();
         };
-
-        window.addEventListener('load', setupListeners); // 修正: ロード時に setupListeners を実行
-        
-        // グローバルに公開
-        window.switchTab = switchTab;
-        window.addToCart = addToCart;
-        window.updateQuantity = updateQuantity;
-        window.clearCart = clearCart;
-        window.showPaymentModal = showPaymentModal;
-        window.hidePaymentModal = hidePaymentModal;
-        window.processPayment = processPayment;
-        window.renderHistoryList = renderHistoryList;
-        window.updateChange = updateChange;
-        window.updatePaymentStatus = updatePaymentStatus;
-        window.addNewItem = addNewItem;
-        window.updateItem = updateItem;
-        window.toggleItemVisibility = toggleItemVisibility;
-        window.deleteItem = deleteItem;
-        window.addPaymentMethod = addPaymentMethod;
-        window.deletePaymentMethod = deletePaymentMethod;
-        window.calcAction = calcAction;
-        window.renderPaymentEditSection = renderPaymentEditSection;
-        window.confirmResetHistory = confirmResetHistory;
-        window.resetHistory = resetHistory;
-        window.showItemStatsModal = showItemStatsModal;
-        window.hideItemStatsModal = hideItemStatsModal;
-        window.updateCart = updateCart;
-        window.confirmResetOthersResetHistory = confirmResetOthersResetHistory;
-        window.resetOthersResetHistory = resetOthersResetHistory;
     </script>
 </body>
 </html>
