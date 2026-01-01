@@ -17,15 +17,6 @@
         html {
             scroll-behavior: smooth;
         }
-        /* アンカーリンクで移動した際に、固定ヘッダーでコンテンツが隠れるのを防止 */
-        #announcement, 
-        #pdf-viewer, 
-        #results, /* IDの位置を更新 */
-        #schedule, 
-        #checklist {
-            /* 固定ヘッダー(タイトル, ナビ, バナー)の合計の高さより少し大きく設定 */
-            scroll-margin-top: 10rem; 
-        }
 
         /* 大会やイベント行のスタイル */
         .event-row {
@@ -56,26 +47,43 @@
             height: 100%;
         }
 
-        /* カスタムスタイル: モバイルでの表の文字サイズ調整 */
+        .section-anchor {
+            scroll-margin-top: 160rem;
+        }
+        @media (max-width: 640px) {
+            .section-anchor {
+                scroll-margin-top: 140px;
+            }
+        }
+
         .schedule-table th, .schedule-table td {
-            /* 基本のパディングを維持しつつ、モバイルでは文字サイズを小さく */
-            padding-left: 0.75rem;
-            padding-right: 0.75rem;
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-            font-size: 0.875rem;
-            /* モバイルで日付や結果を潰さないための最小幅設定 */
-            min-width: 100px;
+            padding: 0.75rem 0.5rem;
+            font-size: 0.75rem;
+            line-height: 1.25;
         }
         @media (min-width: 640px) {
             .schedule-table th, .schedule-table td {
-                font-size: 1rem;
+                padding: 0.75rem 1rem;
+                font-size: 0.9375rem;
             }
         }
-        .schedule-table .min-w-custom-sm {
+
+        .col-name { min-width: 140px; }      /* 大会名 */
+        .col-date { min-width: 100px; }      /* 日付・予選日 */
+        .col-content { min-width: 180px; }   /* 活動内容 */
+        .col-place { min-width: 200px; }     /* 場所 */
+
+        .scroll-hint {
+            background-image: linear-gradient(to right, white, rgba(255,255,255,0));
+            background-position: left center;
+            background-repeat: no-repeat;
+            background-size: 20px 100%;
+        }
+
+        .min-w-custom-sm {
             min-width: 120px; /* 大会名など少し長めの列の最小幅 */
         }
-        .schedule-table .min-w-custom-lg {
+        .min-w-custom-lg {
              min-width: 250px; /* 場所などかなり長くなる可能性のある列の最小幅 */
         }
     </style>
@@ -100,7 +108,7 @@
             <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 py-2">
                 <!-- ナビゲーションの順番を更新 -->
                 <a href="#announcement" class="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">お知らせ</a>
-                <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">月予定</a>
+                <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">予定</a>
                 <a href="#results" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会結果</a>
                 <a href="#schedule" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会予定</a>
                 <a href="#checklist" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">持ち物チェック</a>
@@ -108,7 +116,7 @@
         </div>
     </nav>
     
-    <!-- 【重要】予定変更のお知らせバナー -->
+    <!-- お知らせバナー -->
     <div id="alertBannerContainer" class="sticky top-[160px] md:top-[116px] z-10 transition-all duration-300">
         <div id="alertBanner" class="bg-red-600 text-white p-3 shadow-xl transition-all duration-300 hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between">
@@ -132,38 +140,35 @@
             </div>
         </div>
     </div>
-    <!-- /【重要】お知らせバナー -->
-
 
     <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
-
-        <!-- お知らせ -->
-        <section id="announcement" class="mb-4 p-6 bg-white rounded-xl shadow-lg">
+        <!-------------------- お知らせ -------------------->
+        <section id="announcement" class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg">
             <!-- 赤系 -->
             <h2 class="text-3xl font-bold text-red-700 mb-4 border-b-2 border-red-300 pb-2">
                 お知らせ
             </h2>
-            <p class="text-gray-700">予定表をオンラインで確認できるようになりました。ブックマークに登録すれば、いつでも予定表を確認することができます。ぜひ御活用ください！<br/><br/>【11/30～】体力向上委員会発足します！<br/>土・日・祝の練習前30分でランニングトレーニングを実施します！<br/>ぜひ参加してください！<br/><br/>今年もありがとうございました。来年もよろしくお願いします。</p>
+            <p class="text-gray-700">
+                予定表をオンラインで確認できるようになりました。ブックマークに登録すれば、いつでも予定表を確認することができます。ぜひ御活用ください！<br/><br/>
+                【11/30～2月頃(予定)】体力向上委員会発足します！<br/>土・日・祝の練習前30分でランニングトレーニングを実施します！<br/>ぜひ参加してください！<br/><br/>
+                今年もどうぞよろしくお願いします。<br/>冬季大会2部は2月1日～行われます
+            </p>
         </section>
 
-        <!-- PDF資料閲覧セクション (位置を維持) -->
-        <section id="pdf-viewer" class="mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+        <!-- PDF資料閲覧セクション -->
+        <section id="pdf-viewer" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
             <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
-                部活動 月予定表
+                予定表
             </h2>
             
             <p class="text-gray-600 mb-4">以下のボタンから閲覧したい月の予定表を選択してください。下に予定表が表示されます。</p>
 
-            <!-- PDF選択ボタンのコンテナ -->
-            <div class="flex flex-wrap gap-3 mb-6" id="pdfSelectorContainer">
-                <!-- JavaScriptによりボタンがここに挿入 -->
-            </div>
+            <!-- PDF選択ボタン -->
+            <div class="flex flex-wrap gap-3 mb-6" id="pdfSelectorContainer"></div>
 
-            <div id="pdfMessage" class="text-red-500 mb-4 font-medium hidden"></div>
-
-            <!-- PDFビューアを埋め込むためのコンテナ -->
+            <!-- PDFビューアを埋め込むため -->
             <div id="pdfViewerContainer" class="mt-8 border-4 border-blue-600 rounded-xl overflow-hidden shadow-2xl bg-gray-100">
                 <iframe 
                     id="pdfViewerFrame" 
@@ -176,14 +181,14 @@
             
             <!-- ダウンロードリンク -->
             <p class="p-4 text-center text-gray-600 bg-blue-50 rounded-lg mt-4 border border-blue-200">
-                <span class="font-bold">PDFを直接閲覧できない場合：</span>
+                <span class="font-bold">PDFを直接閲覧できない場合:</span>
                 <a id="pdfDownloadLink" href="#" target="_blank" class="text-blue-600 underline font-bold hover:text-blue-800 transition duration-150">現在選択中のPDFを新しいタブで開きます</a>
             </p>
             <p class="mt-4 text-sm text-gray-500">※資料が表示されない場合は、上記のリンクを御利用ください。</p>
         </section>
 
-        <!-- 大会結果セクション (位置を移動) -->
-        <section id="results" class="mb-12 p-6 bg-white rounded-xl shadow-lg border-2 border-red-400">
+        <!-- 大会結果セクション -->
+        <section id="results" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border-2 border-red-400">
             <h2 class="text-3xl font-bold text-red-700 mb-6 border-b-2 border-red-300 pb-2">
                 大会結果・実績
             </h2>
@@ -228,7 +233,7 @@
                     <!-- 詳細 -->
                     <div class="mt-4 border-t pt-3 border-yellow-200">
                         <p class="text-base text-gray-700 font-semibold mb-1">【団体戦】</p>
-                        <p class="text-lg text-yellow-700 font-bold ml-2">Eブロック ベスト4（約7年ぶりに団体戦の都大会の出場権を獲得！）</p>
+                        <p class="text-lg text-yellow-700 font-bold ml-2">Eブロック ベスト4(約7年ぶりに団体戦の都大会の出場権を獲得)</p>
                     </div>
                 </div>
 
@@ -249,102 +254,32 @@
                     <!-- 詳細 -->
                     <div class="mt-4 border-t pt-3 border-blue-200">
                         <p class="text-base text-gray-700 font-semibold mb-1">【個人戦】</p>
-                        <p class="text-lg text-blue-700 font-bold ml-2">ダブルス Eブロック ベスト4（都大会出場）</p>
+                        <p class="text-lg text-blue-700 font-bold ml-2">ダブルス Eブロック ベスト4(都大会出場)</p>
                     </div>
                 </div>
             </div>
 
             <div class="mt-8 p-4 bg-red-100 border-l-4 border-red-500 text-red-800 rounded-lg">
-                <p class="font-semibold">今後の大会での活躍にもご期待ください！</p>
+                <p class="font-semibold text-center">今後の大会での活躍にもご期待ください！</p>
             </div>
         </section>
         
-        <!-- 活動予定セクション (青系を維持) -->
-        <section id="schedule" class="mb-12 p-6 bg-white rounded-xl shadow-lg">
-            <h2 class="text-3xl font-bold text-blue-700 mb-4 border-b-2 border-blue-300 pb-2">
-                令和７年度 大会予定（随時更新）
+        <!-- 活動予定セクション -->
+        <section id="schedule" class="section-anchor mb-12 p-4 sm:p-6 bg-white rounded-xl shadow-lg">
+            <h2 class="text-2xl sm:text-3xl font-bold text-blue-700 mb-4 border-b-2 border-blue-300 pb-2">
+                令和8年度 大会予定（準備中…）
             </h2>
-            <p class="text-gray-600 mb-4">予定は変更になる場合がありますので、最新の情報は配布資料や中体連公式ホームページを御覧ください。</p>
 
-            <!-- 修正点: overflow-x-auto を適用したコンテナ内に、全てのテーブルを配置 -->
-            <div class="overflow-x-auto shadow-lg rounded-lg border border-gray-200">
-                <!-- 大会予定のテーブル -->
-                <table class="min-w-full divide-y divide-gray-200 schedule-table">
-                    <thead class="bg-blue-600 text-white">
-                        <tr>
-                            <!-- モバイルで文字が潰れないように min-width を適用 -->
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">大会名</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">団体戦予選</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">個人戦予選</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">団体・個人戦決勝</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
-                        <!-- 練習日 (通常行) -->
-                        <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="text-gray-900">選手権大会</td>
-                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
-                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
-                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="text-gray-900">１，２年生大会（シングルスのみ）</td>
-                            <td class="whitespace-nowrap text-gray-600">行われません</td>
-                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
-                            <td class="whitespace-nowrap text-gray-600">〇/〇（〇）</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="text-gray-900">新人大会</td>
-                            <td class="whitespace-nowrap text-gray-600">11/2（日）</td>
-                            <td class="whitespace-nowrap text-gray-600">11/3（月・祝）</td>
-                            <td class="whitespace-nowrap text-gray-600">11/9（日）</td>
-                        </tr>
-                        <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="text-gray-900">冬季大会</td>
-                            <td class="whitespace-nowrap text-gray-600">行われません</td>
-                            <td class="whitespace-nowrap text-gray-600">【1部】12/20（土）21（日）<br/>>【2部】2月1日〜</td>
-                            <td class="whitespace-nowrap text-gray-600">後日通知</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <!-- 大会・イベント日のテーブル (min-w-full を適用) -->
-                <table class="min-w-full divide-y divide-gray-200 mt-6 schedule-table">
-                    <thead class="bg-blue-600 text-white">
-                        <tr>
-                            <!-- モバイルで文字が潰れないように min-width を適用 -->
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">日付</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-lg">活動内容</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">種目</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-sm">時間</th>
-                            <th class="px-3 py-3 text-left text-sm font-semibold tracking-wider min-w-custom-lg">場所</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-100">
-                        <tr class="event-row border-l-4 border-red-500 transition duration-150">
-                            <td class="whitespace-nowrap font-bold text-red-700">7/23（水）</td>
-                            <td class="text-red-700 font-bold">都 選手権大会</td>
-                            <td class="whitespace-nowrap text-red-700">団体戦</td>
-                            <td class="whitespace-nowrap text-red-700">9:30～</td>
-                            <td class="text-red-700">駒沢オリンピック公園総合運動場屋内球技場</td>
-                        </tr>
-                        <tr class="event-row border-l-4 border-red-500 transition duration-150">
-                            <td class="whitespace-nowrap font-bold text-red-700">11/22（土）</td>
-                            <td class="text-red-700 font-bold">都 新人大会</td>
-                            <td class="whitespace-nowrap text-red-700">団体戦</td>
-                            <td class="whitespace-nowrap text-red-700">9:00～</td>
-                            <td class="text-red-700">葛飾区奥戸総合スポーツセンター</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+            <div id="tournament-container"></div>
+
             <p class="mt-4 text-sm text-gray-500">※詳細は部活動のミーティング内で冊子を配布します。</p>
             <a href="https://www.tokyo-ctr-badminton.com/" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
-                大会の詳細はこちら（クリックすると中体連の公式HPにアクセスします）
+                大会の詳細はこちら(クリックすると中体連の公式HPにアクセスします)
             </a>
         </section>
 
         <!-- 大会持ち物チェックリスト -->
-        <section id="checklist" class="mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+        <section id="checklist" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
             <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
                 大会の持ち物 チェックリスト
             </h2>
@@ -395,28 +330,18 @@
         </div>
     </footer>
 
-    <!-- Firebase SDKの読み込み -->
     <script type="module">
-        // グローバル変数として外部に公開（チェックボックス操作のために必要）
-        window.currentChecklist = {};
-        window.handleCheck = handleCheck;
-        window.resetChecklist = resetChecklist;
-
-
-        // -------------------- バナー表示/非表示の切り替え設定 --------------------
-        // true に設定するとバナーが表示され、false に設定すると非表示になります
+        let currentChecklist = {};
+        // --------------------バナーの編集 --------------------
         const showAlertBanner = true;
-        // バナーに表示するメッセージとリンク先（バナー内の「詳細を確認」の飛び先）
         const alertConfig = {
-            message: "令和8年最初の部活は5日からです。バドミントン部から宿題が出ています！提出ですので注意してください。",
-            link: "#announcement"
+            message: "令和8年最初の部活は5日からです。バドミントン部から宿題が出ています！5日に提出ですので注意してください。",
         };
-        // -------------------- PDF資料のリスト --------------------
+
         const pdfDocuments = [
             { title: "新年1月", url: "https://shin-11111111.github.io/shin_gijyutu/club/1.pdf#navpanes=0" },
         ];
 
-        // 大会持ち物チェックリストの初期データ
         const defaultChecklistItems = {
             equipment: [
                 { id: '1', label: 'ユニフォーム', checked: false },
@@ -436,241 +361,222 @@
             ],
             documents: [
                 { id: '13', label: '筆記用具・バドミントンノート', checked: false },
-                { id: '14', label: '暑さ対策(日傘、冷感タオル、氷のう など)', checked: false },
-                { id: '15', label: '寒さ対策(カイロ・マフラー など)', checked: false },
-                { id: '16', label: 'マスク(感染症対策、特に冬場)', checked: false },
-                { id: '17', label: '折り畳み傘・傘袋・着替えの靴下・着替え', checked: false },
+                { id: '14', label: '(夏)暑さ対策(日傘、冷感タオル、氷のう など)', checked: false },
+                { id: '15', label: '(冬)寒さ対策(カイロ・マフラー など)', checked: false },
+                { id: '16', label: 'マスク(感染症対策、特に冬場は注意)', checked: false },
+                { id: '17', label: '(雨天時)折り畳み傘・傘袋・着替えの靴下・着替え', checked: false },
             ]
         };
 
-        /**
-         * チェックリストアイテムのチェック状態を更新し、UIを再描画
-         * @param {string} category - カテゴリ ('equipment', 'clothing', 'documents')
-         * @param {string} id - アイテムID ('racket', 'uniform', etc.)
-         * @param {boolean} isChecked - 新しいチェック状態
-         */
-        function handleCheck(category, id, isChecked) {
-            // currentChecklistが初期化されていない場合のガード
-            if (!window.currentChecklist || !window.currentChecklist[category]) {
-                console.error('Checklist not initialized.');
-                return;
-            }
+        // ---------- 大会予定のデータ（ここを変更する) ----------
+        const tournamentSchedule = [
+            { name: "選手権大会", team: "後日通知", individual: "後日通知", metro: "後日通知", note: "" },
+            { name: "1,2年生大会", team: "行われません", individual: "後日通知", metro: "後日通知", note: "シングルスのみ" },
+            { name: "新人大会", team: "後日通知", individual: "後日通知", metro: "後日通知", note: "" },
+            { name: "冬季大会", team: "行われません", individual: "【1部】後日通知<br>【2部】後日通知", metro: "後日通知", note: "都大会予選は1部大会のみ" }
+        ];
 
-            const item = window.currentChecklist[category].find(i => i.id === id);
-            if (item) {
-                item.checked = isChecked;
-                // UIを即時更新
-                renderChecklist(window.currentChecklist); 
-            }
+        // バナーを隠す処理
+        function hideAlert() {
+            const banner = document.getElementById('alertBanner');
+            banner.style.opacity = '0';
+            setTimeout(() => {
+                banner.classList.add('hidden');
+            }, 300);
         }
 
-        /**
-         * チェックリストを初期状態に戻し、UIを再描画
-         */
-        function resetChecklist() {
-            // 各カテゴリのチェックボックスを全てfalseにリセット
-            ['equipment', 'clothing', 'documents'].forEach(category => {
-                if (window.currentChecklist[category]) {
-                    window.currentChecklist[category].forEach(item => {
-                        item.checked = false;
-                    });
-                }
-            });
-            
-            // UIを再描画
-            renderChecklist(window.currentChecklist);
-
-            // リセットメッセージの表示
-            const resetMessage = document.getElementById('resetMessage');
-            if (resetMessage) {
-                resetMessage.textContent = "チェックリストがリセットされました！";
-                resetMessage.classList.remove('hidden');
-                setTimeout(() => {
-                    resetMessage.classList.add('hidden');
-                }, 3000);
-            }
-        }
-
-        /**
-         * 読み込まれたデータに基づいてチェックリストのHTMLを生成
-         * @param {Object} checklistData - 現在のチェックリストデータ
-         */
-        function renderChecklist(checklistData) {
-            ['equipment', 'clothing', 'documents'].forEach(category => {
-                const ul = document.getElementById(`list-${category}`);
-                if (ul) {
-                    ul.innerHTML = ''; // リストをクリア
-                    
-                    if (checklistData[category]) {
-                        checklistData[category].forEach(item => {
-                            const li = document.createElement('li');
-                            li.className = "flex items-center space-x-3";
-                            
-                            // チェックボックス
-                            const checkbox = document.createElement('input');
-                            checkbox.type = 'checkbox';
-                            checkbox.id = `${category}-${item.id}`;
-                            checkbox.checked = item.checked;
-                            // チェックボックスの色を青系に変更
-                            checkbox.className = "h-5 w-5 text-blue-600 bg-white border-gray-300 rounded focus:ring-blue-500 cursor-pointer";
-                            
-                            // イベントハンドラを設定
-                            checkbox.onchange = (e) => handleCheck(category, item.id, e.target.checked);
-
-                            // ラベル
-                            const label = document.createElement('label');
-                            label.htmlFor = `${category}-${item.id}`;
-                            label.textContent = item.label;
-                            // 💡 チェックされたら line-through と text-gray-400 を適用
-                            label.className = `text-gray-700 font-medium select-none cursor-pointer transition duration-200 ${item.checked ? 'line-through text-gray-400' : ''}`;
-                            
-                            li.appendChild(checkbox);
-                            li.appendChild(label);
-                            ul.appendChild(li);
-                        });
-                    }
-                }
-            });
-        }
-        
-        /**
-         * アプリケーションの初期設定を行います。
-         */
-        function initializeApp() {
-            // 初期データをセットして描画
-            window.currentChecklist = defaultChecklistItems;
-            renderChecklist(window.currentChecklist);
-
-            initializePdfSelector();
-            initializeAlertBanner();
-        }
-
-        // --- 既存のPDFロジック ---
-
-        /**
-         * 指定されたURLのPDFをiframeに表示し、アクティブなボタンを切り替えます。
-         * @param {string} url - 表示するPDFのURL
-         */
+        // PDF表示処理
         function displayPdf(url, buttonElement) {
             const iframeElement = document.getElementById('pdfViewerFrame');
             const downloadLinkElement = document.getElementById('pdfDownloadLink');
             const buttons = document.querySelectorAll('.pdf-button');
 
-            // 1. ボタンのアクティブ状態をリセット
             buttons.forEach(btn => btn.classList.remove('active'));
+            if (buttonElement) buttonElement.classList.add('active');
 
-            // 2. 新しいボタンをアクティブにする
-            if (buttonElement) {
-                buttonElement.classList.add('active');
-            }
-
-            // 3. iframeとダウンロードリンクを更新
             iframeElement.src = url;
-            
             if (downloadLinkElement) {
-                // PDFのURLに #navpanes=0 が含まれている場合、ダウンロードURLには不要なため削除する
-                const cleanUrl = url.split('#')[0]; 
-                downloadLinkElement.href = cleanUrl;
-            } else {
-                console.error("Error: The download link element with id 'pdfDownloadLink' was not found.");
+                downloadLinkElement.href = url.split('#')[0];
             }
         }
 
-        /**
-         * PDF選択ボタンを生成し、最初のPDFを初期表示します。
-         */
+        // PDFセレクターの初期化
         function initializePdfSelector() {
             const container = document.getElementById('pdfSelectorContainer');
+            container.innerHTML = '';
             
             if (pdfDocuments.length > 0) {
                 pdfDocuments.forEach((doc, index) => {
                     const button = document.createElement('button');
                     button.textContent = doc.title;
                     button.className = "pdf-button px-4 py-2 text-sm bg-blue-100 text-blue-800 font-semibold rounded-lg hover:bg-blue-200 transition duration-150 shadow-md transform hover:scale-[1.01] active:scale-[0.99]";
-                    
                     button.onclick = () => displayPdf(doc.url, button);
-                    
                     container.appendChild(button);
 
-                    if (index === 0) {
-                        displayPdf(doc.url, button);
-                    }
+                    if (index === 0) displayPdf(doc.url, button);
                 });
-            } else {
-                 const message = document.createElement('p');
-                 message.textContent = "現在公開中の資料はありません。";
-                 message.className = "text-gray-500 italic";
-                 container.appendChild(message);
             }
         }
 
-        /**
-         * 重要なお知らせバナーの表示/非表示を制御する
-         */
-        function initializeAlertBanner() {
+        // チェックリストの描画
+        function renderChecklist(checklistData) {
+            ['equipment', 'clothing', 'documents'].forEach(category => {
+                const ul = document.getElementById(`list-${category}`);
+                if (!ul) return;
+                ul.innerHTML = '';
+                
+                checklistData[category].forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = "flex items-center space-x-3";
+                    
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = item.checked;
+                    checkbox.className = "h-5 w-5 text-blue-600 cursor-pointer";
+                    checkbox.addEventListener('change', (e) => {
+                        item.checked = e.target.checked;
+                        renderChecklist(currentChecklist);
+                    });
+
+                    const label = document.createElement('label');
+                    label.textContent = item.label;
+                    label.className = `cursor-pointer ${item.checked ? 'line-through text-gray-400' : ''}`;
+                    
+                    li.appendChild(checkbox);
+                    li.appendChild(label);
+                    ul.appendChild(li);
+                });
+            });
+        }
+
+        // --- 大会予定を描画する関数 ---
+        function renderTournamentSchedule() {
+            const container = document.getElementById('tournament-container');
+            if (!container) return;
+
+            // モバイル用カードレイアウトの生成
+            let mobileHtml = `<div class="grid grid-cols-1 gap-4 md:hidden">`;
+            tournamentSchedule.forEach(item => {
+                mobileHtml += `
+                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
+                        <h3 class="font-bold text-lg text-blue-900 mb-2">${item.name} <span class="text-xs font-normal text-gray-500">${item.note}</span></h3>
+                        <div class="grid grid-cols-2 gap-y-2 text-sm">
+                            <div class="text-gray-500 font-medium">団体戦</div>
+                            <div class="${item.team === '行われません' ? 'text-gray-400 italic' : 'text-gray-800'}">${item.team}</div>
+                            <div class="text-gray-500 font-medium">個人戦</div>
+                            <div class="text-gray-800">${item.individual}</div>
+                            <div class="text-gray-500 font-medium">都大会</div>
+                            <div class="text-gray-800">${item.metro}</div>
+                        </div>
+                    </div>`;
+            });
+            mobileHtml += `</div>`;
+
+            // PC用テーブルレイアウトの生成
+            let pcHtml = `
+                <div class="hidden md:block overflow-x-auto shadow-md rounded-lg border border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-blue-600 text-white">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-semibold">大会名</th>
+                                <th class="px-6 py-3 text-left font-semibold">団体戦</th>
+                                <th class="px-6 py-3 text-left font-semibold">個人戦</th>
+                                <th class="px-6 py-3 text-left font-semibold">都大会</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">`;
+            
+            tournamentSchedule.forEach(item => {
+                pcHtml += `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-bold text-gray-900">${item.name}<br><span class="text-xs font-normal text-gray-500">${item.note}</span></td>
+                        <td class="px-6 py-4 ${item.team === '行われません' ? 'text-gray-400 italic' : 'text-gray-600'}">${item.team}</td>
+                        <td class="px-6 py-4 text-gray-600">${item.individual}</td>
+                        <td class="px-6 py-4 text-gray-600">${item.metro}</td>
+                    </tr>`;
+            });
+            pcHtml += `</tbody></table></div>`;
+
+            container.innerHTML = mobileHtml + pcHtml;
+        }
+
+        // ナビゲーションのクリック制御
+        function setupSmoothScroll() {
+            const navLinks = document.querySelectorAll('#main-nav a');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+
+                    const targetId = link.getAttribute('href');
+                    if (!targetId || targetId === '#') return;
+
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        // 1. 固定されているナビゲーションの高さを取得
+                        const navElement = document.getElementById('main-nav');
+                        const headerHeight = navElement ? navElement.getBoundingClientRect().bottom : 120;
+
+                        // 2. ターゲットの位置を取得
+                        const elementPosition = targetElement.getBoundingClientRect().top;
+                        
+                        // 3. 現在のスクロール位置 + ターゲットの相対位置 - ヘッダーの高さ - 少しの余白(10px)
+                        const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 10;
+
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+
+        // --- 全体の初期化 ---
+        function initializeApp() {
+            // データの初期化
+            currentChecklist = JSON.parse(JSON.stringify(defaultChecklistItems));
+            
+            // UIの初期描画
+            renderChecklist(currentChecklist);
+            initializePdfSelector();
+            renderTournamentSchedule();
+
+            setupSmoothScroll();
+
+            // お知らせバナーの設定
             const bannerContainer = document.getElementById('alertBannerContainer');
             const banner = document.getElementById('alertBanner');
             const messageElement = document.getElementById('alertMessage');
-            const linkElement = banner.querySelector('a');
             
-            // バナーを一時的に非表示にしてから、設定に基づいて表示を決定
-            banner.classList.add('hidden');
-            bannerContainer.style.display = 'none';
-
             if (showAlertBanner) {
-                // バナーを表示し、内容を設定
-                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>${alertConfig.message}`;
-                linkElement.href = alertConfig.link;
-                
-                bannerContainer.style.display = 'block';
+                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> ${alertConfig.message}`;
                 banner.classList.remove('hidden');
-            } 
-        }
-
-        /**
-         * バナーを非表示にする（ユーザーが閉じた場合）
-         */
-        function hideAlert() {
-            const banner = document.getElementById('alertBanner');
-            // アニメーションで非表示にする
-            banner.style.maxHeight = '0px';
-            banner.style.paddingTop = '0px';
-            banner.style.paddingBottom = '0px';
-            banner.style.overflow = 'hidden';
-            banner.style.opacity = '0';
-        }
-        window.hideAlert = hideAlert;
-
-        // 初期化処理
-        function initializeOnLoad() {
-            // Firebase関連の初期化を削除し、純粋なアプリ初期化関数を呼び出す
-            initializeApp();
-            
-            // イベントリスナーを設定
-            const closeBtn = document.getElementById('closeAlertBtn');
-            if (closeBtn) {
-                closeBtn.addEventListener('click', hideAlert);
+                bannerContainer.style.display = 'block';
+            } else {
+                bannerContainer.style.display = 'none';
             }
-            
-            const resetBtn = document.getElementById('resetChecklistBtn');
-            if (resetBtn) {
-                resetBtn.addEventListener('click', resetChecklist);
-            }
-        }
-        
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeOnLoad);
-        } else {
-            initializeOnLoad();
+
+            // イベントリスナーの登録
+            document.getElementById('closeAlertBtn')?.addEventListener('click', hideAlert);
+            document.getElementById('resetChecklistBtn')?.addEventListener('click', () => {
+                Object.keys(currentChecklist).forEach(cat => {
+                    currentChecklist[cat].forEach(i => i.checked = false);
+                });
+                renderChecklist(currentChecklist);
+                
+                const msg = document.getElementById('resetMessage');
+                if (msg) {
+                    msg.textContent = "リセットされました";
+                    msg.classList.remove('hidden');
+                    setTimeout(() => msg.classList.add('hidden'), 2000);
+                }
+            });
         }
 
-    </script>
+        // 実行（DOMContentLoaded 1つに集約）
+        document.addEventListener('DOMContentLoaded', initializeApp);
+        </script>
 </body>
 </html>
-
-
-
-
-
