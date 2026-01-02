@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>久保田の技術部屋</title>
-    <!-- Tailwind CSS CDNをロード -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- タイピングのフォント -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script>
         // Tailwindの設定（CSSの定義）
         tailwind.config = {
@@ -16,7 +17,6 @@
                         sans: ['Inter', 'Helvetica Neue', 'Arial', 'sans-serif'],
                     },
                     colors: {
-                        // カスタムカラーを定義
                         'primary': '#3498db', // メインカラー(文字色・枠線)
                         'secondary': '#0074f5', // 見出し
                         'third': '#00aef5', // サブ見出し
@@ -30,7 +30,7 @@
                         'teacher': '#34495e', // 教員専用セクションの背景色
                         'content': '#005ca8', // 目次とボタン
                         'content-h': '#003d70', // 目次とボタン（ホバー時）
-                        'table': '#0066e6', // 表のヘッダー
+                        //'table': '#0066e6', // 表のヘッダー
                     }
                 }
             }
@@ -49,14 +49,13 @@
 </head>
 <body class="font-sans bg-gray-50 text-gray-800 p-4 md:p-8 min-h-screen">
 
-    <!-- メッセージ表示用コンテナ (モーダル風アラート) -->
+    <!-- メッセージ表示用コンテナ -->
     <div id="message-container" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-center space-y-2">
-        <!-- メッセージはJSで挿入されます -->
+        <!-- メッセージはJSで挿入 -->
     </div>
 
     <main class="max-w-4xl mx-auto">
-        
-        <!-- 教員モードボタン: 右寄せコンテナ内に配置 -->
+        <!-- 教員モードボタン -->
         <div class="flex justify-end mb-4">
             <button id="teacher-mode-button" 
                     class="bg-teacher-button hover:bg-teacher-button-h text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher-button/50">
@@ -68,21 +67,21 @@
             久保田の技術部屋
         </h1>
 
-        <!-- お知らせセクション -->
+        <!-- ==================== お知らせ ==================== -->
         <div class="border-2 border-green-500 bg-green-50 p-4 mb-6 rounded-lg text-green-700 shadow-md">
             <strong class="block text-xl mb-1">お知らせ</strong>
             <p>
-                【12/26更新】2025年はありがとうございました！2026年もよろしくお願いします！
+                【1/1更新】今年もよろしくお願いします！
             </p>
         </div>
 
-        <!-- 目次 …目次を作成するときは、h2にidを追加し、idに飛ぶようにする-->
+        <!-- 目次を作成するときは、h2にidを追加し、idに飛ぶようにする-->
         <h2 class="bg-content text-white p-3 mb-4 rounded-lg font-bold text-xl">
             目次
         </h2>
         <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <a href="#link-list" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                外部サイト
+                よく使うサイト
             </a>
             <a href="#tools" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 便利ツール
@@ -173,10 +172,7 @@
             </ul>
             <hr class="my-8 border-gray-300">
         </div>
-        <!-- ==================================================================================== -->
-        
 
-        <!-- ==================== よく使うリンク（グリッドセクション） ==================== -->
         <h2 id="link-list" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             よく使うサイト一覧（外部サイト）
         </h2>
@@ -229,12 +225,11 @@
         </h2>
 
         <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <li class="group bg-black p-5 text-center rounded-xl border-2 border-gray-600 
-                       hover:bg-white hover:shadow-xl hover:shadow-gray-400 transition duration-300 cursor-pointer">
+            <li class="group bg-slate-900 p-5 text-center rounded-xl border-2 border-slate-700
+                       hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-400 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/typing.html" target="_blank" 
-                   class="text-yellow-400 font-bold text-lg block transition duration-300
-                          group-hover:drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">
-                    TECH-STRIKE
+                   class="orbitron text-6xl md:text-lg font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
+                    TECH<span class="text-pink-500">-</span>STRIKE
                     <span class="text-sm block mt-1">タイピング練習</span>
                 </a>
             </li>
@@ -297,13 +292,6 @@
             <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
                        hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/mechanism.html" target="_blank" class="text-dark-heading font-bold text-lg block">
-                    てこクランク機構
-                    <span class="text-sm text-gray-600 block mt-1">シミュレーション</span>
-                </a>
-            </li>
-            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
-                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/mechanism.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     タイムシフトカメラ
                     <span class="text-sm text-gray-600 block mt-1">体育の授業で使える</span>
                 </a>
@@ -319,8 +307,6 @@
 
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
-
-        <!-- ==================== 分類別リスト（通常縦並び） ==================== -->
         
         <h2 id="classes" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             授業で使用するサイト
@@ -330,7 +316,7 @@
         </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/video/wood.html" class="text-green-500 font-bold block text-lg">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/video/wood.html" target="_blank" class="text-blue-900 font-bold block text-lg">
                     久保田の技術部屋 - 動画ギャラリー（木材加工編）
                     <span class="text-sm text-gray-500 block mt-1">木材加工の実習で分からなくなったら閲覧！</span>
                 </a>
@@ -348,11 +334,18 @@
         </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/mechanism.html" target="_blank" class="text-blue-900 font-bold block text-lg">
+                    てこクランク機構
+                    <span class="text-sm text-gray-500 block mt-1">シミュレーション</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://www.tinkercad.com/" target="_blank" class="text-primary font-bold block text-lg">
                     Tinkercad
                     <span class="text-sm text-gray-500 block mt-1">3D CADと回路のシミュレーション</span>
                 </a>
-                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://energy-kyoiku.meti.go.jp/balance_game/" target="_blank" class="text-primary font-bold block text-lg">
                     電力バランスゲーム
                     <span class="text-sm text-gray-500 block mt-1">時間があるときにやってみてください</span>
@@ -365,13 +358,19 @@
         </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/HTML_guidance" target="_blank" class="text-green-500 font-bold block text-lg">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/HTML_guidance.html" target="_blank" class="text-blue-900 font-bold block text-lg">
                     久保田の技術部屋 - HTMLマスター編
                     <span class="text-sm text-gray-500 block mt-1">HTMLの授業を行うときに使用します</span>
                 </a>
             </li>
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a tabindex="-1" class="text-green-500 font-bold block text-lg">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/editor.html" target="_blank" class="text-blue-900 font-bold block text-lg">
+                    プログラミング エディタ
+                    <span class="text-sm text-gray-500 block mt-1">プログラム作成</span>
+                </a>
+            </li>
+            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                <a tabindex="-1" class="text-blue-900 font-bold block text-lg">
                     皆さんの作成した作品
                     <span class="text-sm text-gray-500 block mt-1">クリックしたら学年・組・番号を入力</span>
                 </a>
@@ -405,7 +404,7 @@
         <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
             冬休み
         </h3>
-        <div class="border-2 border-blue-500 bg-blue-50 p-4 mb-6 rounded-lg text-blue-700 shadow-md">
+        <div class="border-2 border-pink-500 bg-pink-50 p-4 mb-6 rounded-lg text-pink-700 shadow-md">
             <strong class="block text-xl mb-1">課題の詳細</strong>
             <p>
                 1年生は、本棚を家に持ち帰り、本棚を部屋に置いて写真を撮影、Teamsに提出してきてください。
@@ -413,7 +412,7 @@
         </div>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/長期休暇課題/1.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/長期休暇課題/1.pdf" target="_blank" class="text-pink-600 font-bold block text-lg">
                     1年生
                     <span class="text-sm text-gray-500 block mt-1">1年</span>
                 </a>
@@ -426,13 +425,13 @@
             定期考査対策
         </h2>
 
-        <!-- ==================== 表の挿入 ==================== -->
+        <!-- ==================== 表 ==================== -->
         <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
             第5回定期考査 範囲
         </h3>
         <div class="p-4 bg-white rounded-lg shadow-md mb-6 overflow-x-auto">
             <table class="w-full text-left border-collapse table-auto">
-                <thead class="bg-table text-white">
+                <thead class="bg-green-500 text-white">
                     <tr>
                         <th class="p-3 border-b border-gray-200 font-semibold text-sm rounded-tl-lg w-1/3">1年生</th>
                         <th class="p-3 border-b border-gray-200 font-semibold text-sm w-1/3">2年生</th>
@@ -489,6 +488,12 @@
             技能関係の評価規準
         </h2>
 
+        <div class="border-2 border-purple-500 bg-purple-50 p-4 mb-6 rounded-lg text-purple-700 text-center shadow-md">
+            <p>
+                これを規準に評価をおこないます。確認しながら実技に取り組みましょう。
+            </p>
+        </div>
+
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/技能評価/計画・振り返りシート.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
@@ -537,10 +542,17 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <!-- ==================== 資料ダウンロードセクション ==================== -->
         <h2 id="prints" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             授業プリント
         </h2>
+
+        <div class="border-2 border-blue-500 bg-blue-50 p-4 mb-6 rounded-lg text-blue-700 text-center shadow-md">
+            <p>
+                定期考査毎にファイルを回収します。休んでいた場合など、プリントをしっかりと埋めておきましょう。<br/>
+                また、時間を有効活用して勉強に励みましょう！
+            </p>
+        </div>
+
         <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
             <a href="#wood" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
                 木材加工
@@ -884,10 +896,8 @@
                 </a>
             </li>
         </ul>
-        <!-- ==================================================================== -->
         
         <footer class="mt-12 pt-4 border-t border-gray-300 text-center">
-            <!-- 免責事項を追加 -->
             <p class="text-xs text-gray-500 mb-2">
                 【免責事項】本サイトは授業での利用を目的としています。本サイト内のリンクが正常に動作しない場合など、利用によって生じたいかなる損害についても作成者は責任を負いません。
             </p>
@@ -914,7 +924,6 @@
             </div>
         </div>
     </div>
-    <!-- ============================================================= -->
 
     <!-- ==================== JavaScriptによる認証機能とメッセージ処理 ==================== -->
     <script>
@@ -927,11 +936,8 @@
         const submitButton = document.getElementById('submit-password-button');
         const cancelButton = document.getElementById('cancel-button');
 
-        /**
-         * alert()の代わりにモーダル風のメッセージボックスを表示する関数 (Tailwind版)
-         * @param {string} message - 表示するメッセージ
-         * @param {string} type - 'success' または 'error'
-         */
+        // alert()の代わりにモーダル風のメッセージボックスを表示する関数 (Tailwind版)
+
         function alert_message(message, type) {
             let container = document.getElementById('message-container');
             
@@ -958,25 +964,25 @@
             }, 4000);
         }
 
-        // 1. 教員モードボタンのクリックイベント (モーダル表示)
+        // 教員モードボタンのクリックイベント
         teacherButton.addEventListener('click', function() {
             passwordModal.classList.remove('hidden');
-            passwordInput.value = ''; // 入力欄をクリア
+            passwordInput.value = '';
             passwordInput.focus();
         });
 
-        // 2. キャンセルボタンのクリックイベント (モーダル非表示)
+        // キャンセルボタンのクリックイベント
         cancelButton.addEventListener('click', function() {
             passwordModal.classList.add('hidden');
         });
         
-        // 3. 認証ボタンのクリックイベント (パスワードチェック)
+        // 認証ボタンのクリックイベント
         submitButton.addEventListener('click', authenticate);
         
-        // 4. Enterキーでの認証
+        // Enterキーでの認証
         passwordInput.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
-                event.preventDefault(); // フォーム送信を防ぐ
+                event.preventDefault();
                 authenticate();
             }
         });
@@ -984,25 +990,20 @@
         function authenticate() {
             const password = passwordInput.value.trim();
 
-            if (password === APP_CONFIG.password) { // APP_CONFIGからパスワードを取得
+            if (password === APP_CONFIG.password) {
                 // 認証成功
                 teacherLinks.classList.remove('hidden');
                 passwordModal.classList.add('hidden');
                 alert_message("教員モードが有効になりました。", "success");
-                teacherButton.classList.add('hidden'); // ボタンを非表示にする
+                teacherButton.classList.add('hidden');
             } else {
                 // 認証失敗
-                passwordInput.value = ''; // パスワードをクリア
+                passwordInput.value = '';
                 passwordInput.focus();
                 alert_message("パスワードが正しくありません。", "error");
             }
         }
         // ==================== スムーズスクロール機能 ====================
-        
-        /**
-         * ページ内のアンカーリンク（#から始まるURL）をスムーズにスクロールさせる
-         * @param {Event} event - クリックイベント
-         */
         function smoothScroll(event) {
             // ページ内リンクで、かつ外部サイトへのリンクではないかチェック
             if (this.hash !== "" && this.getAttribute('href').startsWith('#')) {
@@ -1011,14 +1012,14 @@
 
                 // スムーズスクロールを実行
                 document.querySelector(hash).scrollIntoView({
-                    behavior: 'smooth' // スムーズスクロールを指定
+                    behavior: 'smooth'
                 });
             }
         }
 
-        // 全てのページ内リンク（hrefが'#'で始まるもの）に対してイベントリスナーを設定
+        // 全てのページ内リンクに対してイベントリスナーを設定
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            // 教員モードボタンは除外 (認証モーダルを開くための特殊な動作のため)
+            // 教員モードボタンは除外
             if (anchor.id !== 'teacher-mode-button') {
                  anchor.addEventListener('click', smoothScroll);
             }
@@ -1026,18 +1027,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
