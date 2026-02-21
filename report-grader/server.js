@@ -9,13 +9,13 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 
-// HTMLを配信
-app.use(express.static(path.join(__dirname, "public")));
-
-// Gemini中継API
 app.post("/api/gemini", async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      return res.status(500).json({ error: "API key not set" });
+    }
 
     const response = await fetch(
       "https://generativeai.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
@@ -28,13 +28,14 @@ app.post("/api/gemini", async (req, res) => {
 
     const data = await response.json();
     res.json(data);
+
   } catch (e) {
-    console.error(e);
+    console.error("Gemini error:", e);
     res.status(500).json({ error: "Gemini request failed" });
   }
 });
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 
 app.listen(3000, () =>
   console.log("✅ Server running at http://localhost:3000")
