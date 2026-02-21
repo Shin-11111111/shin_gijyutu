@@ -16,9 +16,6 @@ app.use(express.static(path.join(__dirname, "public")));
 app.post("/api/gemini", async (req, res) => {
   try {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return res.status(500).json({ error: "API key not set" });
-    }
 
     const response = await fetch(
       "https://generativeai.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
@@ -36,6 +33,8 @@ app.post("/api/gemini", async (req, res) => {
     res.status(500).json({ error: "Gemini request failed" });
   }
 });
+
+app.use(express.static("public"));
 
 app.listen(3000, () =>
   console.log("✅ Server running at http://localhost:3000")
