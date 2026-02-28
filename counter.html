@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>カウンター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .counter-value {
+            font-variant-numeric: tabular-nums;
+            transition: transform 0.05s ease-out;
+        }
+
+        .counter-value.active {
+            transform: scale(1.08);
+        }
+
+        @media (min-width: 768px) {
+            .display-text {
+                font-size: 12rem !important;
+            }
+        }
+
+        button {
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen items-center justify-center p-4 md:p-8">
+
+    <div class="w-full max-w-2xl h-full max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl p-6 md:p-10 border border-gray-100 overflow-hidden">
+        
+        <div class="text-center mb-2 md:mb-4 flex-none">
+            <h1 class="text-[10px] md:text-xs font-black text-gray-300 tracking-[0.3em] uppercase">カウンター</h1>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center min-h-0">
+            <div id="counter" class="counter-value display-text text-7xl md:text-[12rem] font-black text-indigo-600 leading-none">
+                0
+            </div>
+        </div>
+
+        <div class="flex-[1.5] flex flex-col min-h-0 mb-4 md:mb-6">
+            <button id="plus" class="w-full h-full flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-[2rem] md:rounded-[2.5rem] transition-all group shadow-xl shadow-indigo-100">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-24 lg:h-32 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 md:gap-4 flex-none">
+            <button id="minus" class="flex items-center justify-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 py-4 md:py-6 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 md:h-8 md:w-8 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4" />
+                </svg>
+                <span class="ml-2 font-bold text-gray-500 text-sm md:text-base">減らす</span>
+            </button>
+            <button id="reset" class="flex items-center justify-center bg-white border-2 border-gray-100 hover:border-red-100 hover:bg-red-50 active:bg-red-100 py-4 md:py-6 rounded-[1.2rem] md:rounded-[1.5rem] transition-all group">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 md:h-6 md:w-6 text-gray-400 group-hover:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span class="ml-2 font-bold text-gray-400 group-hover:text-red-400 text-sm md:text-base uppercase">リセット</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-6 md:bottom-10 bg-gray-900/90 backdrop-blur-sm text-white px-8 py-3 rounded-2xl text-sm font-bold opacity-0 transition-all transform translate-y-4 pointer-events-none shadow-2xl z-50">
+        リセットしました
+    </div>
+
+    <script>
+        // State
+        let count = parseInt(localStorage.getItem('simple_counter_val')) || 0;
+
+        // DOM Elements
+        const counterDisplay = document.getElementById('counter');
+        const plusBtn = document.getElementById('plus');
+        const minusBtn = document.getElementById('minus');
+        const resetBtn = document.getElementById('reset');
+        const toast = document.getElementById('toast');
+
+        function updateDisplay() {
+            counterDisplay.innerText = count;
+            localStorage.setItem('simple_counter_val', count);
+            
+            // Animation feedback
+            counterDisplay.classList.add('active');
+            setTimeout(() => counterDisplay.classList.remove('active'), 50);
+        }
+
+        function showToast(message) {
+            toast.innerText = message;
+            toast.style.opacity = '1';
+            toast.style.transform = 'translateY(0)';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(16px)';
+            }, 2000);
+        }
+
+        // Click Events
+        plusBtn.addEventListener('click', () => {
+            count++;
+            updateDisplay();
+        });
+
+        minusBtn.addEventListener('click', () => {
+            if (count > 0) {
+                count--;
+                updateDisplay();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            if (count === 0) return;
+            count = 0;
+            updateDisplay();
+            showToast('リセットしました');
+        });
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+' || e.key === 'ArrowUp' || e.key === ' ') {
+                e.preventDefault();
+                plusBtn.click();
+            }
+            if (e.key === '-' || e.key === 'ArrowDown') {
+                minusBtn.click();
+            }
+            if (e.key === 'r' || e.key === 'R' || e.key === 'Escape') {
+                resetBtn.click();
+            }
+        });
+
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
