@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夜の学年会 特設サイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; }
+        .font-serif { font-family: 'Noto Serif JP', serif; }
+        
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+        }
+        .sakura {
+            position: absolute;
+            background-color: #ffd1dc;
+            border-radius: 100% 0 100% 0;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        @keyframes fade-in-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in-up {
+            animation: fade-in-up 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 antialiased overflow-x-hidden">
+
+    <!-- 桜吹雪コンテナ -->
+    <div id="sakura-container" class="fixed inset-0 pointer-events-none z-20 overflow-hidden hidden"></div>
+
+    <!-- ナビゲーションバー -->
+    <nav id="navbar" class="fixed top-0 w-full z-50 transition-all duration-300 py-4 bg-transparent">
+        <div class="max-w-4xl mx-auto px-6 flex justify-between items-center">
+            <span class="font-bold text-pink-600 tracking-wider text-sm">2026年 増戸中学校 第3学年</span>
+        </div>
+    </nav>
+
+    <!-- ヒーローセクション -->
+    <section class="relative h-[85vh] flex flex-col items-center justify-center text-center px-6 bg-gradient-to-b from-pink-50 to-stone-50 overflow-hidden">
+        <div class="z-10 animate-fade-in-up">
+            <div class="mb-6 inline-block px-4 py-1 border border-pink-200 rounded-full text-pink-500 text-[10px] font-black tracking-[0.3em] uppercase bg-white/50">
+                Special Thanks
+            </div>
+            <h1 class="text-5xl md:text-8xl font-serif font-bold text-stone-900 leading-tight mb-8">
+                夜の学年会
+            </h1>
+            <p class="text-lg md:text-xl text-stone-600 mb-12 max-w-lg mx-auto font-light leading-relaxed">
+                卒業おめでとうございます！
+            </p>
+            <div class="inline-flex flex-col md:flex-row gap-6 justify-center items-center text-stone-700 bg-white/80 py-6 px-12 rounded-[2rem] shadow-sm backdrop-blur-sm border border-white">
+                <div class="flex items-center gap-3 font-bold">
+                    <i data-lucide="calendar" class="w-5 h-5 text-pink-400"></i>
+                    <span>2026年3月19日 (木)</span>
+                </div>
+                <div class="hidden md:block w-px h-8 bg-stone-200"></div>
+                <div class="flex items-center gap-3 font-bold">
+                    <i data-lucide="clock" class="w-5 h-5 text-pink-400"></i>
+                    <span>18:30 ～ 21:30</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- スクロール矢印 -->
+    <div class="flex justify-center items-center h-24 relative z-10">
+        <div class="animate-bounce opacity-40 flex flex-col items-center">
+            <span class="text-[10px] text-stone-400 font-bold tracking-widest uppercase mb-2">Scroll</span>
+            <i data-lucide="chevron-down" class="w-8 h-8 text-stone-950"></i>
+        </div>
+    </div>
+
+    <!-- メインコンテンツ -->
+    <main class="relative z-10 max-w-4xl mx-auto px-6 space-y-24 py-12">
+        
+        <!-- 基本情報カード -->
+        <section class="bg-white rounded-[3rem] p-10 md:p-16 shadow-2xl shadow-stone-200/50 border border-stone-100">
+            <h2 class="text-2xl font-bold mb-16 flex items-center gap-4">
+                <span class="w-12 h-1 bg-pink-500 rounded-full"></span>
+                Information
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16">
+                <div class="space-y-12">
+                    <div class="flex gap-6">
+                        <div class="bg-pink-50 p-5 rounded-3xl h-fit">
+                            <i data-lucide="clock" class="w-6 h-6 text-pink-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">Time</h3>
+                            <p class="text-2xl font-bold text-stone-900">18:30 〜 21:30</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="bg-pink-50 p-5 rounded-3xl h-fit">
+                            <i data-lucide="map-pin" class="w-6 h-6 text-pink-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">Location</h3>
+                            <p class="text-2xl font-bold text-stone-900 mb-2">串焼きと野菜巻きと九州料理の個室居酒屋 ひまり屋 立川店</p>
+                            <p class="text-stone-500 text-sm leading-relaxed mb-6">
+                                東京都立川市柴崎町3-3-7 山三電機ビル4F<br>
+                                <span class="text-pink-400 font-bold italic">（渋谷駅 南口より徒歩2分）</span>
+                            </p>
+                            <a href="https://maps.app.goo.gl/HMyeFgmJNL5rCQGb7" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold rounded-2xl transition-all shadow-xl active:scale-95">
+                                Google Mapを確認
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-12">
+                    <div class="flex gap-6">
+                        <div class="bg-pink-50 p-5 rounded-3xl h-fit">
+                            <i data-lucide="credit-card" class="w-6 h-6 text-pink-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">Fee</h3>
+                            <p class="text-2xl font-bold text-stone-900">学年親睦から出していただきます</p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-6">
+                        <div class="bg-pink-50 p-5 rounded-3xl h-fit">
+                            <i data-lucide="info" class="w-6 h-6 text-pink-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[10px] text-stone-400 uppercase tracking-[0.2em] mb-3">Note</h3>
+                            <p class="text-sm text-stone-600 leading-loose bg-stone-50 p-6 rounded-2xl border border-stone-100">
+                                駐車場はございませんので、公共交通機関をご利用ください。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- メニューセクション -->
+        <section class="bg-stone-950 text-white rounded-[3.5rem] p-12 md:p-24 shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                <i data-lucide="utensils" class="w-64 h-64 text-white"></i>
+            </div>
+            
+            <div class="relative z-10">
+                <div class="flex flex-col items-center mb-20">
+                    <h2 class="text-xs font-bold text-pink-500 tracking-[0.4em] uppercase mb-4">Course Menu</h2>
+                    <p class="text-4xl md:text-5xl font-serif italic">Celebration Feast</p>
+                    <div class="w-16 h-0.5 bg-stone-800 mt-8"></div>
+                </div>
+
+                <div class="space-y-12 max-w-2xl mx-auto">
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">01</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">本日の前菜</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">02</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">温泉玉子のシーザーサラダ</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">03</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">五島列島直送！季節鮮魚のお造り三点盛り</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">04</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">特製タルタルソースのチキン南蛮</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">05</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">特製あんかけの玉子焼き</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">06</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">旬の野菜巻き</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">07</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">自家製海鮮焼きそば</h4>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-10">
+                        <div class="text-stone-800 font-serif italic text-3xl">08</div>
+                        <div class="flex-1 border-b border-white/5 pb-8">
+                            <h4 class="font-bold text-2xl mb-2">本日のデザート</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-20 p-10 bg-white/5 rounded-[2.5rem] border border-white/10 flex flex-col md:flex-row items-center gap-8 max-w-2xl mx-auto">
+                    <div class="bg-white/10 p-5 rounded-3xl">
+                        <i data-lucide="glass-water" class="w-8 h-8 text-pink-500 shrink-0"></i>
+                    </div>
+                    <div class="text-center md:text-left">
+                        <h4 class="font-bold text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-3">Free Drink Policy</h4>
+                        <p class="text-stone-300 text-sm leading-relaxed">
+                            2時間飲み放題付きです！<br>
+                            <span class="text-pink-500/80 text-xs font-bold tracking-widest">LAST ORDER: 30 MIN BEFORE END</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="py-24 text-center">
+        <div class="w-12 h-px bg-pink-200 mx-auto mb-8 opacity-50"></div>
+        <p class="text-stone-400 text-[10px] tracking-[0.6em] font-bold uppercase opacity-60">copyright © 久保田</p>
+    </footer>
+
+    <script>
+        // Lucideアイコンの初期化
+        lucide.createIcons();
+
+        // スクロールによるナビゲーションバーの変化
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('bg-white/90', 'backdrop-blur-md', 'shadow-sm', 'py-2');
+                navbar.classList.remove('bg-transparent', 'py-4');
+            } else {
+                navbar.classList.remove('bg-white/90', 'backdrop-blur-md', 'shadow-sm', 'py-2');
+                navbar.classList.add('bg-transparent', 'py-4');
+            }
+        });
+
+        // 3/19を過ぎた場合のみ桜を散らす
+        function initSakura() {
+            const now = new Date();
+            const deadline = new Date(now.getFullYear(), 2, 18, 23, 59, 59);
+
+            if (now > deadline) {
+                const container = document.getElementById('sakura-container');
+                container.classList.remove('hidden');
+                
+                for (let i = 0; i < 20; i++) {
+                    createSakura(container);
+                }
+            }
+        }
+
+        function createSakura(container) {
+            const petal = document.createElement('div');
+            petal.className = 'sakura';
+            
+            const sizeWidth = Math.random() * 10 + 8;
+            const sizeHeight = Math.random() * 6 + 4;
+            
+            petal.style.width = sizeWidth + 'px';
+            petal.style.height = sizeHeight + 'px';
+            petal.style.left = Math.random() * 100 + '%';
+            petal.style.top = '-10%';
+            
+            const duration = Math.random() * 5 + 5;
+            const delay = Math.random() * 5;
+            
+            petal.style.animation = `fall ${duration}s linear infinite`;
+            petal.style.animationDelay = delay + 's';
+            petal.style.transform = `rotate(${Math.random() * 360}deg)`;
+            
+            container.appendChild(petal);
+        }
+
+        initSakura();
+    </script>
+</body>
+</html>
