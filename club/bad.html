@@ -4,39 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>バドミントン部</title>
-    <!-- Tailwind CSS CDNを読み込み -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Google Fonts - Inter を使用 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
         }
-        /* スムーズなスクロールを有効にする */
         html {
             scroll-behavior: smooth;
         }
 
-        /* 大会やイベント行のスタイル */
         .event-row {
-            background-color: #fef2f2; /* Red-50 */
+            background-color: #fef2f2;
         }
         .event-row:hover {
-            background-color: #fee2e2; /* Red-100 */
+            background-color: #fee2e2;
         }
-        /* アクティブな PDF 選択ボタンのスタイル */
         .pdf-button.active {
-            background-color: #1e40af; /* Blue-800 */
+            background-color: #1e40af;
             color: white;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
         }
 
-        /* PDFビューアコンテナのスタイル修正 */
+        /* スマホ用 */
         #pdfViewerContainer {
-            padding-top: calc(100% * 1.414); 
-            height: 0;
+            height: 1000px;
+            padding-top: 0;
             position: relative;
+        }
+
+        /* タブレット・PC用 */
+        @media (min-width: 768px) {
+            #pdfViewerContainer {
+                height: 1200px;
+            }
         }
         
         #pdfViewerContainer iframe {
@@ -68,10 +70,10 @@
             }
         }
 
-        .col-name { min-width: 140px; }      /* 大会名 */
-        .col-date { min-width: 100px; }      /* 日付・予選日 */
-        .col-content { min-width: 180px; }   /* 活動内容 */
-        .col-place { min-width: 200px; }     /* 場所 */
+        .col-name { min-width: 140px; }
+        .col-date { min-width: 100px; }
+        .col-content { min-width: 180px; }
+        .col-place { min-width: 200px; }
 
         .scroll-hint {
             background-image: linear-gradient(to right, white, rgba(255,255,255,0));
@@ -81,10 +83,10 @@
         }
 
         .min-w-custom-sm {
-            min-width: 120px; /* 大会名など少し長めの列の最小幅 */
+            min-width: 120px;
         }
         .min-w-custom-lg {
-             min-width: 250px; /* 場所などかなり長くなる可能性のある列の最小幅 */
+             min-width: 250px;
         }
     </style>
 </head>
@@ -106,7 +108,6 @@
     <nav class="bg-white shadow-md sticky top-[68px] md:top-[76px] z-10" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 py-2">
-                <!-- ナビゲーションの順番を更新 -->
                 <a href="#announcement" class="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">お知らせ</a>
                 <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">予定</a>
                 <a href="#results" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会結果</a>
@@ -146,7 +147,6 @@
 
         <!-------------------- お知らせ -------------------->
         <section id="announcement" class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg">
-            <!-- 赤系 -->
             <h2 class="text-3xl font-bold text-red-700 mb-4 border-b-2 border-red-300 pb-2">
                 お知らせ
             </h2>
@@ -166,7 +166,6 @@
             <!-- PDF選択ボタン -->
             <div class="flex flex-wrap gap-3 mb-6" id="pdfSelectorContainer"></div>
 
-            <!-- PDFビューアを埋め込むため -->
             <div id="pdfViewerContainer" class="mt-8 border-4 border-blue-600 rounded-xl overflow-hidden shadow-2xl bg-gray-100">
                 <iframe 
                     id="pdfViewerFrame" 
@@ -197,13 +196,13 @@
                 <div class="p-5 bg-red-50 rounded-lg shadow-xl border border-red-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold uppercase tracking-wider text-red-600 bg-red-200 px-3 py-1 rounded-full">
-                            2年生
+                            3年生
                         </span>
                         <span class="text-sm text-gray-500">令和7年度 新人大会</span>
                     </div>
                     
-                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
-                    <p class="text-4xl sm:text-5xl font-extrabold text-red-800 leading-tight">
+                    <!-- 大会結果のハイライト -->
+                    <p class="text-3xl sm:text-4xl font-extrabold text-red-800 leading-tight">
                         団体戦 都大会出場
                     </p>
                     
@@ -218,13 +217,13 @@
                 <div class="p-5 bg-yellow-50 rounded-lg shadow-xl border border-yellow-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold uppercase tracking-wider text-yellow-600 bg-yellow-200 px-3 py-1 rounded-full">
-                            3年生
+                            祝
                         </span>
                         <span class="text-sm text-gray-500">令和7年度 選手権大会</span>
                     </div>
                     
                     <!-- 大会結果のハイライト（大きく目立つ文字） -->
-                    <p class="text-4xl sm:text-5xl font-extrabold text-yellow-800 leading-tight">
+                    <p class="text-3xl sm:text-4xl font-extrabold text-yellow-800 leading-tight">
                         団体戦 都大会出場
                     </p>
                     
@@ -239,13 +238,13 @@
                 <div class="p-5 bg-blue-50 rounded-lg shadow-xl border border-blue-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
                         <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-200 px-3 py-1 rounded-full">
-                            昨年度結果
+                            祝
                         </span>
                         <span class="text-sm text-gray-500">令和6年度 新人大会</span>
                     </div>
                     
                     <!-- 大会結果のハイライト（大きく目立つ文字） -->
-                    <p class="text-4xl sm:text-5xl font-extrabold text-blue-800 leading-tight">
+                    <p class="text-3xl sm:text-4xl font-extrabold text-blue-800 leading-tight">
                         個人戦 都大会出場
                     </p>
                     
@@ -578,7 +577,3 @@
         </script>
 </body>
 </html>
-
-
-
-
