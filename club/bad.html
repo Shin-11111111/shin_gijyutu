@@ -29,7 +29,7 @@
 
         /* スマホ用 */
         #pdfViewerContainer {
-            height: 1000px;
+            height: 900px;
             padding-top: 0;
             position: relative;
         }
@@ -446,7 +446,6 @@
             });
         }
 
-        // --- 大会予定を描画する関数 ---
         function renderTournamentSchedule() {
             const container = document.getElementById('tournament-container');
             if (!container) return;
@@ -497,7 +496,6 @@
             container.innerHTML = mobileHtml + pcHtml;
         }
 
-        // ナビゲーションのクリック制御
         function setupSmoothScroll() {
             const navLinks = document.querySelectorAll('#main-nav a');
 
@@ -511,14 +509,11 @@
                     const targetElement = document.querySelector(targetId);
 
                     if (targetElement) {
-                        // 1. 固定されているナビゲーションの高さを取得
                         const navElement = document.getElementById('main-nav');
                         const headerHeight = navElement ? navElement.getBoundingClientRect().bottom : 120;
 
-                        // 2. ターゲットの位置を取得
                         const elementPosition = targetElement.getBoundingClientRect().top;
                         
-                        // 3. 現在のスクロール位置 + ターゲットの相対位置 - ヘッダーの高さ - 少しの余白(10px)
                         const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 10;
 
                         window.scrollTo({
@@ -530,19 +525,15 @@
             });
         }
 
-        // --- 全体の初期化 ---
         function initializeApp() {
-            // データの初期化
             currentChecklist = JSON.parse(JSON.stringify(defaultChecklistItems));
             
-            // UIの初期描画
             renderChecklist(currentChecklist);
             initializePdfSelector();
             renderTournamentSchedule();
 
             setupSmoothScroll();
 
-            // お知らせバナーの設定
             const bannerContainer = document.getElementById('alertBannerContainer');
             const banner = document.getElementById('alertBanner');
             const messageElement = document.getElementById('alertMessage');
@@ -555,7 +546,6 @@
                 bannerContainer.style.display = 'none';
             }
 
-            // イベントリスナーの登録
             document.getElementById('closeAlertBtn')?.addEventListener('click', hideAlert);
             document.getElementById('resetChecklistBtn')?.addEventListener('click', () => {
                 Object.keys(currentChecklist).forEach(cat => {
@@ -572,7 +562,6 @@
             });
         }
 
-        // 実行（DOMContentLoaded 1つに集約）
         document.addEventListener('DOMContentLoaded', initializeApp);
         </script>
 </body>
