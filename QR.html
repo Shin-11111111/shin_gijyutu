@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>二次元コードリーダー＆ジェネレーター</title>
-    <!-- Tailwind CSSを読み込み -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Interフォントの設定 -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -85,9 +83,7 @@
             <div class="relative w-full sm:w-3/4 md:w-2/3 mx-auto bg-gray-900 rounded-xl shadow-xl overflow-hidden mb-4">
                 <video id="video" class="w-full h-96 object-contain"></video>
                 <canvas id="canvas" class="hidden w-full h-96 object-contain"></canvas>
-                <!-- QRコード検出時のハイライト表示エリア -->
                 <div id="highlightContainer" class="absolute inset-0"></div>
-                <!-- ビデオスキャン開始前のメッセージオーバーレイ -->
                 <div id="videoOverlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 transition-opacity duration-300">
                     <p class="text-white text-lg font-semibold" id="overlayMessage">カメラを起動するか、画像をアップロードしてください。</p>
                 </div>
@@ -128,7 +124,6 @@
                 </div>
 
                 <div id="qrcodeContainer" class="mt-4">
-                    <!-- 生成されたQRコードが表示されます -->
                     <p class="text-gray-500">生成ボタンを押すと、ここにQRコードが表示されます。</p>
                 </div>
             </div>
@@ -137,9 +132,6 @@
     </div>
 
     <script>
-        // ------------------------------------
-        // 1. 変数と要素の取得
-        // ------------------------------------
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const resultBox = document.getElementById('resultBox');
@@ -171,10 +163,6 @@
         const scanCanvas = document.createElement('canvas');
         const scanContext = scanCanvas.getContext('2d');
 
-
-        // ------------------------------------
-        // 2. 共通機能: 結果表示
-        // ------------------------------------
         function displayResult(text, isError = false) {
             resultBox.textContent = text;
             if (isError) {
@@ -189,10 +177,6 @@
         function clearHighlight() {
             highlightContainer.innerHTML = '';
         }
-
-        // ------------------------------------
-        // 3. リーダー機能: カメラ操作とスキャン (jsQRバージョン)
-        // ------------------------------------
         
         function scanLoop() {
             if (!isCameraActive) return;
@@ -355,15 +339,11 @@
                     stopCamera();
                 }
 
-                displayResult(`読み取り結果: ${data}。新しいタブで開きます...`);
-                // 新しいタブで開く
+                displayResult(`読み取り結果: ${data}`);
                 window.open(data, '_blank'); 
             }
         }
 
-        // ------------------------------------
-        // 4. リーダー機能: ファイルからのスキャン (jsQRバージョン)
-        // ------------------------------------
         fileButton.addEventListener('click', () => {
             if (isCameraActive) {
                 // カメラが起動している場合は一旦停止
@@ -398,7 +378,6 @@
                 const url = URL.createObjectURL(file);
                 img.src = url;
 
-                // 画像のロードを待つ
                 await new Promise((resolve, reject) => {
                     img.onload = resolve;
                     img.onerror = reject;
@@ -438,9 +417,6 @@
         });
 
 
-        // ------------------------------------
-        // 5. リーダー機能: QRコード検出時のハイライト表示
-        // ------------------------------------
         function showHighlight(minX, minY, maxX, maxY, element) {
             clearHighlight();
 
@@ -470,11 +446,6 @@
             
             highlightContainer.appendChild(highlight);
         }
-
-
-        // ------------------------------------
-        // 6. ジェネレーター機能: QRコード生成とダウンロード
-        // ------------------------------------
 
         // QRコード生成
         generateQrBtn.addEventListener('click', () => {
@@ -529,8 +500,6 @@
                  return;
             }
 
-            // dataURL を作ってダウンロード
-            // Canvasから直接JPEG形式のデータURLを取得
             const dataUrl = canvas.toDataURL('image/jpeg', 0.92); // 0.92 = 品質
             const a = document.createElement('a');
             a.href = dataUrl;
@@ -539,11 +508,6 @@
             a.click();
             document.body.removeChild(a);
         });
-
-
-        // ------------------------------------
-        // 7. 初期設定とタブ切り替え
-        // ------------------------------------
         
         function switchTab(tabName) {
             if (tabName === 'reader') {
@@ -576,18 +540,15 @@
                 startButton.classList.add('hidden'); 
             }
         }
-        
-        // イベントリスナーのセットアップ
+
         startButton.addEventListener('click', startCamera); // startButtonはstart/stopを兼ねる
         stopButton.addEventListener('click', stopCamera);
         tabReader.addEventListener('click', () => switchTab('reader'));
         tabGenerator.addEventListener('click', () => switchTab('generator'));
         
-        // ウィンドウリサイズ時にハイライトをクリア
         window.addEventListener('resize', clearHighlight);
         
         window.onload = () => {
-             // ページロード時はリーダービューをデフォルト表示
              switchTab('reader'); 
         };
 
