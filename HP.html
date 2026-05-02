@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -68,43 +68,46 @@
         </h1>
 
         <!-- ==================== お知らせ ==================== -->
-        <div class="border-2 border-green-500 bg-green-50 p-4 mb-6 rounded-lg text-green-700 shadow-md">
+        <div class="border-2 border-blue-500 bg-blue-50 p-4 mb-6 rounded-lg text-blue-700 shadow-md">
             <strong class="block text-xl mb-1">お知らせ</strong>
             <p>
                 【4/11更新】今年度もよろしくお願いします！
             </p>
         </div>
 
+        
         <!-- 目次を作成するときは、h2にidを追加し、idに飛ぶようにする-->
         <h2 class="bg-content text-white p-3 mb-4 rounded-lg font-bold text-xl">
             目次
         </h2>
-        <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <a href="#link-list" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                よく使うサイト
-            </a>
-            <a href="#tools" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                便利ツール
-            </a>
-            <a href="#classes" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                授業使用サイト
-            </a>
-            <a href="#vacation" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                長期休暇課題
-            </a>
-            <a href="#exam" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                定期考査対策
-            </a>
-            <a href="#skill" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                技能関係の評価規準
-            </a>
-            <a href="#prints" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                授業プリント
-            </a>
+        <div id="first-toc" class="sticky top-0 z-30 border-2 border-primary rounded-xl p-4 mb-8 shadow-lg backdrop-blur-sm transition-transform duration-100 ease-linear">
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <a href="#link-list" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    よく使うサイト
+                </a>
+                <a href="#tools" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    便利ツール
+                </a>
+                <a href="#classes" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    授業使用サイト
+                </a>
+                <a href="#vacation" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    長期休暇課題
+                </a>
+                <a href="#exam" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    定期考査対策
+                </a>
+                <a href="#skill" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    技能関係の評価規準
+                </a>
+                <a href="#prints" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    授業プリント
+                </a>
+            </div>
         </div>
 
         <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <a href="#top" class="fixed bottom-5 right-5 table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center z-50">
+            <a href="#top" class="fixed bottom-5 right-5 table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 md:py-4 md:px-6 md:text-lg rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center z-50">
                 Topに戻る
             </a>
         </div>
@@ -197,7 +200,7 @@
             <hr class="my-8 border-gray-300">
         </div>
 
-        <h2 id="link-list" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="link-list" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             よく使うサイト一覧（外部サイト）
         </h2>
         
@@ -244,7 +247,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="tools" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="tools" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             便利ツール（久保田手作りプログラム）
         </h2>
 
@@ -339,11 +342,11 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
         
-        <h2 id="classes" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="classes" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             授業で使用するサイト
         </h2>
         <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
-            材料加工
+            材料と加工
         </h3>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
@@ -452,7 +455,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
         
-        <h2 id="vacation" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="vacation" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             長期休暇課題
         </h2>
         <h3 class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
@@ -503,7 +506,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="exam" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="exam" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             定期考査対策
         </h2>
 
@@ -598,7 +601,7 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="skill" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="skill" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             技能関係の評価規準
         </h2>
 
@@ -686,30 +689,33 @@
         <!-- ==================== 下線 ==================== -->
         <hr class="my-8 border-gray-300">
 
-        <h2 id="prints" class="text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
+        <h2 id="prints" class="scroll-mt-40 text-2xl font-bold text-secondary border-l-4 border-secondary pl-3 mt-8 mb-4">
             授業プリント
         </h2>
 
         <div class="border-2 border-blue-500 bg-blue-50 p-4 mb-6 rounded-lg text-blue-700 text-center shadow-md">
             <p>
                 定期考査毎にファイルを回収します。休んでいた場合など、プリントをしっかりと埋めておきましょう。<br/>
-                また、時間を有効活用して勉強に励みましょう！
+                また、時間を有効活用して勉強に励みましょう！<br/>
+                クリックすると、プリントの内容を確認できます。
             </p>
         </div>
 
-        <div class="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <a href="#wood" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                材料加工
-            </a>
-            <a href="#biology" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                生物育成
-            </a>
-            <a href="#energy" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                エネルギー変換
-            </a>
-            <a href="#info" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
-                情報
-            </a>
+        <div id="second-toc" class="sticky top-0 z-30 bg-gray-50/95 border-2 border-blue-500 rounded-xl p-4 mb-6 shadow-lg backdrop-blur-sm">
+            <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <a href="#wood" onclick="openAndScroll('wood-content', 'wood')" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    材料と加工
+                </a>
+                <a href="#biology" onclick="openAndScroll('biology-content', 'biology')" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    生物育成
+                </a>
+                <a href="#energy" onclick="openAndScroll('energy-content', 'energy')" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    エネルギー変換
+                </a>
+                <a href="#info" onclick="openAndScroll('info-content', 'info')" class="table-of-contents-button bg-content hover:bg-content-h text-white font-bold py-2 px-3 rounded-lg shadow-xl transition duration-300 text-sm whitespace-nowrap text-center">
+                    情報
+                </a>
+            </div>
         </div>
         <ul class="space-y-3">
             <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
@@ -739,341 +745,369 @@
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
 
-            <h3 id="wood" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
-                材料加工
+            <h3 id="wood" 
+                class="scroll-mt-20 cursor-pointer flex items-center justify-between text-xl font-bold text-third border-2 border-third/30 bg-white p-4 rounded-xl hover:bg-blue-50 hover:shadow-md transition duration-200 mt-6 mb-3" 
+                onclick="toggleSection('wood-content')">
+                材料と加工
+                <span id="wood-content-icon" class="bg-blue-100 text-blue-500 w-8 h-8 flex items-center justify-center rounded-full text-sm">▼</span>
             </h3>
 
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/1.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-1
-                    <span class="text-sm text-gray-500 block mt-1">(1年)材料の特性</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/2.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-2
-                    <span class="text-sm text-gray-500 block mt-1">(1年)木材の特性</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/3.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-3
-                    <span class="text-sm text-gray-500 block mt-1">(1年)金属の特性</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/4.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-4
-                    <span class="text-sm text-gray-500 block mt-1">(1年)プラスチックの特性</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/4-2.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-4②
-                    <span class="text-sm text-gray-500 block mt-1">(1年)プラスチックごみの現状</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/5.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-5
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/6.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-6
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/7.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-7
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/8.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-8
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/9.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-9
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/10.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-10
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/11.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-11
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/12.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-12
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/13.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-13
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/14.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
-                    木材-14
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
+            <ul id="wood-content" class="hidden space-y-3 mt-3">
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/1.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-1
+                        <span class="text-sm text-gray-500 block mt-1">(1年)材料の特性</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/2.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-2
+                        <span class="text-sm text-gray-500 block mt-1">(1年)木材の特性</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/3.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-3
+                        <span class="text-sm text-gray-500 block mt-1">(1年)金属の特性</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/4.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-4
+                        <span class="text-sm text-gray-500 block mt-1">(1年)プラスチックの特性</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/4-2.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-4②
+                        <span class="text-sm text-gray-500 block mt-1">(1年)プラスチックごみの現状</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/QR.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        プラスチックごみの現状【振り返り用二次元コード】
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/5.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-5
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/6.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-6
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/7.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-7
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/8.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-8
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/9.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-9
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/10.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-10
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/11.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-11
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/12.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-12
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/13.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-13
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/木材加工/14.pdf" target="_blank" class="text-orange-600 font-bold block text-lg">
+                        木材-14
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+            </ul>
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
 
-            <h3 id="biology" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+            <h3 id="biology"
+                class="scroll-mt-20 cursor-pointer flex items-center justify-between text-xl font-bold text-third border-2 border-third/30 bg-white p-4 rounded-xl hover:bg-blue-50 hover:shadow-md transition duration-200 mt-6 mb-3" 
+                onclick="toggleSection('biology-content')">
                 生物育成
+                <span id="biology-content-icon" class="bg-blue-100 text-blue-500 w-8 h-8 flex items-center justify-center rounded-full text-sm">▼</span>
             </h3>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/1.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-1
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/2.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-2
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/3.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-3
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/4.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-4
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/5.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-5
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/6.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    生物-6
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/QR.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
-                    動物・水産生物レポート【振り返り用二次元コード】
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
+
+            <ul id="biology-content" class="hidden space-y-3 mt-3">
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/1.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-1
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/2.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-2
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/3.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-3
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/4.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-4
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/5.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-5
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/6.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        生物-6
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/生物育成/QR.pdf" target="_blank" class="text-green-600 font-bold block text-lg">
+                        動物・水産生物レポート【振り返り用二次元コード】
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+            </ul>
+
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
 
-            <h3 id="energy" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+            <h3 id="energy"
+                class="scroll-mt-20 cursor-pointer flex items-center justify-between text-xl font-bold text-third border-2 border-third/30 bg-white p-4 rounded-xl hover:bg-blue-50 hover:shadow-md transition duration-200 mt-6 mb-3"
+                onclick="toggleSection('energy-content')">
                 エネルギー変換
+                <span id="energy-content-icon" class="bg-blue-100 text-blue-500 w-8 h-8 flex items-center justify-center rounded-full text-sm">▼</span>
             </h3>
 
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/1.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-1
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/2.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-2
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/3.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-3
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/4.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-4
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/5.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-5
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/6.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-6
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/7.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-7
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/8.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-8
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/9.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-9
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/10.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-10
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/11.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-11
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/12.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
-                    エネ-12
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
+            <ul id="energy-content" class="hidden space-y-3 mt-3">
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/1.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-1
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/2.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-2
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/3.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-3
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/4.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-4
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/5.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-5
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/6.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-6
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/7.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-7
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/8.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-8
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/9.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-9
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/10.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-10
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/11.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-11
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/エネルギー変換/12.pdf" target="_blank" class="text-purple-600 font-bold block text-lg">
+                        エネ-12
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+            </ul>
             <!-- ==================== 下線 ==================== -->
             <hr class="my-8 border-gray-300">
 
-            <h3 id="info" class="text-xl font-bold text-third border-l-4 border-third pl-3 mt-6 mb-3">
+            <h3 id="info"
+                class="scroll-mt-20 cursor-pointer flex items-center justify-between text-xl font-bold text-third border-2 border-third/30 bg-white p-4 rounded-xl hover:bg-blue-50 hover:shadow-md transition duration-200 mt-6 mb-3"
+                onclick="toggleSection('info-content')">
                 情報
+                <span id="info-content-icon" class="bg-blue-100 text-blue-500 w-8 h-8 flex items-center justify-center rounded-full text-sm">▼</span>
             </h3>
 
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/1.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-1
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/2.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-2
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/3.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-3
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/3_1.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    Word練習用ファイルの作成例
-                    <span class="text-sm text-gray-500 block mt-1">1年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/4.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-4
-                    <span class="text-sm text-gray-500 block mt-1">(2年)Power Point</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/5.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-5
-                    <span class="text-sm text-gray-500 block mt-1">(2年)情報の仕組み</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/6.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-6
-                    <span class="text-sm text-gray-500 block mt-1">(2年)ネットワークの仕組み</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/7.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-7
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/7-2.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-7②
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/QR.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報モラルレポート【振り返り用二次元コード】
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/8.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-8
-                    <span class="text-sm text-gray-500 block mt-1">2年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/9.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-9
-                    <span class="text-sm text-gray-500 block mt-1">2～3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/10.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-10
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/11.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-11
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/12.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-12
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
-            <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/情報/13.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
-                    情報-13
-                    <span class="text-sm text-gray-500 block mt-1">3年</span>
-                </a>
-            </li>
+            <ul id="info-content" class="hidden space-y-3 mt-3">
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/1.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-1
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/2.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-2
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/3.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-3
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/3_1.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        Word練習用ファイルの作成例
+                        <span class="text-sm text-gray-500 block mt-1">1年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/4.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-4
+                        <span class="text-sm text-gray-500 block mt-1">(2年)Power Point</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/5.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-5
+                        <span class="text-sm text-gray-500 block mt-1">(2年)情報の仕組み</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/6.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-6
+                        <span class="text-sm text-gray-500 block mt-1">(2年)ネットワークの仕組み</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/7.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-7
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/7-2.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-7②
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/QR.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報モラルレポート【振り返り用二次元コード】
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/8.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-8
+                        <span class="text-sm text-gray-500 block mt-1">2年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/9.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-9
+                        <span class="text-sm text-gray-500 block mt-1">2～3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/10.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-10
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/11.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-11
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/12.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-12
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+                <li class="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition duration-200 transform hover:-translate-y-0.5">
+                    <a href="https://shin-11111111.github.io/shin_gijyutu/情報/13.pdf" target="_blank" class="text-blue-600 font-bold block text-lg">
+                        情報-13
+                        <span class="text-sm text-gray-500 block mt-1">3年</span>
+                    </a>
+                </li>
+            </ul>
         </ul>
         
-        <footer class="mt-12 pt-4 border-t border-gray-300 text-center">
+        <footer class="mt-12 pt-4 border-t border-gray-300">
             <p class="text-xs text-gray-500 mb-2">
-                【免責事項】本サイトは授業での利用を目的としています。本サイト内のリンクが正常に動作しない場合など、利用によって生じたいかなる損害についても作成者は責任を負いません。
+                【免責事項】<br/>
+                本サイトは授業での利用を目的としています。本サイト内のリンクが正常に動作しない場合など、利用によって生じたいかなる損害についても作成者は責任を負いません。
             </p>
-            <p class="text-gray-500"><small>&copy; 2025 久保田 / 授業用サイト集</small></p>
+            <p class="text-gray-500 text-center"><small>&copy; 2025 久保田 / 授業用サイト集</small></p>
         </footer>
     </main>
 
-    <!-- ==================== パスワード入力モーダル ==================== -->
     <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
         <div class="bg-white p-6 rounded-lg shadow-2xl w-11/12 max-w-md">
             <h3 class="text-xl font-bold mb-4 text-dark-heading">教員モード認証</h3>
@@ -1093,10 +1127,7 @@
         </div>
     </div>
 
-    <!-- ==================== JavaScriptによる認証機能とメッセージ処理 ==================== -->
     <script>
-        // 設定値はheadで定義したAPP_CONFIGオブジェクトから取得します。
-        
         const teacherButton = document.getElementById('teacher-mode-button');
         const teacherLinks = document.getElementById('teacher-only-links');
         const passwordModal = document.getElementById('password-modal');
@@ -1104,26 +1135,17 @@
         const submitButton = document.getElementById('submit-password-button');
         const cancelButton = document.getElementById('cancel-button');
 
-        // alert()の代わりにモーダル風のメッセージボックスを表示する関数 (Tailwind版)
-
         function alert_message(message, type) {
             let container = document.getElementById('message-container');
-            
-            // メッセージボックスを作成
             const box = document.createElement('div');
-            
-            // APP_CONFIGから背景色クラスを取得
             let bgColor = APP_CONFIG.colors[type] || APP_CONFIG.colors.error;
             
             box.className = `p-3 rounded-lg text-white shadow-lg transition-opacity duration-500 ${bgColor}`;
             box.textContent = message;
-            
             container.appendChild(box);
 
-            // 4秒後にメッセージボックスを消去
             setTimeout(() => {
                 box.style.opacity = '0';
-                // トランジション終了後にDOMから削除
                 box.addEventListener('transitionend', () => {
                     if (container.contains(box)) {
                         container.removeChild(box);
@@ -1132,22 +1154,18 @@
             }, 4000);
         }
 
-        // 教員モードボタンのクリックイベント
         teacherButton.addEventListener('click', function() {
             passwordModal.classList.remove('hidden');
             passwordInput.value = '';
             passwordInput.focus();
         });
 
-        // キャンセルボタンのクリックイベント
         cancelButton.addEventListener('click', function() {
             passwordModal.classList.add('hidden');
         });
         
-        // 認証ボタンのクリックイベント
         submitButton.addEventListener('click', authenticate);
-        
-        // Enterキーでの認証
+
         passwordInput.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 event.preventDefault();
@@ -1171,7 +1189,31 @@
                 alert_message("パスワードが正しくありません。", "error");
             }
         }
-        // ==================== スムーズスクロール機能 ====================
+
+        window.addEventListener('scroll', function() {
+            const firstToc = document.getElementById('first-toc');
+            const secondToc = document.getElementById('second-toc');
+            
+            if (!firstToc || !secondToc) return;
+
+            // 2つ目の目次の現在位置（画面上部からの距離）[cite: 1]
+            const secondRect = secondToc.getBoundingClientRect();
+            // 1つ目の目次の高さ
+            const firstHeight = firstToc.offsetHeight;
+
+            // 2つ目の目次が1つ目の目次に「衝突」し始めるタイミングを計算
+            // 余白（margin）分を考慮して調整（ここでは +20px 程度）
+            const offset = secondRect.top - firstHeight - 20;
+
+            if (offset < 0) {
+                // 衝突したら、その分だけ上にスライドさせる（負の値を指定）
+                firstToc.style.transform = `translateY(${offset}px)`;
+            } else {
+                // まだ距離があるときは元の位置
+                firstToc.style.transform = `translateY(0px)`;
+            }
+        });
+
         function smoothScroll(event) {
             // ページ内リンクで、かつ外部サイトへのリンクではないかチェック
             if (this.hash !== "" && this.getAttribute('href').startsWith('#')) {
@@ -1185,9 +1227,32 @@
             }
         }
 
-        // 全てのページ内リンクに対してイベントリスナーを設定
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const icon = document.getElementById(sectionId + '-icon');
+
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                if (icon) icon.textContent = '▲';
+            } else {
+                content.classList.add('hidden');
+                if (icon) icon.textContent = '▼';
+            }
+        }
+
+        function openAndScroll(contentId, anchorId) {
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.classList.remove('hidden'); // 強制的に開く
+                document.getElementById(contentId + '-icon').textContent = '▲';
+            }
+            // 少し遅らせてからスクロール（開く動作を待つため）
+            setTimeout(() => {
+                document.getElementById(anchorId).scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            // 教員モードボタンは除外
             if (anchor.id !== 'teacher-mode-button') {
                  anchor.addEventListener('click', smoothScroll);
             }
@@ -1195,17 +1260,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
