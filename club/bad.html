@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>バドミントン部</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
@@ -12,9 +17,8 @@
             background-color: #f7f9fb;
         }
         html {
-            scroll-behavior: smooth;
+            scroll-behavior: auto;
         }
-
         .event-row {
             background-color: #fef2f2;
         }
@@ -33,7 +37,6 @@
             padding-top: 0;
             position: relative;
         }
-
         /* タブレット・PC用 */
         @media (min-width: 768px) {
             #pdfViewerContainer {
@@ -50,12 +53,7 @@
         }
 
         .section-anchor {
-            scroll-margin-top: 160rem;
-        }
-        @media (max-width: 640px) {
-            .section-anchor {
-                scroll-margin-top: 140px;
-            }
+            scroll-margin-top: 110px;
         }
 
         .schedule-table th, .schedule-table td {
@@ -68,6 +66,20 @@
                 padding: 0.75rem 1rem;
                 font-size: 0.9375rem;
             }
+        }
+
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: 
+                opacity 1.0s cubic-bezier(0.215, 0.61, 0.355, 1), 
+                transform 1.0s cubic-bezier(0.215, 0.61, 0.355, 1);
+            will-change: opacity, transform;
+        }
+
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .col-name { min-width: 140px; }
@@ -88,37 +100,41 @@
         .min-w-custom-lg {
              min-width: 250px;
         }
+        .force-black-text label {
+            color: #1a202c !important;
+        }
     </style>
 </head>
-<body class="text-gray-800">
-
-    <!-- ヘッダーセクション -->
-    <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-10">
+<body class="text-gray-800 bg-[#f7f9fb] dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div class="text-2xl font-extrabold tracking-tight">
-                【バドミントン部】公式サイト
+                【男子バドミントン部】公式サイト
             </div>
-            <h1 class="text-xl sm:text-2xl font-semibold hidden md:block">
-                増戸中学校
-            </h1>
+            <!-- 学校名を削除し、ボタンをこの位置に配置 -->
+            <div class="flex items-center">
+                <button id="darkModeToggle" class="p-2 rounded-full border border-white/30 hover:bg-blue-500 transition">
+                    <span class="dark:hidden">ダークモード</span>
+                    <span class="hidden dark:inline">ライトモード</span>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- ナビゲーション -->
-    <nav class="bg-white shadow-md sticky top-[68px] md:top-[76px] z-10" id="main-nav">
+    <nav class="bg-white shadow-md sticky top-[64px] md:top-[64px] z-20 border-t border-gray-100" id="main-nav">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-wrap justify-center gap-x-4 gap-y-1 py-2">
-                <a href="#announcement" class="text-red-600 hover:bg-red-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">お知らせ</a>
-                <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">予定</a>
+            <div class="flex flex-wrap justify-center gap-x-4 py-1">
+                <a href="#announcement" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">お知らせ</a>
+                <a href="#pdf-viewer" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">月間予定</a>
+                <a href="#weekly-practice" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">週間予定</a>
                 <a href="#results" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会結果</a>
                 <a href="#schedule" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会予定</a>
-                <a href="#checklist" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">持ち物チェック</a>
+                <a href="#checklist" class="text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg font-medium transition duration-150 whitespace-nowrap">大会持ち物</a>
             </div>
         </div>
     </nav>
     
-    <!-- お知らせバナー -->
-    <div id="alertBannerContainer" class="sticky top-[160px] md:top-[116px] z-10 transition-all duration-300">
+    <div id="alertBannerContainer" class="sticky z-20 transition-all duration-300" style="top: 0px;">
         <div id="alertBanner" class="bg-red-600 text-white p-3 shadow-xl transition-all duration-300 hidden">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between">
                 <p id="alertMessage" class="font-bold text-lg flex items-center">
@@ -132,7 +148,6 @@
                         class="p-1 rounded-full hover:bg-blue-500 transition duration-150"
                         aria-label="閉じる"
                     >
-                        <!-- クロスアイコン (X) -->
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
                         </svg>
@@ -142,36 +157,30 @@
         </div>
     </div>
 
-    <!-- メインコンテンツ -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-
-        <!-------------------- お知らせ -------------------->
-        <section class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg text-center">
+        <section class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg border border-blue-200 text-center">
             <p class="text-gray-700">
                 予定表をオンラインで確認できるようになりました。ブックマークに登録すれば、いつでも予定表を確認することができます。ぜひ御活用ください！
             </p>
         </section>
-        <section id="announcement" class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg">
-            <h2 class="text-3xl font-bold text-red-700 mb-4 border-b-2 border-red-300 pb-2">
+        <!-------------------- お知らせ -------------------->
+        <section id="announcement" class="section-anchor mb-4 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+            <h2 class="text-3xl font-bold text-blue-700 mb-4 border-b-2 border-blue-300 pb-2">
                 お知らせ
             </h2>
             <p class="text-gray-700">
-                予定変更のお知らせ<br/>
                 配布した予定に訂正がありました。<br/><br/>
-                5月18日（月） OFF→16:00～18:00<br/>
-                5月25日（月） OFF→16:00～18:00
+                <span class="font-bold text-red-600">5月18日（月） OFF→16:00～18:00</span><br/>
+                <span class="font-bold text-red-600">5月25日（月） OFF→16:00～18:00</span>
             </p>
         </section>
 
-        <!-- PDF資料閲覧セクション -->
         <section id="pdf-viewer" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
             <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
-                予定表
+                月間予定表
             </h2>
-            
             <p class="text-gray-600 mb-4">以下のボタンから閲覧したい月の予定表を選択してください。下に予定表が表示されます。</p>
 
-            <!-- PDF選択ボタン -->
             <div class="flex flex-wrap gap-3 mb-6" id="pdfSelectorContainer"></div>
 
             <div id="pdfViewerContainer" class="mt-8 border-4 border-blue-600 rounded-xl overflow-hidden shadow-2xl bg-gray-100">
@@ -180,83 +189,76 @@
                     src="" 
                     class="w-full h-full" 
                     title="PDF Document Viewer"
+                    loading="lazy"
                 >
                 </iframe>
             </div>
             
-            <!-- ダウンロードリンク -->
-            <p class="p-4 text-center text-gray-600 bg-blue-50 rounded-lg mt-4 border border-blue-200">
-                <span class="font-bold">PDFを直接閲覧できない場合:</span>
-                <a id="pdfDownloadLink" href="#" target="_blank" class="text-blue-600 underline font-bold hover:text-blue-800 transition duration-150">現在選択中のPDFを新しいタブで開きます</a>
+            <p class="mt-4 text-center">
+                <a id="pdfDownloadLink" href="#" target="_blank" class="inline-block px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">閲覧できない場合は、現在選択中のPDFを新しいタブで開きます</a>
             </p>
-            <p class="mt-4 text-sm text-gray-500">※資料が表示されない場合は、上記のリンクを御利用ください。</p>
         </section>
 
-        <!-- 大会結果セクション -->
-        <section id="results" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border-2 border-red-400">
-            <h2 class="text-3xl font-bold text-red-700 mb-6 border-b-2 border-red-300 pb-2">
+        <section id="weekly-practice" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+            <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
+                週間練習予定
+            </h2>
+            <div id="practice-schedule-container" class="grid grid-cols-1 lg:grid-cols-8 gap-2"></div>
+            <p class="mt-4 text-sm text-gray-500">※土・日・祝は地域指導員による指導です。<br/>※大会前や学校行事により変更になる場合があります。詳細は月予定表を確認してください。</p>
+        </section>
+
+        <section id="results" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
+            <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
                 大会結果・実績
             </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
                 <!-- 結果カード 1 -->
-                <div class="p-5 bg-red-50 rounded-lg shadow-xl border border-red-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                <div class="p-5 bg-blue-200 rounded-lg shadow-xl border border-blue-400 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-red-600 bg-red-200 px-3 py-1 rounded-full">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-700 bg-blue-400 px-3 py-1 rounded-full">
                             3年生
                         </span>
                         <span class="text-sm text-gray-500">令和7年度 新人大会</span>
                     </div>
-                    
-                    <!-- 大会結果のハイライト -->
-                    <p class="text-3xl sm:text-4xl font-extrabold text-red-800 leading-tight">
+                    <p class="text-3xl sm:text-4xl font-extrabold text-blue-800 leading-tight">
                         団体戦 都大会出場
                     </p>
-                    
-                    <!-- 詳細 -->
-                    <div class="mt-4 border-t pt-3 border-red-200">
+                    <div class="mt-4 border-t pt-3 border-blue-200">
                         <p class="text-base text-gray-700 font-semibold mb-1">【団体戦】</p>
-                        <p class="text-lg text-red-700 font-bold ml-2">Eブロック ベスト４（都大会出場）</p>
+                        <p class="text-lg text-blue-700 font-bold ml-2">Eブロック ベスト４（都大会出場）</p>
                     </div>
                 </div>
 
                 <!-- 結果カード 2 -->
-                <div class="p-5 bg-yellow-50 rounded-lg shadow-xl border border-yellow-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                <div class="p-5 bg-blue-100 rounded-lg shadow-xl border border-blue-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-yellow-600 bg-yellow-200 px-3 py-1 rounded-full">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-700 bg-blue-200 px-3 py-1 rounded-full">
                             祝
                         </span>
                         <span class="text-sm text-gray-500">令和7年度 選手権大会</span>
                     </div>
-                    
-                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
-                    <p class="text-3xl sm:text-4xl font-extrabold text-yellow-800 leading-tight">
+                    <p class="text-3xl sm:text-4xl font-extrabold text-blue-800 leading-tight">
                         団体戦 都大会出場
                     </p>
-                    
-                    <!-- 詳細 -->
-                    <div class="mt-4 border-t pt-3 border-yellow-200">
+                    <div class="mt-4 border-t pt-3 border-blue-200">
                         <p class="text-base text-gray-700 font-semibold mb-1">【団体戦】</p>
-                        <p class="text-lg text-yellow-700 font-bold ml-2">Eブロック ベスト4(約7年ぶりに団体戦の都大会の出場権を獲得)</p>
+                        <p class="text-lg text-blue-700 font-bold ml-2">Eブロック ベスト4(約7年ぶりに団体戦の都大会の出場権を獲得)</p>
                     </div>
                 </div>
 
                 <!-- 結果カード 3 -->
-                <div class="p-5 bg-blue-50 rounded-lg shadow-xl border border-blue-200 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
+                <div class="p-5 bg-blue-50 rounded-lg shadow-xl border border-blue-100 hover:shadow-2xl transition duration-300 transform hover:scale-[1.02]">
                     <div class="flex items-center justify-between mb-3">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-600 bg-blue-200 px-3 py-1 rounded-full">
+                        <span class="text-xs font-semibold uppercase tracking-wider text-blue-700 bg-blue-200 px-3 py-1 rounded-full">
                             祝
                         </span>
                         <span class="text-sm text-gray-500">令和6年度 新人大会</span>
                     </div>
-                    
-                    <!-- 大会結果のハイライト（大きく目立つ文字） -->
                     <p class="text-3xl sm:text-4xl font-extrabold text-blue-800 leading-tight">
                         個人戦 都大会出場
                     </p>
-                    
-                    <!-- 詳細 -->
                     <div class="mt-4 border-t pt-3 border-blue-200">
                         <p class="text-base text-gray-700 font-semibold mb-1">【個人戦】</p>
                         <p class="text-lg text-blue-700 font-bold ml-2">ダブルス Eブロック ベスト4(都大会出場)</p>
@@ -264,57 +266,52 @@
                 </div>
             </div>
 
-            <div class="mt-8 p-4 bg-red-100 border-l-4 border-red-500 text-red-800 rounded-lg">
+            <div class="mt-8 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-lg">
                 <p class="font-semibold text-center">今後の大会での活躍にもご期待ください！</p>
             </div>
         </section>
         
-        <!-- 活動予定セクション -->
-        <section id="schedule" class="section-anchor mb-12 p-4 sm:p-6 bg-white rounded-xl shadow-lg">
+        <section id="schedule" class="section-anchor mb-12 p-4 sm:p-6 bg-white rounded-xl shadow-lg border border-blue-200">
             <h2 class="text-2xl sm:text-3xl font-bold text-blue-700 mb-4 border-b-2 border-blue-300 pb-2">
                 令和8年度 大会予定
             </h2>
 
             <div id="tournament-container"></div>
 
-            <p class="mt-4 text-sm text-gray-500">※詳細は部活動のミーティング内で冊子を配布します。</p>
-            <a href="https://www.tokyo-ctr-badminton.com/" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
-                大会の詳細はこちら(クリックすると中体連の公式HPにアクセスします)
-            </a>
+            <p class="mt-4 text-sm text-gray-500">※詳細はミーティングで冊子を配布します。</p>
+            <div class="mt-6 text-center">
+                <a href="https://www.tokyo-ctr-badminton.com/" class="inline-block px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md">
+                    大会の詳細はこちら(中体連公式HP)
+                </a>
+            </div>
         </section>
 
-        <!-- 大会持ち物チェックリスト -->
         <section id="checklist" class="section-anchor mb-12 p-6 bg-white rounded-xl shadow-lg border border-blue-200">
             <h2 class="text-3xl font-bold text-blue-700 mb-6 border-b-2 border-blue-300 pb-2">
                 大会の持ち物 チェックリスト
             </h2>
-            <!-- ユーザーID表示要素を完全に削除 -->
             <p class="text-gray-600 mb-6">大会前日の最終確認にご利用ください。忘れ物のないように注意しましょう。</p>
 
             <div id="checklistContainer" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-red-50 p-4 rounded-lg shadow-inner">
-                    <h3 class="text-xl font-semibold text-red-700 mb-3 border-b border-red-300 pb-2">出場生徒</h3>
+                <div class="bg-blue-200 p-4 rounded-lg shadow-inner border border-blue-200">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-3 border-b border-blue-300 pb-2">出場生徒</h3>
                     <ul id="list-equipment" class="space-y-3">
-                        <!-- Items will be inserted here by JS -->
                     </ul>
                 </div>
-                <div class="bg-blue-50 p-4 rounded-lg shadow-inner">
+                <div class="bg-blue-100 p-4 rounded-lg shadow-inner border border-blue-200">
                     <h3 class="text-xl font-semibold text-blue-700 mb-3 border-b border-blue-300 pb-2">応援生徒（＋出場生徒）</h3>
                     <ul id="list-clothing" class="space-y-3">
-                        <!-- Items will be inserted here by JS -->
                     </ul>
                 </div>
-                <div class="bg-green-50 p-4 rounded-lg shadow-inner">
-                    <h3 class="text-xl font-semibold text-green-700 mb-3 border-b border-green-300 pb-2">その他</h3>
+                <div class="bg-blue-50 p-4 rounded-lg shadow-inner border border-blue-200">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-3 border-b border-blue-300 pb-2">その他</h3>
                     <ul id="list-documents" class="space-y-3">
-                        <!-- Items will be inserted here by JS -->
                     </ul>
                 </div>
             </div>
 
             <p class="text-gray-600 mb-6">服装は練習着・体操服、短パン、必要に応じてジャージ・ウィンドブレーカーです。<br />応援生徒も引率の有無にかかわらず、学校指定の服装で来てください。</p>
 
-            <!-- チェックリストをリセットするボタンを追加 -->
             <div class="mt-6 flex flex-col sm:flex-row items-center justify-between">
                 <button 
                     id="resetChecklistBtn"
@@ -322,13 +319,12 @@
                 >
                     チェックリストをリセット
                 </button>
-                <p id="resetMessage" class="mt-3 sm:mt-0 text-green-600 font-bold hidden"></p>
+                <p id="resetMessage" class="mt-3 sm:mt-0 text-blue-600 font-bold hidden"></p>
             </div>
         </section>
 
     </main>
 
-    <!-- フッター -->
     <footer class="bg-gray-800 text-white py-6 mt-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
             &copy; 2025 久保田【バドミントン部】
@@ -337,16 +333,18 @@
 
     <script type="module">
         let currentChecklist = {};
-        // --------------------バナーの編集 --------------------
-        const showAlertBanner = false;
+        // ------------------------------ バナーの編集 ------------------------------
+        const showAlertBanner = true;
         const alertConfig = {
-            message: "令和8年最初の部活は5日からです。バドミントン部から宿題が出ています！5日に提出ですので注意してください。",
+            message: "保護者会を5月16日（土）13:30から行います。",
         };
 
+        // ------------------------------ 月間練習予定 ------------------------------
         const pdfDocuments = [
             { title: "5月", url: "https://shin-11111111.github.io/shin_gijyutu/club/5.pdf#navpanes=0" },
         ];
 
+        // ------------------------------ チェックリスト ------------------------------
         const defaultChecklistItems = {
             equipment: [
                 { id: '1', label: 'ユニフォーム', checked: false },
@@ -373,7 +371,7 @@
             ]
         };
 
-        // ---------- 大会予定のデータ（ここを変更する) ----------
+        // ------------------------------ 大会予定 ------------------------------
         const tournamentSchedule = [
             { name: "選手権大会", team: "6/28", individual: "6/14〜", metro: "7/21", note: "" },
             { name: "1,2年生大会", team: "行われません", individual: "7/27〜？", metro: "8/13", note: "シングルスのみ" },
@@ -381,16 +379,64 @@
             { name: "冬季大会", team: "行われません", individual: "【1部】12/19〜<br>【2部】1/31", metro: "1/17〜", note: "都大会予選は1部大会のみ" }
         ];
 
-        // バナーを隠す処理
+        // ------------------------------ 週間練習予定 ------------------------------
+        const weeklyPracticeData = [
+            { day: "月", content: "練習", time: "16:00～18:00", place: "体育館・小学校体育館", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "火", content: "定休日", time: "-", place: "-", color: "bg-gray-100", textColor: "text-gray-400" },
+            { day: "水", content: "練習", time: "15:00～18:00", place: "体育館または校庭", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "木", content: "練習", time: "16:00～18:00", place: "体育館", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "金", content: "練習", time: "16:00～18:00", place: "校庭", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "土", content: "練習（どちらか）", time: "午前または午後", place: "体育館", color: "bg-blue-100", textColor: "text-red-700" },
+            { day: "日", content: "練習（どちらか）", time: "午前または午後", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
+            { day: "祝", content: "練習", time: "午前または午後", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
+        ];
+
+        function renderWeeklyPractice() {
+            const container = document.getElementById('practice-schedule-container');
+            if (!container) return;
+
+            container.innerHTML = weeklyPracticeData.map(item => {
+                const dayLabel = item.day === '祝' ? '祝' : item.day;
+
+                let dayBgColor = "bg-gray-700";
+                if (item.day === '日' || item.day === '祝') dayBgColor = "bg-red-500";
+                if (item.day === '土') dayBgColor = "bg-blue-500";
+
+                return `
+                    <div class="${item.color} border border-blue-100 rounded-lg overflow-hidden shadow-sm flex flex-row lg:flex-col items-center text-sm">
+                        <div class="${dayBgColor} text-white font-bold py-3 lg:py-1 w-14 lg:w-full text-center shrink-0">
+                            ${dayLabel}<span class="hidden lg:inline">${item.day === '祝' ? '日' : '曜日'}</span>
+                        </div>
+
+                        <div class="flex flex-1 items-center px-4 py-2 gap-2 lg:flex-col lg:justify-center lg:gap-1 w-full">
+                            <div class="w-[30%] lg:w-auto font-extrabold ${item.textColor} whitespace-nowrap">
+                                ${item.content}
+                            </div>
+
+                            <div class="w-[35%] lg:w-auto text-gray-600 whitespace-nowrap font-medium text-center lg:text-left">
+                                ${item.time}
+                            </div>
+
+                            <div class="w-[35%] lg:w-auto text-xs text-gray-500 text-right lg:text-center whitespace-nowrap">
+                                ${item.place}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function hideAlert() {
             const banner = document.getElementById('alertBanner');
+            if (!banner) return;
+
             banner.style.opacity = '0';
             setTimeout(() => {
                 banner.classList.add('hidden');
+                updateBannerPosition();
             }, 300);
         }
 
-        // PDF表示処理
         function displayPdf(url, buttonElement) {
             const iframeElement = document.getElementById('pdfViewerFrame');
             const downloadLinkElement = document.getElementById('pdfDownloadLink');
@@ -401,11 +447,10 @@
 
             iframeElement.src = url;
             if (downloadLinkElement) {
-                downloadLinkElement.href = url.split('#')[0];
+                downloadLinkElement.href = url;
             }
         }
 
-        // PDFセレクターの初期化
         function initializePdfSelector() {
             const container = document.getElementById('pdfSelectorContainer');
             container.innerHTML = '';
@@ -423,7 +468,6 @@
             }
         }
 
-        // チェックリストの描画
         function renderChecklist(checklistData) {
             ['equipment', 'clothing', 'documents'].forEach(category => {
                 const ul = document.getElementById(`list-${category}`);
@@ -445,7 +489,7 @@
 
                     const label = document.createElement('label');
                     label.textContent = item.label;
-                    label.className = `cursor-pointer ${item.checked ? 'line-through text-gray-400' : ''}`;
+                    label.className = `cursor-pointer ${item.checked ? 'line-through text-gray-400' : 'text-gray-900 font-medium'}`;
                     
                     li.appendChild(checkbox);
                     li.appendChild(label);
@@ -458,50 +502,72 @@
             const container = document.getElementById('tournament-container');
             if (!container) return;
 
-            // モバイル用カードレイアウトの生成
             let mobileHtml = `<div class="grid grid-cols-1 gap-4 md:hidden">`;
             tournamentSchedule.forEach(item => {
                 mobileHtml += `
-                    <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
-                        <h3 class="font-bold text-lg text-blue-900 mb-2">${item.name} <span class="text-xs font-normal text-gray-500">${item.note}</span></h3>
-                        <div class="grid grid-cols-2 gap-y-2 text-sm">
-                            <div class="text-gray-500 font-medium">団体戦</div>
-                            <div class="${item.team === '行われません' ? 'text-gray-400 italic' : 'text-gray-800'}">${item.team}</div>
-                            <div class="text-gray-500 font-medium">個人戦</div>
-                            <div class="text-gray-800">${item.individual}</div>
-                            <div class="text-gray-500 font-medium">都大会</div>
-                            <div class="text-gray-800">${item.metro}</div>
+                    <div class="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+                        <div class="bg-blue-600 px-4 py-2 flex items-center justify-between">
+                            <span class="font-bold text-white text-base">${item.name}</span>
+                            ${item.note ? `<span class="text-xs text-blue-200 bg-blue-700 px-2 py-0.5 rounded-full">${item.note}</span>` : ''}
+                        </div>
+                        <div class="p-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                            <div class="text-gray-500 font-medium flex items-center gap-1">団体戦</div>
+                            <div class="${item.team === '行われません' ? 'text-gray-400 italic' : 'font-semibold text-gray-800'}">${item.team}</div>
+                            <div class="text-gray-500 font-medium flex items-center gap-1">個人戦</div>
+                            <div class="font-semibold text-gray-800">${item.individual}</div>
+                            <div class="text-gray-500 font-medium flex items-center gap-1">都大会</div>
+                            <div class="font-bold text-blue-700">${item.metro}</div>
                         </div>
                     </div>`;
             });
             mobileHtml += `</div>`;
 
-            // PC用テーブルレイアウトの生成
             let pcHtml = `
-                <div class="hidden md:block overflow-x-auto shadow-md rounded-lg border border-gray-200">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-blue-600 text-white">
-                            <tr>
-                                <th class="px-6 py-3 text-left font-semibold">大会名</th>
-                                <th class="px-6 py-3 text-left font-semibold">団体戦</th>
-                                <th class="px-6 py-3 text-left font-semibold">個人戦</th>
-                                <th class="px-6 py-3 text-left font-semibold">都大会</th>
+                <div class="hidden md:block overflow-x-auto shadow-md rounded-xl border border-blue-200">
+                    <table class="min-w-full divide-y divide-blue-100">
+                        <thead>
+                            <tr class="bg-blue-600 text-white">
+                                <th class="px-6 py-4 text-left font-semibold text-sm tracking-wide w-1/4">大会名</th>
+                                <th class="px-6 py-4 text-center font-semibold text-sm tracking-wide w-1/4">団体戦</th>
+                                <th class="px-6 py-4 text-center font-semibold text-sm tracking-wide w-1/4">個人戦</th>
+                                <th class="px-6 py-4 text-center font-semibold text-sm tracking-wide w-1/4 bg-blue-800">都大会</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-100">`;
+                        <tbody class="bg-white divide-y divide-blue-50">`;
             
-            tournamentSchedule.forEach(item => {
+            tournamentSchedule.forEach((item, index) => {
+                const rowBg = index % 2 === 0 ? 'bg-white' : 'bg-blue-50/40';
+                const metroBg = index % 2 === 0 ? 'bg-blue-100/50' : 'bg-blue-100';
+                
                 pcHtml += `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 font-bold text-gray-900">${item.name}<br><span class="text-xs font-normal text-gray-500">${item.note}</span></td>
-                        <td class="px-6 py-4 ${item.team === '行われません' ? 'text-gray-400 italic' : 'text-gray-600'}">${item.team}</td>
-                        <td class="px-6 py-4 text-gray-600">${item.individual}</td>
-                        <td class="px-6 py-4 text-gray-600">${item.metro}</td>
+                    <tr class="${rowBg} hover:bg-blue-50 transition duration-150">
+                        <td class="px-6 py-4 font-bold text-gray-900 text-base">
+                            ${item.name}
+                            ${item.note ? `<br><span class="text-xs font-normal text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full mt-1 inline-block">${item.note}</span>` : ''}
+                        </td>
+                        <td class="px-6 py-4 text-center ${item.team === '行われません' ? 'text-gray-400 italic text-sm' : 'font-semibold text-gray-700'}">${item.team}</td>
+                        <td class="px-6 py-4 text-center font-semibold text-gray-700">${item.individual}</td>
+                        <td class="px-6 py-4 text-center font-bold text-blue-700 ${metroBg}">${item.metro}</td>
                     </tr>`;
             });
             pcHtml += `</tbody></table></div>`;
 
             container.innerHTML = mobileHtml + pcHtml;
+        }
+
+        function getScrollOffset() {
+            const nav = document.getElementById('main-nav');
+            const banner = document.getElementById('alertBanner');
+            const bannerContainer = document.getElementById('alertBannerContainer');
+            
+            let offset = nav ? nav.getBoundingClientRect().bottom : 0;
+            
+            if (banner && !banner.classList.contains('hidden')) {
+                const bannerHeight = bannerContainer.getBoundingClientRect().height;
+                offset += bannerHeight;
+            }
+            
+            return offset;
         }
 
         function setupSmoothScroll() {
@@ -510,19 +576,13 @@
             navLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-
                     const targetId = link.getAttribute('href');
-                    if (!targetId || targetId === '#') return;
-
                     const targetElement = document.querySelector(targetId);
 
                     if (targetElement) {
-                        const navElement = document.getElementById('main-nav');
-                        const headerHeight = navElement ? navElement.getBoundingClientRect().bottom : 120;
-
                         const elementPosition = targetElement.getBoundingClientRect().top;
-                        
-                        const offsetPosition = elementPosition + window.pageYOffset - headerHeight - 10;
+                        const totalHeaderHeight = getScrollOffset();
+                        const offsetPosition = elementPosition + window.pageYOffset - totalHeaderHeight - 10;
 
                         window.scrollTo({
                             top: offsetPosition,
@@ -533,14 +593,30 @@
             });
         }
 
+        function updateBannerPosition() {
+            const nav = document.getElementById('main-nav');
+            const banner = document.getElementById('alertBannerContainer');
+            
+            if (nav && banner) {
+                const navHeight = nav.getBoundingClientRect().height;
+                const navTop = parseInt(window.getComputedStyle(nav).top);
+                
+                banner.style.top = `${navTop + navHeight}px`;
+            }
+        }
+
         function initializeApp() {
             currentChecklist = JSON.parse(JSON.stringify(defaultChecklistItems));
             
             renderChecklist(currentChecklist);
             initializePdfSelector();
+            renderWeeklyPractice();
             renderTournamentSchedule();
 
             setupSmoothScroll();
+
+            setupRevealAnimation();
+            setupDarkMode();
 
             const bannerContainer = document.getElementById('alertBannerContainer');
             const banner = document.getElementById('alertBanner');
@@ -567,6 +643,51 @@
                     msg.classList.remove('hidden');
                     setTimeout(() => msg.classList.add('hidden'), 2000);
                 }
+            });
+            updateBannerPosition();
+            window.addEventListener('resize', updateBannerPosition);
+        }
+
+        function setupRevealAnimation() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        setTimeout(() => {
+                            entry.target.classList.add('active');
+                        }, 150);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach((section, index) => {
+                section.classList.add('reveal');
+
+                if (index < 4) {
+                    setTimeout(() => {
+                        section.classList.add('active');
+                    }, index * 200); 
+                }
+
+                observer.observe(section);
+            });
+        }
+
+        function setupDarkMode() {
+            const btn = document.getElementById('darkModeToggle');
+            
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+
+            btn.addEventListener('click', () => {
+                document.documentElement.classList.toggle('dark');
+                const isDark = document.documentElement.classList.contains('dark');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
             });
         }
 
