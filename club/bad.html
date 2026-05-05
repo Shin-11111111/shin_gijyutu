@@ -109,13 +109,12 @@
     <header class="bg-blue-600 text-white shadow-lg sticky top-0 z-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
             <div class="text-2xl font-extrabold tracking-tight">
-                【男子バドミントン部】公式サイト
+                男子バドミントン部
             </div>
-            <!-- 学校名を削除し、ボタンをこの位置に配置 -->
             <div class="flex items-center">
                 <button id="darkModeToggle" class="p-2 rounded-full border border-white/30 hover:bg-blue-500 transition">
-                    <span class="dark:hidden">ダークモード</span>
-                    <span class="hidden dark:inline">ライトモード</span>
+                    <span class="dark:hidden">ライト</span>
+                    <span class="hidden dark:inline">ダーク</span>
                 </button>
             </div>
         </div>
@@ -136,23 +135,22 @@
     
     <div id="alertBannerContainer" class="sticky z-20 transition-all duration-300" style="top: 0px;">
         <div id="alertBanner" class="bg-red-600 text-white p-3 shadow-xl transition-all duration-300 hidden">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between">
-                <p id="alertMessage" class="font-bold text-lg flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between flex-nowrap">
+                <div class="flex items-center min-w-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg>
-                </p>
-                <div class="flex items-center space-x-4 mt-2 sm:mt-0">
-                    <button 
-                        id="closeAlertBtn"
-                        class="p-1 rounded-full hover:bg-blue-500 transition duration-150"
-                        aria-label="閉じる"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-                        </svg>
-                    </button>
+                    <p id="alertMessage" class="font-bold text-sm sm:text-lg truncate"></p>
                 </div>
+                <button 
+                    id="closeAlertBtn"
+                    class="p-2 ml-2 rounded-full hover:bg-red-500 transition duration-150 shrink-0"
+                    aria-label="閉じる"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -381,14 +379,14 @@
 
         // ------------------------------ 週間練習予定 ------------------------------
         const weeklyPracticeData = [
-            { day: "月", content: "練習", time: "16:00～18:00", place: "体育館・小学校体育館", color: "bg-blue-50", textColor: "text-blue-700" },
-            { day: "火", content: "定休日", time: "-", place: "-", color: "bg-gray-100", textColor: "text-gray-400" },
-            { day: "水", content: "練習", time: "15:00～18:00", place: "体育館または校庭", color: "bg-blue-50", textColor: "text-blue-700" },
-            { day: "木", content: "練習", time: "16:00～18:00", place: "体育館", color: "bg-blue-50", textColor: "text-blue-700" },
-            { day: "金", content: "練習", time: "16:00～18:00", place: "校庭", color: "bg-blue-50", textColor: "text-blue-700" },
-            { day: "土", content: "練習（どちらか）", time: "午前または午後", place: "体育館", color: "bg-blue-100", textColor: "text-red-700" },
-            { day: "日", content: "練習（どちらか）", time: "午前または午後", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
-            { day: "祝", content: "練習", time: "午前または午後", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
+            { day: "月", content: "練習", place: "体育館・小学校体育館", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "火", content: "定休日", place: "-", color: "bg-gray-100", textColor: "text-gray-400" },
+            { day: "水", content: "練習", place: "体育館または校庭", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "木", content: "練習", place: "体育館", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "金", content: "練習", place: "校庭", color: "bg-blue-50", textColor: "text-blue-700" },
+            { day: "土", content: "練習（どちらか）", place: "体育館", color: "bg-blue-100", textColor: "text-red-700" },
+            { day: "日", content: "練習（どちらか）", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
+            { day: "祝", content: "練習", place: "体育館", color: "bg-red-50", textColor: "text-red-700" },
         ];
 
         function renderWeeklyPractice() {
@@ -409,15 +407,10 @@
                         </div>
 
                         <div class="flex flex-1 items-center px-4 py-2 gap-2 lg:flex-col lg:justify-center lg:gap-1 w-full">
-                            <div class="w-[30%] lg:w-auto font-extrabold ${item.textColor} whitespace-nowrap">
+                            <div class="w-[50%] lg:w-auto font-extrabold ${item.textColor} whitespace-nowrap text-left lg:text-center">
                                 ${item.content}
                             </div>
-
-                            <div class="w-[35%] lg:w-auto text-gray-600 whitespace-nowrap font-medium text-center lg:text-left">
-                                ${item.time}
-                            </div>
-
-                            <div class="w-[35%] lg:w-auto text-xs text-gray-500 text-right lg:text-center whitespace-nowrap">
+                            <div class="w-[50%] lg:w-auto text-xs text-gray-500 text-right lg:text-center whitespace-nowrap">
                                 ${item.place}
                             </div>
                         </div>
@@ -623,11 +616,9 @@
             const messageElement = document.getElementById('alertMessage');
             
             if (showAlertBanner) {
-                messageElement.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg> ${alertConfig.message}`;
+                messageElement.textContent = alertConfig.message;
                 banner.classList.remove('hidden');
                 bannerContainer.style.display = 'block';
-            } else {
-                bannerContainer.style.display = 'none';
             }
 
             document.getElementById('closeAlertBtn')?.addEventListener('click', hideAlert);
