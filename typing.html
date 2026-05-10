@@ -65,7 +65,6 @@
             30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
             40%, 60% { transform: translate3d(4px, 0, 0); }
         }
-
         #monster-container {
             animation: floating 3s ease-in-out infinite;
             will-change: transform;
@@ -75,7 +74,7 @@
         }
         @keyframes monster-hit-anim {
             0% { transform: scale(1); filter: brightness(1); }
-            50% { transform: scale(1.15) brightness(2); }
+            50% { transform: scale(1.15); filter: brightness(2); }
             100% { transform: scale(1) brightness(1); }
         }
         .monster-death {
@@ -162,9 +161,6 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        #monster-container {
-            animation: floating 3s ease-in-out infinite;
-        }
 
         @keyframes floating {
             0%, 100% { transform: translateY(0); }
@@ -186,14 +182,13 @@
 </head>
 <body class="flex items-center justify-center min-h-screen">
 
-    <div class="fixed inset-0 pointer-events-none opacity-20">
-        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[150px]"></div>
-        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-500 rounded-full blur-[150px]"></div>
+    <div class="fixed inset-0 pointer-events-none opacity-20" style="transform: translateZ(0); will-change: transform;">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[150px]" style="transform: translateZ(0); will-change: transform;"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-500 rounded-full blur-[150px]" style="transform: translateZ(0); will-change: transform;"></div>
     </div>
 
     <div id="game-container" class="max-w-4xl w-full px-6 z-10">
         
-        <!-- Top Stats -->
         <div class="grid grid-cols-4 gap-4 mb-6 orbitron text-sm">
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-blue-400">
                 <p class="text-[10px] uppercase text-blue-400">Time</p>
@@ -202,6 +197,7 @@
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-green-400">
                 <p class="text-[10px] uppercase text-green-400">Score</p>
                 <p id="score-display" class="text-xl font-bold text-green-400">0</p>
+                <p id="highscore-display" class="text-[10px] text-green-400/50 mt-0.5" style="display:none;">BEST: <span id="highscore-value">0</span></p>
             </div>
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-purple-400">
                 <p class="text-[10px] uppercase text-purple-400">Accuracy</p>
@@ -213,12 +209,10 @@
             </div>
         </div>
 
-        <!-- Main Battle Arena -->
         <div class="relative glass-panel rounded-3xl p-8 overflow-hidden min-h-[420px] flex flex-col items-center justify-center">
             <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center mb-6">
                 <div id="combo-display" class="absolute top-0 combo-text orbitron">0 COMBO!</div>
                 
-                <!-- Enemy Side -->
                 <div id="monster-container" class="w-32 h-32 mb-4 opacity-0 transition-opacity duration-500">
                     <svg id="monster-svg" viewBox="0 0 100 100" class="w-full h-full">
                         <rect id="monster-body" x="20" y="20" width="60" height="60" fill="rgba(255,0,255,0.2)" stroke="#ff00ff" stroke-width="2" />
@@ -227,7 +221,6 @@
                     </svg>
                 </div>
                 
-                <!-- Enemy HP -->
                 <div id="enemy-hp-container" class="w-64 opacity-0 transition-opacity">
                     <p class="orbitron text-[8px] text-pink-500 uppercase tracking-widest text-center mb-1">Target HP</p>
                     <div class="hp-bar-container">
@@ -236,7 +229,6 @@
                 </div>
             </div>
 
-            <!-- Text Display -->
             <div id="display-area" class="w-full text-center z-10 flex flex-col items-center">
                 <div id="title-container" class="mb-8">
                     <h1 class="orbitron text-6xl md:text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
@@ -251,7 +243,6 @@
                 <div id="roma-display" class="text-3xl md:text-4xl font-bold tracking-[0.1em] orbitron min-h-[3rem]"></div>
             </div>
 
-            <!-- Player Side Status (Bottom of Display) -->
             <div id="player-hp-container" class="w-full mt-12 opacity-0 transition-opacity">
                 <div class="flex justify-between items-end mb-1">
                     <p class="orbitron text-[10px] text-blue-400 font-bold tracking-widest uppercase">Player HP</p>
@@ -263,7 +254,7 @@
             </div>
         </div>
 
-        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" lang="en" />
+        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" inputmode="latin" />
 
         <div class="mt-8 flex flex-col items-center gap-4">
             <button id="start-btn" class="btn-neon px-12 py-3 rounded-full text-lg font-bold orbitron tracking-widest">START MISSION</button>
@@ -271,7 +262,6 @@
         </div>
     </div>
 
-    <!-- Result Screen -->
     <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 hidden items-center justify-center z-[100] p-6">
         <div class="max-w-md w-full text-center space-y-8 fade-in">
             <h2 class="text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
@@ -329,23 +319,23 @@
             { jp: "データベース", roma: "de-tabe-su" },
             { jp: "シミュレーション", roma: "shimyure-syon" },
             { jp: "フローチャート", roma: "furo-cha-to" },
-            { jp: "条件分岐", roma: "joukenbunki" },
+            { jp: "条件分岐", roma: "zyoukenbunki" },
             { jp: "入力", roma: "nyuuryoku" },
             { jp: "出力", roma: "shutsuryoku" },
             { jp: "処理", roma: "shori" },
             { jp: "変数", roma: "hensuu" },
-            { jp: "著作権", roma: "thosakuken" },
+            { jp: "著作権", roma: "tyosakuken" },
             { jp: "肖像権", roma: "shouzouken" },
             { jp: "特許権", roma: "tokkyoken" },
             { jp: "商標権", roma: "syouhyouken" },
             { jp: "意匠権", roma: "isyouken" },
-            { jp: "実用新案権", roma: "zituyousinnanken" },
+            { jp: "実用新案権", roma: "zituyousinanken" },
             { jp: "知的財産権", roma: "titekizaisanken" },
             { jp: "産業財産権", roma: "sangyouzaisanken" },
             { jp: "情報モラル", roma: "zyouhoumoraru" },
             { jp: "ネット依存", roma: "nettoizon" },
             { jp: "デジタルタトゥー", roma: "dejitarutatwu-" },
-            { jp: "個人情報", roma: "kojinnzyouhou" },
+            { jp: "個人情報", roma: "kojinzyouhou" },
             { jp: "不正アクセス", roma: "fuseiakusesu" },
             { jp: "ウイルス", roma: "uirusu" },
             { jp: "マルウェア", roma: "maruwea" },
@@ -363,6 +353,7 @@
         let timeLeft = 60;
         let timer = null;
         let isPlaying = false;
+        let isComposing = false;
         let totalTyped = 0;
         let missCount = 0;
         let combo = 0;
@@ -393,15 +384,36 @@
 
         const titleContainer = document.getElementById('title-container');
 
-        // 短い攻撃音を生成して鳴らす関数
+        let _audioCtx = null;
+        function getAudioContext() {
+            if (!_audioCtx || _audioCtx.state === 'closed') {
+                _audioCtx = new AudioContext(); // ← 1回だけ生成して使い回す
+            }
+            return _audioCtx;
+        }
+
+        const popupPool = [];
+        function getPopup() {
+            const popup = popupPool.pop() || (() => {
+                const el = document.createElement('div');
+                el.className = 'damage-popup';
+                return el;
+            })();
+            return popup;
+        }
+        function releasePopup(popup) {
+            popup.style.animation = 'none';
+            popupPool.push(popup);
+        }
+
         function playHitSound() {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const audioCtx = getAudioContext();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
 
-            oscillator.type = 'square'; // ファミコン風の音
-            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime); // 音の高さ
-            oscillator.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.1); // 音を下げる
+            oscillator.type = 'square';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.1);
 
             gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
@@ -435,13 +447,12 @@
             readyMsg.classList.remove('hidden');
 
             setTimeout(() => {
-                readyMsg.style.display = 'none'; // READYを消す
+                readyMsg.style.display = 'none';
                 
                 enemyHpContainer.style.display = 'block';
                 playerHpContainer.style.display = 'block';
                 monsterContainer.style.display = 'block';
 
-                // ゲーム要素を表示
                 enemyHpContainer.style.opacity = '1';
                 playerHpContainer.style.opacity = '1';
                 monsterContainer.style.opacity = '1';
@@ -450,7 +461,6 @@
                 isPlaying = true;
                 hiddenInput.focus();
 
-                // タイマー開始
                 clearInterval(timer);
                 timer = setInterval(() => {
                     timeLeft--;
@@ -471,15 +481,30 @@
         }
 
         function renderRoma() {
-            let html = "";
-            for (let i = 0; i < currentRomaArray.length; i++) {
-                let statusClass = "";
-                if (i < charIndex) statusClass = "done";
-                else if (i === charIndex) statusClass = "next";
-                
-                html += `<span class="char ${statusClass}">${currentRomaArray[i]}</span>`;
+            const existing = romaEl.querySelectorAll('.char');
+
+            if (existing.length !== currentRomaArray.length) {
+                let html = "";
+                for (let i = 0; i < currentRomaArray.length; i++) {
+                    let statusClass = "";
+                    if (i < charIndex) statusClass = "done";
+                    else if (i === charIndex) statusClass = "next";
+                    html += `<span class="char ${statusClass}">${currentRomaArray[i]}</span>`;
+                }
+                romaEl.innerHTML = html;
+                return;
             }
-            romaEl.innerHTML = html;
+
+            for (let i = 0; i < currentRomaArray.length; i++) {
+                const span = existing[i];
+                const newChar = currentRomaArray[i];
+                const newClass = i < charIndex ? "done" : i === charIndex ? "next" : "";
+
+                if (span.textContent !== newChar) span.textContent = newChar;
+
+                const current = span.className.replace("char", "").trim();
+                if (current !== newClass) span.className = "char " + newClass;
+            }
         }
 
         function spawnMonster() {
@@ -512,24 +537,25 @@
         function triggerHit(points) {
             playHitSound();
             
-            // 1. 一旦クラスを削除
             monsterContainer.classList.remove('monster-hit', 'monster-shake');
             
-            // 2. ブラウザに「今の状態を一度描画せよ」と強制（これがないとアニメが再発火しません）
             void monsterContainer.offsetWidth; 
             
-            // 3. 再びクラスを追加
             monsterContainer.classList.add('monster-hit', 'monster-shake');
 
-            // ダメージポップアップの生成
-            const popup = document.createElement('div');
-            popup.className = 'damage-popup';
-            popup.innerText = "+" + points; 
+            const popup = getPopup();
+            popup.innerText = "+" + points;
             popup.style.left = `50%`;
-            popup.style.marginLeft = `${(Math.random() - 0.5) * 100}px`; 
+            popup.style.marginLeft = `${(Math.random() - 0.5) * 100}px`;
             popup.style.top = `30%`;
+            popup.style.animation = 'none';
+            void popup.offsetWidth; // アニメーションリセット
+            popup.style.animation = '';
             document.getElementById('battle-stage').appendChild(popup);
-            setTimeout(() => popup.remove(), 800);
+            setTimeout(() => {
+                popup.remove();
+                releasePopup(popup);
+            }, 800);
         }
 
         function triggerMiss() {
@@ -547,11 +573,10 @@
         }
 
         function showCombo() {
-            // 10コンボごと（10, 20, 30...）かつ 0より大きい場合のみ表示
             if (combo > 0 && combo % 10 === 0) {
                 comboDisplay.innerText = combo + " COMBO!";
                 comboDisplay.classList.remove('combo-animate');
-                void comboDisplay.offsetWidth; // アニメーションのリセット用
+                void comboDisplay.offsetWidth;
                 comboDisplay.classList.add('combo-animate');
             }
         }
@@ -560,10 +585,8 @@
             scoreEl.textContent = score;
             slayedEl.textContent = slayed;
             
-            // 正解率の計算ロジック
             let accuracy = 0;
             if (totalTyped > 0) {
-                // 1文字以上打っている場合のみ計算
                 accuracy = Math.round(((totalTyped - missCount) / totalTyped) * 100);
             }
             
@@ -581,17 +604,14 @@
 
             const resultTitle = resultModal.querySelector('h2');
 
-            // 条件判定：HPが0になった、または1体も倒せなかった場合は失敗
             if (isGameOver || slayed === 0) {
                 resultTitle.textContent = "MISSION FAILED";
                 resultTitle.style.color = "var(--neon-red)";
                 resultTitle.classList.add('animate-pulse');
             } else {
-                // 1体以上倒して時間切れになった場合は成功
                 resultTitle.textContent = "MISSION COMPLETE";
                 resultTitle.style.color = "#fff";
                 resultTitle.classList.remove('animate-pulse');
-                // 紙吹雪を飛ばす
                 confetti({ 
                     particleCount: 150, 
                     spread: 70, 
@@ -600,7 +620,6 @@
                 });
             }
 
-            // リザルト数値の反映
             document.getElementById('final-slayed').textContent = slayed;
             document.getElementById('final-score').textContent = score;
             document.getElementById('final-accuracy').textContent = accuracyEl.textContent;
@@ -609,17 +628,27 @@
             resultModal.style.display = 'flex';
         }
 
+        hiddenInput.addEventListener('compositionstart', () => {
+            isComposing = true;
+        });
+
+        hiddenInput.addEventListener('compositionend', (e) => {
+            isComposing = false;
+        });
+
         hiddenInput.addEventListener('input', (e) => {
-            if (!isPlaying) {
-                hiddenInput.value = "";
-                return;
-            }
+            if (!isPlaying) { hiddenInput.value = ""; return; }
+            if (isComposing) return;
 
             let val = e.target.value;
+            val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) =>
+                String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
+            );
             if (/[^\x20-\x7E]/.test(val)) {
                 e.target.value = val.replace(/[^\x20-\x7E]/g, "");
                 return;
             }
+            e.target.value = val;
 
             if (val.length === 0) return;
             const typedChar = val.slice(-1).toLowerCase();
@@ -628,11 +657,8 @@
             let isCorrect = false;
             let expected = currentRomaArray[charIndex];
 
-            // --- 判定ロジック ---
             if (typedChar === expected) {
                 isCorrect = true;
-                
-                // 「ん」の制御：nが入力された時の動的補完
                 if (expected === 'n') {
                     const nextChar = currentRomaArray[charIndex + 1];
                     const needDoubleN = ['a','i','u','e','o','y','n'];
@@ -640,17 +666,14 @@
                     if (nextChar && needDoubleN.includes(nextChar)) {
                         // 何もしない → nnを待つ
                     } else {
-                        // nn不要 → 自動でnを補う
-                        if (currentRomaArray[charIndex - 1] !== 'n') {
+                        if (currentRomaArray[charIndex - 1] !== 'n' && currentRomaArray[charIndex + 1] !== 'n') {
                             currentRomaArray.splice(charIndex + 1, 0, 'n');
                         }
                     }
                 }
 
             } else {
-                // --- 特殊入力の互換性対応 ---
-                
-                // 1. 「つ」: tu <-> tsu
+                // 「つ」: tu <-> tsu
                 if (!isCorrect && expected === 'u' && typedChar === 's' && currentRomaArray[charIndex - 1] === 't') {
                     currentRomaArray.splice(charIndex, 0, 's');
                     isCorrect = true;
@@ -659,16 +682,19 @@
                     isCorrect = true;
                 }
 
-                // 2. 「し」: si <-> shi
+                // 「し」: si <-> shi
                 if (!isCorrect && expected === 'i' && typedChar === 'h' && currentRomaArray[charIndex - 1] === 's') {
-                    currentRomaArray.splice(charIndex, 0, 'h');
-                    isCorrect = true;
+                    const nextNext = currentRomaArray[charIndex + 1];
+                    if (nextNext !== 'a' && nextNext !== 'u' && nextNext !== 'o') {
+                        currentRomaArray.splice(charIndex, 0, 'h');
+                        isCorrect = true;
+                    }
                 } else if (!isCorrect && expected === 'h' && typedChar === 'i' && currentRomaArray[charIndex - 1] === 's' && currentRomaArray[charIndex + 1] === 'i') {
                     currentRomaArray.splice(charIndex, 1);
                     isCorrect = true;
                 }
 
-                // 3. 「ち」: ti <-> chi
+                // 「ち」: ti <-> chi
                 if (!isCorrect && expected === 'i' && typedChar === 'h' && currentRomaArray[charIndex - 1] === 'c') {
                     currentRomaArray.splice(charIndex, 0, 'h');
                     isCorrect = true;
@@ -681,129 +707,127 @@
                     isCorrect = true;
                 }
 
-                // 4. 「ふ」: hu <-> fu
+                // 「ふ」: hu <-> fu
                 if (!isCorrect) {
-                    if (expected === 'h' && typedChar === 'f') { currentRomaArray[charIndex] = 'f'; isCorrect = true; }
-                    else if (expected === 'f' && typedChar === 'h') { currentRomaArray[charIndex] = 'h'; isCorrect = true; }
+                    const nextForFu = currentRomaArray[charIndex + 1];
+                    if (expected === 'h' && typedChar === 'f' && nextForFu === 'u') {
+                        currentRomaArray[charIndex] = 'f'; isCorrect = true;
+                    } else if (expected === 'f' && typedChar === 'h' && nextForFu === 'u') {
+                        currentRomaArray[charIndex] = 'h'; isCorrect = true;
+                    }
                 }
 
-                // 5. 「じ」: zi <-> ji
+                // 「じ」: zi <-> ji
                 if (!isCorrect) {
-                    if (expected === 'z' && typedChar === 'j') { currentRomaArray[charIndex] = 'j'; isCorrect = true; }
-                    else if (expected === 'j' && typedChar === 'z') { currentRomaArray[charIndex] = 'z'; isCorrect = true; }
+                    const nextForJi = currentRomaArray[charIndex + 1];
+                    if (expected === 'z' && typedChar === 'j' && nextForJi === 'i') {
+                        currentRomaArray[charIndex] = 'j'; isCorrect = true;
+                    } else if (expected === 'j' && typedChar === 'z' && nextForJi === 'i') {
+                        currentRomaArray[charIndex] = 'z'; isCorrect = true;
+                    }
                 }
 
-                // 6. 「ず」: zu <-> du
-                if (!isCorrect && expected === 'z' && typedChar === 'd') {
-                    currentRomaArray[charIndex] = 'd';
-                    isCorrect = true;
+                // 「ず」: zu -> du
+                if (!isCorrect) {
+                    const nextForZu = currentRomaArray[charIndex + 1];
+                    if (expected === 'z' && typedChar === 'd' && nextForZu === 'u') {
+                        currentRomaArray[charIndex] = 'd'; isCorrect = true;
+                    }
                 }
 
-                // 7. 「しゃ・しゅ・しょ」: sya/syu/syo <-> sha/shu/sho
+                //「しゃ・しゅ・しょ」: sya/syu/syo <-> sha/shu/sho
                 if (!isCorrect) {
                     const prev = currentRomaArray[charIndex - 1];
                     const next = currentRomaArray[charIndex + 1];
-                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
+                    const nextIsYouonVowel = (next === 'a' || next === 'u' || next === 'o');
 
-                    // 先頭が s から始まる場合
-                    if (prev === 's' || expected === 's') {
-                        
-                        // --- 2文字目 (y <-> h) の入れ替え ---
-                        if (isVowel) {
-                            if ((expected === 'y' && typedChar === 'h') || (expected === 'h' && typedChar === 'y')) {
+                    if (prev === 's' && (nextIsYouonVowel || next === 'h' || next === 'y')) {
+                        if (expected === 'y' && typedChar === 'h') {
+                            currentRomaArray[charIndex] = 'h';
+                            isCorrect = true;
+                        }
+                        else if (expected === 'h' && typedChar === 'y') {
+                            currentRomaArray[charIndex] = 'y';
+                            isCorrect = true;
+                        }
+                    }
+                }
+
+                //「じゃ・じゅ・じょ」: jya/jyu/jyo <-> ja/ju/jo <-> zya/zyu/zyo
+                if (!isCorrect) {
+                    const prev = currentRomaArray[charIndex - 1];
+                    const next = currentRomaArray[charIndex + 1];
+                    const nextIsYouonVowel = (next === 'a' || next === 'u' || next === 'o');
+
+                    if ((expected === 'z' && typedChar === 'j') || (expected === 'j' && typedChar === 'z')) {
+                        const afterNext = currentRomaArray[charIndex + 2];
+                        if (nextIsYouonVowel || (next === 'y' && (afterNext === 'a' || afterNext === 'u' || afterNext === 'o'))) {
+                            currentRomaArray[charIndex] = typedChar;
+                            isCorrect = true;
+                        }
+                    }
+
+                    if (!isCorrect && (expected === 'z' || expected === 'j') && typedChar === expected && nextIsYouonVowel) {
+                        currentRomaArray.splice(charIndex + 1, 0, 'y');
+                        isCorrect = true;
+                    }
+
+                    if (!isCorrect && (prev === 'j' || prev === 'z') && nextIsYouonVowel) {
+                        if (expected === 'y' && typedChar === next) {
+                            currentRomaArray.splice(charIndex, 1);
+                            isCorrect = true;
+                        }
+                        else if ((expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                            currentRomaArray.splice(charIndex, 0, 'y');
+                            isCorrect = true;
+                        }
+                    }
+                }
+
+                //「ちゃ・ちゅ・ちょ」: tya/tyu/tyo <-> cha/chu/cho
+                if (!isCorrect) {
+                    const prev = currentRomaArray[charIndex - 1];
+                    const next = currentRomaArray[charIndex + 1];
+                    const nextIsYouonVowel = (next === 'a' || next === 'u' || next === 'o');
+
+                    if ((expected === 'c' && typedChar === 't') || (expected === 't' && typedChar === 'c')) {
+                        const afterNext = currentRomaArray[charIndex + 2];
+                        if (afterNext === 'a' || afterNext === 'u' || afterNext === 'o') {
+                            if (next === 'y' || next === 'h') {
                                 currentRomaArray[charIndex] = typedChar;
-                                isCorrect = true;
-                            }
-                            // sha/sya -> sa (yやhを飛ばして母音を打った場合、y/hを削除)
-                            // ※「さ」と重複しますが、タイピングゲームの救済措置として含める場合
-                            else if ((expected === 'y' || expected === 'h') && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
-                                currentRomaArray.splice(charIndex, 1);
-                                isCorrect = true;
-                            }
-                            // sa -> sya/sha (母音の前にyやhを挿入した場合)
-                            else if (prev === 's' && (expected === 'a' || expected === 'u' || expected === 'o') && (typedChar === 'y' || typedChar === 'h')) {
-                                currentRomaArray.splice(charIndex, 0, typedChar);
+                                if (expected === 'c' && next === 'h') currentRomaArray[charIndex + 1] = 'y';
+                                else if (expected === 't' && next === 'y') currentRomaArray[charIndex + 1] = 'h';
                                 isCorrect = true;
                             }
                         }
                     }
-                }
 
-                // 8. 「ちゃ・ちゅ・ちょ」: tya/tyu/tyo <-> cha/chu/cho
-                if (!isCorrect) {
-                    const prev = currentRomaArray[charIndex - 1];
-                    const next = currentRomaArray[charIndex + 1];
-                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
-
-                    // 先頭が t, c のいずれかから始まる場合
-                    if (prev === 't' || prev === 'c' || expected === 't' || expected === 'c') {
-                        
-                        // --- 1文字目 (t <-> c) の入れ替え ---
-                        if ((expected === 't' && typedChar === 'c') || (expected === 'c' && typedChar === 't')) {
-                            currentRomaArray[charIndex] = typedChar;
+                    if (!isCorrect && nextIsYouonVowel) {
+                        if (prev === 'c' && expected === 'y' && typedChar === 'h') {
+                            currentRomaArray[charIndex - 1] = 'c';
+                            currentRomaArray[charIndex] = 'h';
                             isCorrect = true;
                         }
-                        
-                        // --- 2文字目 (y <-> h) の入れ替え、または省略/挿入 ---
-                        else if (isVowel) {
-                            // ty/cy -> ch (yをhに書き換え、かつ先頭をcに補正)
-                            if (expected === 'y' && typedChar === 'h') {
-                                currentRomaArray[charIndex - 1] = 'c';
-                                currentRomaArray[charIndex] = 'h';
-                                isCorrect = true;
-                            }
-                            // ch -> ty (hをyに書き換え、かつ先頭をtに補正)
-                            else if (expected === 'h' && typedChar === 'y') {
-                                currentRomaArray[charIndex - 1] = 't';
-                                currentRomaArray[charIndex] = 'y';
-                                isCorrect = true;
-                            }
-                            // cha/tya -> ca/ta (yやhを飛ばして母音を打った場合)
-                            else if ((expected === 'y' || expected === 'h') && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
-                                currentRomaArray.splice(charIndex, 1);
-                                isCorrect = true;
-                            }
-                            // ca/ta -> cya/tya (母音の前にyを挿入した場合)
-                            else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
-                                currentRomaArray.splice(charIndex, 0, 'y');
-                                isCorrect = true;
-                            }
-                        }
-                    }
-                }
-
-                // 9. 「じゃ・じゅ・じょ」: jya/jyu/jyo <-> ja/ju/jo <-> zya/zyu/zyo
-                if (!isCorrect) {
-                    const prev = currentRomaArray[charIndex - 1];
-                    const next = currentRomaArray[charIndex + 1];
-                    const isVowel = (next === 'a' || next === 'u' || next === 'o' || expected === 'a' || expected === 'u' || expected === 'o');
-
-                    // 先頭が z, j のいずれかから始まる場合
-                    if (prev === 'z' || prev === 'j' || expected === 'z' || expected === 'j') {
-                        
-                        // --- 1文字目 (z <-> j) の入れ替え ---
-                        if ((expected === 'z' && typedChar === 'j') || (expected === 'j' && typedChar === 'z')) {
-                            currentRomaArray[charIndex] = typedChar;
+                        else if (prev === 't' && expected === 'h' && typedChar === 'y') {
+                            currentRomaArray[charIndex - 1] = 't';
+                            currentRomaArray[charIndex] = 'y';
                             isCorrect = true;
                         }
-                        
-                        // --- 2文字目 (y) の省略・挿入判定 ---
-                        else if (isVowel) {
-                            // jya/zya -> ja/za (yを飛ばして母音を打った場合、yを削除)
-                            if (expected === 'y' && (typedChar === 'a' || typedChar === 'u' || typedChar === 'o')) {
-                                currentRomaArray.splice(charIndex, 1);
-                                isCorrect = true;
-                            }
-                            // ja -> jya (母音の前にyを挿入した場合、yを割り込ませる)
-                            else if ((prev === 'j' || prev === 'z') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
-                                currentRomaArray.splice(charIndex, 0, 'y');
-                                isCorrect = true;
-                            }
+                        else if (prev === 'c' && (expected === 'y' || expected === 'h') && typedChar === next) {
+                            currentRomaArray.splice(charIndex, 1);
+                            isCorrect = true;
+                        }
+                        else if (prev === 't' && (expected === 'y' || expected === 'h') && typedChar === next) {
+                            currentRomaArray.splice(charIndex, 1);
+                            isCorrect = true;
+                        }
+                        else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                            currentRomaArray.splice(charIndex, 0, 'y');
+                            isCorrect = true;
                         }
                     }
                 }
 
-                // 10. 「ん」確定中の救済（nnの2文字目待ちで次の文字が打たれた場合）
                 if (!isCorrect && charIndex > 0 && currentRomaArray[charIndex] === 'n' && currentRomaArray[charIndex - 1] === 'n') {
                     currentRomaArray.splice(charIndex, 1);
                     expected = currentRomaArray[charIndex]; 
@@ -827,22 +851,19 @@
                     slayed++;
                     updateStats();
                     totalSlayedCount++;
-                    // 揺れを止めて、死亡アニメーションに切り替える
                     monsterContainer.classList.remove('monster-shake', 'monster-hit');
-                    void monsterContainer.offsetWidth; // リセット
+                    void monsterContainer.offsetWidth;
                     monsterContainer.classList.add('monster-death');
                     setTimeout(nextWord, 400);
                 }
             } else {
-                // ミス時の処理
                 missCount++;
                 combo = 0;
-                triggerMiss(); // この中でHPが減少します
+                triggerMiss();
                 updateStats();
 
-                // HPが0になったら強制終了
                 if (playerHp <= 0) {
-                    endGame(true); // 引数trueでゲームオーバーとして終了
+                    endGame(true);
                     return;
                 }
             }
@@ -851,41 +872,24 @@
 
         startBtn.addEventListener('click', initGame);
         document.getElementById('retry-btn').addEventListener('click', () => {
-            resultModal.style.display = 'none';
-            startBtn.style.display = 'block';
-            document.getElementById('hint-text').style.display = 'block';
-            readyMsg.style.display = 'block';
-            enemyHpContainer.style.opacity = '0';
-            playerHpContainer.style.opacity = '0';
-            monsterContainer.style.opacity = '0';
-            jpEl.textContent = "";
-            romaEl.textContent = "";
-            updatePlayerHp();
+            retryGame();
         });
 
         window.addEventListener('keydown', (e) => {
             if (e.code === 'Space' || e.code === 'Enter') {
-                // ゲーム中でない場合のみ判定
                 if (!isPlaying) {
-                    e.preventDefault(); // スクロール等の既定動作を防止
-
-                    // リザルト画面が表示されているなら、リトライ処理を実行
+                    e.preventDefault();
                     if (resultModal.style.display === 'flex') {
-                        // リトライボタンのクリックイベントと同じ処理を呼び出す
                         retryGame(); 
                     } else {
-                        // タイトル画面（スタート前）なら、そのまま開始
                         initGame();
                     }
                 }
             }
-            // ゲーム中のバックスペースやタブの無効化
             if (isPlaying && (e.code === 'Backspace' || e.code === 'Tab')) e.preventDefault();
         });
 
-        // リトライボタンの処理を関数として独立させると管理しやすいため、以下のように調整します
         function retryGame() {
-            // 1. 全てのゲーム進行要素を物理的に隠し、透明度を戻す
             enemyHpContainer.style.display = 'none';
             playerHpContainer.style.display = 'none';
             monsterContainer.style.display = 'none';
@@ -893,25 +897,25 @@
             playerHpContainer.style.opacity = '0';
             monsterContainer.style.opacity = '0';
 
-            // 2. 画面のレイアウトを初期状態（タイトル画面）に戻す
             resultModal.style.display = 'none';
             startBtn.style.display = 'block';
             document.getElementById('hint-text').style.display = 'block';
-            titleContainer.style.display = ''; // 'block'ではなく空文字にしてCSS定義を優先
+            titleContainer.style.display = 'block';
             readyMsg.style.display = 'none';
 
-            // 3. 表示テキストと進捗のリセット
             jpEl.textContent = "";
             romaEl.textContent = "";
             charIndex = 0;
             
-            // 4. 統計情報の表示を「0」の初期状態に統一
             timerEl.textContent = "60s";
-            scoreEl.textContent = highScore;
+            scoreEl.textContent = 0;
+            if (highScore > 0) {
+                document.getElementById('highscore-value').textContent = highScore;
+                document.getElementById('highscore-display').style.display = 'block';
+            }
             accuracyEl.textContent = "0%";
             slayedEl.textContent = totalSlayedCount;
 
-            // 5. 内部数値データのリセット
             score = 0;
             slayed = 0;
             totalTyped = 0;
@@ -919,12 +923,8 @@
             combo = 0;
             playerHp = 100;
             
-            // 6. プレイヤーHPバーの見た目をリセット
             updatePlayerHp();
         }
-
-        // ボタン側のクリックイベントもこの関数を使うように変更
-        document.getElementById('retry-btn').addEventListener('click', retryGame);
 
         document.addEventListener('click', () => { if (isPlaying) hiddenInput.focus(); });
     </script>
