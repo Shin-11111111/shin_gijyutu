@@ -56,10 +56,10 @@
             animation: screen-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
         }
         @keyframes screen-shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+            10%, 90% { margin-left: -1px; margin-right: 1px; }
+            20%, 80% { margin-left: 2px; margin-right: -2px; }
+            30%, 50%, 70% { margin-left: -4px; margin-right: 4px; }
+            40%, 60% { margin-left: 4px; margin-right: -4px; }
         }
         #monster-container {
             animation: floating 3s ease-in-out infinite;
@@ -284,7 +284,7 @@
 
     <div id="game-container" class="max-w-4xl w-full px-6 z-10">
         
-        <div class="grid grid-cols-4 gap-4 mb-6 orbitron text-sm">
+        <div class="grid grid-cols-4 gap-4 mb-3 md:mb-6 orbitron text-sm">
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-blue-400">
                 <p class="text-[10px] uppercase text-blue-400">Time</p>
                 <p id="timer-display" class="text-xl font-bold">60s</p>
@@ -304,8 +304,8 @@
             </div>
         </div>
 
-        <div class="relative glass-panel rounded-3xl p-8 overflow-hidden min-h-[420px] flex flex-col items-center justify-center">
-            <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center mb-6">
+        <div class="relative glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center" style="padding: clamp(0.75rem, 2.5vh, 2rem); min-height: clamp(200px, 48vh, 420px);">
+            <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center" style="margin-bottom: clamp(0.25rem, 1.5vh, 1.5rem);">
                 <div id="combo-display" class="absolute top-0 combo-text orbitron">0 COMBO!</div>
                 
                 <div id="monster-container" class="w-32 h-32 mb-4 opacity-0 transition-opacity duration-500">
@@ -378,11 +378,11 @@
             </div>
 
             <div id="display-area" class="w-full text-center z-10 flex flex-col items-center">
-                <div id="title-container" class="mb-8">
-                    <h1 class="orbitron text-6xl md:text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
+                <div id="title-container" style="margin-bottom: clamp(0.5rem, 2vh, 2rem)">
+                    <h1 class="orbitron text-4xl md:text-6xl lg:text-7xl font-black italic tracking-tighter text-white drop-shadow-[0_0_15px_rgba(0,243,255,0.8)]">
                         TECH<span class="text-pink-500">-</span>STRIKE
                     </h1>
-                    <p class="text-blue-400 font-bold tracking-[0.5em] mt-2 text-sm ml-2">久保田の技術部屋<span class="text-pink-500">ー</span>タイピング戦線</p>
+                    <p class="text-blue-400 font-bold tracking-[0.5em] mt-1 md:mt-2 text-xs md:text-sm ml-2">久保田の技術部屋<span class="text-pink-500">ー</span>タイピング戦線</p>
                 </div>
                 
                 <div id="ready-msg" class="orbitron text-4xl font-black italic tracking-widest text-white mb-4" style="display: none;">READY?</div>
@@ -391,7 +391,7 @@
                 <div id="roma-display" class="text-3xl md:text-4xl font-bold tracking-[0.1em] orbitron min-h-[3rem]"></div>
             </div>
 
-            <div id="player-hp-container" class="w-full mt-12 opacity-0 transition-opacity">
+            <div id="player-hp-container" class="w-full" style="margin-top: clamp(0.5rem, 2vh, 3rem); opacity: 0; transition: opacity 0.3s;">
                 <div class="flex justify-between items-end mb-1">
                     <p class="orbitron text-[10px] text-blue-400 font-bold tracking-widest uppercase">Player HP</p>
                     <p id="player-hp-text" class="orbitron text-[10px] text-blue-400">100%</p>
@@ -404,7 +404,7 @@
 
         <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" inputmode="latin" />
 
-        <div class="mt-8 flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center gap-4" style="margin-top: clamp(0.5rem, 2vh, 2rem)">
             <button id="start-btn" class="btn-neon px-12 py-3 rounded-full text-lg font-bold orbitron tracking-widest">START MISSION</button>
             <p id="hint-text" class="text-gray-500 text-xs animate-pulse font-mono uppercase tracking-widest">Press Space or Enter to begin</p>
         </div>
@@ -489,7 +489,7 @@
             { jp: "ウイルス", roma: "uirusu" },
             { jp: "マルウェア", roma: "maruwea" },
 
-            { jp: "AIはハルシネーションに注意", roma: "aihaharusine-syonnityuui" },
+            { jp: "AIはハルシネーションに注意", roma: "aihaharusine-syonnnityuui" },
             { jp: "ネットの使い方には注意が必要だ!", roma: "nettonotukaikatanihatyuuigahituyouda!" },
             { jp: "タイピングはやりすぎていませんか?", roma: "taipinguhayarisugiteimasenka?" }
         ];
@@ -863,6 +863,23 @@
 
             let ch = e.key;
 
+            if (ch === 'Process' || ch === 'Unidentified') {
+                const codeMap = {
+                    Minus: '-', Equal: '=', BracketLeft: '[', BracketRight: ']',
+                    Backslash: '\\', Semicolon: ';', Quote: "'", Comma: ',',
+                    Period: '.', Slash: '/',
+                };
+                if (e.code.startsWith('Key')) {
+                    ch = e.shiftKey
+                        ? e.code.slice(3).toUpperCase()
+                        : e.code.slice(3).toLowerCase();
+                } else if (e.code.startsWith('Digit')) {
+                    ch = e.code.slice(5);
+                } else {
+                    ch = codeMap[e.code] ?? '';
+                }
+            }
+
             ch = ch.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) =>
                 String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
             );
@@ -892,7 +909,7 @@
                     const needDoubleN = ['a','i','u','e','o','y','n'];
 
                     if (nextChar && needDoubleN.includes(nextChar)) {
-                        // 何もしない → nnを待つ
+
                     } else {
                         if (currentRomaArray[charIndex - 1] !== 'n' && currentRomaArray[charIndex + 1] !== 'n') {
                             currentRomaArray.splice(charIndex + 1, 0, 'n');
@@ -1152,6 +1169,28 @@
             document.getElementById('highscore-value').textContent = highScore;
             document.getElementById('highscore-display').style.display = 'block';
         }
+
+        function fitToScreen() {
+            const container = document.getElementById('game-container');
+            container.style.transform = '';
+            container.style.marginTop = '';
+            container.style.marginBottom = '';
+            const availH = window.innerHeight;
+            const availW = window.innerWidth;
+            const contH = container.scrollHeight;
+            const contW = container.scrollWidth;
+            const scaleH = availH / contH;
+            const scaleW = availW / contW;
+            const scale = Math.min(scaleH, scaleW, 1);
+            if (scale < 1) {
+                container.style.transformOrigin = 'center center';
+                container.style.transform = 'scale(' + scale + ')';
+                container.style.marginTop = '-' + (contH * (1 - scale) / 2) + 'px';
+                container.style.marginBottom = '-' + (contH * (1 - scale) / 2) + 'px';
+            }
+        }
+        fitToScreen();
+        window.addEventListener('resize', fitToScreen);
     </script>
 </body>
 </html>
