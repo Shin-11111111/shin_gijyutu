@@ -4,232 +4,562 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホワイトボード</title>
-    <!-- Tailwind CSSの読み込み --><script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 'Inter'フォントを使用 */
-        body { font-family: 'Inter', sans-serif; }
-        
-        /* Canvasを黒板らしくするために、カーソルを十字に変更 */
-        #chalkboard {
-            cursor: crosshair; /* 描画/消しゴムモードのカーソル */
-            background-color: #ffffff; /* white */
-            border: 1px solid #e5e7eb;
-            touch-action: none; 
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+        :root {
+            --sidebar-bg: #1e1e2e;
+            --sidebar-width: 68px;
+            --btn-size: 48px;
+            --accent: #7c6af7;
+            --accent2: #f7c948;
+            --surface: #2a2a3e;
+            --border: rgba(255,255,255,0.08);
+            --text-muted: rgba(255,255,255,0.45);
         }
-        
-        /* 移動モード時のカーソル */
+
+        * { box-sizing: border-box; }
+        body { font-family: 'Noto Sans JP', sans-serif; margin: 0; }
+
+        #chalkboard {
+            cursor: crosshair;
+            background-color: #ffffff;
+            touch-action: none;
+            display: block;
+        }
         #chalkboard.pan-cursor { cursor: grab; }
         #chalkboard.pan-cursor.grabbing { cursor: grabbing; }
 
-        /* 選択されている色ボタンのスタイル: 枠線を強調 */
-        .color-button.active {
-            @apply border-4 border-gray-800 shadow-md;
+        #controls {
+            width: var(--sidebar-width);
+            background: var(--sidebar-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 0;
+            gap: 4px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+            flex-shrink: 0;
+            border-right: 1px solid var(--border);
+            position: relative;
         }
-        
-        /* モードボタンのアクティブスタイル */
-        .mode-button.active {
-            @apply ring-2 ring-offset-2;
+        #controls::-webkit-scrollbar { display: none; }
+
+        .tb-divider {
+            width: 36px;
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+            flex-shrink: 0;
         }
-        #drawModeButton.active { @apply ring-green-500; }
-        #highlighterModeButton.active { @apply ring-yellow-500; } /* 蛍光ペン用 */
-        #eraserModeButton.active { @apply ring-red-500; }
-        #panModeButton.active { @apply ring-indigo-500; }
-        #textToolButton.active { @apply ring-purple-500; }
-        #imageToolButton.active { @apply ring-teal-500; }
-        
-        /* 全画面モード時のCanvasコンテナとCanvasのスタイル */
-        #canvasContainer:fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 100;
-            background-color: #ffffff;
-            margin: 0;
+
+        .tb-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1;
+            padding: 2px 0 0;
+            user-select: none;
+        }
+
+        .tb-btn {
+            width: var(--btn-size);
+            height: var(--btn-size);
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-size: 9.5px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s, transform 0.1s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .tb-btn svg { flex-shrink: 0; }
+        .tb-btn:hover {
+            background: var(--surface);
+            color: #fff;
+            transform: scale(1.05);
+        }
+        .tb-btn.active {
+            background: var(--accent);
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(124,106,247,0.45);
+        }
+        .tb-btn.active-yellow {
+            background: var(--accent2);
+            color: #1a1a2e;
+            box-shadow: 0 2px 12px rgba(247,201,72,0.4);
+        }
+        .tb-btn.active-red {
+            background: #f75a68;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(247,90,104,0.4);
+        }
+        .tb-btn.active-teal {
+            background: #2dd4bf;
+            color: #0f2a27;
+            box-shadow: 0 2px 12px rgba(45,212,191,0.4);
+        }
+        .tb-btn.active-indigo {
+            background: #818cf8;
+            color: #fff;
+            box-shadow: 0 2px 12px rgba(129,140,248,0.4);
+        }
+
+        .color-dot {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2.5px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s, box-shadow 0.15s;
+            flex-shrink: 0;
+        }
+        .color-dot:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.5); }
+        .color-dot.active {
+            border-color: #fff;
+            box-shadow: 0 0 0 2px var(--accent);
+            transform: scale(1.1);
+        }
+
+        .color-picker-wrap {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2.5px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+            position: relative;
+            flex-shrink: 0;
+        }
+        .color-picker-wrap:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.5); }
+        .color-picker-wrap.active { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+        .color-picker-wrap input[type="color"] {
+            position: absolute;
+            top: -4px; left: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
             border: none;
             padding: 0;
+            cursor: pointer;
+            border-radius: 0;
         }
-        
-        /* 全画面モード時のCanvas自体のスタイル */
-        #canvasContainer:fullscreen #chalkboard {
+
+        .color-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 0;
+        }
+
+        .tb-slider-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
             width: 100%;
-            height: 100%;
+        }
+        .tb-slider-label {
+            font-size: 9px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        input[type="range"].tb-slider {
+            -webkit-appearance: none;
+            width: 44px;
+            height: 4px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 2px;
+            outline: none;
+            writing-mode: horizontal-tb;
+        }
+        input[type="range"].tb-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+        input[type="number"].tb-number {
+            width: 44px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 11px;
+            text-align: center;
+            padding: 2px 0;
+        }
+        input[type="number"].tb-number:focus { outline: none; border-color: var(--accent); }
+
+        .tb-toggle-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 4px 0;
+        }
+        .toggle-track {
+            width: 34px;
+            height: 18px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toggle-track.on { background: #3b82f6; }
+        .toggle-thumb {
+            position: absolute;
+            top: 2px; left: 2px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        }
+        .toggle-track.on .toggle-thumb { transform: translateX(16px); }
+        .toggle-label-text {
+            font-size: 8px;
+            color: var(--text-muted);
+            text-align: center;
+            max-width: 52px;
+            line-height: 1.2;
+        }
+
+        #controls-mobile {
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            padding: 6px 8px;
+            gap: 4px;
+            background: var(--sidebar-bg);
+            border-top: 1px solid var(--border);
+            overflow-x: auto;
+            scrollbar-width: none;
+            flex-shrink: 0;
+        }
+        #controls-mobile::-webkit-scrollbar { display: none; }
+
+        .mb-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.55);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            font-size: 8px;
+            font-family: 'Noto Sans JP', sans-serif;
+            font-weight: 500;
+            transition: background 0.15s, color 0.15s;
+            flex-shrink: 0;
+        }
+        .mb-btn:hover { background: var(--surface); color: #fff; }
+        .mb-btn.active { background: var(--accent); color: #fff; }
+        .mb-btn.active-yellow { background: var(--accent2); color: #1a1a2e; }
+        .mb-btn.active-red { background: #f75a68; color: #fff; }
+        .mb-btn.active-teal { background: #2dd4bf; color: #0f2a27; }
+        .mb-btn.active-indigo { background: #818cf8; color: #fff; }
+
+        .mb-divider {
+            width: 1px;
+            height: 28px;
+            background: var(--border);
+            flex-shrink: 0;
+            margin: 0 2px;
+        }
+
+        .mb-color-dot {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+        }
+        .mb-color-dot:hover { transform: scale(1.15); border-color: rgba(255,255,255,0.5); }
+        .mb-color-dot.active { border-color: #fff; box-shadow: 0 0 0 2px var(--accent); }
+
+        .mb-color-picker-wrap {
+            width: 22px; height: 22px;
+            border-radius: 50%; overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.2);
+            cursor: pointer; position: relative; flex-shrink: 0;
+        }
+        .mb-color-picker-wrap input[type="color"] {
+            position: absolute; top: -4px; left: -4px;
+            width: calc(100% + 8px); height: calc(100% + 8px);
+            border: none; padding: 0; cursor: pointer;
+        }
+
+        .mode-button.active { }
+
+        #canvasContainer:fullscreen {
+            position: fixed; top:0; left:0;
+            width:100vw; height:100vh;
+            z-index:100; background:#fff;
+            margin:0; border:none; padding:0;
+        }
+        #canvasContainer:fullscreen #chalkboard { width:100%; height:100%; border:none; }
+
+        @media (max-width: 767px) {
+            #controls { display: none !important; }
+            #controls-mobile { display: flex !important; }
         }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 flex flex-col items-center justify-center">
+<body style="height:100dvh;display:flex;flex-direction:column;overflow:hidden;background:#f1f5f9;">
 
-    <div class="w-full max-w-7xl bg-white shadow-xl rounded-xl overflow-hidden p-4">
-        <h1 class="text-2xl font-bold text-center text-gray-800 mb-4">
-            <span class="text-green-600">ホワイトボード<small>（スマホの場合は横画面推奨）</small></span>
-        </h1>
-        
-        <!-- コントロールパネル -->
-        <div id="controls" class="flex flex-wrap flex-row items-center justify-center gap-3 p-3 bg-gray-50 rounded-lg shadow-inner mb-4">
-            
-            <!-- モード設定グループ -->
-            <div class="flex items-center gap-2 pr-3 border-r border-gray-300">
-                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">画面モード:</span>
-                <!-- ON/OFF トグルスイッチ -->
-                <label for="fixedModeToggle" class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="fixedModeToggle" value="" class="sr-only peer">
-                    <div class="w-11 h-6 bg-gray-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                    <span id="modeLabel" class="ms-3 text-sm font-medium text-gray-700">OFF (無制限)</span>
-                </label>
+    <div style="display:flex;flex:1;overflow:hidden;">
+        <div id="controls">
+            <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#7c6af7,#a78bfa);display:flex;align-items:center;justify-content:center;margin-bottom:4px;flex-shrink:0;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             </div>
-            
-            <!-- 色の選択グループ -->
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-medium text-gray-700">色:</span>
-                <button id="colorBlack" class="color-button w-8 h-8 rounded-full bg-black border-2 border-gray-300 shadow hover:scale-105 transition-transform active:scale-95" title="黒"></button>
-                <button id="colorRed" class="color-button w-8 h-8 rounded-full bg-red-500 border-2 border-red-300 shadow hover:scale-105 transition-transform active:scale-95" title="赤"></button>
-                <button id="colorBlue" class="color-button w-8 h-8 rounded-full bg-blue-500 border-2 border-blue-300 shadow hover:scale-105 transition-transform active:scale-95" title="青"></button>
-                <button id="colorYellow" class="color-button w-8 h-8 rounded-full bg-yellow-400 border-2 border-yellow-300 shadow hover:scale-105 transition-transform active:scale-95" title="黄"></button>
-                <div class="relative group">
-                    <input type="color" id="colorPicker" value="#000000" class="color-button w-10 h-8 rounded-md border-2 border-gray-300 cursor-pointer shadow hover:scale-105 transition-transform active:scale-95" title="カスタム"></input>
-                    <span class="absolute hidden group-hover:block bg-gray-800 text-white text-xs rounded px-2 py-1 -bottom-8 left-1/2 transform -translate-x-1/2">カスタム</span>
+
+            <div class="tb-divider"></div>
+
+            <span class="tb-label">ツール</span>
+
+            <button id="drawModeButton" class="tb-btn mode-button" title="ペン">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+                <span>ペン</span>
+            </button>
+
+            <button id="highlighterModeButton" class="tb-btn mode-button" title="蛍光ペン">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M11 4H4a2 2 0 00-2 2v14"/><path d="M18.5 2.5a2.121 2.121 0 013 3l-9.9 9.9-4.1.5.5-4.1 9.9-9.9z" fill="currentColor" opacity="0.3"/><path d="M18.5 2.5a2.121 2.121 0 013 3l-9.9 9.9-4.1.5.5-4.1 9.9-9.9z"/></svg>
+                <span>蛍光</span>
+            </button>
+
+            <button id="eraserModeButton" class="tb-btn mode-button" title="消しゴム">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l11-11 7 7-1 8z"/><path d="M6.5 17.5l5-5"/></svg>
+                <span>消去</span>
+            </button>
+
+            <button id="textToolButton" class="tb-btn mode-button" title="テキスト">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+                <span>文字</span>
+            </button>
+
+            <button id="imageToolButton" class="tb-btn mode-button" title="画像">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <span>画像</span>
+            </button>
+
+            <button id="panModeButton" class="tb-btn mode-button" title="移動">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+                <span>移動</span>
+            </button>
+
+            <div class="tb-divider"></div>
+
+            <span class="tb-label">カラー</span>
+            <div class="color-row">
+                <button id="colorBlack" class="color-dot active" style="background:#1a1a2e;" title="黒"></button>
+                <button id="colorRed" class="color-dot" style="background:#f75a68;" title="赤"></button>
+                <button id="colorBlue" class="color-dot" style="background:#60a5fa;" title="青"></button>
+                <button id="colorYellow" class="color-dot" style="background:#f7c948;" title="黄"></button>
+                <div class="color-picker-wrap" id="colorPickerWrap" title="カスタム">
+                    <svg style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:1;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+                    <input type="color" id="colorPicker" value="#000000">
                 </div>
             </div>
 
-            <!-- ツール選択グループ -->
-            <div class="flex items-center gap-3 border-l pl-3 border-gray-300">
-                <!-- 描画モード -->
-                <button id="drawModeButton" class="mode-button px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors active:shadow-none active:bg-green-700">
-                    ペン
-                </button>
-                
-                <!-- 蛍光ペンモード -->
-                <button id="highlighterModeButton" class="mode-button px-4 py-2 bg-yellow-400 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-yellow-500 transition-colors active:shadow-none active:bg-yellow-600">
-                    蛍光ペン
-                </button>
+            <div class="tb-divider"></div>
 
-                <!-- 消しゴムモード -->
-                <button id="eraserModeButton" class="mode-button px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors active:shadow-none active:bg-red-700">
-                    消しゴム
-                </button>
-                
-                <!-- テキストツール -->
-                <button id="textToolButton" class="mode-button px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow-md hover:bg-purple-600 transition-colors active:shadow-none active:bg-purple-700">
-                    テキスト
-                </button>
-                
-                <!-- 画像ツール -->
-                <button id="imageToolButton" class="mode-button px-4 py-2 bg-teal-500 text-white font-semibold rounded-lg shadow-md hover:bg-teal-600 transition-colors active:shadow-none active:bg-teal-700">
-                    画像
-                </button>
+            <div class="tb-slider-wrap">
+                <span class="tb-slider-label" id="lineWidthLabel">太さ</span>
+                <input type="range" id="lineWidthRange" min="1" max="50" value="5" class="tb-slider">
+                <input type="number" id="lineWidthInput" min="1" max="50" value="5" class="tb-number">
             </div>
 
-            <!-- 太さ/サイズ選択 (バーと数値入力) -->
-            <div class="flex items-center gap-2 border-l pl-3 border-gray-300">
-                <label for="lineWidthRange" id="lineWidthLabel" class="text-sm font-medium text-gray-700 whitespace-nowrap">太さ:</label>
-                <input type="range" id="lineWidthRange" min="1" max="50" value="5" class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg">
-                <input type="number" id="lineWidthInput" min="1" max="50" value="5" class="w-14 p-1 border border-gray-300 rounded-md text-sm text-center focus:ring-blue-500 focus:border-blue-500">
+            <div class="tb-divider"></div>
+
+            <span class="tb-label">ズーム</span>
+            <button id="zoomInButton" class="tb-btn" title="ズームイン">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                <span>拡大</span>
+            </button>
+            <button id="zoomOutButton" class="tb-btn" title="ズームアウト">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                <span>縮小</span>
+            </button>
+            <button id="resetViewButton" class="tb-btn" title="位置リセット">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0"/><polyline points="3 3 3 12 12 12"/></svg>
+                <span>リセット</span>
+            </button>
+
+            <div class="tb-divider"></div>
+
+            <span class="tb-label">操作</span>
+            <button id="undoButton" class="tb-btn" title="元に戻す" disabled>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+                <span>戻す</span>
+            </button>
+            <button id="clearButton" class="tb-btn" title="すべてクリア">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                <span>クリア</span>
+            </button>
+            <button id="screenshotButton" class="tb-btn" title="スクリーンショット">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span>保存</span>
+            </button>
+            <button id="fullscreenButton" class="tb-btn" title="全画面">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
+                <span>全画面</span>
+            </button>
+
+            <div class="tb-divider"></div>
+
+            <div class="tb-toggle-wrap">
+                <span class="tb-label">固定</span>
+                <div class="toggle-track" id="toggleTrack" title="画面モード">
+                    <div class="toggle-thumb"></div>
+                </div>
+                <input type="checkbox" id="fixedModeToggle" class="sr-only" style="position:absolute;opacity:0;width:0;height:0;">
+                <span class="toggle-label-text" id="modeLabel">無制限</span>
             </div>
 
-            <!-- ズーム/パンコントロールグループ -->
-            <div class="flex items-center gap-2 border-l pl-3 border-gray-300">
-                <span class="text-sm font-medium text-gray-700 whitespace-nowrap">ズーム/移動:</span>
-                <button id="zoomInButton" class="px-3 py-1 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-colors active:scale-95">+</button>
-                <button id="zoomOutButton" class="px-3 py-1 bg-gray-300 text-gray-800 font-bold rounded-lg hover:bg-gray-400 transition-colors active:scale-95">-</button>
-                <button id="panModeButton" class="mode-button px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-600 transition-colors active:shadow-none active:bg-indigo-700">
-                    キャンバス/テキスト/画像 移動
-                </button>
-                <button id="resetViewButton" class="px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg shadow-md hover:bg-gray-700 transition-colors active:shadow-none active:bg-gray-800">
-                    キャンバス位置リセット
-                </button>
-            </div>
-
-            <!-- アクションボタン -->
-            <div class="flex items-center gap-3 border-l pl-3 border-gray-300">
-                <button id="undoButton" class="px-4 py-2 bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:bg-gray-600 transition-colors active:shadow-none active:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed">
-                    元に戻す
-                </button>
-                <button id="clearButton" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 transition-colors active:shadow-none active:bg-red-700">
-                    すべてクリア
-                </button>
-                <button id="screenshotButton" class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 transition-colors active:shadow-none active:bg-green-700">
-                    スクショ
-                </button>
-                <!-- 全画面モードボタン -->
-                <button id="fullscreenButton" class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 transition-colors active:shadow-none active:bg-blue-700">
-                    全画面
-                </button>
-            </div>
-            
         </div>
 
-        <!-- Canvas描画エリアのコンテナ -->
-        <div id="canvasContainer" class="relative border-4 border-gray-800 rounded-lg overflow-hidden shadow-2xl">
-            <!-- Canvas要素 -->
-            <canvas id="chalkboard" class="w-full" width="800" height="450"></canvas>
-            
-            <!-- テキスト入力オーバーレイ -->
-            <textarea id="textInputOverlay" class="absolute hidden" style="font-size: 16px;"></textarea>
-            
-            <!-- 画像ファイル入力 (非表示) -->
+        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+        <div id="canvasContainer" style="position:relative;flex:1;overflow:hidden;">
+            <canvas id="chalkboard" style="width:100%;height:100%;display:block;" width="800" height="450"></canvas>
+            <textarea id="textInputOverlay" class="absolute hidden" style="font-size:16px;"></textarea>
             <input type="file" id="imageFileInput" accept="image/*" class="hidden">
-
-            <!-- メッセージ表示エリア (アラートの代わり) -->
-            <div id="messageBox" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-white px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+            <div id="messageBox" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;padding:8px 16px;border-radius:8px;opacity:0;transition:opacity 0.3s;pointer-events:none;font-size:13px;font-weight:600;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;"></div>
         </div>
-        
+        </div>
+
+    </div>
+
+    <div id="controls-mobile">
+        <button id="drawModeButtonM" class="mb-btn mode-button" title="ペン">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
+            <span>ペン</span>
+        </button>
+        <button id="highlighterModeButtonM" class="mb-btn mode-button" title="蛍光ペン">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 2.5a2.121 2.121 0 013 3l-9.9 9.9-4.1.5.5-4.1 9.9-9.9z" fill="currentColor" opacity="0.3"/><path d="M18.5 2.5a2.121 2.121 0 013 3l-9.9 9.9-4.1.5.5-4.1 9.9-9.9z"/></svg>
+            <span>蛍光</span>
+        </button>
+        <button id="eraserModeButtonM" class="mb-btn mode-button" title="消しゴム">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l11-11 7 7-1 8z"/><path d="M6.5 17.5l5-5"/></svg>
+            <span>消去</span>
+        </button>
+        <button id="textToolButtonM" class="mb-btn mode-button" title="テキスト">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+            <span>文字</span>
+        </button>
+        <button id="imageToolButtonM" class="mb-btn mode-button" title="画像">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>画像</span>
+        </button>
+        <button id="panModeButtonM" class="mb-btn mode-button" title="移動">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3"/><path d="M9 5l3-3 3 3"/><path d="M15 19l-3 3-3-3"/><path d="M19 9l3 3-3 3"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="12" y1="2" x2="12" y2="22"/></svg>
+            <span>移動</span>
+        </button>
+
+        <div class="mb-divider"></div>
+
+        <button id="colorBlackM" class="mb-color-dot" style="background:#1a1a2e;" title="黒"></button>
+        <button id="colorRedM" class="mb-color-dot" style="background:#f75a68;" title="赤"></button>
+        <button id="colorBlueM" class="mb-color-dot" style="background:#60a5fa;" title="青"></button>
+        <button id="colorYellowM" class="mb-color-dot" style="background:#f7c948;" title="黄"></button>
+        <div class="mb-color-picker-wrap" title="カスタム">
+            <input type="color" id="colorPickerM" value="#000000">
+        </div>
+
+        <div class="mb-divider"></div>
+
+        <input type="range" id="lineWidthRangeM" min="1" max="50" value="5" style="-webkit-appearance:none;width:52px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;outline:none;flex-shrink:0;">
+        <input type="number" id="lineWidthInputM" min="1" max="50" value="5" style="width:34px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);border-radius:6px;color:#fff;font-size:11px;text-align:center;padding:2px 0;flex-shrink:0;">
+
+        <div class="mb-divider"></div>
+
+        <button id="zoomInButtonM" class="mb-btn" title="拡大">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <button id="zoomOutButtonM" class="mb-btn" title="縮小">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+        </button>
+        <button id="resetViewButtonM" class="mb-btn" title="リセット">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0"/><polyline points="3 3 3 12 12 12"/></svg>
+        </button>
+        <button id="undoButtonM" class="mb-btn" title="元に戻す" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+        </button>
+        <button id="clearButtonM" class="mb-btn" title="クリア">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M9 6V4h6v2"/></svg>
+        </button>
+        <button id="screenshotButtonM" class="mb-btn" title="保存">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
+        <button id="fullscreenButtonM" class="mb-btn" title="全画面">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 00-2 2v3"/><path d="M21 8V5a2 2 0 00-2-2h-3"/><path d="M3 16v3a2 2 0 002 2h3"/><path d="M16 21h3a2 2 0 002-2v-3"/></svg>
+        </button>
+
     </div>
 
     <script>
-        // グローバル変数
         let canvas, ctx;
         let isDrawing = false;
         let isPanning = false; 
-        let isObjectMoving = false; // オブジェクト移動中フラグ
-        let isResizing = false; // リサイズ中フラグ
-        let isRotating = false; // 回転中フラグ
+        let isObjectMoving = false;
+        let isResizing = false;
+        let isRotating = false;
         let lastX = 0;
         let lastY = 0;
         let currentColor = '#000000'; 
-        
-        // 操作履歴の管理用配列
         let history = [];
         let currentHistoryIndex = -1;
-        const MAX_HISTORY = 50; // 最大履歴数
+        const MAX_HISTORY = 50;
         const blackboardBackgroundColor = '#ffffff'; 
-        // 'draw' (ペン), 'highlighter' (蛍光ペン), 'eraser', 'pan', 'text', 'image'
         let currentMode = 'draw'; 
-        let selectedObject = null; // 現在選択中のオブジェクト (移動/サイズ変更対象)
-
-        // 描画オブジェクトを保持する配列 (ストローク、テキスト、画像)
+        let selectedObject = null;
         let objects = [];
         let currentStroke = null;
-        let editingTextObject = null; // 編集中のテキストオブジェクト
-
-        // ズーム・パン用の状態
+        let editingTextObject = null;
         let scale = 1.0;
         let offsetX = 0;
         let offsetY = 0;
         const zoomFactor = 1.1;
         const maxScale = 4.0;
         const minScaleUnrestricted = 0.25; 
-        
-        // **モード設定の管理**
-        let currentModeSetting = 'unrestricted'; // 'unrestricted' (無制限) or 'fixed' (固定解像度)
+        let currentModeSetting = 'unrestricted';
         const FIXED_WIDTH = 1920; 
         const FIXED_HEIGHT = 1080; 
-        
-        // 蛍光ペン用の設定
         const HIGHLIGHTER_DEFAULT_WIDTH = 20;
         const HIGHLIGHTER_OPACITY = 0.5;
-        
-        // ペン/消しゴムモード用のデフォルト太さ
         const DEFAULT_LINE_WIDTH = 5;
         const DEFAULT_ERASER_WIDTH = 10;
+        const HANDLE_SIZE = 10;
+        const ROTATE_HANDLE_OFFSET = 30;
+        let activeHandle = null;
 
-        // 画像のリサイズ/回転ハンドル設定
-        const HANDLE_SIZE = 10; // ハンドルの半径 (仮想座標)
-        const ROTATE_HANDLE_OFFSET = 30; // 回転ハンドルの中心から画像上辺までのオフセット
-        let activeHandle = null; // 現在操作中のハンドル (null, 'resize', 'rotate')
-
-        // DOM要素
         const canvasContainer = document.getElementById('canvasContainer');
         const colorPicker = document.getElementById('colorPicker');
         const colorBlack = document.getElementById('colorBlack'); 
@@ -238,7 +568,7 @@
         const colorYellow = document.getElementById('colorYellow');
         const lineWidthRange = document.getElementById('lineWidthRange');
         const lineWidthInput = document.getElementById('lineWidthInput');
-        const lineWidthLabel = document.getElementById('lineWidthLabel'); // 太さ/サイズラベル
+        const lineWidthLabel = document.getElementById('lineWidthLabel');
         const drawModeButton = document.getElementById('drawModeButton'); 
         const highlighterModeButton = document.getElementById('highlighterModeButton'); 
         const eraserModeButton = document.getElementById('eraserModeButton');
@@ -257,9 +587,6 @@
         const modeLabel = document.getElementById('modeLabel');
         const fullscreenButton = document.getElementById('fullscreenButton'); 
 
-        // ----------------------------------------------------
-        // 1. 初期設定とCanvasのセットアップ
-        // ----------------------------------------------------
         window.onload = function() {
             canvas = document.getElementById('chalkboard');
             if (!canvas.getContext) {
@@ -276,7 +603,6 @@
             setDrawMode(); 
             colorBlack.classList.add('active');
             
-            // 初期状態を履歴に保存
             saveToHistory();
         };
 
@@ -291,6 +617,7 @@
                 canvas.height = canvasContainer.clientHeight;
             } else {
                 const containerWidth = canvasContainer.clientWidth;
+                const containerHeight = canvasContainer.clientHeight;
                 
                 if (currentModeSetting === 'fixed') {
                     canvas.width = FIXED_WIDTH;
@@ -298,10 +625,10 @@
                     const displayHeight = containerWidth * (FIXED_HEIGHT / FIXED_WIDTH);
                     canvas.style.height = `${displayHeight}px`;
                     
-                } else { // unrestricted
+                } else {
                     canvas.width = containerWidth;
-                    canvas.height = containerWidth * (9 / 16); 
-                    canvas.style.height = `auto`; 
+                    canvas.height = containerHeight > 0 ? containerHeight : containerWidth * (9 / 16);
+                    canvas.style.height = ``;
                 }
             }
             redrawCanvas();
@@ -311,44 +638,31 @@
             currentModeSetting = isFixed ? 'fixed' : 'unrestricted';
             
             if (isFixed) {
-                modeLabel.textContent = 'ON (固定)';
-                showMessage(`モード: キャンバスの大きさ固定 (1920x1080)`, '#10b981'); 
+                modeLabel.textContent = '固定';
+                showMessage(`固定モード (1920x1080)`, '#10b981'); 
             } else {
-                modeLabel.textContent = 'OFF (無制限)';
-                showMessage(`モード: キャンバスの大きさ無制限`, '#3b82f6'); 
+                modeLabel.textContent = '無制限';
+                showMessage(`無制限モード`, '#3b82f6'); 
             }
             resetView(); 
             resizeCanvas();
         }
 
-
-        // ----------------------------------------------------
-        // 2. イベントリスナーの設定
-        // ----------------------------------------------------
-        // 履歴に状態を保存する関数
         function saveToHistory() {
-            // 現在の履歴インデックス以降の履歴を削除（新しい分岐を作成）
             history = history.slice(0, currentHistoryIndex + 1);
             
-            // 新しい状態を保存（ディープコピー）
             const currentState = JSON.parse(JSON.stringify(objects));
-            
-            // 履歴に追加
             history.push(currentState);
             
-            // 最大履歴数を超えた場合、古い履歴を削除
             if (history.length > MAX_HISTORY) {
                 history.shift();
             }
             
-            // 現在の履歴インデックスを更新
             currentHistoryIndex = history.length - 1;
             
-            // 元に戻すボタンの状態を更新
             updateUndoButtonState();
         }
 
-        // 元に戻す処理
         function undo() {
             if (currentHistoryIndex > 0) {
                 currentHistoryIndex--;
@@ -359,7 +673,6 @@
             updateUndoButtonState();
         }
 
-        // 元に戻すボタンの状態を更新
         function updateUndoButtonState() {
             const undoButton = document.getElementById('undoButton');
             if (undoButton) {
@@ -370,20 +683,13 @@
         function setupEventListeners() {
             fixedModeToggle.addEventListener('change', (e) => setModeSetting(e.target.checked));
             
-            // 元に戻すボタンのイベントリスナー
             const undoButton = document.getElementById('undoButton');
             if (undoButton) {
                 undoButton.addEventListener('click', undo);
             }
 
-            // 色選択ボタンのイベントリスナー
-            document.getElementById('colorBlack').addEventListener('click', () => selectColor('#000000', colorBlack));
-            colorRed.addEventListener('click', () => selectColor('#ef4444', colorRed));
-            colorBlue.addEventListener('click', () => selectColor('#3b82f6', colorBlue));
             colorYellow.addEventListener('click', () => selectColor('#facc15', colorYellow));
-            colorPicker.addEventListener('input', (e) => selectColor(e.target.value, colorPicker));
             
-            // マウス/タッチイベント
             canvas.addEventListener('mousedown', handleStart);
             canvas.addEventListener('mousemove', handleMove);
             canvas.addEventListener('mouseup', handleEnd);
@@ -395,7 +701,6 @@
             canvas.addEventListener('touchend', handleEnd);
             canvas.addEventListener('touchcancel', handleEnd);
             
-            // テキスト入力オーバーレイのイベント
             textInputOverlay.addEventListener('blur', stopEditingText);
             textInputOverlay.addEventListener('input', updateTextObject);
             textInputOverlay.addEventListener('keypress', (e) => {
@@ -407,16 +712,25 @@
 
             imageFileInput.addEventListener('change', handleImageFileSelect);
 
-            // コントロールイベント
-            document.getElementById('colorBlack').addEventListener('click', () => selectColor('#000000', colorBlack));
-            colorRed.addEventListener('click', () => selectColor('#ef4444', colorRed));
-            colorBlue.addEventListener('click', () => selectColor('#3b82f6', colorBlue));
-            colorPicker.addEventListener('input', (e) => selectColor(e.target.value, colorPicker));
+            document.getElementById('colorBlack').addEventListener('click', () => selectColor('#1a1a2e', colorBlack));
+            colorRed.addEventListener('click', () => selectColor('#f75a68', colorRed));
+            colorBlue.addEventListener('click', () => selectColor('#60a5fa', colorBlue));
+            colorYellow.addEventListener('click', () => selectColor('#f7c948', colorYellow));
+            colorPicker.addEventListener('input', (e) => selectColor(e.target.value, document.getElementById('colorPickerWrap')));
+
+            const toggleTrack = document.getElementById('toggleTrack');
+            if (toggleTrack) {
+                toggleTrack.addEventListener('click', () => {
+                    const newVal = !fixedModeToggle.checked;
+                    fixedModeToggle.checked = newVal;
+                    toggleTrack.classList.toggle('on', newVal);
+                    setModeSetting(newVal);
+                });
+            }
             
             lineWidthRange.addEventListener('input', updateLineWidth);
             lineWidthInput.addEventListener('input', updateLineWidth);
 
-            // モードボタン
             drawModeButton.addEventListener('click', setDrawMode);
             highlighterModeButton.addEventListener('click', setHighlighterMode); 
             eraserModeButton.addEventListener('click', setEraserMode);
@@ -429,14 +743,61 @@
             
             fullscreenButton.addEventListener('click', toggleFullscreen);
 
-            // ズーム/パンイベント
             zoomInButton.addEventListener('click', () => zoom(zoomFactor));
             zoomOutButton.addEventListener('click', () => zoom(1 / zoomFactor));
             resetViewButton.addEventListener('click', resetView);
 
-            
-            // 【★追加】キーボードイベントでオブジェクトを削除するリスナーを追加
             document.addEventListener('keydown', handleKeyDown);
+
+            const mobileColorMapping = [
+                ['colorBlackM', '#1a1a2e'],
+                ['colorRedM', '#f75a68'],
+                ['colorBlueM', '#60a5fa'],
+                ['colorYellowM', '#f7c948'],
+            ];
+            mobileColorMapping.forEach(([id, color]) => {
+                const btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', () => selectColor(color, btn));
+            });
+            const colorPickerM = document.getElementById('colorPickerM');
+            if (colorPickerM) colorPickerM.addEventListener('input', (e) => selectColor(e.target.value, colorPickerM));
+
+            const mModeMap = [
+                ['drawModeButtonM', setDrawMode],
+                ['highlighterModeButtonM', setHighlighterMode],
+                ['eraserModeButtonM', setEraserMode],
+                ['textToolButtonM', setTextMode],
+                ['imageToolButtonM', setImageMode],
+                ['panModeButtonM', setPanMode],
+                ['zoomInButtonM', () => zoom(zoomFactor)],
+                ['zoomOutButtonM', () => zoom(1 / zoomFactor)],
+                ['resetViewButtonM', resetView],
+                ['undoButtonM', undo],
+                ['clearButtonM', clearCanvas],
+                ['screenshotButtonM', takeScreenshot],
+                ['fullscreenButtonM', toggleFullscreen],
+            ];
+            mModeMap.forEach(([id, fn]) => {
+                const btn = document.getElementById(id);
+                if (btn) btn.addEventListener('click', fn);
+            });
+
+            const lineWidthRangeM = document.getElementById('lineWidthRangeM');
+            const lineWidthInputM = document.getElementById('lineWidthInputM');
+            if (lineWidthRangeM) lineWidthRangeM.addEventListener('input', (e) => {
+                lineWidthRange.value = e.target.value;
+                lineWidthInput.value = e.target.value;
+                updateLineWidth(e);
+            });
+            if (lineWidthInputM) lineWidthInputM.addEventListener('input', (e) => {
+                lineWidthRange.value = e.target.value;
+                lineWidthInput.value = e.target.value;
+                updateLineWidth(e);
+            });
+            lineWidthRange.addEventListener('input', (e) => {
+                if (lineWidthRangeM) lineWidthRangeM.value = e.target.value;
+                if (lineWidthInputM) lineWidthInputM.value = e.target.value;
+            });
         }
         
         function toggleFullscreen() {
@@ -454,11 +815,6 @@
                     });
             }
         }
-
-
-        // ----------------------------------------------------
-        // 3. 描画データの操作と再描画
-        // ----------------------------------------------------
 
         function drawStroke(stroke) {
             if (stroke.points.length < 1) return;
@@ -500,7 +856,7 @@
             });
             
             if (selectedObject === textObject && !editingTextObject) {
-                ctx.strokeStyle = '#3b82f6'; // Blue
+                ctx.strokeStyle = '#3b82f6';
                 ctx.lineWidth = 2 / scale;
                 
                 let textWidths = lines.map(line => ctx.measureText(line).width * scale);
@@ -515,7 +871,6 @@
         }
 
         function drawImage(imageObject) {
-            // 回転の中心
             const centerX = imageObject.x + imageObject.width / 2;
             const centerY = imageObject.y + imageObject.height / 2;
 
@@ -553,28 +908,23 @@
                 ctx.textBaseline = 'alphabetic';
             }
             
-            // 選択中の画像にハイライト
             if (selectedObject === imageObject) {
-                ctx.strokeStyle = '#3b82f6'; // Blue
+                ctx.strokeStyle = '#3b82f6';
                 ctx.lineWidth = 2 / scale;
                 ctx.strokeRect(imageObject.x, imageObject.y, imageObject.width, imageObject.height);
                 
-                // リサイズハンドルと回転ハンドルを描画
                 drawImageHandles(imageObject);
             }
             ctx.restore();
         }
 
-        // 画像の四隅にリサイズハンドル、上部に回転ハンドルを描画する
         function drawImageHandles(imageObject) {
             const handleSize = HANDLE_SIZE / scale; 
             
-            // リサイズハンドル
             ctx.fillStyle = '#3b82f6'; 
             ctx.strokeStyle = '#ffffff'; 
             ctx.lineWidth = 1 / scale;
 
-            // 画像の四隅の座標を計算（回転なし）
             const corners = [
                 {x: imageObject.x, y: imageObject.y},
                 {x: imageObject.x + imageObject.width, y: imageObject.y},
@@ -582,21 +932,17 @@
                 {x: imageObject.x, y: imageObject.y + imageObject.height}
             ];
 
-            // 回転ハンドルの基準点を計算（回転なし）
             const rotateHandleY = imageObject.y - ROTATE_HANDLE_OFFSET / scale;
             const rotateHandleX = imageObject.x + imageObject.width / 2;
 
-            // 画像の中心点
             const centerX = imageObject.x + imageObject.width / 2;
             const centerY = imageObject.y + imageObject.height / 2;
 
-            // 保存された回転状態を一時的に解除
             ctx.save();
             ctx.translate(centerX, centerY);
             ctx.rotate(imageObject.rotation);
             ctx.translate(-centerX, -centerY);
 
-            // リサイズハンドルを描画
             corners.forEach(corner => {
                 ctx.beginPath();
                 ctx.arc(corner.x, corner.y, handleSize, 0, Math.PI * 2);
@@ -604,13 +950,11 @@
                 ctx.stroke();
             });
 
-            // 回転ハンドルを描画
             ctx.beginPath();
             ctx.arc(rotateHandleX, rotateHandleY, handleSize, 0, Math.PI * 2);
             ctx.fill();
             ctx.stroke();
 
-            // 回転ハンドルと画像上部中央を結ぶ線
             ctx.beginPath();
             const topCenterX = imageObject.x + imageObject.width / 2;
             const topCenterY = imageObject.y;
@@ -621,7 +965,6 @@
             ctx.lineWidth = 1 / scale;
             ctx.stroke();
 
-            // 回転状態を元に戻す
             ctx.restore();
         }
 
@@ -651,10 +994,6 @@
 
             ctx.restore(); 
         }
-
-        // ----------------------------------------------------
-        // 4. ズーム・パン処理と制約
-        // ----------------------------------------------------
 
         function constrainView() {
             if (currentModeSetting !== 'fixed' ) {
@@ -743,10 +1082,6 @@
             redrawCanvas();
             showMessage('キャンバス位置をリセットしました');
         }
-
-        // ----------------------------------------------------
-        // 5. 描画・オブジェクト操作のハンドラ
-        // ----------------------------------------------------
         
         function getVirtualCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
@@ -779,7 +1114,6 @@
                 const obj = objects[i];
                 if (obj.type === 'text' || obj.type === 'image') {
                     
-                    // 回転している画像の場合、逆回転して衝突判定を行う
                     if (obj.type === 'image' && obj.rotation) {
                         const centerX = obj.x + obj.width / 2;
                         const centerY = obj.y + obj.height / 2;
@@ -790,7 +1124,7 @@
                             rotatedVirtualY >= obj.y && rotatedVirtualY <= obj.y + obj.height) {
                             return obj;
                         }
-                    } else if (obj.type === 'text') { // テキスト
+                    } else if (obj.type === 'text') {
                         const baseFontSize = parseInt(obj.font);
                         const lineHeight = baseFontSize * 1.2; 
                         const numLines = obj.content.split('\n').length;
@@ -802,7 +1136,7 @@
                             virtualY >= yOffsetStart && virtualY <= yOffsetStart + height) {
                             return obj;
                         }
-                    } else { // 回転していない画像
+                    } else {
                          if (virtualX >= obj.x && virtualX <= obj.x + obj.width &&
                             virtualY >= obj.y && virtualY <= obj.y + obj.height) {
                             return obj;
@@ -813,7 +1147,6 @@
             return null;
         }
 
-        // リサイズハンドルの座標と衝突判定
         function getResizeHandleAt(virtualX, virtualY, imageObject) {
             if (!imageObject || imageObject.type !== 'image') return null;
 
@@ -840,7 +1173,6 @@
             return null;
         }
 
-        // 回転ハンドルの座標と衝突判定
         function getRotateHandleAt(virtualX, virtualY, imageObject) {
             if (!imageObject || imageObject.type !== 'image') return null;
 
@@ -868,7 +1200,6 @@
             
             if(editingTextObject) stopEditingText();
 
-            // パンモード以外で、まずハンドルの操作をチェック
             if (currentMode === 'pan' && selectedObject && selectedObject.type === 'image') {
                 activeHandle = getResizeHandleAt(x, y, selectedObject);
                 if (activeHandle) {
@@ -893,21 +1224,15 @@
                 }
             }
 
-
-            // オブジェクトの選択を試みる
             selectedObject = getObjectAt(x, y); 
             
-            // UIの「太さ」をテキストサイズ変更モードに切り替えるかどうかチェック
             updateLineWidthLabel();
 
-            // UIカラーピッカーを現在のオブジェクトの色に同期
             updateColorPickerUI();
 
-            // CASE 1: 移動モード (Pan Mode) または 2本指タッチ (Pan)
             if (currentMode === 'pan' || (e.touches && e.touches.length === 2)) {
                 
                 if (selectedObject && (selectedObject.type === 'text' || selectedObject.type === 'image')) {
-                    // オブジェクトの上をクリック -> オブジェクト移動モードに移行
                     isObjectMoving = true;
                     isPanning = false; 
                     [lastX, lastY] = [x, y];
@@ -923,12 +1248,11 @@
                     }
 
                 } else {
-                    // オブジェクトのない場所をクリック -> キャンバスパンモードに移行
                     isPanning = true;
                     isObjectMoving = false;
-                    selectedObject = null; // オブジェクト選択を解除
-                    updateLineWidthLabel(); // ラベルをリセット
-                    updateColorPickerUI(); // カラーピッカーを初期状態にリセット
+                    selectedObject = null;
+                    updateLineWidthLabel();
+                    updateColorPickerUI();
                     [lastX, lastY] = [rawX, rawY]; 
                     canvas.classList.add('grabbing'); 
                     redrawCanvas();
@@ -936,7 +1260,6 @@
                 return;
             }
             
-            // CASE 2: テキストモード (Creation or Edit)
             if (currentMode === 'text') {
                 if (selectedObject && selectedObject.type === 'text') {
                     startEditingText(selectedObject);
@@ -947,18 +1270,16 @@
                 return;
             }
             
-            // CASE 3: 画像モード (Creation)
             if (currentMode === 'image') {
                 selectedObject = null;
                 return;
             }
             
-            // CASE 4: 描画/蛍光ペン/消しゴムモード
             if (currentMode === 'draw' || currentMode === 'eraser' || currentMode === 'highlighter') {
                 isDrawing = true;
                 selectedObject = null;
-                updateLineWidthLabel(); // ラベルを「太さ」に戻す
-                updateColorPickerUI(); // カラーピッカーを現在の描画色に同期
+                updateLineWidthLabel();
+                updateColorPickerUI();
                 
                 let strokeColor = currentColor;
                 let strokeWidth = parseInt(lineWidthRange.value);
@@ -1047,7 +1368,6 @@
             
             if (isObjectMoving) {
                 isObjectMoving = false;
-                // 移動完了後もオブジェクトは選択されたままにする (サイズ変更のため)
                 redrawCanvas(); 
                 return;
             }
@@ -1071,16 +1391,12 @@
             
             if (currentStroke && currentStroke.points.length >= 1) { 
                 objects.push(currentStroke);
-                saveToHistory(); // 描画操作を履歴に保存
+                saveToHistory();
             }
             currentStroke = null;
             
             redrawCanvas();
         }
-        
-        // ----------------------------------------------------
-        // 6. オブジェクト機能 (テキスト・画像)
-        // ----------------------------------------------------
 
         function insertText(x, y) {
             const newText = {
@@ -1110,8 +1426,9 @@
             const baseFontSize = parseInt(textObject.font);
             const actualFontSize = baseFontSize * scale * (rect.width / canvas.width); 
             
+            textInputOverlay.style.position = 'fixed';
             textInputOverlay.style.left = `${rect.left + screenX * (rect.width / canvas.width)}px`;
-            textInputOverlay.style.top = `${rect.top + (screenY - baseFontSize * 1.2 * scale) * (rect.height / canvas.height)}px`; 
+            textInputOverlay.style.top  = `${rect.top + (screenY - baseFontSize * 1.2 * scale) * (rect.height / canvas.height)}px`;
             
             textInputOverlay.style.color = textObject.color;
             textInputOverlay.style.fontSize = `${actualFontSize}px`;
@@ -1144,15 +1461,15 @@
 
         function stopEditingText() {
             if (editingTextObject) {
+                const completedObj = editingTextObject;
                 editingTextObject.content = textInputOverlay.value.trim() || ' ';
-                updateTextObject(); 
-                
+                updateTextObject();
                 textInputOverlay.style.display = 'none';
                 editingTextObject = null;
-                saveToHistory(); // テキスト編集を履歴に保存
+                saveToHistory();
                 redrawCanvas();
-                setPanMode(); // 移動モードに切り替え
-                selectedObject = objects[objects.length - 1]; // 挿入したテキストを選択状態に
+                setPanMode();
+                selectedObject = completedObj;
             }
         }
         
@@ -1184,19 +1501,19 @@
                         url: 'local_file', 
                         width: initialWidth,
                         height: initialHeight,
-                        originalWidth: initialWidth, // リサイズ計算用
-                        originalHeight: initialHeight, // リサイズ計算用
-                        rotation: 0, // 初期角度
+                        originalWidth: initialWidth,
+                        originalHeight: initialHeight,
+                        rotation: 0,
                         img: img
                     };
                     objects.push(newImage);
-                    saveToHistory(); // 画像挿入を履歴に保存
+                    saveToHistory();
                     redrawCanvas();
                     showMessage('ローカル画像を挿入しました。移動やリサイズが可能です', '#059669'); 
                     
                     imageFileInput.value = null; 
-                    setPanMode(); // 移動モードに切り替え
-                    selectedObject = newImage; // 挿入した画像を選択状態に
+                    setPanMode();
+                    selectedObject = newImage;
                 };
                 img.onerror = () => {
                     showMessage('画像ファイルの読み込みに失敗しました', '#dc2626');
@@ -1208,7 +1525,6 @@
             reader.readAsDataURL(file);
         }
         
-        // 画像のリサイズ処理
         function resizeImage(currentX, currentY) {
             if (!selectedObject || selectedObject.type !== 'image' || !activeHandle) return;
 
@@ -1219,17 +1535,14 @@
             const originalHeight = img.height;
             const aspectRatio = img.img.width / img.img.height;
             
-            // 回転を考慮した中心座標
             const centerX = img.x + img.width / 2;
             const centerY = img.y + img.height / 2;
 
-            // マウス座標を画像の基準座標系に逆回転変換
             const rotatedMouseX = centerX + (currentX - centerX) * Math.cos(-img.rotation) - (currentY - centerY) * Math.sin(-img.rotation);
             const rotatedMouseY = centerY + (currentX - centerX) * Math.sin(-img.rotation) + (currentY - centerY) * Math.cos(-img.rotation);
 
             let newWidth, newHeight, newX, newY;
 
-            // ハンドルの位置に応じて新しい幅と高さを計算
             switch (activeHandle) {
                 case 'topLeft':
                     newWidth = originalWidth - (rotatedMouseX - originalX);
@@ -1259,20 +1572,17 @@
                     return;
             }
 
-            // 最小サイズ制約
             const minSize = 20; 
             if (newWidth < minSize || newHeight < minSize) {
                 return;
             }
 
-            // 更新
             img.width = newWidth;
             img.height = newHeight;
             img.x = newX;
             img.y = newY;
         }
 
-        // 画像の回転処理
         function rotateImage(currentX, currentY) {
             if (!selectedObject || selectedObject.type !== 'image' || activeHandle !== 'rotate') return;
 
@@ -1280,20 +1590,13 @@
             const centerX = img.x + img.width / 2;
             const centerY = img.y + img.height / 2;
 
-            // 中心からマウスまでのベクトル
             const dx = currentX - centerX;
             const dy = currentY - centerY;
 
-            // 新しい角度を計算 (Math.atan2 は -PI から PI の範囲)
-            const newRotation = Math.atan2(dy, dx) + Math.PI / 2; // 画像の「上」がY軸と揃うように調整
+            const newRotation = Math.atan2(dy, dx) + Math.PI / 2;
 
             img.rotation = newRotation;
         }
-
-
-        // ----------------------------------------------------
-        // 7. コントロール機能 (モード切替/太さ)
-        // ----------------------------------------------------
         
         function hexToRgba(hex, alpha) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -1306,49 +1609,48 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // カラーピッカーUIの状態を更新する
         function updateColorPickerUI() {
             let activeColor = currentColor;
 
             if (selectedObject && selectedObject.type === 'text') {
                 activeColor = selectedObject.color;
             }
-            // 画像は色を持たないのでcurrentColorのまま
 
-            // すべてのアクティブ状態を解除
-            document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.color-dot, .mb-color-dot').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('colorPickerWrap')?.classList.remove('active');
 
-            // カスタムカラーピッカーの値を更新
             colorPicker.value = activeColor;
-            
-            // プリセットボタンがあれば、それもアクティブにする
-            if (activeColor === '#000000') colorBlack.classList.add('active');
-            else if (activeColor === '#ef4444') colorRed.classList.add('active');
-            else if (activeColor === '#3b82f6') colorBlue.classList.add('active');
-            else if (activeColor === '#facc15') colorYellow.classList.add('active');
-            else colorPicker.classList.add('active'); // カスタムカラーが選択された場合
+            const colorPickerM = document.getElementById('colorPickerM');
+            if (colorPickerM) colorPickerM.value = activeColor;
 
-            // 現在のモードに応じてボタンの背景色を変更
-            if (currentMode === 'highlighter') {
-                highlighterModeButton.style.backgroundColor = activeColor;
-                highlighterModeButton.style.color = isColorLight(activeColor) ? '#000000' : '#ffffff';
-                drawModeButton.style.backgroundColor = '';
-                drawModeButton.style.color = '';
-            } else if (currentMode === 'draw') {
-                drawModeButton.style.backgroundColor = activeColor;
-                drawModeButton.style.color = isColorLight(activeColor) ? '#000000' : '#ffffff';
-                highlighterModeButton.style.backgroundColor = '';
-                highlighterModeButton.style.color = '';
+            if (activeColor === '#1a1a2e' || activeColor === '#000000') {
+                colorBlack.classList.add('active');
+                document.getElementById('colorBlackM')?.classList.add('active');
+            } else if (activeColor === '#f75a68' || activeColor === '#ef4444') {
+                colorRed.classList.add('active');
+                document.getElementById('colorRedM')?.classList.add('active');
+            } else if (activeColor === '#60a5fa' || activeColor === '#3b82f6') {
+                colorBlue.classList.add('active');
+                document.getElementById('colorBlueM')?.classList.add('active');
+            } else if (activeColor === '#f7c948' || activeColor === '#facc15') {
+                colorYellow.classList.add('active');
+                document.getElementById('colorYellowM')?.classList.add('active');
             } else {
-                // その他のモードの場合は両方のボタンをデフォルトに戻す
-                drawModeButton.style.backgroundColor = '';
-                drawModeButton.style.color = '';
+                document.getElementById('colorPickerWrap')?.classList.add('active');
+            }
+
+            if (currentMode === 'highlighter') {
                 highlighterModeButton.style.backgroundColor = '';
-                highlighterModeButton.style.color = '';
+                drawModeButton.style.backgroundColor = '';
+            } else if (currentMode === 'draw') {
+                drawModeButton.style.backgroundColor = '';
+                highlighterModeButton.style.backgroundColor = '';
+            } else {
+                drawModeButton.style.backgroundColor = '';
+                highlighterModeButton.style.backgroundColor = '';
             }
         }
 
-        // 色の明るさを判定する関数
         function isColorLight(color) {
             const hex = color.replace('#', '');
             const r = parseInt(hex.substr(0, 2), 16);
@@ -1359,22 +1661,19 @@
         }
 
         function selectColor(color, activeElement) {
-            // テキストオブジェクトが選択されている場合は、その色を変更
             if (selectedObject && selectedObject.type === 'text') {
                 selectedObject.color = color;
                 redrawCanvas();
                 showMessage('テキストの色を変更しました', color);
             } else {
-                // それ以外の場合は、現在の描画色を変更
                 currentColor = color;
-                
                 if (currentMode === 'highlighter') {
-                showMessage(`蛍光ペンの色を変更: ${color}`, color);
-            } else if (currentMode !== 'pan' && currentMode !== 'text' && currentMode !== 'image') {
-                setDrawMode();
+                    showMessage(`蛍光ペンの色を変更: ${color}`, color);
+                } else if (currentMode !== 'pan' && currentMode !== 'text' && currentMode !== 'image') {
+                    setDrawMode();
+                }
             }
-            }
-            updateColorPickerUI(); // UIを更新
+            updateColorPickerUI();
         }
         
         function updateLineWidthLabel() {
@@ -1404,15 +1703,21 @@
         }
         
         function deactivateModeButtons() {
-            document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode-button').forEach(btn => {
+                btn.classList.remove('active', 'active-yellow', 'active-red', 'active-teal', 'active-indigo');
+            });
         }
 
         function setDrawMode() {
             currentMode = 'draw';
+            if (currentColor === '#facc15' && !selectedObject) {
+                currentColor = '#000000';
+            }
             
             deactivateModeButtons();
             drawModeButton.classList.add('active');
-            
+            document.getElementById('drawModeButtonM')?.classList.add('active');
+
             canvas.classList.remove('pan-cursor', 'grabbing'); 
             canvas.style.cursor = 'crosshair';
             
@@ -1422,21 +1727,21 @@
             lineWidthRange.value = DEFAULT_LINE_WIDTH;
             lineWidthInput.value = DEFAULT_LINE_WIDTH;
             updateLineWidthLabel(); 
-            updateColorPickerUI(); // 描画色に同期
+            updateColorPickerUI();
 
-            showMessage(`ペンモード - ${currentColor}`, currentColor);
+            showMessage(`ペンモード`, currentColor);
         }
         
         function setHighlighterMode() {
             currentMode = 'highlighter';
-            
-            // 現在選択されている色を維持
+            currentColor = '#facc15';
             
             lineWidthRange.value = HIGHLIGHTER_DEFAULT_WIDTH;
             lineWidthInput.value = HIGHLIGHTER_DEFAULT_WIDTH;
 
             deactivateModeButtons();
-            highlighterModeButton.classList.add('active');
+            highlighterModeButton.classList.add('active-yellow');
+            document.getElementById('highlighterModeButtonM')?.classList.add('active-yellow');
             
             canvas.classList.remove('pan-cursor', 'grabbing'); 
             canvas.style.cursor = 'crosshair';
@@ -1444,18 +1749,16 @@
             selectedObject = null; 
             redrawCanvas();
             updateLineWidthLabel(); 
-            updateColorPickerUI(); // 現在の色を維持
-            showMessage(`蛍光ペンモード - ${currentColor}`, currentColor);
+            updateColorPickerUI();
+            showMessage(`蛍光ペンモード`, currentColor);
         }
-
 
         function setEraserMode() {
             currentMode = 'eraser';
             
             deactivateModeButtons();
-            eraserModeButton.classList.add('active');
-            
-            document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active'));
+            eraserModeButton.classList.add('active-red');
+            document.getElementById('eraserModeButtonM')?.classList.add('active-red');
             
             canvas.classList.remove('pan-cursor', 'grabbing'); 
             canvas.style.cursor = 'crosshair';
@@ -1466,7 +1769,6 @@
             lineWidthRange.value = DEFAULT_ERASER_WIDTH;
             lineWidthInput.value = DEFAULT_ERASER_WIDTH;
             updateLineWidthLabel(); 
-            // 消しゴムは色を持たないのでcurrentColorは維持、UIはそのまま
             
             showMessage('消しゴムモード');
         }
@@ -1475,24 +1777,28 @@
             currentMode = 'pan';
             
             deactivateModeButtons();
-            panModeButton.classList.add('active');
+            panModeButton.classList.add('active-indigo');
+            document.getElementById('panModeButtonM')?.classList.add('active-indigo');
             
             canvas.classList.add('pan-cursor');
             canvas.classList.remove('grabbing');
             canvas.style.cursor = 'grab';
 
-            // selectedObjectの状態を維持 (移動/サイズ変更のため)
             redrawCanvas();
             updateLineWidthLabel(); 
             updateColorPickerUI(); 
-            showMessage('移動モード (キャンバス/テキスト/画像)', '#4f46e5'); 
+            showMessage('移動モード', '#818cf8'); 
         }
         
         function setTextMode() {
             currentMode = 'text';
+            if (currentColor === '#facc15' && !selectedObject) {
+                currentColor = '#000000';
+            }
             
             deactivateModeButtons();
             textToolButton.classList.add('active');
+            document.getElementById('textToolButtonM')?.classList.add('active');
             
             canvas.classList.remove('pan-cursor', 'grabbing'); 
             canvas.style.cursor = 'text';
@@ -1501,7 +1807,7 @@
             redrawCanvas();
             updateLineWidthLabel(); 
             updateColorPickerUI(); 
-            showMessage('テキスト挿入モード', '#8b5cf6'); 
+            showMessage('テキスト挿入モード', '#7c6af7'); 
         }
         
         function setImageMode() {
@@ -1509,7 +1815,8 @@
             currentMode = 'image';
             
             deactivateModeButtons();
-            imageToolButton.classList.add('active');
+            imageToolButton.classList.add('active-teal');
+            document.getElementById('imageToolButtonM')?.classList.add('active-teal');
             
             canvas.classList.remove('pan-cursor', 'grabbing'); 
             canvas.style.cursor = 'wait'; 
@@ -1520,7 +1827,7 @@
             updateColorPickerUI(); 
 
             imageFileInput.click();
-            showMessage('画像をアップロードしてください', '#14b8a6'); 
+            showMessage('画像をアップロードしてください', '#2dd4bf'); 
         }
 
         function clearCanvas() {
@@ -1529,6 +1836,7 @@
             currentStroke = null;
             redrawCanvas(); 
             resetView(); 
+            saveToHistory();
             showMessage('ボードをクリアしました');
         }
 
@@ -1606,7 +1914,6 @@
                     });
 
                 } else if (obj.type === 'image') {
-                     // 画像の回転を考慮して描画
                     const centerX = obj.x + obj.width / 2;
                     const centerY = obj.y + obj.height / 2;
 
@@ -1659,48 +1966,33 @@
             }, 2000);
         }
         
-        // キーボードイベント処理
         function handleKeyDown(event) {
-            // テキスト入力オーバーレイが非表示の場合、つまりテキスト入力中でない場合のみ処理
             if (textInputOverlay.style.display !== 'block') {
                 
-                // Backspace (event.key === 'Backspace') または Delete (event.key === 'Delete') が押されたかチェック
                 if (event.key === 'Backspace' || event.key === 'Delete') {
                     
                     if (selectedObject) {
-                        // ブラウザのデフォルトの戻る/削除動作を防ぐ
                         event.preventDefault(); 
                         
-                        // 選択中のオブジェクトを削除
                         deleteSelectedObject();
-                        showMessage('オブジェクトを削除しました', '#ef4444'); // Red
+                        showMessage('オブジェクトを削除しました', '#ef4444');
                     } else if (currentMode === 'draw' || currentMode === 'highlighter' || currentMode === 'eraser') {
-                        // 描画モードでBackSpaceが押された場合、直前のストロークを削除（オプション）
-                        // ※今回は選択オブジェクトの削除に特化するため、このロジックはコメントアウトします。
-                        // undoLastStroke();
                     }
                 }
             }
         }
 
-        // 【★追加】選択されたオブジェクトの削除処理
         function deleteSelectedObject() {
             if (selectedObject) {
-                // objects配列内でselectedObjectのインデックスを見つける
                 const index = objects.indexOf(selectedObject);
 
                 if (index > -1) {
-                    // spliceメソッドでそのインデックスから1つ要素を削除
                     objects.splice(index, 1);
                 }
-
-                // 削除後、選択を解除
                 selectedObject = null;
-                // Canvasを再描画して、削除されたオブジェクトを消す
                 redrawCanvas();
             }
         }
     </script>
 </body>
 </html>
-
