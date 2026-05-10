@@ -36,26 +36,22 @@
             position: relative;
             color: rgba(255, 255, 255, 0.2);
         }
-        .char.done {
-            color: var(--neon-green);
-            text-shadow: 0 0 8px var(--neon-green);
+        .char.done { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); animation: char-done-glow 0.15s ease-out; }
+        @keyframes char-done-glow {
+            0%   { color: #fff; text-shadow: 0 0 20px #fff, 0 0 40px var(--neon-blue); transform: scale(1.3); }
+            100% { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); transform: scale(1); }
+        }
+        .char.miss { color: var(--neon-red); animation: char-miss-anim 0.2s ease-in-out; }
+        @keyframes char-miss-anim {
+            0%,100% { transform: translateX(0) scale(1); }
+            25%     { transform: translateX(-4px) scale(1.2); color: #fff; text-shadow: 0 0 10px var(--neon-red); }
+            75%     { transform: translateX(4px) scale(1.2); }
         }
         .char.next {
             color: #fff;
             border-bottom: 2px solid var(--neon-blue);
             text-shadow: 0 0 5px #fff;
         }
-        .char.miss {
-            color: var(--neon-red);
-            animation: shake 0.2s ease-in-out;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-4px); }
-            75% { transform: translateX(4px); }
-        }
-
         .screen-shake {
             animation: screen-shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
         }
@@ -75,7 +71,7 @@
         @keyframes monster-hit-anim {
             0% { transform: scale(1); filter: brightness(1); }
             50% { transform: scale(1.15); filter: brightness(2); }
-            100% { transform: scale(1) brightness(1); }
+            100% { transform: scale(1); filter: brightness(1); }
         }
         .monster-death {
             animation: monster-death-anim 0.5s ease-out forwards;
@@ -137,7 +133,6 @@
             opacity: 0;
             position: absolute;
             z-index: -1;
-            ime-mode: disabled;
         }
         
         .btn-neon {
@@ -178,10 +173,110 @@
             80% { transform: translate(8px, 2px) rotate(3deg); }
             100% { transform: translate(0, 0) rotate(0deg); filter: brightness(1) sepia(0); }
         }
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particle-burst 0.6s ease-out forwards;
+            z-index: 9999;
+        }
+        @keyframes particle-burst {
+            0%   { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--dx),var(--dy)) scale(0); opacity: 0; }
+        }
+        #bg-grid {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image:
+                linear-gradient(rgba(0,243,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,243,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: grid-scroll 20s linear infinite;
+        }
+        @keyframes grid-scroll {
+            0%   { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+        #bg-scanline {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
+        }
+        #bg-scan-sweep {
+            position: fixed; left: 0; right: 0; height: 120px;
+            pointer-events: none; z-index: 1;
+            background: linear-gradient(to bottom, transparent, rgba(0,243,255,0.04), transparent);
+            animation: scan-sweep 4s linear infinite;
+        }
+        @keyframes scan-sweep {
+            0%   { top: -120px; }
+            100% { top: 100vh; }
+        }
+        #screen-flash { position: fixed; inset: 0; pointer-events: none; z-index: 200; opacity: 0; }
+        .flash-hit  { animation: flash-hit-anim  0.15s ease-out forwards; }
+        .flash-miss { animation: flash-miss-anim 0.2s  ease-out forwards; }
+        @keyframes flash-hit-anim {
+            0%   { opacity: 0.3; background: radial-gradient(ellipse at center, rgba(0,243,255,0.4), transparent 70%); }
+            100% { opacity: 0; }
+        }
+        @keyframes flash-miss-anim {
+            0%   { opacity: 0.4; background: radial-gradient(ellipse at center, rgba(255,49,49,0.5), transparent 70%); }
+            100% { opacity: 0; }
+        }
+        .energy-wave {
+            position: fixed; inset: 0; pointer-events: none; z-index: 198;
+            border: 2px solid rgba(0,243,255,0.6); border-radius: 50%;
+            animation: energy-expand 0.4s ease-out forwards;
+        }
+        @keyframes energy-expand {
+            0%   { transform: scale(0.2); opacity: 0.8; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+        #cutin-overlay {
+            position: fixed; inset: 0; z-index: 300;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; overflow: hidden;
+        }
+        .cutin-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 8vw, 5rem);
+            font-weight: 900; letter-spacing: 0.15em; color: #fff;
+            text-shadow: 0 0 30px var(--neon-blue), 0 0 60px var(--neon-blue);
+            white-space: nowrap; opacity: 0;
+        }
+        .cutin-enter { animation: cutin-in 1.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+        @keyframes cutin-in {
+            0%   { opacity: 0; transform: scaleX(3) translateX(-30%); filter: blur(20px); }
+            25%  { opacity: 1; transform: scaleX(1) translateX(0);    filter: blur(0); }
+            70%  { opacity: 1; transform: scaleX(1) translateX(0); }
+            100% { opacity: 0; transform: scaleX(0.8) translateX(10%); filter: blur(10px); }
+        }
+        .cutin-line { position: absolute; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon-blue), transparent); opacity: 0; }
+        .cutin-line-top    { top: 44%; }
+        .cutin-line-bottom { top: 56%; }
+        .cutin-line-anim { animation: cutin-line-flash 1.4s ease forwards; }
+        @keyframes cutin-line-flash {
+            0%   { opacity: 0; transform: scaleX(0); }
+            25%  { opacity: 1; transform: scaleX(1); }
+            70%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        #game-container { transition: filter 0.8s ease; }
+        .theme-purple { filter: hue-rotate(40deg); }
+        .theme-red    { filter: hue-rotate(160deg); }
+        .theme-gold   { filter: hue-rotate(200deg) saturate(1.5); }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
+    <div id="bg-grid"></div>
+    <div id="bg-scanline"></div>
+    <div id="bg-scan-sweep"></div>
 
+    <div id="screen-flash"></div>
+
+    <div id="cutin-overlay">
+        <div class="cutin-line cutin-line-top"></div>
+        <div class="cutin-text" id="cutin-text"></div>
+        <div class="cutin-line cutin-line-bottom"></div>
+    </div>
     <div class="fixed inset-0 pointer-events-none opacity-20" style="transform: translateZ(0); will-change: transform;">
         <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500 rounded-full blur-[150px]" style="transform: translateZ(0); will-change: transform;"></div>
         <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-500 rounded-full blur-[150px]" style="transform: translateZ(0); will-change: transform;"></div>
@@ -197,7 +292,7 @@
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-green-400">
                 <p class="text-[10px] uppercase text-green-400">Score</p>
                 <p id="score-display" class="text-xl font-bold text-green-400">0</p>
-                <p id="highscore-display" class="text-[10px] text-green-400/50 mt-0.5" style="display:none;">BEST: <span id="highscore-value">0</span></p>
+                <p id="highscore-display" class="text-[15px] text-green-400/50 mt-0.5" style="display:none;">BEST: <span id="highscore-value">0</span></p>
             </div>
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-purple-400">
                 <p class="text-[10px] uppercase text-purple-400">Accuracy</p>
@@ -215,9 +310,62 @@
                 
                 <div id="monster-container" class="w-32 h-32 mb-4 opacity-0 transition-opacity duration-500">
                     <svg id="monster-svg" viewBox="0 0 100 100" class="w-full h-full">
-                        <rect id="monster-body" x="20" y="20" width="60" height="60" fill="rgba(255,0,255,0.2)" stroke="#ff00ff" stroke-width="2" />
-                        <rect x="30" y="40" width="10" height="5" fill="#ff00ff" />
-                        <rect x="60" y="40" width="10" height="5" fill="#ff00ff" />
+                        <!-- タイプ0: 四角いロボット -->
+                        <g id="monster-type-0">
+                            <rect id="monster-body" x="20" y="20" width="60" height="60" fill="rgba(255,0,255,0.2)" stroke="#ff00ff" stroke-width="2"/>
+                            <rect x="30" y="38" width="12" height="8" rx="2" fill="#ff00ff"/>
+                            <rect x="58" y="38" width="12" height="8" rx="2" fill="#ff00ff"/>
+                            <rect x="35" y="58" width="30" height="4" rx="2" fill="#ff00ff"/>
+                            <line x1="20" y1="35" x2="10" y2="25" stroke="#ff00ff" stroke-width="2"/>
+                            <line x1="80" y1="35" x2="90" y2="25" stroke="#ff00ff" stroke-width="2"/>
+                        </g>
+                        <!-- タイプ1: クモ型 -->
+                        <g id="monster-type-1" style="display:none">
+                            <ellipse cx="50" cy="50" rx="22" ry="18" fill="rgba(0,255,136,0.15)" stroke="#00ff88" stroke-width="2"/>
+                            <circle cx="42" cy="45" r="5" fill="#00ff88"/>
+                            <circle cx="58" cy="45" r="5" fill="#00ff88"/>
+                            <circle cx="50" cy="57" r="3" fill="#00ff88"/>
+                            <line x1="28" y1="40" x2="12" y2="28" stroke="#00ff88" stroke-width="1.5"/>
+                            <line x1="28" y1="50" x2="10" y2="50" stroke="#00ff88" stroke-width="1.5"/>
+                            <line x1="28" y1="60" x2="12" y2="72" stroke="#00ff88" stroke-width="1.5"/>
+                            <line x1="72" y1="40" x2="88" y2="28" stroke="#00ff88" stroke-width="1.5"/>
+                            <line x1="72" y1="50" x2="90" y2="50" stroke="#00ff88" stroke-width="1.5"/>
+                            <line x1="72" y1="60" x2="88" y2="72" stroke="#00ff88" stroke-width="1.5"/>
+                        </g>
+                        <!-- タイプ2: ドラゴン型 -->
+                        <g id="monster-type-2" style="display:none">
+                            <polygon points="50,10 70,35 80,70 50,85 20,70 30,35" fill="rgba(255,49,49,0.15)" stroke="#ff3131" stroke-width="2"/>
+                            <polygon points="50,10 58,25 50,30 42,25" fill="#ff3131" opacity="0.6"/>
+                            <circle cx="42" cy="45" r="6" fill="#ff3131"/>
+                            <circle cx="58" cy="45" r="6" fill="#ff3131"/>
+                            <circle cx="43" cy="45" r="2" fill="#000"/>
+                            <circle cx="59" cy="45" r="2" fill="#000"/>
+                            <polyline points="38,62 44,58 50,64 56,58 62,62" fill="none" stroke="#ff3131" stroke-width="2"/>
+                        </g>
+                        <!-- タイプ3: ゴースト型 -->
+                        <g id="monster-type-3" style="display:none">
+                            <path d="M25,75 Q25,25 50,20 Q75,25 75,75 Q68,68 61,75 Q54,68 50,75 Q46,68 39,75 Q32,68 25,75Z" fill="rgba(0,243,255,0.12)" stroke="#00f3ff" stroke-width="2"/>
+                            <circle cx="41" cy="50" r="7" fill="#00f3ff" opacity="0.8"/>
+                            <circle cx="59" cy="50" r="7" fill="#00f3ff" opacity="0.8"/>
+                            <circle cx="41" cy="50" r="3" fill="#000"/>
+                            <circle cx="59" cy="50" r="3" fill="#000"/>
+                        </g>
+                        <!-- タイプ4: ウイルス型 -->
+                        <g id="monster-type-4" style="display:none">
+                            <circle cx="50" cy="50" r="20" fill="rgba(255,255,0,0.12)" stroke="#ffff00" stroke-width="2"/>
+                            <circle cx="50" cy="50" r="12" fill="rgba(255,255,0,0.2)" stroke="#ffff00" stroke-width="1"/>
+                            <line x1="50" y1="28" x2="50" y2="20" stroke="#ffff00" stroke-width="2"/><circle cx="50" cy="18" r="3" fill="#ffff00"/>
+                            <line x1="50" y1="72" x2="50" y2="80" stroke="#ffff00" stroke-width="2"/><circle cx="50" cy="82" r="3" fill="#ffff00"/>
+                            <line x1="28" y1="50" x2="20" y2="50" stroke="#ffff00" stroke-width="2"/><circle cx="18" cy="50" r="3" fill="#ffff00"/>
+                            <line x1="72" y1="50" x2="80" y2="50" stroke="#ffff00" stroke-width="2"/><circle cx="82" cy="50" r="3" fill="#ffff00"/>
+                            <line x1="35" y1="35" x2="28" y2="28" stroke="#ffff00" stroke-width="2"/><circle cx="26" cy="26" r="3" fill="#ffff00"/>
+                            <line x1="65" y1="35" x2="72" y2="28" stroke="#ffff00" stroke-width="2"/><circle cx="74" cy="26" r="3" fill="#ffff00"/>
+                            <line x1="35" y1="65" x2="28" y2="72" stroke="#ffff00" stroke-width="2"/><circle cx="26" cy="74" r="3" fill="#ffff00"/>
+                            <line x1="65" y1="65" x2="72" y2="72" stroke="#ffff00" stroke-width="2"/><circle cx="74" cy="74" r="3" fill="#ffff00"/>
+                            <circle cx="44" cy="47" r="3" fill="#ffff00"/>
+                            <circle cx="56" cy="47" r="3" fill="#ffff00"/>
+                            <path d="M43,57 Q50,63 57,57" fill="none" stroke="#ffff00" stroke-width="2"/>
+                        </g>
                     </svg>
                 </div>
                 
@@ -262,7 +410,7 @@
         </div>
     </div>
 
-    <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 hidden items-center justify-center z-[100] p-6">
+    <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 items-center justify-center z-[100] p-6" style="display:none;">
         <div class="max-w-md w-full text-center space-y-8 fade-in">
             <h2 class="text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
             <div class="grid grid-cols-2 gap-4">
@@ -309,6 +457,7 @@
             { jp: "ウィンドウ", roma: "windou" },
             { jp: "ビット", roma: "bitto" },
             { jp: "バイト", roma: "baito" },
+            { jp: "バグとデバッグ", roma: "bagutodebaggu" },
             { jp: "キロバイト", roma: "kirobaito" },
             { jp: "メガバイト", roma: "megabaito" },
             { jp: "ギガバイト", roma: "gigabaito" },
@@ -317,7 +466,7 @@
             { jp: "フォルダ", roma: "foruda" },
             { jp: "クラウド", roma: "kuraudo" },
             { jp: "データベース", roma: "de-tabe-su" },
-            { jp: "シミュレーション", roma: "shimyure-syon" },
+            { jp: "シミュレーション", roma: "simyure-syon" },
             { jp: "フローチャート", roma: "furo-cha-to" },
             { jp: "条件分岐", roma: "zyoukenbunki" },
             { jp: "入力", roma: "nyuuryoku" },
@@ -329,7 +478,7 @@
             { jp: "特許権", roma: "tokkyoken" },
             { jp: "商標権", roma: "syouhyouken" },
             { jp: "意匠権", roma: "isyouken" },
-            { jp: "実用新案権", roma: "zituyousinanken" },
+            { jp: "実用新案権", roma: "zituyousinnanken" },
             { jp: "知的財産権", roma: "titekizaisanken" },
             { jp: "産業財産権", roma: "sangyouzaisanken" },
             { jp: "情報モラル", roma: "zyouhoumoraru" },
@@ -340,10 +489,10 @@
             { jp: "ウイルス", roma: "uirusu" },
             { jp: "マルウェア", roma: "maruwea" },
 
-            { jp: "SNSの使い方には注意が必要だ!", roma: "snsnotukaikatanihatyuuigahituyouda!" },
+            { jp: "AIはハルシネーションに注意", roma: "aihaharusine-syonnityuui" },
+            { jp: "ネットの使い方には注意が必要だ!", roma: "nettonotukaikatanihatyuuigahituyouda!" },
             { jp: "タイピングはやりすぎていませんか?", roma: "taipinguhayarisugiteimasenka?" }
         ];
-
 
         let currentWord = {};
         let currentRomaArray = [];
@@ -353,13 +502,13 @@
         let timeLeft = 60;
         let timer = null;
         let isPlaying = false;
-        let isComposing = false;
         let totalTyped = 0;
         let missCount = 0;
         let combo = 0;
         let playerHp = 100;
-        let highScore = 0;
+        let highScore = parseInt(localStorage.getItem('typingHighScore') || '0');
         let totalSlayedCount = 0;
+        let isComposing = false;
 
         const timerEl = document.getElementById('timer-display');
         const scoreEl = document.getElementById('score-display');
@@ -369,7 +518,6 @@
         const romaEl = document.getElementById('roma-display');
         const hiddenInput = document.getElementById('hidden-input');
         const monsterContainer = document.getElementById('monster-container');
-        const monsterBody = document.getElementById('monster-body');
         const enemyHpFill = document.getElementById('enemy-hp-fill');
         const playerHpFill = document.getElementById('player-hp-fill');
         const playerHpText = document.getElementById('player-hp-text');
@@ -382,12 +530,78 @@
 
         const neonColors = ['#00f3ff', '#ff00ff', '#00ff88', '#ffff00', '#ff3131'];
 
+        const gameContainer = document.getElementById('game-container');
+
+        function updateComboTheme(c) {
+            gameContainer.classList.remove('theme-purple','theme-red','theme-gold');
+            if      (c >= 50) gameContainer.classList.add('theme-gold');
+            else if (c >= 20) gameContainer.classList.add('theme-red');
+            else if (c >= 10) gameContainer.classList.add('theme-purple');
+        }
+
+        const screenFlash = document.getElementById('screen-flash');
+        function flashScreen(type) {
+            screenFlash.className = '';
+            void screenFlash.offsetWidth;
+            screenFlash.className = type === 'hit' ? 'flash-hit' : 'flash-miss';
+        }
+        function spawnEnergyWave() {
+            const w = document.createElement('div');
+            w.className = 'energy-wave';
+            document.body.appendChild(w);
+            setTimeout(() => w.remove(), 400);
+        }
+
+        function spawnParticles(x, y, color) {
+            const count = 8;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const angle = (i / count) * Math.PI * 2;
+                const dist  = 30 + Math.random() * 40;
+                const size  = 3 + Math.random() * 4;
+                p.style.cssText = `
+                    left:${x}px; top:${y}px;
+                    width:${size}px; height:${size}px;
+                    background:${color};
+                    box-shadow: 0 0 6px ${color};
+                    --dx:${Math.cos(angle)*dist}px;
+                    --dy:${Math.sin(angle)*dist}px;
+                `;
+                document.body.appendChild(p);
+                setTimeout(() => p.remove(), 600);
+            }
+        }
+
+        const cutinText = document.getElementById('cutin-text');
+        const cutinLines = document.querySelectorAll('.cutin-line');
+        function showCutin(text, color = '#00f3ff') {
+            cutinText.textContent = text;
+            cutinText.style.color = color;
+            cutinText.style.textShadow = `0 0 30px ${color}, 0 0 60px ${color}`;
+            cutinText.className = 'cutin-text';
+            cutinLines.forEach(l => l.className = l.className.replace(' cutin-line-anim',''));
+            void cutinText.offsetWidth;
+            cutinText.classList.add('cutin-enter');
+            cutinLines.forEach(l => l.classList.add('cutin-line-anim'));
+        }
+
+        const monsterTypes = 5;
+        let currentMonsterType = 0;
+        function setMonsterType(type) {
+            for (let i = 0; i < monsterTypes; i++) {
+                const el = document.getElementById(`monster-type-${i}`);
+                if (el) el.style.display = i === type ? '' : 'none';
+            }
+            currentMonsterType = type;
+        }
+
         const titleContainer = document.getElementById('title-container');
 
         let _audioCtx = null;
         function getAudioContext() {
             if (!_audioCtx || _audioCtx.state === 'closed') {
-                _audioCtx = new AudioContext(); // ← 1回だけ生成して使い回す
+                _audioCtx = new AudioContext();
             }
             return _audioCtx;
         }
@@ -447,6 +661,7 @@
             readyMsg.classList.remove('hidden');
 
             setTimeout(() => {
+                showCutin('MISSION START!!', '#00f3ff');
                 readyMsg.style.display = 'none';
                 
                 enemyHpContainer.style.display = 'block';
@@ -510,11 +725,18 @@
         function spawnMonster() {
             monsterContainer.classList.remove('monster-death', 'monster-hit', 'monster-shake');
             void monsterContainer.offsetWidth;
+            const type = Math.floor(Math.random() * monsterTypes);
+            setMonsterType(type);
             const color = neonColors[Math.floor(Math.random() * neonColors.length)];
-            monsterBody.setAttribute('stroke', color);
-            monsterBody.setAttribute('fill', color + '33');
+            const mb = document.getElementById('monster-body');
+            if (mb) { mb.setAttribute('stroke', color); mb.setAttribute('fill', color + '33'); }
             document.querySelectorAll('#monster-svg circle').forEach(c => c.setAttribute('fill', color));
-            document.querySelectorAll('#monster-svg path:not(#monster-body)').forEach(p => p.setAttribute('stroke', color));
+            document.querySelectorAll('#monster-svg path:not(#monster-body), #monster-svg polygon, #monster-svg ellipse, #monster-svg rect:not(#monster-body), #monster-svg line, #monster-svg polyline').forEach(el => {
+                if (el.getAttribute('stroke')) el.setAttribute('stroke', color);
+                if (el.getAttribute('fill') && el.getAttribute('fill') !== '#000' && el.getAttribute('fill') !== 'none') {
+                    el.setAttribute('fill', el.getAttribute('fill').includes('rgba') ? color + '26' : color);
+                }
+            });
         }
 
         function updateEnemyHp() {
@@ -536,12 +758,15 @@
 
         function triggerHit(points) {
             playHitSound();
-            
             monsterContainer.classList.remove('monster-hit', 'monster-shake');
-            
-            void monsterContainer.offsetWidth; 
-            
+            void monsterContainer.offsetWidth;
             monsterContainer.classList.add('monster-hit', 'monster-shake');
+
+            flashScreen('hit');
+            if (combo > 0 && combo % 10 === 0) spawnEnergyWave();
+
+            const rect = romaEl.getBoundingClientRect();
+            spawnParticles(rect.left + rect.width * 0.5, rect.top + rect.height * 0.5, neonColors[Math.floor(Math.random() * neonColors.length)]);
 
             const popup = getPopup();
             popup.innerText = "+" + points;
@@ -549,23 +774,22 @@
             popup.style.marginLeft = `${(Math.random() - 0.5) * 100}px`;
             popup.style.top = `30%`;
             popup.style.animation = 'none';
-            void popup.offsetWidth; // アニメーションリセット
+            void popup.offsetWidth;
             popup.style.animation = '';
             document.getElementById('battle-stage').appendChild(popup);
-            setTimeout(() => {
-                popup.remove();
-                releasePopup(popup);
-            }, 800);
+            setTimeout(() => { popup.remove(); releasePopup(popup); }, 800);
         }
 
         function triggerMiss() {
             document.getElementById('game-container').classList.add('screen-shake');
             setTimeout(() => document.getElementById('game-container').classList.remove('screen-shake'), 300);
+            flashScreen('miss');
             
             const chars = romaEl.querySelectorAll('.char');
             if (chars[charIndex]) {
-                chars[charIndex].classList.add('miss');
-                setTimeout(() => chars[charIndex].classList.remove('miss'), 200);
+                const missChar = chars[charIndex];
+                missChar.classList.add('miss');
+                setTimeout(() => missChar.classList.remove('miss'), 200);
             }
             
             playerHp = Math.max(0, playerHp - 5);
@@ -573,6 +797,7 @@
         }
 
         function showCombo() {
+            updateComboTheme(combo);
             if (combo > 0 && combo % 10 === 0) {
                 comboDisplay.innerText = combo + " COMBO!";
                 comboDisplay.classList.remove('combo-animate');
@@ -600,15 +825,18 @@
 
             if (score > highScore) {
                 highScore = score;
+                localStorage.setItem('typingHighScore', highScore);
             }
 
             const resultTitle = resultModal.querySelector('h2');
 
-            if (isGameOver || slayed === 0) {
+            if (slayed === 0) {
+                showCutin('MISSION FAILED', '#ff3131');
                 resultTitle.textContent = "MISSION FAILED";
                 resultTitle.style.color = "var(--neon-red)";
                 resultTitle.classList.add('animate-pulse');
             } else {
+                showCutin('MISSION COMPLETE', '#00f3ff');
                 resultTitle.textContent = "MISSION COMPLETE";
                 resultTitle.style.color = "#fff";
                 resultTitle.classList.remove('animate-pulse');
@@ -626,38 +854,38 @@
             document.getElementById('final-keys').textContent = totalSlayedCount;
             
             resultModal.style.display = 'flex';
+
+            gameContainer.classList.remove('theme-purple','theme-red','theme-gold');
         }
 
-        hiddenInput.addEventListener('compositionstart', () => {
-            isComposing = true;
-        });
+        hiddenInput.addEventListener('keydown', (e) => {
+            if (!isPlaying) return;
 
-        hiddenInput.addEventListener('compositionend', (e) => {
-            isComposing = false;
-        });
+            let ch = e.key;
 
-        hiddenInput.addEventListener('input', (e) => {
-            if (!isPlaying) { hiddenInput.value = ""; return; }
-            if (isComposing) return;
-
-            let val = e.target.value;
-            val = val.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) =>
+            ch = ch.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) =>
                 String.fromCharCode(c.charCodeAt(0) - 0xFEE0)
             );
-            if (/[^\x20-\x7E]/.test(val)) {
-                e.target.value = val.replace(/[^\x20-\x7E]/g, "");
-                return;
-            }
-            e.target.value = val;
 
-            if (val.length === 0) return;
-            const typedChar = val.slice(-1).toLowerCase();
+            if (ch.length === 1 && /^[\x20-\x7E]$/.test(ch)) {
+                e.preventDefault();
+                e.stopPropagation();
+                hiddenInput.value = "";
+                processChar(ch);
+            }
+        });
+
+        document.addEventListener('click', () => { if (isPlaying) hiddenInput.focus(); });
+
+        function processChar(typedChar) {
+            typedChar = typedChar.toLowerCase();
             totalTyped++;
 
             let isCorrect = false;
             let expected = currentRomaArray[charIndex];
 
             if (typedChar === expected) {
+
                 isCorrect = true;
                 if (expected === 'n') {
                     const nextChar = currentRomaArray[charIndex + 1];
@@ -767,17 +995,8 @@
                         }
                     }
 
-                    if (!isCorrect && (expected === 'z' || expected === 'j') && typedChar === expected && nextIsYouonVowel) {
-                        currentRomaArray.splice(charIndex + 1, 0, 'y');
-                        isCorrect = true;
-                    }
-
                     if (!isCorrect && (prev === 'j' || prev === 'z') && nextIsYouonVowel) {
-                        if (expected === 'y' && typedChar === next) {
-                            currentRomaArray.splice(charIndex, 1);
-                            isCorrect = true;
-                        }
-                        else if ((expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                        if ((expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
                             currentRomaArray.splice(charIndex, 0, 'y');
                             isCorrect = true;
                         }
@@ -811,14 +1030,6 @@
                         else if (prev === 't' && expected === 'h' && typedChar === 'y') {
                             currentRomaArray[charIndex - 1] = 't';
                             currentRomaArray[charIndex] = 'y';
-                            isCorrect = true;
-                        }
-                        else if (prev === 'c' && (expected === 'y' || expected === 'h') && typedChar === next) {
-                            currentRomaArray.splice(charIndex, 1);
-                            isCorrect = true;
-                        }
-                        else if (prev === 't' && (expected === 'y' || expected === 'h') && typedChar === next) {
-                            currentRomaArray.splice(charIndex, 1);
                             isCorrect = true;
                         }
                         else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
@@ -867,8 +1078,7 @@
                     return;
                 }
             }
-            hiddenInput.value = "";
-        });
+        }
 
         startBtn.addEventListener('click', initGame);
         document.getElementById('retry-btn').addEventListener('click', () => {
@@ -890,12 +1100,23 @@
         });
 
         function retryGame() {
-            enemyHpContainer.style.display = 'none';
-            playerHpContainer.style.display = 'none';
-            monsterContainer.style.display = 'none';
+            enemyHpContainer.style.transition = 'none';
+            playerHpContainer.style.transition = 'none';
+            monsterContainer.style.transition = 'none';
             enemyHpContainer.style.opacity = '0';
             playerHpContainer.style.opacity = '0';
             monsterContainer.style.opacity = '0';
+            enemyHpContainer.style.display = '';
+            playerHpContainer.style.display = '';
+            monsterContainer.style.display = '';
+            monsterContainer.classList.remove('monster-hit', 'monster-shake', 'monster-death');
+            void monsterContainer.offsetWidth;
+            enemyHpContainer.style.transition = '';
+            playerHpContainer.style.transition = '';
+            monsterContainer.style.transition = '';
+
+            jpEl.textContent = "";
+            romaEl.innerHTML = "";
 
             resultModal.style.display = 'none';
             startBtn.style.display = 'block';
@@ -903,8 +1124,7 @@
             titleContainer.style.display = 'block';
             readyMsg.style.display = 'none';
 
-            jpEl.textContent = "";
-            romaEl.textContent = "";
+            totalSlayedCount = 0;
             charIndex = 0;
             
             timerEl.textContent = "60s";
@@ -927,6 +1147,11 @@
         }
 
         document.addEventListener('click', () => { if (isPlaying) hiddenInput.focus(); });
+
+        if (highScore > 0) {
+            document.getElementById('highscore-value').textContent = highScore;
+            document.getElementById('highscore-display').style.display = 'block';
+        }
     </script>
 </body>
 </html>
