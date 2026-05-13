@@ -56,6 +56,7 @@
             -webkit-overflow-scrolling: touch;
             height: 100%;
             box-sizing: border-box;
+            min-height: 0;
         }
 
         #thumbnail-sidebar .thumb-item {
@@ -70,7 +71,7 @@
             border-color: #3b82f6;
         }
         #thumbnail-sidebar .thumb-item canvas {
-            width: 90px !important;
+            width: 100% !important;
             height: auto !important;
             display: block;
         }
@@ -124,12 +125,27 @@
             border-top: 1px solid #e5e7eb;
         }
 
-        /* 消しゴムカーソル */
+        #inline-input-overlay {
+            display: none;
+        }
+        .inline-textarea {
+            position: fixed;
+            border: none;
+            outline: none;
+            background: transparent;
+            resize: none;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            white-space: pre;
+            caret-color: #222;
+            z-index: 500;
+        }
+
         body.eraser-mode canvas {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="12" rx="2" fill="%23fff" stroke="%23888" stroke-width="2"/><rect x="2" y="10" width="9" height="12" rx="1" fill="%23fca5a5"/><line x1="2" y1="16" x2="22" y2="16" stroke="%23888" stroke-width="1"/></svg>') 4 20, cell;
         }
 
-        /* フォントパネル */
         #font-panel {
             width: 200px;
             flex-shrink: 0;
@@ -204,6 +220,68 @@
             accent-color: #3b82f6;
         }
 
+        #thumbnail-sidebar {
+            transition: width 0.2s ease, padding 0.2s ease;
+        }
+        #thumbnail-sidebar.collapsed {
+            width: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+        #font-panel {
+            transition: width 0.2s ease, padding 0.2s ease;
+        }
+        #font-panel.collapsed {
+            width: 0 !important;
+            padding: 0 !important;
+            overflow: hidden;
+        }
+        .sidebar-toggle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 48px;
+            background: #e5e7eb;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #6b7280;
+            z-index: 60;
+            border-radius: 0 4px 4px 0;
+            user-select: none;
+        }
+        .sidebar-toggle:hover { background: #d1d5db; }
+        #left-toggle  { left: 0; border-radius: 0 4px 4px 0; }
+        #right-toggle { right: 0; border-radius: 4px 0 0 4px; }
+
+        .header-row1 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-bottom: 1px solid #f3f4f6;
+            flex-wrap: wrap;
+        }
+        .header-row2 {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            flex-wrap: wrap;
+        }
+        .toolbar-sep {
+            width: 1px;
+            height: 24px;
+            background: #d1d5db;
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
         @media (max-width: 768px) {
             .header-grid {
                 display: flex;
@@ -212,91 +290,155 @@
                 gap: 8px;
             }
         }
+        #custom-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.4);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        #custom-modal-overlay.visible {
+            display: flex;
+        }
+        #custom-modal {
+            background: white;
+            border-radius: 12px;
+            padding: 28px 24px 20px;
+            width: 320px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        #custom-modal-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #111827;
+            margin: 0;
+        }
+        #custom-modal-message {
+            font-size: 13px;
+            color: #4b5563;
+            margin: 0;
+            line-height: 1.6;
+        }
+        #custom-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        #custom-modal-cancel {
+            padding: 7px 18px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: white;
+            color: #374151;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        #custom-modal-cancel:hover { background: #f3f4f6; }
+        #custom-modal-ok {
+            padding: 7px 18px;
+            border-radius: 8px;
+            border: none;
+            background: #ef4444;
+            color: white;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #custom-modal-ok:hover { background: #dc2626; }
     </style>
 </head>
 <body>
-
-    <header class="border-b p-3">
-        <div class="header-grid gap-4">
-            <div class="flex items-center gap-2 justify-start">
-                <h1 class="font-bold text-lg text-gray-800 hidden lg:block mr-2">Web ノート</h1>
-                <input type="file" id="upload-pdf" accept="application/pdf" class="hidden">
-                <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg cursor-pointer transition flex items-center gap-2 border text-xs whitespace-nowrap">
-                    <span>PDFをアップロード</span>
-                </label>
-                <button onclick="addNewPage()" class="bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded-lg cursor-pointer transition flex items-center gap-2 border text-xs whitespace-nowrap">
-                    <span>ページ追加</span>
-                </button>
+    <div id="custom-modal-overlay">
+        <div id="custom-modal">
+            <p id="custom-modal-title"></p>
+            <p id="custom-modal-message"></p>
+            <div id="custom-modal-buttons">
+                <button id="custom-modal-cancel">キャンセル</button>
+                <button id="custom-modal-ok">削除して続ける</button>
             </div>
+        </div>
+    </div>
 
-            <div class="flex items-center gap-1 bg-gray-50 p-1 rounded-xl border flex-nowrap shadow-sm">
-                <button onclick="setMode('select')" id="btn-select" class="tool-btn active" title="選択">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
-                </button>
-                <button onclick="setMode('draw')" id="btn-draw" class="tool-btn" title="ペン">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 5 5"/><path d="m11 11 5 5"/></svg>
-                </button>
-                <button onclick="setMode('highlighter')" id="btn-highlighter" class="tool-btn" title="蛍光ペン">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><path d="m5 15 3 3"/></svg>
-                </button>
-                <button onclick="setMode('erase')" id="btn-erase" class="tool-btn" title="消しゴム">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
-                </button>
-                <button onclick="setMode('text-inline')" id="btn-text-inline" class="tool-btn" title="罫線上に直接入力">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/><path d="M9 3v6"/></svg>
-                </button>
-                <button onclick="addTextBox()" id="btn-text" class="tool-btn" title="テキストボックス">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-                </button>
-                <input type="file" id="upload-image" accept="image/*" class="hidden">
+    <header>
+        <div class="header-row1">
+            <h1 class="font-bold text-base text-gray-800 mr-2 hidden lg:block">Web ノート</h1>
+            <div class="toolbar-sep"></div>
+
+            <button onclick="setMode('select')" id="btn-select" class="tool-btn active" title="選択">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+            </button>
+            <button onclick="setMode('draw')" id="btn-draw" class="tool-btn" title="ペン">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 5 5"/><path d="m11 11 5 5"/></svg>
+            </button>
+            <button onclick="setMode('highlighter')" id="btn-highlighter" class="tool-btn" title="蛍光ペン">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><path d="m5 15 3 3"/></svg>
+            </button>
+            <button id="btn-erase" class="tool-btn" title="消しゴム" onclick="setMode('erase')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+            </button>
+            <div class="toolbar-sep"></div>
+
+            <button onclick="setColor('#000000')" class="color-swatch selected" style="background:#000000;" title="黒" id="swatch-black"></button>
+            <button onclick="setColor('#ef4444')" class="color-swatch" style="background:#ef4444;" title="赤" id="swatch-red"></button>
+            <button onclick="setColor('#3b82f6')" class="color-swatch" style="background:#3b82f6;" title="青" id="swatch-blue"></button>
+            <button onclick="setColor('#22c55e')" class="color-swatch" style="background:#22c55e;" title="緑" id="swatch-green"></button>
+            <input type="color" id="color-picker" value="#000000" class="w-6 h-6 cursor-pointer rounded overflow-hidden p-0 border-none" title="カスタムカラー">
+            <div class="toolbar-sep"></div>
+            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="3"/></svg>
+            <input type="range" id="brush-size-slider" min="1" max="30" value="5" style="width:70px; accent-color:#3b82f6;" title="ブラシ太さ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="7"/></svg>
+            <div class="toolbar-sep"></div>
+
+            <button onclick="undo()" class="tool-btn" title="元に戻す (Ctrl+Z)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+            </button>
+            <button onclick="redo()" class="tool-btn" title="やり直し (Ctrl+Y)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+            </button>
+            <div class="toolbar-sep"></div>
+
+            <button onclick="zoomOut()" class="tool-btn" title="縮小">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <span id="zoom-level" class="text-xs font-mono w-10 text-center">100%</span>
+            <button onclick="zoomIn()" class="tool-btn" title="拡大">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+            </button>
+            <div class="toolbar-sep"></div>
+
+            <input type="file" id="upload-image" accept="image/*" class="hidden">
                 <label for="upload-image" class="tool-btn" title="画像を挿入">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
                 </label>
-                <div class="h-6 w-[1px] bg-gray-300 mx-1"></div>
-                <button onclick="undo()" class="tool-btn" title="元に戻す (Ctrl+Z)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-                </button>
-                <button onclick="redo()" class="tool-btn" title="やり直し (Ctrl+Y)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
-                </button>
-                <div class="h-6 w-[1px] bg-gray-300 mx-1"></div>
-                <button onclick="zoomOut()" class="tool-btn" title="縮小">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                </button>
-                <span id="zoom-level" class="text-xs font-mono w-10 text-center">100%</span>
-                <button onclick="zoomIn()" class="tool-btn" title="拡大">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
-                </button>
-                <div class="h-6 w-[1px] bg-gray-300 mx-1"></div>
-                <div class="flex items-center gap-1">
-                    <button onclick="setColor('#000000')" class="color-swatch selected" style="background:#000000;" title="黒" id="swatch-black"></button>
-                    <button onclick="setColor('#ef4444')" class="color-swatch" style="background:#ef4444;" title="赤" id="swatch-red"></button>
-                    <button onclick="setColor('#3b82f6')" class="color-swatch" style="background:#3b82f6;" title="青" id="swatch-blue"></button>
-                    <button onclick="setColor('#22c55e')" class="color-swatch" style="background:#22c55e;" title="緑" id="swatch-green"></button>
-                    <input type="color" id="color-picker" value="#000000" class="w-6 h-6 cursor-pointer rounded overflow-hidden p-0 border-none" title="カスタムカラー">
-                </div>
-                <div class="h-6 w-[1px] bg-gray-300 mx-1"></div>
-                <div class="flex items-center gap-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="3"/></svg>
-                    <input type="range" id="brush-size-slider" min="1" max="30" value="5" class="w-16" title="ブラシ太さ">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="7"/></svg>
-                </div>
-            </div>
-
-            <div class="flex items-center gap-2 justify-end">
-                <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-xs font-bold border border-red-200">全クリア</button>
-                <button onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-md transition text-xs">保存</button>
-            </div>
+            <input type="file" id="upload-pdf" accept="application/pdf" class="hidden">
+            <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg cursor-pointer border text-xs whitespace-nowrap">PDF読込</label>
+            <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg text-xs border border-red-200">全クリア</button>
+            <button onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-bold shadow-md text-xs">保存</button>
         </div>
     </header>
 
-    <div id="app-body" style="display:flex; flex:1; overflow:hidden; min-height:0;">
+    <div id="app-body" style="display:flex; flex:1; overflow:hidden; min-height:0; position:relative;">
         <aside id="thumbnail-sidebar" style="width:110px; flex-shrink:0; background:#e5e7eb; border-right:1px solid #d1d5db; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:8px; z-index:50;">
         </aside>
-        <main id="canvas-container" style="flex:1; overflow:auto; display:flex; flex-direction:column; align-items:center; padding:20px; gap:20px;">
+        <div id="left-toggle" class="sidebar-toggle" onclick="toggleSidebar('left')" title="サムネイル表示/非表示">&#9664;</div>
+        <main id="canvas-container" style="flex:1; overflow:auto; display:flex; flex-direction:column; align-items:center; padding:20px; gap:20px; position:relative;">
+            <div id="inline-input-overlay"></div>
         </main>
+        <div id="right-toggle" class="sidebar-toggle" onclick="toggleSidebar('right')" title="テキスト設定表示/非表示">&#9654;</div>
         <div id="font-panel">
             <h3>テキスト設定</h3>
+            <div>
+                <label>入力モード</label>
+                <div class="font-btn-row">
+                    <button class="font-toggle-btn" id="btn-text-inline" onclick="setMode('text-inline')" title="罫線に直接入力" style="font-size:10px;">罫線入力</button>
+                    <button class="font-toggle-btn" id="btn-text" onclick="addTextBox()" title="テキストボックス" style="font-size:10px;">ボックス</button>
+                </div>
+            </div>
             <div>
                 <label>フォント</label>
                 <select id="fp-font">
@@ -359,7 +501,30 @@
         let startScale = 1.0;
         let _clipboard = null;
 
+        function showConfirmModal(title, message, onOk) {
+            const overlay = document.getElementById('custom-modal-overlay');
+            document.getElementById('custom-modal-title').textContent = title;
+            document.getElementById('custom-modal-message').textContent = message;
+            overlay.classList.add('visible');
+            const okBtn = document.getElementById('custom-modal-ok');
+            const cancelBtn = document.getElementById('custom-modal-cancel');
+            const close = () => overlay.classList.remove('visible');
+            const handleOk = () => { close(); onOk(); okBtn.removeEventListener('click', handleOk); cancelBtn.removeEventListener('click', close); };
+            okBtn.addEventListener('click', handleOk);
+            cancelBtn.addEventListener('click', () => { close(); okBtn.removeEventListener('click', handleOk); });
+        }
+
+        function hasContent() {
+            return pages.some(fCanvas =>
+                fCanvas.getObjects().some(obj => !obj._isBackground)
+            );
+        }
+
         function initApp() {
+            if (typeof pdfjsLib !== 'undefined') {
+                pdfjsLib.GlobalWorkerOptions.workerSrc =
+                    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            }
             addNewPage();
             setupGestures();
 
@@ -376,7 +541,11 @@
 
             document.getElementById('color-picker').addEventListener('input', (e) => {
                 clearSwatchSelection();
-                pages.forEach(updatePageMode);
+                if (currentMode === 'erase') {
+                    setMode('draw');
+                } else {
+                    pages.forEach(updatePageMode);
+                }
             });
 
             document.getElementById('brush-size-slider').addEventListener('input', () => pages.forEach(updatePageMode));
@@ -433,6 +602,21 @@
             return Math.hypot(touches[0].pageX - touches[1].pageX, touches[0].pageY - touches[1].pageY);
         }
 
+        function isPointerOnStroke(obj, pointer) {
+            const tmpCanvas = document.createElement('canvas');
+            const bound = obj.getBoundingRect(false);
+            const pad = (obj.strokeWidth || 1) + 2;
+            tmpCanvas.width  = Math.ceil(bound.width)  + pad * 2;
+            tmpCanvas.height = Math.ceil(bound.height) + pad * 2;
+            const ctx = tmpCanvas.getContext('2d');
+            ctx.translate(-(bound.left - pad), -(bound.top - pad));
+            obj.render(ctx);
+            const lx = Math.round(pointer.x - bound.left + pad);
+            const ly = Math.round(pointer.y - bound.top  + pad);
+            if (lx < 0 || ly < 0 || lx >= tmpCanvas.width || ly >= tmpCanvas.height) return false;
+            return ctx.getImageData(lx, ly, 1, 1).data[3] > 0;
+        }
+
         function createPageCanvas() {
             const container = document.getElementById('canvas-container');
             const wrapper = document.createElement('div');
@@ -459,13 +643,25 @@
 
             fCanvas.on('mouse:move', (options) => {
                 if (currentMode === 'erase' && options.e.buttons === 1) {
-                    removeObjectWithUndo(fCanvas.findTarget(options.e));
+                    const pointer = fCanvas.getPointer(options.e);
+                    const target = fCanvas.getObjects().find(obj => {
+                        if (obj._isBackground) return false;
+                        if (!obj.containsPoint(pointer)) return false;
+                        return isPointerOnStroke(obj, pointer);
+                    });
+                    removeObjectWithUndo(target);
                 }
             });
 
             fCanvas.on('mouse:down', (options) => {
                 if (currentMode === 'erase') {
-                    removeObjectWithUndo(fCanvas.findTarget(options.e));
+                    const pointer = fCanvas.getPointer(options.e);
+                    const target = fCanvas.getObjects().find(obj => {
+                        if (obj._isBackground) return false;
+                        if (!obj.containsPoint(pointer)) return false;
+                        return isPointerOnStroke(obj, pointer);
+                    });
+                    removeObjectWithUndo(target);
                 }
             });
 
@@ -478,6 +674,25 @@
 
             fCanvas.on('selection:created', syncFontPanel);
             fCanvas.on('selection:updated', syncFontPanel);
+            fCanvas.on('text:changed', (e) => {
+                const obj = e.target;
+                if (obj && obj.type === 'i-text' && obj.textAlign) {
+                    const wasLocked = obj.lockMovementX;
+                    obj.lockMovementX = false;
+                    repositionTextByAlign(obj, obj.textAlign, fCanvas);
+                    obj.lockMovementX = wasLocked;
+                    fCanvas.renderAll();
+                }
+            });
+
+            const scheduleThumbUpdate = () => {
+                clearTimeout(fCanvas._thumbTimer);
+                fCanvas._thumbTimer = setTimeout(updateThumbnails, 400);
+            };
+            fCanvas.on('path:created', scheduleThumbUpdate);
+            fCanvas.on('object:modified', scheduleThumbUpdate);
+            fCanvas.on('object:removed', scheduleThumbUpdate);
+            fCanvas.on('text:editing:exited', scheduleThumbUpdate);
 
             pages.push(fCanvas);
             return fCanvas;
@@ -494,12 +709,15 @@
 
             if (bgImage) {
                 fabric.Image.fromURL(bgImage, function(img) {
+                    const scaleX = baseWidth  / img.getOriginalSize().width;
+                    const scaleY = baseHeight / img.getOriginalSize().height;
+                    const scale  = Math.min(scaleX, scaleY);
                     img.set({
-                        scaleX: baseWidth / img.width,
-                        scaleY: baseHeight / img.height,
+                        scaleX: scale,
+                        scaleY: scale,
                         originX: 'left', originY: 'top',
                         selectable: false, evented: false,
-                        _isBackground: true 
+                        _isBackground: true
                     });
                     fCanvas.setBackgroundImage(img, fCanvas.renderAll.bind(fCanvas));
                 });
@@ -530,6 +748,12 @@
                 });
                 fCanvas.setZoom(canvasScale);
                 fCanvas.renderAll();
+                const wrapper = fCanvas.wrapperEl?.parentElement;
+                if (wrapper) {
+                    wrapper.style.width  = (baseWidth  * canvasScale) + 'px';
+                    wrapper.style.height = (baseHeight * canvasScale) + 'px';
+                    wrapper.style.flexShrink = '0';
+                }
             });
             document.getElementById('zoom-level').textContent = Math.round(canvasScale * 100) + '%';
         }
@@ -555,6 +779,146 @@
             updatePageCounter();
         }
 
+        let _eraseActive = false;
+
+        function startErase() {
+            _eraseActive = true;
+            document.body.classList.add('eraser-mode');
+            document.getElementById('btn-erase').classList.add('active');
+        }
+
+        function stopErase() {
+            _eraseActive = false;
+            document.body.classList.remove('eraser-mode');
+            document.getElementById('btn-erase').classList.remove('active');
+        }
+
+        function toggleSidebar(side) {
+            if (side === 'left') {
+                const el = document.getElementById('thumbnail-sidebar');
+                const toggle = document.getElementById('left-toggle');
+                const collapsed = el.classList.toggle('collapsed');
+                toggle.innerHTML = collapsed ? '&#9654;' : '&#9664;';
+            } else {
+                const el = document.getElementById('font-panel');
+                const toggle = document.getElementById('right-toggle');
+                const collapsed = el.classList.toggle('collapsed');
+                toggle.innerHTML = collapsed ? '&#9664;' : '&#9654;';
+            }
+        }
+
+        function showInlineTextarea(fCanvas, screenX, screenY, snappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine) {
+            const overlay = document.getElementById('inline-input-overlay');
+
+            const ta = document.createElement('textarea');
+            ta.className = 'inline-textarea';
+            ta.rows = 1;
+            ta.style.left       = screenX + 'px';
+            ta.style.top        = screenY + 'px';
+            ta.style.fontSize   = (fontSize * zoom) + 'px';
+            ta.style.fontFamily = fontFamily;
+            ta.style.color      = color;
+            ta.style.width      = '200px';
+            ta.style.height     = (fontSize * zoom + 6) + 'px';
+            ta.style.lineHeight = (fontSize * zoom + 6) + 'px';
+
+            document.body.appendChild(ta);
+            requestAnimationFrame(() => ta.focus());
+
+            const maxWidth = (baseWidth - 20) * zoom;
+
+            ta.addEventListener('input', () => {
+                const naturalWidth = ta.scrollWidth;
+                if (naturalWidth + 20 > maxWidth) {
+                    const cursorPos = ta.selectionStart;
+                    const fullText  = ta.value;
+                    const before   = fullText.slice(0, cursorPos);
+                    const splitPos = before.lastIndexOf(' ') > 0 ? before.lastIndexOf(' ') : cursorPos - 1;
+                    const thisLine = fullText.slice(0, splitPos).trimEnd();
+                    const carry    = fullText.slice(splitPos).trimStart();
+
+                    committed = true;
+                    ta.value = thisLine;
+                    commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color);
+
+                    const nextSnappedY = snappedY + lineSpacing;
+                    if (nextSnappedY < baseHeight) {
+                        const upperCanvas = fCanvas.upperCanvasEl;
+                        const rect  = upperCanvas.getBoundingClientRect();
+                        const nextLeft = rect.left + 10 * zoom;
+                        const nextTop  = rect.top  + (nextSnappedY - fontSize) * zoom;
+                        const nextTa = showInlineTextarea(fCanvas, nextLeft, nextTop, nextSnappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
+                        requestAnimationFrame(() => {
+                            nextTa.value = carry;
+                            nextTa.dispatchEvent(new Event('input'));
+                            nextTa.setSelectionRange(carry.length, carry.length);
+                        });
+                    }
+                    return;
+                }
+                ta.style.width = Math.max(80, naturalWidth + 20) + 'px';
+            });
+
+            let committed = false;
+            const commit = () => {
+                if (committed) return;
+                committed = true;
+                commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color);
+            };
+
+            ta.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    commit();
+                    const nextSnappedY = snappedY + lineSpacing;
+                    if (nextSnappedY < baseHeight) {
+                        const upperCanvas = fCanvas.upperCanvasEl;
+                        const rect = upperCanvas.getBoundingClientRect();
+                        const nextLeft = rect.left + 10 * zoom;
+                        const nextTop  = rect.top  + (nextSnappedY - fontSize) * zoom;
+                        showInlineTextarea(fCanvas, nextLeft, nextTop, nextSnappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
+                    }
+                }
+                if (e.key === 'Escape') {
+                    commit();
+                }
+            });
+
+            ta.addEventListener('blur', () => {
+                if (!ta._wrapCommitted) commit();
+            });
+        }
+
+        function commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color) {
+            const val = ta.value;
+            ta.remove();
+            if (!val.trim()) return;
+
+            const lineY = snappedY - fontSize;
+            const textAlign = document.getElementById('fp-align-left')?.classList.contains('active') ? 'left'
+                : document.getElementById('fp-align-center')?.classList.contains('active') ? 'center'
+                : document.getElementById('fp-align-right')?.classList.contains('active') ? 'right'
+                : 'left';
+            const text = new fabric.IText(val, {
+                left: 10,
+                top: lineY,
+                fontFamily,
+                fontSize,
+                fill: color,
+                textAlign,
+                selectable: true,
+                evented: true,
+                hasControls: false,
+                hasBorders: false,
+                lockMovementX: true,
+                lockMovementY: true,
+                _isInlineText: true,
+            });
+            repositionTextByAlign(text, textAlign, fCanvas);
+            fCanvas.add(text);
+            fCanvas.renderAll();
+        }
+
         function setMode(mode) {
             currentMode = mode;
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
@@ -563,6 +927,8 @@
 
             if (mode === 'highlighter') {
                 setColor('#ffff00');
+            } else if (mode === 'draw' || mode === 'text-inline') {
+                setColor('#000000');
             }
 
             if (mode === 'erase') {
@@ -572,65 +938,52 @@
             }
 
             pages.forEach(fCanvas => {
-                // text-inline 用のハンドラを毎回クリア
                 if (fCanvas._textInlineHandler) {
                     fCanvas.off('mouse:down', fCanvas._textInlineHandler);
                     fCanvas._textInlineHandler = null;
                 }
 
                 if (mode === 'text-inline') {
-                    // text-inline は描画モードOFF、選択もOFF、evented は既存オブジェクトを選択できるようON
                     fCanvas.isDrawingMode = false;
                     fCanvas.selection = false;
                     fCanvas.forEachObject(obj => {
                         obj.selectable = false;
-                        obj.evented = true; // クリック位置の判定のためON
+                        obj.evented = false;
                     });
 
                     fCanvas._textInlineHandler = (opt) => {
-                        // 既存のITextをクリックした場合は編集モードに入る
-                        if (opt.target && opt.target.type === 'i-text') {
-                            opt.target.selectable = true;
-                            fCanvas.setActiveObject(opt.target);
-                            opt.target.enterEditing();
-                            fCanvas.renderAll();
-                            return;
-                        }
-                        if (opt.target && opt.target._isBackground) {
-                        } else if (opt.target) {
-                            return;
-                        }
+                    if (opt.target && opt.target._isInlineText && opt.e.detail >= 2) {
+                        fCanvas.setActiveObject(opt.target);
+                        opt.target.enterEditing();
+                        opt.target.selectAll();
+                        fCanvas.renderAll();
+                        return;
+                    }
+                    if (opt.target && !opt.target._isBackground) return;
 
-                        const pointer = fCanvas.getPointer(opt.e);
+                    const pointer   = fCanvas.getPointer(opt.e);
                         const lineSpacing = 30;
-                        const snappedLine = Math.round(pointer.y / lineSpacing) * lineSpacing;
-                        const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
-                        const lineY = snappedLine - fontSize + 2;
-                        const color = document.getElementById('color-picker').value;
-                        const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
+                        const firstLine   = 50;
+                        const lineIndex   = Math.round((pointer.y - firstLine) / lineSpacing);
+                        const snappedY    = firstLine + lineIndex * lineSpacing;
 
-                        const text = new fabric.IText('', {
-                            left: pointer.x,
-                            top: lineY,
-                            fontFamily,
-                            fontSize,
-                            fill: color,
-                            selectable: true,
-                            evented: true,
-                            hasControls: false,
-                            hasBorders: false,
-                            padding: 0,
-                        });
-                        fCanvas.add(text);
-                        fCanvas.setActiveObject(text);
-                        requestAnimationFrame(() => {
-                            text.enterEditing();
-                            fCanvas.renderAll();
-                        });
+                        const fontSize   = parseInt(document.getElementById('fp-size').value) || 18;
+                        const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
+                        const color      = document.getElementById('color-picker').value;
+
+                        const zoom     = fCanvas.getZoom();
+                        const upperCanvas = fCanvas.upperCanvasEl;
+                        const rect        = upperCanvas.getBoundingClientRect();
+
+                        const taLeft = rect.left + 10 * zoom;
+                        const taTop  = rect.top  + (snappedY - fontSize) * zoom;
+
+                        showInlineTextarea(fCanvas, taLeft, taTop, snappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
                     };
                     fCanvas.on('mouse:down', fCanvas._textInlineHandler);
 
                 } else {
+                    fCanvas.isDrawingMode = false;
                     fCanvas.selection = (mode === 'select');
                     fCanvas.forEachObject(obj => {
                         if (!obj._isBackground) {
@@ -669,6 +1022,7 @@
             const pageH = baseHeight * canvasScale + 20;
             const idx = Math.min(pages.length - 1, Math.floor((scrollTop + pageH / 2) / pageH));
             const target = pages[idx];
+            setColor('#000000');
             const color = document.getElementById('color-picker').value;
             const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
             const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
@@ -688,12 +1042,6 @@
             text.enterEditing();
             target.renderAll();
             setMode('select');
-        }
-
-        function getCurrentPageIndex() {
-            const container = document.getElementById('canvas-container');
-            const pageH = baseHeight * canvasScale + 20;
-            return Math.min(pages.length - 1, Math.floor((container.scrollTop + pageH / 2) / pageH));
         }
 
         function getCurrentCanvas() {
@@ -729,15 +1077,18 @@
         }
 
         function clearAll() {
-            const modal = confirm("ノートを初期化しますか？\n描画内容と追加したページは削除されます。");
-            if (modal) {
-                const container = document.getElementById('canvas-container');
-                container.innerHTML = '';
-                pages = [];
-                addNewPage();
-                setMode('select');
-                container.scrollTop = 0;
-            }
+            showConfirmModal(
+                'ノートを初期化',
+                '描画内容と追加したページはすべて削除されます。よろしいですか？',
+                () => {
+                    const container = document.getElementById('canvas-container');
+                    container.innerHTML = '';
+                    pages = [];
+                    addNewPage();
+                    setMode('select');
+                    container.scrollTop = 0;
+                }
+            );
         }
 
         async function downloadPDF() {
@@ -788,7 +1139,7 @@
             if (pages.length <= 1) { alert('最後の1ページは削除できません'); return; }
             const container = document.getElementById('canvas-container');
             pages[i].dispose();
-            container.children[i].remove();
+            container.querySelectorAll('.canvas-wrapper')[i].remove();
             pages.splice(i, 1);
             updatePageCounter();
             updateThumbnails();
@@ -796,11 +1147,11 @@
 
         function movePage(from, to) {
             const container = document.getElementById('canvas-container');
-            const children = Array.from(container.children);
+            const wrappers = Array.from(container.querySelectorAll('.canvas-wrapper'));
             if (from < to) {
-                container.insertBefore(children[from], children[to].nextSibling);
+                container.insertBefore(wrappers[from], wrappers[to].nextSibling);
             } else {
-                container.insertBefore(children[from], children[to]);
+                container.insertBefore(wrappers[from], wrappers[to]);
             }
             const [moved] = pages.splice(from, 1);
             pages.splice(to, 0, moved);
@@ -830,63 +1181,17 @@
             });
         }
 
-        function initKeyboardShortcuts() {
-            document.addEventListener('keydown', (e) => {
-                const active = document.activeElement;
-                if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
-                const fCanvas = getCurrentCanvas();
-                if (!fCanvas) return;
-                const isEditing = fCanvas.getActiveObject() && fCanvas.getActiveObject().isEditing;
-                if (isEditing) return;
-
-                const ctrl = e.ctrlKey || e.metaKey;
-
-                if (ctrl && e.key === 'z') { e.preventDefault(); undo(); }
-                if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'z'))) { e.preventDefault(); redo(); }
-                if (ctrl && e.key === 's') { e.preventDefault(); downloadPDF(); }
-                if (ctrl && e.key === 'c') {
-                    e.preventDefault();
-                    const obj = fCanvas.getActiveObject();
-                    if (obj && !obj._isBackground) obj.clone(c => { _clipboard = c; });
-                }
-                if (ctrl && e.key === 'x') {
-                    e.preventDefault();
-                    const obj = fCanvas.getActiveObject();
-                    if (obj && !obj._isBackground) {
-                        obj.clone(c => { _clipboard = c; });
-                        fCanvas.remove(obj);
-                        fCanvas.renderAll();
-                    }
-                }
-                if (ctrl && e.key === 'v') {
-                    e.preventDefault();
-                    if (_clipboard) {
-                        _clipboard.clone(c => {
-                            c.set({ left: c.left + 16, top: c.top + 16, evented: true });
-                            fCanvas.add(c);
-                            fCanvas.setActiveObject(c);
-                            fCanvas.renderAll();
-                        });
-                    }
-                }
-                if (e.key === 'Delete' || e.key === 'Backspace') {
-                    const obj = fCanvas.getActiveObject();
-                    if (obj && !obj._isBackground) {
-                        fCanvas.remove(obj);
-                        fCanvas.renderAll();
-                    }
-                }
-            });
-        }
-
-        // ---- クイックカラー選択 ----
         function setColor(hex) {
             document.getElementById('color-picker').value = hex;
             clearSwatchSelection();
             const map = { '#000000':'black','#ef4444':'red','#3b82f6':'blue','#22c55e':'green' };
             const id = map[hex];
             if (id) document.getElementById(`swatch-${id}`)?.classList.add('selected');
-            pages.forEach(updatePageMode);
+            if (currentMode === 'erase') {
+                setMode('draw');
+            } else {
+                pages.forEach(updatePageMode);
+            }
         }
 
         function clearSwatchSelection() {
@@ -895,10 +1200,8 @@
             });
         }
 
-        // ---- フォントパネル ----
         function syncFontPanel(e) {
             const obj = e?.selected?.[0] || (e?.target);
-            // selectionイベントとupdatedイベントの両対応
             const target = (e?.selected && e.selected[0]) || e?.target;
             if (!target || target.type !== 'i-text') return;
             document.getElementById('fp-font').value = target.fontFamily || 'sans-serif';
@@ -952,6 +1255,7 @@
             const obj = fCanvas.getActiveObject();
             if (obj && obj.type === 'i-text') {
                 obj.set('textAlign', align);
+                repositionTextByAlign(obj, align, fCanvas);
                 fCanvas.renderAll();
             }
             ['left','center','right'].forEach(a => {
@@ -959,17 +1263,28 @@
             });
         }
 
+        function repositionTextByAlign(obj, align, fCanvas) {
+            const canvasWidth = baseWidth;
+            const margin = 10;
+            if (align === 'left') {
+                obj.set('left', margin);
+            } else if (align === 'center') {
+                obj.set('left', (canvasWidth - obj.width) / 2);
+            } else if (align === 'right') {
+                obj.set('left', canvasWidth - obj.width - margin);
+            }
+            obj.setCoords();
+        }
+
         function setTextColor(hex) {
             const fCanvas = getCurrentCanvas();
             document.getElementById('fp-color-picker').value = hex;
-            // フォントパネルのスウォッチ選択表示を更新
             document.querySelectorAll('#fp-color-swatches .color-swatch').forEach(s => s.classList.remove('selected'));
             const map = { '#000000':'fp-swatch-black','#ef4444':'fp-swatch-red','#3b82f6':'fp-swatch-blue','#22c55e':'fp-swatch-green','#f59e0b':'fp-swatch-yellow','#8b5cf6':'fp-swatch-purple' };
             if (map[hex]) document.getElementById(map[hex])?.classList.add('selected');
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
             if (obj && obj.type === 'i-text') {
-                // 選択範囲があればその部分だけ、なければオブジェクト全体に適用
                 if (obj.isEditing && obj.selectionStart !== obj.selectionEnd) {
                     obj.setSelectionStyles({ fill: hex });
                 } else {
@@ -979,29 +1294,44 @@
             }
         }
 
-        // ---- PDFアップロード ----
         async function handlePDFUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
-            const arrayBuffer = await file.arrayBuffer();
+
+            const doLoad = async () => {
+                const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             const container = document.getElementById('canvas-container');
             container.innerHTML = '';
             pages = [];
             for (let i = 1; i <= pdf.numPages; i++) {
                 const pdfPage = await pdf.getPage(i);
-                const viewport = pdfPage.getViewport({ scale: 1.0 });
+                const dpr = window.devicePixelRatio || 2;
+                const baseViewport = pdfPage.getViewport({ scale: 1.0 });
+                const scale = (baseWidth / baseViewport.width) * dpr * 2;
+                const viewport = pdfPage.getViewport({ scale });
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.width;
                 tempCanvas.height = viewport.height;
-                await pdfPage.render({ canvasContext: tempCanvas.getContext('2d'), viewport }).promise;
-                addNewPage(tempCanvas.toDataURL());
+                const ctx = tempCanvas.getContext('2d');
+                await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+                addNewPage(tempCanvas.toDataURL('image/png'));
             }
             updateThumbnails();
-            e.target.value = '';
+                e.target.value = '';
+            };
+
+            if (hasContent()) {
+                showConfirmModal(
+                    'PDFを読み込む',
+                    '現在のノートに書かれている内容は削除されます。よろしいですか？',
+                    doLoad
+                );
+            } else {
+                doLoad();
+            }
         }
 
-        // ---- 画像挿入 ----
         function handleImageInsert(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -1022,7 +1352,6 @@
             e.target.value = '';
         }
 
-        // ---- サムネイル ----
         function updateThumbnails() {
             const sidebar = document.getElementById('thumbnail-sidebar');
             if (!sidebar) return;
@@ -1035,10 +1364,11 @@
                 if (i === getCurrentPageIndex()) item.style.borderColor = '#3b82f6';
 
                 const thumbCanvas = document.createElement('canvas');
-                const scale = 90 / baseWidth;
-                thumbCanvas.width = 90;
+                const thumbW = 82;
+                const scale = thumbW / baseWidth;
+                thumbCanvas.width = thumbW;
                 thumbCanvas.height = Math.round(baseHeight * scale);
-                thumbCanvas.style.cssText = 'width:90px; display:block;';
+                thumbCanvas.style.cssText = 'width:100%; display:block;';
                 const ctx = thumbCanvas.getContext('2d');
                 const oz = fCanvas.getZoom();
                 fCanvas.setZoom(1.0);
@@ -1048,7 +1378,7 @@
                 fCanvas.setDimensions({ width: baseWidth * oz, height: baseHeight * oz });
                 fCanvas.renderAll();
                 const img = new Image();
-                img.onload = () => ctx.drawImage(img, 0, 0, 90, thumbCanvas.height);
+                img.onload = () => ctx.drawImage(img, 0, 0, thumbW, thumbCanvas.height);
                 img.src = dataUrl;
                 item.appendChild(thumbCanvas);
 
@@ -1057,7 +1387,6 @@
                 label.textContent = `${i + 1}`;
                 item.appendChild(label);
 
-                // 削除ボタン
                 const delBtn = document.createElement('div');
                 delBtn.style.cssText = 'position:absolute; top:2px; right:2px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:opacity 0.2s;';
                 delBtn.textContent = '×';
@@ -1070,7 +1399,6 @@
 
                 item.addEventListener('click', () => scrollToPage(i));
 
-                // ドラッグ＆ドロップ並び替え
                 item.addEventListener('dragstart', (ev) => {
                     ev.dataTransfer.setData('text/plain', String(i));
                     ev.dataTransfer.effectAllowed = 'move';
@@ -1093,6 +1421,15 @@
 
                 sidebar.appendChild(item);
             });
+
+            const addBtn = document.createElement('div');
+            addBtn.title = 'ページを追加';
+            addBtn.style.cssText = 'cursor:pointer; border:2px dashed #9ca3af; border-radius:4px; background:transparent; padding:8px 0; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:22px; line-height:1; transition:background 0.15s; flex-shrink:0;';
+            addBtn.textContent = '+';
+            addBtn.onmouseenter = () => { addBtn.style.background = '#d1d5db'; };
+            addBtn.onmouseleave = () => { addBtn.style.background = 'transparent'; };
+            addBtn.onclick = () => addNewPage();
+            sidebar.appendChild(addBtn);
         }
 
         function scrollToPage(i) {
@@ -1102,31 +1439,6 @@
             setTimeout(updateThumbnails, 100);
         }
 
-        function deletePage(i) {
-            if (pages.length <= 1) { alert('最後の1ページは削除できません'); return; }
-            const container = document.getElementById('canvas-container');
-            pages[i].dispose();
-            container.children[i].remove();
-            pages.splice(i, 1);
-            updatePageCounter();
-            updateThumbnails();
-        }
-
-        function movePage(from, to) {
-            const container = document.getElementById('canvas-container');
-            const children = Array.from(container.children);
-            if (from < to) {
-                container.insertBefore(children[from], children[to].nextSibling);
-            } else {
-                container.insertBefore(children[from], children[to]);
-            }
-            const [moved] = pages.splice(from, 1);
-            pages.splice(to, 0, moved);
-            updatePageCounter();
-            updateThumbnails();
-        }
-
-        // ---- キーボードショートカット ----
         function initKeyboardShortcuts() {
             document.addEventListener('keydown', (e) => {
                 const active = document.activeElement;
