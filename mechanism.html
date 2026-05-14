@@ -1,380 +1,724 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>てこクランク機構 シミュレーション</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* 既存のCSS設定は残しつつ、フォント設定をオーバーライドまたは追加 */
-    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;margin:0;padding:20px;background:#f7f9fc;color:#111}
-    /* 追加するフォント設定 */
-    :root {
-        font-family: 'Inter', 'Noto Sans JP', sans-serif;
-    }
-    /* 既存のbodyフォント設定を上書きして、より広範囲に適用 */
-    body {
-        font-family: 'Inter', 'Noto Sans JP', sans-serif;
-        margin:0;padding:20px;background:#f7f9fc;color:#111; /* 既存の設定を再定義 */
-    }
-    
-    h1{font-size:24px;margin-bottom:15px;color:#0b69ff;}
-    .container{
-        display:flex;
-        gap:20px;
-        max-width:1200px;
-        margin:0 auto;
-    }
-    .controls{
-        width:360px;
-        padding:20px;
-        background:#fff;
-        border-radius:12px;
-        box-shadow:0 8px 24px rgba(10,20,40,0.1);
-        height:fit-content;
-    }
-    .canvas-wrap{
-        flex:1;
-        min-width:500px;
-        padding:0;
-        background:#fff;border-radius:12px;
-        box-shadow:0 8px 24px rgba(10,20,40,0.08);
-        display:flex;align-items:center;
-        justify-content:center;
-        overflow:hidden;
-    }
-    label{
-        display:block;
-        margin-top:12px;
-        font-size:14px;
-        font-weight:600;
-        color:#333;
-    }
-    input[type=range]{
-      width:100%;
-      margin-top:8px;
-      height: 8px;
-      cursor: pointer;
-      /* Reset default appearance for compatibility */
-      appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
-      background: transparent;
-    }
-    input[type=range]::-webkit-slider-runnable-track {
-        width: 100%;
-        height: 8px;
-        background: var(--link-color, #ccc);
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        transition: background 0.2s;
-    }
-    input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        border: 3px solid #fff;
-        height: 18px;width: 18px;
-        border-radius: 50%;
-        background: var(--link-color, #888);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        margin-top: -6px;
-    }
-    input[type=range]::-moz-range-track {
-        width: 100%;
-        height: 8px;
-        background: var(--link-color, #ccc);
-        border-radius: 4px;
-        border: 1px solid #ddd;
-    }
-    input[type=range]::-moz-range-thumb {
-        border: 3px solid #fff;
-        height: 18px;
-        width: 18px;
-        border-radius: 50%;
-        background: var(--link-color, #888);
-        box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    }
-    .row{
-        display:flex;
-        align-items:center;
-        gap:10px;
-        margin-top:20px;
-        padding-top:10px;
-        border-top:1px solid #eee;
-    }
-    .btn{
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        gap:8px;
-        padding:10px 16px;
-        border-radius:8px;
-        border:1px solid #dfe6f0;
-        background:#fff;cursor:pointer;
-        font-weight:500;
-        transition:all 0.2s;
-    }
-    .btn:hover{
-        background:#f0f3f8;
-    }
-    .btn.primary{
-        background:#0b69ff;
-        color:#fff;
-        border-color:transparent;
-    }
-    .btn.primary:hover{
-        background:#0957d5;
-    }
-    
-    /* === リセットボタンの赤色スタイルを追加 (Danger) === */
-    .btn.danger {
-        background: #ef4444; /* Tailwind red-500 */
-        color: #fff;
-        border-color: transparent;
-    }
-    .btn.danger:hover {
-        background: #dc2626; /* Tailwind red-600 */
-    }
-    /* ================================================= */
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>てこクランク機構 シミュレーション</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #0d1117;
+            --panel:    #161b22;
+            --border:   #21262d;
+            --border2:  #30363d;
+            --text:     #e6edf3;
+            --muted:    #8b949e;
+            --accent:   #58a6ff;
+            --accent2:  #1f6feb;
+            --red:      #f85149;
+            --green:    #3fb950;
+            --orange:   #d29922;
 
-    svg{background:linear-gradient(180deg,#eef4ff 0%, #ffffff 80%);border-radius:12px;width:100%;height:100%;}
-    .info{font-size:13px;margin-top:15px;color:#444;line-height:1.5;}
+            --l1c: #f85149;
+            --l2c: #3fb950;
+            --l3c: #58a6ff;
+            --l4c: #8b949e;
+        }
 
-    /* エラーメッセージ用クラス */
-    .error-message {
-        display: none; /* 初期状態では非表示 */
-        color: #d90429; /* 赤系の色 */
-        font-weight: 700;
-        margin-top: 10px;
-        padding: 10px;
-        border: 1px solid #d90429;
-        border-radius: 8px;
-        background-color: #fcebeb;
-    }
-  </style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        /* グラーショフ条件：最短 + 最長 ≦ 残り2辺の和 */
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 28px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+        .header-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--accent2), var(--accent));
+            border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .header-icon svg { width: 20px; height: 20px; }
+        header h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            color: var(--text);
+        }
+        header h1 span {
+            color: var(--muted);
+            font-weight: 400;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        .header-badge {
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            padding: 4px 10px;
+            border: 1px solid var(--border2);
+            border-radius: 20px;
+            color: var(--muted);
+            letter-spacing: 0.05em;
+        }
+
+        .workspace {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            gap: 0;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            flex-shrink: 0;
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .link-row {
+            margin-bottom: 14px;
+        }
+        .link-row:last-child { margin-bottom: 0; }
+
+        .link-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 7px;
+        }
+        .link-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .link-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .link-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--accent);
+            background: rgba(88,166,255,0.08);
+            border: 1px solid rgba(88,166,255,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            min-width: 44px;
+            text-align: center;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background: var(--border2);
+            border-radius: 2px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--link-color, var(--accent));
+            border: 2px solid var(--bg);
+            box-shadow: 0 0 0 1px var(--link-color, var(--accent));
+            transition: transform 0.15s;
+            cursor: grab;
+        }
+        input[type=range]::-webkit-slider-thumb:active { transform: scale(1.3); cursor: grabbing; }
+        input[type=range]::-moz-range-thumb {
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--link-color, var(--accent));
+            border: 2px solid var(--bg);
+            box-shadow: 0 0 0 1px var(--link-color, var(--accent));
+        }
+        input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; }
+        input[type=range]::-moz-range-track { height: 4px; background: var(--border2); border-radius: 2px; }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+        .btn {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 9px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border2);
+            background: transparent;
+            color: var(--muted);
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .btn:hover:not(:disabled) { background: var(--border); color: var(--text); border-color: var(--border2); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        .btn.active-play {
+            background: rgba(63,185,80,0.12);
+            color: var(--green);
+            border-color: rgba(63,185,80,0.4);
+        }
+        .btn.active-pause {
+            background: rgba(88,166,255,0.12);
+            color: var(--accent);
+            border-color: rgba(88,166,255,0.4);
+        }
+        .btn-reset {
+            background: rgba(248,81,73,0.08);
+            color: var(--red);
+            border-color: rgba(248,81,73,0.3);
+        }
+        .btn-reset:hover { background: rgba(248,81,73,0.18) !important; color: var(--red) !important; }
+
+        .btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+        .error-box {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 12px;
+            background: rgba(248,81,73,0.08);
+            border: 1px solid rgba(248,81,73,0.35);
+            border-radius: 6px;
+            font-size: 12px;
+            color: #ff7b72;
+            line-height: 1.5;
+        }
+        .error-box.visible { display: block; }
+
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+        .legend-line {
+            width: 24px; height: 3px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .legend-line.dashed {
+            background: none;
+            border-top: 2px dashed var(--l4c);
+        }
+        .hint-text {
+            font-size: 11px;
+            color: var(--muted);
+            line-height: 1.7;
+            padding: 14px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .canvas-wrap {
+            flex: 1;
+            display: flex;
+            align-items: stretch;
+            justify-content: stretch;
+            position: relative;
+            background:
+                radial-gradient(ellipse at 30% 40%, rgba(31,111,235,0.06) 0%, transparent 60%),
+                radial-gradient(ellipse at 70% 70%, rgba(63,185,80,0.04) 0%, transparent 50%),
+                var(--bg);
+        }
+        .canvas-wrap::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(var(--border) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.35;
+            pointer-events: none;
+        }
+        #svg {
+            width: 100%; height: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .statusbar {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 8px 20px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        .status-item { display: flex; align-items: center; gap: 6px; }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+        .status-dot.running { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+        .status-sep { color: var(--border2); }
+        .sidebar-bottom { padding: 16px; }
+    </style>
 </head>
 <body>
-  <h1 class="text-3xl font-extrabold mb-2 text-center">てこクランク機構 シミュレーション</h1>
-  <div class="container">
-    <div class="controls">
-      <div>
-        <div><strong>リンク長さの設定</strong></div>
-        <label>クランク AB : <span id="len1Val">60</span></label>
-        <input id="len1" type="range" min="10" max="300" step="10" value="60">
-        <label>リンク BC : <span id="len2Val">150</span></label>
-        <input id="len2" type="range" min="10" max="300" step="10" value="150">
-        <label>リンク CD : <span id="len3Val">120</span></label>
-        <input id="len3" type="range" min="10" max="300" step="10" value="120">
-        <label>固定リンク DA : <span id="len4Val">180</span></label>
-        <input id="len4" type="range" min="20" max="400" step="10" value="180">
-      </div>
-      <div class="row">
-        <button id="play" class="btn primary">再生</button>
-        <button id="pause" class="btn">一時停止</button>
-        <button id="reset" class="btn danger">リセット</button>
-      </div>
-      <!-- エラーメッセージ表示用のdivを追加 -->
-      <div id="errorMessage" class="error-message"></div>
-      <div class="info">リンクの長さを変更して再生してみましょう。<br/>動きがどのように変わるでしょうか？</div>
+    <header>
+        <div class="header-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round">
+                <circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/>
+                <line x1="7" y1="12" x2="17" y2="6"/><line x1="7" y1="12" x2="17" y2="18"/>
+            </svg>
+        </div>
+        <h1>てこクランク機構</h1>
+    </header>
+
+    <div class="workspace">
+
+        <aside class="sidebar">
+
+            <div class="sidebar-section">
+                <div class="section-title">リンク長さ</div>
+
+                <div class="link-row">
+                    <div class="link-label">
+                        <div class="link-name">
+                            <span class="link-dot" style="background:var(--l1c)"></span>
+                            クランク AB
+                        </div>
+                        <span class="link-value" id="len1Val">60</span>
+                    </div>
+                    <input id="len1" type="range" min="10" max="300" step="10" value="60">
+                </div>
+
+                <div class="link-row">
+                    <div class="link-label">
+                        <div class="link-name">
+                            <span class="link-dot" style="background:var(--l2c)"></span>
+                            連結リンク BC
+                        </div>
+                        <span class="link-value" id="len2Val">150</span>
+                    </div>
+                <input id="len2" type="range" min="10" max="300" step="10" value="150">
+                </div>
+
+                <div class="link-row">
+                    <div class="link-label">
+                        <div class="link-name">
+                            <span class="link-dot" style="background:var(--l3c)"></span>
+                            てこ CD
+                        </div>
+                        <span class="link-value" id="len3Val">120</span>
+                    </div>
+                    <input id="len3" type="range" min="10" max="300" step="10" value="120">
+                </div>
+
+                <div class="link-row" style="margin-bottom:0">
+                    <div class="link-label">
+                        <div class="link-name">
+                            <span class="link-dot" style="background:var(--l4c)"></span>
+                            固定リンク DA
+                        </div>
+                        <span class="link-value" id="len4Val">180</span>
+                    </div>
+                    <input id="len4" type="range" min="20" max="400" step="10" value="180">
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">コントロール</div>
+                <div class="btn-row">
+                    <button id="play" class="btn active-play">
+                        <svg id="playIcon" viewBox="0 0 16 16" fill="currentColor"><path d="M4 3l10 5-10 5V3z"/></svg>
+                        <span id="playLabel">再生</span>
+                    </button>
+                    <button id="reset" class="btn btn-reset">
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 8a6 6 0 1 0 1.5-4"/><polyline points="2,2 2,6 6,6"/></svg>
+                        初期化
+                    </button>
+                </div>
+                <div id="errorMessage" class="error-box"></div>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="section-title">凡例</div>
+                <div class="legend-row"><div class="legend-line" style="background:var(--l1c)"></div>クランク (AB)</div>
+                <div class="legend-row"><div class="legend-line" style="background:var(--l2c)"></div>リンク (BC)</div>
+                <div class="legend-row"><div class="legend-line" style="background:var(--l3c)"></div>リンク (CD)</div>
+                <div class="legend-row" style="margin-bottom:0"><div class="legend-line dashed"></div>固定リンク (DA)</div>
+            </div>
+
+        </aside>
+
+        <div class="canvas-wrap">
+            <svg id="svg" viewBox="0 0 900 600"></svg>
+        </div>
+
     </div>
 
-    <div class="canvas-wrap">
-      <svg id="svg" width="900" height="600" viewBox="0 0 900 600"></svg>
+    <div class="statusbar">
+        <div class="status-item">
+            <div class="status-dot running" id="statusDot"></div>
+            <span id="statusText">シミュレーション実行中</span>
+        </div>
+        <span class="status-sep">|</span>
+        <div class="status-item">θ = <span id="thetaVal">0.00</span> rad</div>
+        <span class="status-sep">|</span>
+        <div class="status-item">A・D 端点はドラッグで移動可能</div>
     </div>
-  </div>
 
   <script>
-    const LINK_COLORS = { l1: { line: '#ff4444', joint: '#cc0000' }, l2: { line: '#33cc33', joint: '#009900' }, l3: { line: '#4444ff', joint: '#0000cc' }, l4: { line: '#333333', joint: '#333333' } };
+    const LINK_COLORS = {
+        l1: { line: '#f85149', joint: '#f85149' },
+        l2: { line: '#3fb950', joint: '#3fb950' },
+        l3: { line: '#58a6ff', joint: '#58a6ff' },
+        l4: { line: '#8b949e', joint: '#8b949e' }
+    };
     const FIXED_SPEED = 1.0;
     function $(id){ return document.getElementById(id); }
     const svg = $('svg');
-    const len1 = $('len1'); const len2 = $('len2'); const len3 = $('len3'); const len4 = $('len4');
-    const len1Val = $('len1Val'); const len2Val = $('len2Val'); const len3Val = $('len3Val'); const len4Val = $('len4Val');
-    const playBtn = $('play'); const pauseBtn = $('pause'); const resetBtn = $('reset');
-    
-    // エラーメッセージ要素を取得
-    const errorMessageDiv = $('errorMessage'); 
+    const len1=$('len1'),len2=$('len2'),len3=$('len3'),len4=$('len4');
+    const len1Val=$('len1Val'),len2Val=$('len2Val'),len3Val=$('len3Val'),len4Val=$('len4Val');
+    const playBtn=$('play'),resetBtn=$('reset');
+    const playIcon=$('playIcon'),playLabel=$('playLabel');
+    const errorMessageDiv=$('errorMessage');
+    const statusDot=$('statusDot'),statusText=$('statusText'),thetaVal=$('thetaVal');
 
-    function create(tag, attrs){ const e = document.createElementNS('http://www.w3.org/2000/svg', tag); for(const k in attrs) e.setAttribute(k, attrs[k]); return e; }
-    // Clear existing SVG children safely to avoid browser warnings about using innerHTML on SVG
-    while (svg.firstChild) svg.removeChild(svg.firstChild);
-    const edgesG = create('g',{}); svg.appendChild(edgesG);
-    const edgeElems = [ create('line', {stroke: LINK_COLORS.l1.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l2.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l3.line, 'stroke-width':10,'stroke-linecap':'round'}), create('line', {stroke: LINK_COLORS.l4.line, 'stroke-width':4, 'stroke-linecap':'round', 'stroke-dasharray':'8 4'}) ];
-    const jointElems = [ create('circle',{r:10,fill:'#fff',stroke:LINK_COLORS.l4.joint,'stroke-width':3}), create('circle',{r:8,fill:'#fff',stroke:LINK_COLORS.l1.joint,'stroke-width':3}), create('circle',{r:8,fill:'#fff',stroke:LINK_COLORS.l2.joint,'stroke-width':3}), create('circle',{r:10,fill:'#fff',stroke:LINK_COLORS.l4.joint,'stroke-width':3}) ];
-    const labels = [ create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l4.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l1.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l2.joint}), create('text',{'font-size':16,'font-weight':700,fill:LINK_COLORS.l4.joint}) ];
-    edgeElems.forEach(e=>edgesG.appendChild(e)); jointElems.forEach(j=>edgesG.appendChild(j)); labels.forEach(t=>svg.appendChild(t));
+    function create(tag, attrs){
+        const e = document.createElementNS('http://www.w3.org/2000/svg', tag);
+        for(const k in attrs) e.setAttribute(k, attrs[k]);
+        return e;
+    }
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
 
-    var A = {x:220,y:300};
-    var l1 = +len1.value; var l2 = +len2.value; var l3 = +len3.value; var l4 = +len4.value;
-    var D = {x: A.x + l4, y: A.y};
-    var theta = 0; var raf = null;
+    const defs = create('defs',{});
+    const markerA = create('marker',{id:'fixA',markerWidth:14,markerHeight:14,refX:7,refY:7});
+    const markerD = create('marker',{id:'fixD',markerWidth:14,markerHeight:14,refX:7,refY:7});
+    [markerA,markerD].forEach(m=>{
+        const p = create('polygon',{points:'7,2 12,12 2,12',fill:'#8b949e',opacity:'0.6'});
+        m.appendChild(p); defs.appendChild(m);
+    });
+    svg.appendChild(defs);
 
-    function setLinkColorsToSliders() { len1.style.setProperty('--link-color', LINK_COLORS.l1.line); len2.style.setProperty('--link-color', LINK_COLORS.l2.line); len3.style.setProperty('--link-color', LINK_COLORS.l3.line); len4.style.setProperty('--link-color', LINK_COLORS.l4.line); }
-    function updateLabels(){ len1Val.textContent = Math.round(len1.value); len2Val.textContent = Math.round(len2.value); len3Val.textContent = Math.round(len3.value); len4Val.textContent = Math.round(len4.value); }
+    const edgesG = create('g',{});
+    svg.appendChild(edgesG);
+
+    const traceEl = create('path',{fill:'none',stroke:'rgba(248,81,73,0.18)','stroke-width':1.5});
+    svg.appendChild(traceEl);
+
+    const edgeElems = [
+        create('line',{stroke:LINK_COLORS.l1.line,'stroke-width':5,'stroke-linecap':'round'}),
+        create('line',{stroke:LINK_COLORS.l2.line,'stroke-width':5,'stroke-linecap':'round'}),
+        create('line',{stroke:LINK_COLORS.l3.line,'stroke-width':5,'stroke-linecap':'round'}),
+        create('line',{stroke:LINK_COLORS.l4.line,'stroke-width':2,'stroke-linecap':'round','stroke-dasharray':'6 4'})
+    ];
+    const jointElems = [
+        create('circle',{r:8,fill:'#161b22',stroke:LINK_COLORS.l4.joint,'stroke-width':2.5}),
+        create('circle',{r:6,fill:'#161b22',stroke:LINK_COLORS.l1.joint,'stroke-width':2.5}),
+        create('circle',{r:6,fill:'#161b22',stroke:LINK_COLORS.l2.joint,'stroke-width':2.5}),
+        create('circle',{r:8,fill:'#161b22',stroke:LINK_COLORS.l4.joint,'stroke-width':2.5})
+    ];
+    const pinA = create('polygon',{points:'0,-12 8,4 -8,4',fill:'#8b949e',opacity:'0.55'});
+    const pinD = create('polygon',{points:'0,-12 8,4 -8,4',fill:'#8b949e',opacity:'0.55'});
+
+    const labelStyle = {'font-family':'JetBrains Mono, monospace','font-size':'13','font-weight':'600'};
+    const labels = [
+        create('text',{...labelStyle,fill:LINK_COLORS.l4.joint}),
+        create('text',{...labelStyle,fill:LINK_COLORS.l1.joint}),
+        create('text',{...labelStyle,fill:LINK_COLORS.l2.joint}),
+        create('text',{...labelStyle,fill:LINK_COLORS.l4.joint})
+    ];
+
+    edgeElems.forEach(e=>edgesG.appendChild(e));
+    svg.appendChild(pinA); svg.appendChild(pinD);
+    jointElems.forEach(j=>svg.appendChild(j));
+    labels.forEach(t=>svg.appendChild(t));
+
+    var A={x:220,y:300};
+    var l1=+len1.value,l2=+len2.value,l3=+len3.value,l4=+len4.value;
+    var D={x:A.x+l4,y:A.y};
+    var theta=0, raf=null;
+    var tracePoints=[], maxTrace=120;
+
+    function setLinkColorsToSliders(){
+        len1.style.setProperty('--link-color',LINK_COLORS.l1.line);
+        len2.style.setProperty('--link-color',LINK_COLORS.l2.line);
+        len3.style.setProperty('--link-color',LINK_COLORS.l3.line);
+        len4.style.setProperty('--link-color',LINK_COLORS.l4.line);
+    }
+    function updateLabels(){
+        len1Val.textContent=Math.round(len1.value);
+        len2Val.textContent=Math.round(len2.value);
+        len3Val.textContent=Math.round(len3.value);
+        len4Val.textContent=Math.round(len4.value);
+    }
 
     function circleIntersection(p1,p2,r1,r2){
-      const dx = p2.x - p1.x; const dy = p2.y - p1.y; const d = Math.hypot(dx,dy);
-      if(d < 1e-9) return [];
-      if(d > r1 + r2 + 1e-6) return [];
-      if(d < Math.abs(r1 - r2) - 1e-6) return [];
-      const a = (r1*r1 - r2*r2 + d*d) / (2*d);
-      const h2 = r1*r1 - a*a;
-      const xm = p1.x + a * dx / d; const ym = p1.y + a * dy / d;
-      const h = Math.sqrt(Math.max(0,h2));
-      const rx = -dy * (h/d); const ry = dx * (h/d);
-      return [{x: xm + rx, y: ym + ry}, {x: xm - rx, y: ym - ry}];
+        const dx=p2.x-p1.x,dy=p2.y-p1.y,d=Math.hypot(dx,dy);
+        if(d<1e-9||d>r1+r2+1e-6||d<Math.abs(r1-r2)-1e-6) return [];
+        const a=(r1*r1-r2*r2+d*d)/(2*d);
+        const h=Math.sqrt(Math.max(0,r1*r1-a*a));
+        const xm=p1.x+a*dx/d, ym=p1.y+a*dy/d;
+        const rx=-dy*(h/d), ry=dx*(h/d);
+        return [{x:xm+rx,y:ym+ry},{x:xm-rx,y:ym-ry}];
     }
 
-    // C点選択ロジックを変更: 可能であれば常にAD線（A.y）の下側 (y > A.y) を選ぶ
     function chooseNearest(cands, prev){
-      if(cands.length===0) return null;
-      if(cands.length===1) return cands[0];
-
-      // 1) prev がある場合は連続性を優先して最も近い点をまず候補にする
-      if(prev){
-        let best=cands[0]; let bd=Math.hypot(cands[0].x-prev.x, cands[0].y-prev.y);
-        for(let i=1;i<cands.length;i++){ const d=Math.hypot(cands[i].x-prev.x, cands[i].y-prev.y); if(d<bd){best=cands[i]; bd=d;} }
-        // もし選ばれた点がADの上（y <= A.y）で、もう一方がADの下（y > A.y）なら下側を優先
-        const other = (best === cands[0]) ? cands[1] : cands[0];
-        if(best.y <= A.y && other.y > A.y) return other;
-        return best;
-      }
-
-      // prev が無い（初回/リセット時）は、ADの下側 (y > A.y) を優先して選択
-      const below = cands.filter(c => c.y > A.y);
-      if(below.length === 1) return below[0];
-      if(below.length === 2) return (below[0].y > below[1].y) ? below[0] : below[1];
-
-      // どちらもADの上側なら、Y座標が大きい（より下）方を選ぶ
-      return cands[0].y > cands[1].y ? cands[0] : cands[1];
-    }
-
-    /**
-     * グラーショフの法則の不成立条件をチェックする
-     * l1: AB (クランク), l2: BC (連結), l3: CD (てこ), l4: DA (固定)
-     * @returns {boolean} グラーショフ不成立（クランク回転不可）の場合 true
-     */
-    function checkGrashofFailure(l1, l2, l3, l4) {
-      // リンク長を配列にし、ソートして最短(s)、最長(l)、中間(p, q)を取得
-      const links = [l1, l2, l3, l4].sort((a, b) => a - b);
-      const s = links[0]; // shortest
-      const l = links[3]; // longest
-      const p = links[1]; // intermediate 1
-      const q = links[2]; // intermediate 2
-      
-      // グラーショフの法則が不成立となる条件: s + l > p + q
-      // 許容誤差 1e-6 を追加
-      const isGrashofFailure = (s + l > p + q + 1e-6);
-      
-      return isGrashofFailure;
-    }
-
-    // エラー表示/非表示関数を修正
-    function showError(msg, disablePlay = true){ 
-        console.error('リンク機構が再現不可能: ' + msg); 
-        errorMessageDiv.textContent = 'エラー: ' + msg; 
-        errorMessageDiv.style.display = 'block'; 
-        stop(); 
-        if (disablePlay) {
-            playBtn.disabled = true;
-            playBtn.classList.remove('primary'); // 色をリセット
+        if(cands.length===0) return null;
+        if(cands.length===1) return cands[0];
+        if(prev){
+            let best=cands[0], bd=Math.hypot(cands[0].x-prev.x,cands[0].y-prev.y);
+            for(let i=1;i<cands.length;i++){const d=Math.hypot(cands[i].x-prev.x,cands[i].y-prev.y);if(d<bd){best=cands[i];bd=d;}}
+            const other=(best===cands[0])?cands[1]:cands[0];
+            if(best.y<=A.y&&other.y>A.y) return other;
+            return best;
         }
+        const below=cands.filter(c=>c.y>A.y);
+        if(below.length===1) return below[0];
+        if(below.length===2) return (below[0].y>below[1].y)?below[0]:below[1];
+        return cands[0].y>cands[1].y?cands[0]:cands[1];
+    }
+
+    function checkGrashofFailure(l1,l2,l3,l4){
+        const links = [l1,l2,l3,l4];
+        const s   = Math.min(...links);
+        const ll  = Math.max(...links);
+        const pq  = links.reduce((a,b)=>a+b,0) - s - ll;
+
+        if(s + ll > pq + 1e-6) return true;
+
+        if(l1 !== s) return true;
+
+        return false;
+    }
+
+    function showError(msg,disablePlay=true){
+        errorMessageDiv.textContent='⚠ '+msg;
+        errorMessageDiv.classList.add('visible');
+        stop();
+        if(disablePlay){
+            playBtn.disabled=true;
+            playBtn.classList.remove('active-play','active-pause');
+            playIcon.innerHTML='<path d="M4 3l10 5-10 5V3z"/>';
+            playLabel.textContent='再生';
+        }
+        statusDot.classList.remove('running');
+        statusText.textContent='エラー停止';
     }
     function hideError(){
-        errorMessageDiv.textContent = '';
-        errorMessageDiv.style.display = 'none';
-        playBtn.disabled = false; // エラー解消時に再生ボタンを有効化
+        errorMessageDiv.textContent='';
+        errorMessageDiv.classList.remove('visible');
+        playBtn.disabled=false;
+        playBtn.classList.add('active-play');
     }
-
 
     function computeAndDraw(){
-      l1 = +len1.value; l2 = +len2.value; l3 = +len3.value; l4 = +len4.value;
-      
-      // 1. グラーショフ不成立条件をチェック
-      if (checkGrashofFailure(l1, l2, l3, l4)) {
-          // グラーショフの法則が不成立の場合
-          showError('リンクの長さが不適切です。クランク機構として回転できません。', true);
-      } else {
-          // グラーショフの法則が成立
-          hideError();
-          
-          // 2. 幾何学的計算を実行
-          D.x = A.x + l4; D.y = A.y;
-          updateLabels();
+        l1=+len1.value; l2=+len2.value; l3=+len3.value; l4=+len4.value;
+        const links = [l1,l2,l3,l4];
+        const s  = Math.min(...links);
+        const ll = Math.max(...links);
+        const pq = links.reduce((a,b)=>a+b,0) - s - ll;
 
-          const B = { x: A.x + l1 * Math.cos(theta), y: A.y + l1 * Math.sin(theta) };
-          const cands = circleIntersection(B, D, l2, l3);
-          
-          if(cands.length===0){ 
-              // 幾何学的に交点が存在しない（三角形の不等式不成立）
-              showError('BCとCDの交点が存在しません。リンク長が長すぎるか短すぎます。', true); 
-              return; 
-          }
+        if(s + ll > pq + 1e-6){
+            showError('リンク長を調整してください。');
+            return;
+        }
+        if(l1 !== s){
+            showError('てこクランク条件不成立：クランク AB を最も短いリンクにしてください。');
+            return;
+        }
+        hideError();
+        D.x=A.x+l4; D.y=A.y;
+        updateLabels();
 
-          // 3. 描画と状態更新
-          const C = chooseNearest(cands, computeAndDraw.prevC);
-          computeAndDraw.prevC = C;
+        const B={x:A.x+l1*Math.cos(theta), y:A.y+l1*Math.sin(theta)};
+        const cands=circleIntersection(B,D,l2,l3);
+        if(cands.length===0){
+            showError('BCとCDの交点が存在しません。');
+            return;
+        }
+        const C=chooseNearest(cands,computeAndDraw.prevC);
+        computeAndDraw.prevC=C;
 
-          // 描画処理 (既存のコードをそのまま使用)
-          edgeElems[0].setAttribute('x1', A.x); edgeElems[0].setAttribute('y1', A.y); edgeElems[0].setAttribute('x2', B.x); edgeElems[0].setAttribute('y2', B.y);
-          edgeElems[1].setAttribute('x1', B.x); edgeElems[1].setAttribute('y1', B.y); edgeElems[1].setAttribute('x2', C.x); edgeElems[1].setAttribute('y2', C.y);
-          edgeElems[2].setAttribute('x1', C.x); edgeElems[2].setAttribute('y1', C.y); edgeElems[2].setAttribute('x2', D.x); edgeElems[2].setAttribute('y2', D.y);
-          edgeElems[3].setAttribute('x1', D.x); edgeElems[3].setAttribute('y1', D.y); edgeElems[3].setAttribute('x2', A.x); edgeElems[3].setAttribute('y2', A.y);
+        tracePoints.push({x:B.x,y:B.y});
+        if(tracePoints.length>maxTrace) tracePoints.shift();
+        if(tracePoints.length>1){
+            const d='M'+tracePoints.map(p=>p.x+','+p.y).join('L');
+            traceEl.setAttribute('d',d);
+        }
 
-          jointElems[0].setAttribute('cx', A.x); jointElems[0].setAttribute('cy', A.y);
-          jointElems[1].setAttribute('cx', B.x); jointElems[1].setAttribute('cy', B.y);
-          jointElems[2].setAttribute('cx', C.x); jointElems[2].setAttribute('cy', C.y);
-          jointElems[3].setAttribute('cx', D.x); jointElems[3].setAttribute('cy', D.y);
+        edgeElems[0].setAttribute('x1',A.x); edgeElems[0].setAttribute('y1',A.y); edgeElems[0].setAttribute('x2',B.x); edgeElems[0].setAttribute('y2',B.y);
+        edgeElems[1].setAttribute('x1',B.x); edgeElems[1].setAttribute('y1',B.y); edgeElems[1].setAttribute('x2',C.x); edgeElems[1].setAttribute('y2',C.y);
+        edgeElems[2].setAttribute('x1',C.x); edgeElems[2].setAttribute('y1',C.y); edgeElems[2].setAttribute('x2',D.x); edgeElems[2].setAttribute('y2',D.y);
+        edgeElems[3].setAttribute('x1',D.x); edgeElems[3].setAttribute('y1',D.y); edgeElems[3].setAttribute('x2',A.x); edgeElems[3].setAttribute('y2',A.y);
 
-          jointElems[0].setAttribute('fill', LINK_COLORS.l4.joint);
-          jointElems[3].setAttribute('fill', LINK_COLORS.l4.joint);
+        pinA.setAttribute('transform',`translate(${A.x},${A.y})`);
+        pinD.setAttribute('transform',`translate(${D.x},${D.y})`);
 
-          labels[0].setAttribute('x', A.x - 15); labels[0].setAttribute('y', A.y - 15); labels[0].textContent='A';
-          labels[1].setAttribute('x', B.x + 15); labels[1].setAttribute('y', B.y - 15); labels[1].textContent='B';
-          labels[2].setAttribute('x', C.x + 15); labels[2].setAttribute('y', C.y - 15); labels[2].textContent='C';
-          labels[3].setAttribute('x', D.x + 15); labels[3].setAttribute('y', D.y - 15); labels[3].textContent='D';
-      }
+        jointElems[0].setAttribute('cx',A.x); jointElems[0].setAttribute('cy',A.y);
+        jointElems[1].setAttribute('cx',B.x); jointElems[1].setAttribute('cy',B.y);
+        jointElems[2].setAttribute('cx',C.x); jointElems[2].setAttribute('cy',C.y);
+        jointElems[3].setAttribute('cx',D.x); jointElems[3].setAttribute('cy',D.y);
+        jointElems[0].setAttribute('fill','#161b22'); jointElems[3].setAttribute('fill','#161b22');
+
+        labels[0].setAttribute('x',A.x-18); labels[0].setAttribute('y',A.y-14); labels[0].textContent='A';
+        labels[1].setAttribute('x',B.x+10); labels[1].setAttribute('y',B.y-10); labels[1].textContent='B';
+        labels[2].setAttribute('x',C.x+10); labels[2].setAttribute('y',C.y-10); labels[2].textContent='C';
+        labels[3].setAttribute('x',D.x+10); labels[3].setAttribute('y',D.y-14); labels[3].textContent='D';
+
+        thetaVal.textContent=(theta % (2*Math.PI)).toFixed(2);
     }
 
-    function step(ts){ theta += FIXED_SPEED * 0.03; computeAndDraw(); raf = requestAnimationFrame(step); }
-    function start(){ 
-        if (playBtn.disabled) return; // 無効化されている場合は再生しない
-        playBtn.classList.remove('primary'); 
-        pauseBtn.classList.add('primary'); 
-        if(!raf) raf = requestAnimationFrame(step); 
+    let lastTs=null;
+    function step(ts){
+        if(lastTs!==null){
+            const dt=Math.min((ts-lastTs)/1000,0.05);
+            theta+=FIXED_SPEED*dt*Math.PI;
+        }
+        lastTs=ts;
+        computeAndDraw();
+        raf=requestAnimationFrame(step);
     }
-    function stop(){ 
-        playBtn.classList.add('primary'); 
-        pauseBtn.classList.remove('primary'); 
-        if(raf){ cancelAnimationFrame(raf); raf = null; } 
+    function start(){
+        if(playBtn.disabled) return;
+        playBtn.classList.remove('active-play');
+        playBtn.classList.add('active-pause');
+        playIcon.innerHTML='<rect x="3" y="2" width="4" height="12"/><rect x="9" y="2" width="4" height="12"/>';
+        playLabel.textContent='停止';
+        statusDot.classList.add('running');
+        statusText.textContent='シミュレーション実行中';
+        if(!raf) raf=requestAnimationFrame(step);
+    }
+    function stop(){
+        playBtn.classList.remove('active-pause');
+        playBtn.classList.add('active-play');
+        playIcon.innerHTML='<path d="M4 3l10 5-10 5V3z"/>';
+        playLabel.textContent='再生';
+        statusDot.classList.remove('running');
+        statusText.textContent='一時停止中';
+        if(raf){ cancelAnimationFrame(raf); raf=null; }
+        lastTs=null;
     }
 
-    playBtn.addEventListener('click', ()=> start()); 
-    pauseBtn.addEventListener('click', ()=> stop()); 
-    resetBtn.addEventListener('click', ()=>{ 
-        stop(); 
-        theta = 0; 
-        computeAndDraw.prevC = null; 
-        hideError(); 
-        computeAndDraw(); 
+    playBtn.addEventListener('click',()=>{ if(raf) stop(); else start(); });
+    resetBtn.addEventListener('click',()=>{
+        stop();
+        theta=0;
+        tracePoints=[];
+        traceEl.setAttribute('d','');
+        computeAndDraw.prevC=null;
+        hideError();
+        computeAndDraw();
+        statusText.textContent='シミュレーション実行中';
     });
 
-    [len1,len2,len3,len4].forEach(el=>el.addEventListener('input',()=>{ 
-        computeAndDraw.prevC = null; 
-        updateLabels(); 
-        computeAndDraw(); 
+    [len1,len2,len3,len4].forEach(el=>el.addEventListener('input',()=>{
+        tracePoints=[]; traceEl.setAttribute('d','');
+        computeAndDraw.prevC=null;
+        updateLabels();
+        computeAndDraw();
     }));
 
-    let dragging = null;
-    const getSvgCoords = (e) => { const r = svg.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    let dragging=null;
+    const getSvgCoords=(e)=>{
+        const r=svg.getBoundingClientRect();
+        const scaleX=900/r.width, scaleY=600/r.height;
+        return {x:(e.clientX-r.left)*scaleX, y:(e.clientY-r.top)*scaleY};
+    };
+    svg.addEventListener('mousedown',(e)=>{
+        const {x,y}=getSvgCoords(e);
+        if(Math.hypot(x-A.x,y-A.y)<22) dragging='A';
+        else if(Math.hypot(x-D.x,y-D.y)<22) dragging='D';
+    });
+    window.addEventListener('mousemove',(e)=>{
+        if(!dragging) return;
+        const {x,y}=getSvgCoords(e);
+        if(dragging==='A'){ A.x=x; A.y=y; D.x=A.x+(+len4.value); D.y=A.y; }
+        else if(dragging==='D'){
+            D.x=x; D.y=A.y;
+            const rawL4=Math.round(Math.abs(D.x-A.x));
+            const newL4=Math.max(+len4.min,Math.min(+len4.max,rawL4));
+            len4.value=newL4; D.x=A.x+newL4;
+        }
+        tracePoints=[]; traceEl.setAttribute('d','');
+        computeAndDraw.prevC=null; updateLabels(); computeAndDraw();
+    });
+    window.addEventListener('mouseup',()=>{ dragging=null; });
 
-    svg.addEventListener('mousedown', (e)=>{ const {x, y} = getSvgCoords(e); if(Math.hypot(x-A.x,y-A.y) < 20) dragging = 'A'; else if(Math.hypot(x-D.x,y-D.y) < 20) dragging = 'D'; });
-    window.addEventListener('mousemove', (e)=>{ if(!dragging) return; const {x, y} = getSvgCoords(e); if(dragging === 'A'){ A.x = x; A.y = y; D.x = A.x + (+len4.value); D.y = A.y; } else if(dragging === 'D'){ D.x = x; D.y = A.y; const newL4 = Math.round(Math.abs(D.x - A.x)); len4.value = newL4; } computeAndDraw.prevC = null; updateLabels(); computeAndDraw(); });
-    window.addEventListener('mouseup', ()=>{ dragging = null; });
-
-    svg.addEventListener('touchstart', (e) => { e.preventDefault(); const touch = e.touches[0]; const {x, y} = getSvgCoords(touch); if(Math.hypot(x-A.x,y-A.y) < 20) dragging = 'A'; else if(Math.hypot(x-D.x,y-D.y) < 20) dragging = 'D'; }, { passive: false });
-    window.addEventListener('touchmove', (e) => { if(!dragging) return; e.preventDefault(); const touch = e.touches[0]; const {x, y} = getSvgCoords(touch); if(dragging === 'A'){ A.x = x; A.y = y; D.x = A.x + (+len4.value); D.y = A.y; } else if(dragging === 'D'){ D.x = x; D.y = A.y; const newL4 = Math.round(Math.abs(D.x - A.x)); len4.value = newL4; } computeAndDraw.prevC = null; updateLabels(); computeAndDraw(); }, { passive: false });
-    window.addEventListener('touchend', () => { dragging = null; });
+    svg.addEventListener('touchstart',(e)=>{
+        e.preventDefault();
+        const touch=e.touches[0], {x,y}=getSvgCoords(touch);
+        if(Math.hypot(x-A.x,y-A.y)<22) dragging='A';
+        else if(Math.hypot(x-D.x,y-D.y)<22) dragging='D';
+    },{passive:false});
+    window.addEventListener('touchmove',(e)=>{
+        if(!dragging) return; e.preventDefault();
+        const touch=e.touches[0], {x,y}=getSvgCoords(touch);
+        if(dragging==='A'){ A.x=x; A.y=y; D.x=A.x+(+len4.value); D.y=A.y; }
+        else if(dragging==='D'){
+            D.x=x; D.y=A.y;
+            const rawL4=Math.round(Math.abs(D.x-A.x));
+            const newL4=Math.max(+len4.min,Math.min(+len4.max,rawL4));
+            len4.value=newL4; D.x=A.x+newL4;
+        }
+        tracePoints=[]; traceEl.setAttribute('d','');
+        computeAndDraw.prevC=null; updateLabels(); computeAndDraw();
+    },{passive:false});
+    window.addEventListener('touchend',()=>{ dragging=null; });
 
     setLinkColorsToSliders(); updateLabels(); computeAndDraw(); start();
   </script>
