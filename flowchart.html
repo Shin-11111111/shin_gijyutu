@@ -7,13 +7,11 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* フォント設定 */
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f7f7;
-            overflow: hidden; /* 全体のスクロールを禁止 */
+            overflow: hidden;
         }
-        /* キャンバスコンテナのスタイル */
         #canvasContainer {
             position: relative;
             background-color: white;
@@ -21,7 +19,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
             cursor: default;
         }
-        /* テキスト入力フィールドをキャンバス上に重ねるためのスタイル */
         #textEditInput {
             position: absolute;
             border: 1px solid #4f46e5;
@@ -33,7 +30,6 @@
             display: none;
             z-index: 100;
         }
-        /* ボタンのアニメーション */
         .btn {
             transition: all 0.15s ease;
         }
@@ -46,11 +42,10 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        /* グリッド表示のためのスタイル (任意) */
         #canvasContainer.show-grid {
             background-image: linear-gradient(to right, #f0f0f0 1px, transparent 1px),
                               linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
-            background-size: 20px 20px; /* グリッドサイズ */
+            background-size: 20px 20px;
         }
     </style>
 </head>
@@ -85,14 +80,12 @@
             
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">やり直し・削除</h2>
 
-            <!-- 選択削除ボタン -->
             <button id="deleteSelectedBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50" disabled>
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3"></path></svg>
                 削除 (Delete)
             </button>
             <p id="deleteStatusText" class="text-xs text-center text-red-500"></p>
 
-            <!-- 最後の接続を取消ボタン -->
             <button id="undoConnectionBtn" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50" disabled>
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l3-3m-3 3l3 3"></path></svg>
                 矢印の取り消し
@@ -115,7 +108,7 @@
                 <label for="snapToGridCheckbox" class="text-sm text-gray-700">位置を合わせる</label>
             </div>
             <div class="flex items-center">
-                <input type="checkbox" id="showGridCheckbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2">
+                <input type="checkbox" id="showGridCheckbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mr-2" checked>
                 <label for="showGridCheckbox" class="text-sm text-gray-700">グリッド線の表示</label>
             </div>
 
@@ -142,38 +135,31 @@
 
 
     <script>
-        // グローバル変数
         const canvas = document.getElementById('flowchartCanvas');
         const ctx = canvas.getContext('2d');
         const canvasContainer = document.getElementById('canvasContainer');
         const textEditInput = document.getElementById('textEditInput');
 
-        // 図形データ構造
         let shapes = []; 
-        // 接続データ構造を更新: { fromId, toId, exitPoint: 'bottom' | 'right', label: 'Yes' | 'No', waypoints: [{x, y}, ...] }
         let connections = [];
 
-        // 新しい描画用オブジェクト: 接続開始後に中間点をためる
-        let currentDrawing = null; // { fromId, exitPoint, startPoint:{x,y}, waypoints: [{x,y}, ...] }
+        let currentDrawing = null;
 
-        // 操作状態
-        let selectedShapes = []; // 複数選択された図形のID配列
-        let draggingShape = null; // ドラッグ中の図形
-        let draggingWaypoint = null; // ドラッグ中の中間点 { connection, index, x, y }
-        let highlightedWaypoint = null; // ハイライト表示用の中間点 { connection, index, x, y }
+        let selectedShapes = [];
+        let draggingShape = null;
+        let draggingWaypoint = null;
+        let highlightedWaypoint = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
         let connectMode = false;
-        let editingShape = null; // テキスト編集中の図形
-        // 複数選択のための状態変数
+        let editingShape = null;
         let isSelecting = false; 
         let selectionRect = { x: 0, y: 0, width: 0, height: 0 }; 
-        let lastMouseX = 0; // マウスの最後のX座標
-        let lastMouseY = 0; // マウスの最後のY座標
-        let initialDragX = 0; // ドラッグ開始時のX座標
-        let initialDragY = 0; // ドラッグ開始時のY座標
+        let lastMouseX = 0;
+        let lastMouseY = 0;
+        let initialDragX = 0;
+        let initialDragY = 0;
 
-        // 定数
         const SHAPE_DEFAULTS = {
             w: 120,
             h: 60,
@@ -182,14 +168,10 @@
             strokeColor: '#333333',
             textColor: '#000000',
             font: '14px Inter',
-            gridSize: 20, // グリッドのサイズ（スナップ単位）
-            waypointRadius: 6, // ウェイポイントの描画半径
-            waypointHitRadius: 10 // ウェイポイントの当たり判定半径
+            gridSize: 20,
+            waypointRadius: 6,
+            waypointHitRadius: 10
         };
-
-        // --------------------------------------------------------------------------------
-        // 1. セットアップと初期化
-        // --------------------------------------------------------------------------------
 
         function isClickOnRightSide(shape, x, y) {
             if (shape.type !== 'diamond') return false;
@@ -235,10 +217,6 @@
             localStorage.setItem('flowchartConnections', JSON.stringify(connections));
         }
         
-        // --------------------------------------------------------------------------------
-        // 2. 図形・接続の描画ロジック
-        // --------------------------------------------------------------------------------
-
         function drawShape(shape, isHighlight = false) {
             const { x, y, w, h, type, text, id } = shape;
             const halfW = w / 2;
@@ -285,7 +263,6 @@
                 ctx.setLineDash([5, 3]);
                 const padding = 5;
                 ctx.beginPath();
-                // 選択ボックスは図形の外側を囲む
                 const rectX = x - halfW - padding;
                 const rectY = y - halfH - padding;
                 const rectW = w + 2 * padding;
@@ -332,7 +309,7 @@
             if (!fromShape || !toShape) return;
 
             const startPoint = getShapeBoundaryPoint(fromShape, connection, true);
-            const endPoint = getShapeBoundaryPoint(toShape, fromShape, false);
+            const endPoint = getShapeBoundaryPoint(toShape, connection, false);
 
             ctx.strokeStyle = SHAPE_DEFAULTS.strokeColor;
             ctx.lineWidth = 2;
@@ -340,27 +317,23 @@
             ctx.moveTo(startPoint.x, startPoint.y);
 
             const pts = [];
-            // include stored waypoints (if any)
             if (connection.waypoints && connection.waypoints.length) {
                 connection.waypoints.forEach(p => {
                     ctx.lineTo(p.x, p.y);
                     pts.push(p);
                 });
             }
-            // final segment to endPoint
             ctx.lineTo(endPoint.x, endPoint.y);
             ctx.stroke();
 
-            // 矢印先端を最後のセグメントの向きに合わせる
             let fromX = pts.length ? pts[pts.length - 1].x : startPoint.x;
             let fromY = pts.length ? pts[pts.length - 1].y : startPoint.y;
             drawArrowhead(endPoint.x, endPoint.y, fromX, fromY);
 
-            // ラベル
             if (connection.label) {
                 let labelX, labelY;
                 const p1 = startPoint;
-                const p2 = endPoint;
+                const p2 = (connection.waypoints && connection.waypoints.length > 0) ? connection.waypoints[0] : endPoint;
                 const labelPositionRatio = 0.25;
                 labelX = p1.x * (1 - labelPositionRatio) + p2.x * labelPositionRatio;
                 labelY = p1.y * (1 - labelPositionRatio) + p2.y * labelPositionRatio;
@@ -372,11 +345,9 @@
                 ctx.textBaseline = 'middle';
                 
                 const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
-                let offset = 15; // 基本オフセット
+                let offset = 15;
 
-                // ひし形から右（No）へ伸びる線のラベルを線の下側に配置
                 if (fromShape.type === 'diamond' && connection.exitPoint === 'right' && connection.label === 'No') {
-                    // 右に伸びる線の場合、ラベルを線の下側に配置
                     labelX = (p1.x * (1 - labelPositionRatio) + p2.x * labelPositionRatio) + 15;
                     labelY = (p1.y * (1 - labelPositionRatio) + p2.y * labelPositionRatio) + 55;
                     ctx.fillText(connection.label, labelX, labelY);
@@ -391,7 +362,6 @@
                 ctx.restore();
             }
 
-            // ウェイポイントを描画
             if (connection.waypoints && connection.waypoints.length) {
                 connection.waypoints.forEach((p, index) => {
                     const isHighlighted = highlightedWaypoint && highlightedWaypoint.connection === connection && highlightedWaypoint.index === index;
@@ -441,18 +411,15 @@
             ctx.restore();
         }
         
-        // 範囲選択ボックスの描画
         function drawSelectionRect() {
             if (!isSelecting) return;
 
             const { x, y, width, height } = selectionRect;
 
             ctx.save();
-            // 選択領域の半透明な背景
             ctx.fillStyle = 'rgba(79, 70, 229, 0.1)'; 
             ctx.fillRect(x, y, width, height);
 
-            // 選択領域の青い点線
             ctx.strokeStyle = '#4f46e5';
             ctx.lineWidth = 1;
             ctx.setLineDash([4, 2]);
@@ -478,18 +445,13 @@
 
         function draw() {
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            // 接続とウェイポイントを先に描画
-            connections.forEach(drawConnection); 
-            // 図形を描画
+            connections.forEach(drawConnection);
             shapes.forEach(shape => drawShape(shape, false));
-            // 一時的な接続線を描画
             if (currentDrawing && connectMode) drawTemporaryCurrent(currentDrawing, lastMouseX, lastMouseY);
-            // 範囲選択ボックスを描画
             drawSelectionRect();
             
             updateDeleteButtonState();
             
-            // カーソル設定
             let cursor = 'default';
             if (draggingShape || draggingWaypoint) {
                 cursor = 'move';
@@ -501,16 +463,12 @@
             canvas.style.cursor = cursor;
         }
 
-        // --------------------------------------------------------------------------------
-        // 3. 図形操作（追加・削除・接続）
-        // --------------------------------------------------------------------------------
-
         function addShape(type, defaultText, initialX, initialY, selectNew = true) {
             const snapX = Math.round(initialX / SHAPE_DEFAULTS.gridSize) * SHAPE_DEFAULTS.gridSize;
             const snapY = Math.round(initialY / SHAPE_DEFAULTS.gridSize) * SHAPE_DEFAULTS.gridSize;
             const newShape = { id: generateId(), type: type, x: snapX, y: snapY, w: SHAPE_DEFAULTS.w, h: SHAPE_DEFAULTS.h, text: defaultText || '処理' };
             shapes.push(newShape);
-            selectedShapes = selectNew ? [newShape.id] : []; // 複数選択対応
+            selectedShapes = selectNew ? [newShape.id] : [];
             draw(); saveShapes();
         }
 
@@ -518,15 +476,12 @@
         document.getElementById('addRectangle').addEventListener('click', () => addShape('rectangle', '処理', canvas.width / 2, canvas.height / 2));
         document.getElementById('addDiamond').addEventListener('click', () => addShape('diamond', '条件分岐', canvas.width / 2, canvas.height / 2));
 
-        // 複数図形削除に対応
         function deleteSelectedShape() {
             if (selectedShapes.length > 0) {
                 const idsToDelete = new Set(selectedShapes);
                 
-                // 図形を削除
                 shapes = shapes.filter(s => !idsToDelete.has(s.id));
                 
-                // 接続を削除
                 connections = connections.filter(c => !idsToDelete.has(c.fromId) && !idsToDelete.has(c.toId));
                 
                 selectedShapes = []; 
@@ -572,7 +527,6 @@
             return null;
         }
 
-        // ウェイポイント取得
         function getWaypointAt(px, py) {
             const hitRadiusSq = SHAPE_DEFAULTS.waypointHitRadius * SHAPE_DEFAULTS.waypointHitRadius;
             for (const connection of connections) {
@@ -598,10 +552,6 @@
         textEditInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') hideTextEditor(); });
         textEditInput.addEventListener('blur', hideTextEditor);
 
-        // --------------------------------------------------------------------------------
-        // 4. イベントハンドラ（マウス/キー操作）
-        // --------------------------------------------------------------------------------
-
         canvas.addEventListener('mousedown', (e) => {
             e.preventDefault();
             if (e.button === 2) return; 
@@ -609,17 +559,16 @@
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left; const y = e.clientY - rect.top;
             lastMouseX = x; lastMouseY = y;
-            initialDragX = x; // 範囲選択開始点として記録
-            initialDragY = y; // 範囲選択開始点として記録
+            initialDragX = x;
+            initialDragY = y;
             
             if (editingShape) hideTextEditor();
 
-            // ウェイポイントのドラッグチェック
             const waypoint = getWaypointAt(x, y);
             if (waypoint) {
                 draggingWaypoint = waypoint;
                 canvas.style.cursor = 'move';
-                selectedShapes = []; // 複数図形の選択を解除
+                selectedShapes = [];
                 draw();
                 return;
             }
@@ -627,30 +576,24 @@
             const shape = getShapeAt(x, y);
 
             if (!connectMode) {
-                // --- 通常モード: 図形のドラッグ/選択/範囲選択 ---
                 if (shape) {
-                    // 図形をクリックした場合
                     if (!selectedShapes.includes(shape.id)) {
-                        // 選択されていない図形をクリックした場合、その図形を単一選択にし、ドラッグ開始
                         selectedShapes = [shape.id];
-                        draw(); // 選択ハイライトのため即座に再描画
+                        draw();
                     }
                     
-                    // 選択済みかどうかに関わらず、ドラッグを開始する
                     draggingShape = shape; dragOffsetX = x - shape.x; dragOffsetY = y - shape.y; 
                     canvas.style.cursor = 'move'; 
                     return;
                 } else {
-                    // 何もない場所をクリックした場合、範囲選択を開始
                     isSelecting = true;
                     selectionRect = { x, y, width: 0, height: 0 };
-                    selectedShapes = []; // 範囲選択開始で既存の選択をクリア
+                    selectedShapes = [];
                     draw();
                 }
                 return;
             }
 
-            // --- 接続モードの処理 (変更なし) ---
             if (shape) {
                 if (!currentDrawing) {
                     currentDrawing = {
@@ -661,7 +604,7 @@
                     };
                     currentDrawing.startPoint = getShapeBoundaryPoint(shape, currentDrawing, true);
                     document.getElementById('connectStatus').textContent = `『${shape.text}』から開始 — 空白クリックで中間点を追加、別の図形クリックで終了`;
-                    selectedShapes = []; // 接続開始時は選択解除
+                    selectedShapes = [];
                     draw();
                 } else if (currentDrawing.fromId === shape.id) {
                     currentDrawing = null;
@@ -692,7 +635,7 @@
                     currentDrawing.waypoints.push({ x: px, y: py });
                     draw();
                 } else {
-                    selectedShapes = []; draw(); // 接続モードで空白クリックは選択解除
+                    selectedShapes = []; draw();
                 }
             }
         });
@@ -706,7 +649,6 @@
                 return;
             }
 
-            // ウェイポイントのドラッグ
             if (draggingWaypoint) {
                 e.preventDefault();
                 let newX = lastMouseX;
@@ -721,10 +663,8 @@
                 return;
             }
 
-            // --- 範囲選択 ---
             if (isSelecting) {
                 e.preventDefault();
-                // 範囲選択ボックスの座標とサイズを更新
                 selectionRect.x = Math.min(initialDragX, lastMouseX);
                 selectionRect.y = Math.min(initialDragY, lastMouseY);
                 selectionRect.width = Math.abs(initialDragX - lastMouseX);
@@ -733,14 +673,10 @@
                 return;
             }
 
-            // --- 図形ドラッグ (複数移動に対応) ---
             if (draggingShape) {
                 e.preventDefault();
-                const dx = lastMouseX - (draggingShape.x + dragOffsetX); // 移動量X
-                const dy = lastMouseY - (draggingShape.y + dragOffsetY); // 移動量Y
-
-                let newShapeX = draggingShape.x + dx;
-                let newShapeY = draggingShape.y + dy;
+                let newShapeX = lastMouseX - dragOffsetX;
+                let newShapeY = lastMouseY - dragOffsetY;
                 
                 if (document.getElementById('snapToGridCheckbox').checked) { 
                     newShapeX = Math.round(newShapeX / SHAPE_DEFAULTS.gridSize) * SHAPE_DEFAULTS.gridSize; 
@@ -751,7 +687,6 @@
                 const actualDy = newShapeY - draggingShape.y;
 
                 if (actualDx !== 0 || actualDy !== 0) {
-                    // 選択されているすべての図形を移動
                     shapes.forEach(shape => {
                         if (selectedShapes.includes(shape.id)) {
                             shape.x += actualDx;
@@ -759,14 +694,11 @@
                         }
                     });
                     
-                    // ウェイポイントの移動は不要 (図形との接続位置が相対的に変わらないため)
-                    
                     draw();
                 }
                 return;
             }
 
-            // ウェイポイントのハイライト
             const waypoint = getWaypointAt(lastMouseX, lastMouseY);
             if (waypoint) {
                 highlightedWaypoint = waypoint;
@@ -779,27 +711,21 @@
         });
 
         canvas.addEventListener('mouseup', () => {
-            // 図形ドラッグ終了
             if (draggingShape) {
-                // グリッドスナップはmousemoveで処理済みだが、念のため保存
                 draggingShape = null; canvas.style.cursor = 'default'; saveShapes(); draw();
             }
-            // ウェイポイントのドラッグ終了
             if (draggingWaypoint) {
                 draggingWaypoint = null;
                 saveShapes();
                 draw();
             }
-            // --- 範囲選択終了 ---
             if (isSelecting) {
                 const { x, y, width, height } = selectionRect;
                 isSelecting = false;
 
-                // 選択範囲が小さい（クリックと見なせる）場合は、選択解除する
                 if (width < 5 && height < 5) {
                     selectedShapes = [];
                 } else {
-                    // 選択範囲に含まれる図形を検出
                     const newSelection = [];
                     const normalizedX = Math.min(x, x + width);
                     const normalizedY = Math.min(y, y + height);
@@ -813,9 +739,6 @@
                         const shapeTop = shape.y - halfH;
                         const shapeRight = shape.x + halfW;
                         const shapeBottom = shape.y + halfH;
-
-                        // 図形のバウンディングボックスが選択領域に完全に含まれているか、または交差しているか
-                        // シンプルな交差チェック
                         if (
                             shapeLeft < normalizedX + normalizedW &&
                             shapeRight > normalizedX &&
@@ -828,8 +751,6 @@
 
                     selectedShapes = newSelection;
                 }
-
-                // 選択状態が変わったので再描画と保存
                 selectionRect = { x: 0, y: 0, width: 0, height: 0 };
                 draw(); 
                 updateDeleteButtonState();
@@ -837,7 +758,6 @@
         });
 
         canvas.addEventListener('mouseleave', () => {
-            // ドラッグ終了処理
             if (draggingShape) { draggingShape = null; saveShapes(); }
             if (draggingWaypoint) { draggingWaypoint = null; saveShapes(); }
             if (isSelecting) { 
@@ -847,7 +767,6 @@
             canvas.style.cursor = 'default'; draw();
         });
         
-        // 右クリックでのウェイポイント削除
         canvas.addEventListener('contextmenu', (e) => {
             e.preventDefault(); 
             const rect = canvas.getBoundingClientRect();
@@ -873,8 +792,7 @@
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left; const y = e.clientY - rect.top;
             const shape = getShapeAt(x, y);
-            if (shape) { 
-                // ダブルクリックされた図形のみを単一選択にし、編集開始
+            if (shape) {
                 selectedShapes = [shape.id];
                 if (!connectMode) showTextEditor(shape); 
                 return; 
@@ -886,24 +804,18 @@
                 e.preventDefault(); 
                 deleteSelectedShape(); 
             }
-            // EscでcurrentDrawingキャンセル
             if (e.key === 'Escape') {
                 if (currentDrawing) {
                     currentDrawing = null; document.getElementById('connectStatus').textContent = '接続をキャンセルしました。'; draw();
                 }
-                // Escで複数選択も解除
                 if (selectedShapes.length > 0) {
                     selectedShapes = []; draw();
                 }
             }
         });
 
-        // --------------------------------------------------------------------------------
-        // 5. ツールボタン
-        // --------------------------------------------------------------------------------
-
         document.getElementById('connectModeToggle').addEventListener('click', () => {
-            connectMode = !connectMode; currentDrawing = null; selectedShapes = []; // 複数選択解除
+            connectMode = !connectMode; currentDrawing = null; selectedShapes = [];
             const toggleBtn = document.getElementById('connectModeToggle'); const statusMsg = document.getElementById('connectStatus'); const connectIcon = document.getElementById('connectIcon'); const connectText = document.getElementById('connectText');
             if (connectMode) {
                 toggleBtn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600'); toggleBtn.classList.add('bg-orange-500', 'hover:bg-orange-600'); connectIcon.classList.add('animate-pulse'); connectText.textContent = '接続モードを終了'; statusMsg.textContent = '図形をクリックして開始、空白クリックで中間点、図形クリックで終了'; statusMsg.classList.remove('hidden');
@@ -917,8 +829,7 @@
         document.getElementById('showGridCheckbox').addEventListener('change', (e) => { if (e.target.checked) canvasContainer.classList.add('show-grid'); else canvasContainer.classList.remove('show-grid'); });
 
         document.getElementById('clearBtn').addEventListener('click', () => {
-            // Note: window.confirm is not supported in this environment. Using a custom console message instead of a modal.
-            console.log("全クリア処理を実行します。");
+            if (!window.confirm('すべての図形と接続を削除しますか？')) return;
             shapes = []; connections = []; selectedShapes = []; localStorage.removeItem('flowchartShapes'); localStorage.removeItem('flowchartConnections'); hideTextEditor(); draw(); updateUndoConnectionButton(); 
         });
 
@@ -928,16 +839,21 @@
             
             if (wasGridShown) { 
                 canvasContainer.classList.remove('show-grid'); 
-                draw(); // グリッドを非表示にして再描画
+                draw();
             }
 
-            // JPEG形式でデータURLを取得 (第1引数を 'image/jpeg' に、第2引数で品質を設定, 0.9は高品質)
-            const dataURL = canvas.toDataURL('image/jpeg', 0.9); 
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.fillStyle = '#ffffff';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            tempCtx.drawImage(canvas, 0, 0);
+            const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9); 
             
             const a = document.createElement('a'); 
             a.href = dataURL; 
-            // ダウンロードファイル名も.jpgに変更
-            a.download = 'flowchart_screenshot_' + Date.now() + '.jpg'; 
+            a.download = 'flowchart_screenshot_' + Date.now() + '.jpg';
             
             document.body.appendChild(a); 
             a.click(); 
@@ -945,7 +861,7 @@
 
             if (wasGridShown) { 
                 canvasContainer.classList.add('show-grid'); 
-                draw(); // グリッドを元に戻して再描画
+                draw();
             }
         });
 
