@@ -58,6 +58,10 @@
             width: 100%;
             background-color: #1e1e1e;
         }
+        #result-display {
+            flex: 1;
+            min-height: 0;
+        }
         .preview-container iframe {
             width: 100%;
             height: 100%;
@@ -84,7 +88,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
                 開発エディタ
             </h1>
-            <!-- タイトルの横に配置 -->
+            <span id="currentFileName" class="text-sm text-slate-400 font-normal truncate max-w-xs"></span>
             <select id="languageSelect" class="bg-slate-700 text-white text-sm rounded border border-slate-600 px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                 <option value="html">HTML</option>
                 <option value="javascript">JavaScript</option>
@@ -94,14 +98,29 @@
                 <option value="json">JSON</option>
                 <option value="markdown">Markdown</option>
             </select>
+
+            <div class="flex items-center gap-1">
+                <button id="fontDecBtn" class="bg-slate-600 hover:bg-slate-500 text-white w-7 h-7 rounded text-sm font-bold transition-colors flex items-center justify-center" title="フォントサイズを小さく">A-</button>
+                <span id="fontSizeLabel" class="text-xs text-slate-300 w-6 text-center">14</span>
+                <button id="fontIncBtn" class="bg-slate-600 hover:bg-slate-500 text-white w-7 h-7 rounded text-base font-bold transition-colors flex items-center justify-center" title="フォントサイズを大きく">A+</button>
+            </div>
         </div>
         
         <div class="flex gap-2">
             <input type="file" id="fileInput" class="hidden" accept=".html,.js,.css,.py,.ts,.json,.md,.txt">
             
+            <button id="newFileBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></svg>
+                新規
+            </button>
+
             <button id="uploadBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
                 開く
+            </button>
+            <button id="toggleEditorBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span>エディタのみ</span>
             </button>
             <button id="toggleViewBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
                 <svg id="viewIcon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/></svg>
@@ -165,7 +184,6 @@
         const editorSide = document.getElementById('editor-side');
         const mainContainer = document.getElementById('main-container');
         const viewIcon = document.getElementById('viewIcon');
-        const saveStatus = document.getElementById('saveStatus');
         
         const modalOverlay = document.getElementById('modal-overlay');
         const cancelModalBtn = document.getElementById('cancelModalBtn');
@@ -173,10 +191,17 @@
 
         let editor;
         let isOnlyPreview = false;
+        let isOnlyEditor = false;
         let pendingFile = null;
+        let debounceTimer = null;
+        let lastSplitWidth = '50%';
+        let currentFileName = null;
 
+        const STORAGE_KEY_FILENAME = 'web_editor_last_filename';
         const STORAGE_KEY_CODE = 'web_editor_last_code';
         const STORAGE_KEY_LANG = 'web_editor_last_lang';
+        const STORAGE_KEY_FONTSIZE = 'web_editor_font_size';
+        let fontSize = parseInt(localStorage.getItem(STORAGE_KEY_FONTSIZE)) || 14;
 
         const samples = {
             html: '<!DOCTYPE html>\n<html lang="ja">\n<head>\n  <meta charset="UTF-8">\n  <title>Hello World</title>\n</head>\n<body>\n  <h1>Hello world</h1>\n</body>\n</html>',
@@ -196,9 +221,11 @@
                 doc.open();
                 doc.write(code);
                 doc.close();
-                const script = doc.createElement('script');
-                script.textContent = `document.querySelectorAll('a').forEach(l => l.setAttribute('target', '_blank'));`;
-                doc.body.appendChild(script);
+                if (doc.body) {
+                    const script = doc.createElement('script');
+                    script.textContent = `document.querySelectorAll('a').forEach(l => l.setAttribute('target', '_blank'));`;
+                    doc.body.appendChild(script);
+                }
             } else {
                 preview.classList.add('hidden');
                 textResult.classList.remove('hidden');
@@ -210,17 +237,30 @@
             if (!editor) return;
             localStorage.setItem(STORAGE_KEY_CODE, editor.getValue());
             localStorage.setItem(STORAGE_KEY_LANG, languageSelect.value);
-            if(saveStatus) {
-                saveStatus.textContent = '保存済み';
-                setTimeout(() => { if(saveStatus) saveStatus.textContent = '自動保存済み'; }, 2000);
-            }
+            if (currentFileName) localStorage.setItem(STORAGE_KEY_FILENAME, currentFileName);
         }
 
         function loadFromLocalStorage() {
             const savedCode = localStorage.getItem(STORAGE_KEY_CODE);
             const savedLang = localStorage.getItem(STORAGE_KEY_LANG);
-            return { code: savedCode, lang: savedLang };
+            const savedFilename = localStorage.getItem(STORAGE_KEY_FILENAME);
+            return { code: savedCode, lang: savedLang, filename: savedFilename };
         }
+
+        document.getElementById('newFileBtn').addEventListener('click', () => {
+            if (!confirm('現在の編集内容をすべて破棄して新規作成しますか？')) return;
+            localStorage.removeItem(STORAGE_KEY_CODE);
+            localStorage.removeItem(STORAGE_KEY_LANG);
+            localStorage.removeItem(STORAGE_KEY_FILENAME);
+            currentFileName = null;
+            document.getElementById('currentFileName').textContent = '';
+            if (editor) {
+                const lang = languageSelect.value;
+                monaco.editor.setModelLanguage(editor.getModel(), lang);
+                editor.setValue('');
+                updateOutput('', lang);
+            }
+        });
 
         uploadBtn.addEventListener('click', () => fileInput.click());
 
@@ -243,6 +283,9 @@
                 reader.onload = (event) => {
                     const content = event.target.result;
                     const fileName = pendingFile.name.toLowerCase();
+                    currentFileName = pendingFile.name;
+                    localStorage.setItem(STORAGE_KEY_FILENAME, currentFileName);
+                    document.getElementById('currentFileName').textContent = currentFileName;
                     
                     let detectedLang = 'html';
                     if (fileName.endsWith('.js')) detectedLang = 'javascript';
@@ -267,26 +310,57 @@
         });
 
         toggleViewBtn.addEventListener('click', () => {
+            if (isOnlyEditor) {
+                isOnlyEditor = false;
+                document.getElementById('preview-side').classList.remove('hidden-mode');
+                resizer.classList.remove('hidden-mode');
+                editorSide.style.width = lastSplitWidth;
+                document.getElementById('toggleEditorBtn').querySelector('span').textContent = 'エディタのみ';
+            }
             isOnlyPreview = !isOnlyPreview;
             if (isOnlyPreview) {
                 editorSide.classList.add('hidden-mode');
                 resizer.classList.add('hidden-mode');
                 toggleViewBtn.querySelector('span').textContent = '分割表示に戻す';
-                viewIcon.innerHTML = '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>';
+                viewIcon.innerHTML = '<rect width="18" height="18" x="3" y="3" rx="2"/>';
             } else {
                 editorSide.classList.remove('hidden-mode');
                 resizer.classList.remove('hidden-mode');
                 toggleViewBtn.querySelector('span').textContent = 'プレビューのみ';
-                viewIcon.innerHTML = '<rect width="18" height="18" x="3" y="3" rx="2"/>';
+                viewIcon.innerHTML = '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>';
                 if (editor) editor.layout();
             }
+        });
+
+        document.getElementById('toggleEditorBtn').addEventListener('click', () => {
+            const previewSide = document.getElementById('preview-side');
+            if (isOnlyPreview) {
+                isOnlyPreview = false;
+                editorSide.classList.remove('hidden-mode');
+                toggleViewBtn.querySelector('span').textContent = 'プレビューのみ';
+                viewIcon.innerHTML = '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/>';
+            }
+            isOnlyEditor = !isOnlyEditor;
+            const btn = document.getElementById('toggleEditorBtn');
+            if (isOnlyEditor) {
+                previewSide.classList.add('hidden-mode');
+                resizer.classList.add('hidden-mode');
+                editorSide.style.width = '100%';
+                btn.querySelector('span').textContent = '分割表示に戻す';
+            } else {
+                previewSide.classList.remove('hidden-mode');
+                resizer.classList.remove('hidden-mode');
+                editorSide.style.width = '50%';
+                btn.querySelector('span').textContent = 'エディタのみ';
+            }
+            if (editor) editor.layout();
         });
 
         let isResizing = false;
         resizer.addEventListener('mousedown', (e) => {
             isResizing = true;
             resizer.classList.add('dragging');
-            preview.classList.add('no-select');
+            document.getElementById('result-display').classList.add('no-select');
             document.body.style.cursor = 'col-resize';
         });
 
@@ -298,14 +372,15 @@
             const minWidth = 100;
             const maxWidth = containerWidth - 100;
             const newWidth = Math.min(Math.max(pointerRelativeXpos, minWidth), maxWidth);
-            editorSide.style.width = (newWidth / containerWidth) * 100 + '%';
+            lastSplitWidth = (newWidth / containerWidth) * 100 + '%';
+            editorSide.style.width = lastSplitWidth;
         });
 
         document.addEventListener('mouseup', () => {
             if (isResizing) {
                 isResizing = false;
                 resizer.classList.remove('dragging');
-                preview.classList.remove('no-select');
+                document.getElementById('result-display').classList.remove('no-select');
                 document.body.style.cursor = 'default';
                 if (editor) editor.layout();
             }
@@ -316,7 +391,10 @@
             const saved = loadFromLocalStorage();
             const initialLang = saved.lang || 'html';
             const initialCode = saved.code || samples.html;
-
+            if (saved.filename) {
+                currentFileName = saved.filename;
+                document.getElementById('currentFileName').textContent = currentFileName;
+            }
             languageSelect.value = initialLang;
 
             editor = monaco.editor.create(document.getElementById('editor-container'), {
@@ -324,7 +402,7 @@
                 language: initialLang,
                 theme: 'vs-dark',
                 automaticLayout: true,
-                fontSize: 14,
+                fontSize: fontSize,
                 minimap: { enabled: false },
                 padding: { top: 10 }
             });
@@ -332,14 +410,17 @@
             editor.onDidChangeModelContent(() => {
                 const code = editor.getValue();
                 const lang = languageSelect.value;
-                updateOutput(code, lang);
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    updateOutput(code, lang);
+                }, 400);
                 saveToLocalStorage();
             });
 
             languageSelect.addEventListener('change', (e) => {
                 const newLang = e.target.value;
                 monaco.editor.setModelLanguage(editor.getModel(), newLang);
-                if (!localStorage.getItem(STORAGE_KEY_CODE) && samples[newLang]) {
+                if (!editor.getValue().trim() && samples[newLang]) {
                     editor.setValue(samples[newLang]);
                 }
                 updateOutput(editor.getValue(), newLang);
@@ -359,13 +440,31 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `code_export.${ext}`;
+            a.download = currentFileName || `code_export.${ext}`;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
-            }, 0);
+            }, 100);
+        });
+
+        document.getElementById('fontSizeLabel').textContent = fontSize;
+
+        document.getElementById('fontDecBtn').addEventListener('click', () => {
+            if (!editor || fontSize <= 10) return;
+            fontSize--;
+            editor.updateOptions({ fontSize });
+            document.getElementById('fontSizeLabel').textContent = fontSize;
+            localStorage.setItem(STORAGE_KEY_FONTSIZE, fontSize);
+        });
+
+        document.getElementById('fontIncBtn').addEventListener('click', () => {
+            if (!editor || fontSize >= 24) return;
+            fontSize++;
+            editor.updateOptions({ fontSize });
+            document.getElementById('fontSizeLabel').textContent = fontSize;
+            localStorage.setItem(STORAGE_KEY_FONTSIZE, fontSize);
         });
     </script>
 </body>
