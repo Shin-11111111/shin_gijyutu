@@ -59,6 +59,11 @@
 
         <aside class="w-64 bg-white p-4 rounded-xl shadow-lg flex flex-col space-y-4 mr-4 overflow-y-auto">
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2">図形の追加</h2>
+            <div class="flex items-center space-x-2">
+                <label class="text-sm text-gray-700 whitespace-nowrap">文字サイズ:</label>
+                <input type="range" id="fontSizeSlider" min="10" max="28" value="14" class="w-20">
+                <span id="fontSizeValue" class="text-sm text-gray-700 w-8">14</span>
+            </div>
             
             <button id="addOval" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 ● 楕円 (開始/終了)
@@ -78,29 +83,12 @@
             </button>
             <p id="connectStatus" class="text-sm text-center text-gray-500 hidden mt-1">図形をクリックして開始、空白クリックで中間点、図形クリックで終了</p>
             
-            <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">やり直し・削除</h2>
+            <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">削除</h2>
 
             <button id="deleteSelectedBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50" disabled>
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3"></path></svg>
                 削除 (Delete)
             </button>
-            <p id="deleteStatusText" class="text-xs text-center text-red-500"></p>
-
-            <button id="undoConnectionBtn" class="btn bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center disabled:opacity-50" disabled>
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l3-3m-3 3l3 3"></path></svg>
-                矢印の取り消し
-            </button>
-
-            <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">使い方</h2>
-            <div class="text-sm text-gray-600 p-2 border border-gray-200 rounded-lg">
-                <p class="font-bold mb-1">操作方法:</p>
-                <ul class="list-disc list-inside space-y-0.5">
-                    <li>編集: 図形をダブルクリック</li>
-                    <li>矢印の調整: 中間点をドラッグで移動</li>
-                    <li>中間点削除: 中間点を右クリック</li>
-                    <li>削除: 「選択削除」ボタンか、Delete/Backspaceキー</li>
-                </ul>
-            </div>
 
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">表示設定</h2>
             <div class="flex items-center">
@@ -114,11 +102,24 @@
 
 
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">保存・クリア</h2>
-            <button id="screenshotBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+            <button id="loadHtmlBtn" class="btn bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" title="前回の続き"></path></svg>
+                HTMLから読み込み
+            </button>
+            <button id="saveHtmlBtn" class="btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" title="途中までで保存"></path></svg>
+                HTMLで保存
+            </button>
+            <input type="file" id="loadHtmlInput" accept=".html" style="display:none">
+            <button id="screenshotBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 画像として保存
             </button>
-            <button id="clearBtn" class="btn bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+            <button id="newBtn" class="btn bg-teal-500 hover:bg-teal-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                新規作成
+            </button>
+            <button id="clearBtn" class="btn bg-gray-300 hover:bg-red-500 text-gray-800 hover:text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                 全クリア
             </button>
@@ -146,6 +147,7 @@
         let currentDrawing = null;
 
         let selectedShapes = [];
+        let selectedConnection = null;
         let draggingShape = null;
         let draggingWaypoint = null;
         let highlightedWaypoint = null;
@@ -168,6 +170,7 @@
             strokeColor: '#333333',
             textColor: '#000000',
             font: '14px Inter',
+            fontSize: 14,
             gridSize: 20,
             waypointRadius: 6,
             waypointHitRadius: 10
@@ -273,10 +276,11 @@
             }
 
             ctx.fillStyle = SHAPE_DEFAULTS.textColor;
-            ctx.font = SHAPE_DEFAULTS.font;
+            const fontSize = shape.fontSize || SHAPE_DEFAULTS.fontSize;
+            ctx.font = `${fontSize}px Inter`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            wrapText(ctx, text, x, y, w - 10, 18);
+            wrapText(ctx, text, x, y, w - 10, fontSize + 4);
         }
 
         function wrapText(context, text, x, y, maxWidth, lineHeight) {
@@ -311,8 +315,9 @@
             const startPoint = getShapeBoundaryPoint(fromShape, connection, true);
             const endPoint = getShapeBoundaryPoint(toShape, connection, false);
 
-            ctx.strokeStyle = SHAPE_DEFAULTS.strokeColor;
-            ctx.lineWidth = 2;
+            const isConnSelected = selectedConnection === connection;
+            ctx.strokeStyle = isConnSelected ? '#4f46e5' : SHAPE_DEFAULTS.strokeColor;
+            ctx.lineWidth = isConnSelected ? 3 : 2;
             ctx.beginPath();
             ctx.moveTo(startPoint.x, startPoint.y);
 
@@ -348,18 +353,15 @@
                 let offset = 15;
 
                 if (fromShape.type === 'diamond' && connection.exitPoint === 'right' && connection.label === 'No') {
-                    labelX = (p1.x * (1 - labelPositionRatio) + p2.x * labelPositionRatio) + 15;
-                    labelY = (p1.y * (1 - labelPositionRatio) + p2.y * labelPositionRatio) + 55;
-                    ctx.fillText(connection.label, labelX, labelY);
+                    ctx.fillText(connection.label, p1.x + 18, p1.y + 14);
                     ctx.restore();
-                    return;
+                } else {
+                    ctx.fillText(connection.label, 
+                        labelX + offset * Math.cos(angle - Math.PI/2), 
+                        labelY + offset * Math.sin(angle - Math.PI/2)
+                    );
+                    ctx.restore();
                 }
-                
-                ctx.fillText(connection.label, 
-                    labelX + offset * Math.cos(angle - Math.PI/2), 
-                    labelY + offset * Math.sin(angle - Math.PI/2)
-                );
-                ctx.restore();
             }
 
             if (connection.waypoints && connection.waypoints.length) {
@@ -466,58 +468,64 @@
         function addShape(type, defaultText, initialX, initialY, selectNew = true) {
             const snapX = Math.round(initialX / SHAPE_DEFAULTS.gridSize) * SHAPE_DEFAULTS.gridSize;
             const snapY = Math.round(initialY / SHAPE_DEFAULTS.gridSize) * SHAPE_DEFAULTS.gridSize;
-            const newShape = { id: generateId(), type: type, x: snapX, y: snapY, w: SHAPE_DEFAULTS.w, h: SHAPE_DEFAULTS.h, text: defaultText || '処理' };
+            const newShape = { id: generateId(), type: type, x: snapX, y: snapY, w: SHAPE_DEFAULTS.w, h: SHAPE_DEFAULTS.h, text: defaultText || '処理', fontSize: SHAPE_DEFAULTS.fontSize };
             shapes.push(newShape);
             selectedShapes = selectNew ? [newShape.id] : [];
             draw(); saveShapes();
         }
+
+        document.getElementById('fontSizeSlider').addEventListener('input', (e) => {
+            const size = parseInt(e.target.value);
+            document.getElementById('fontSizeValue').textContent = size;
+            SHAPE_DEFAULTS.fontSize = size;
+            selectedShapes.forEach(id => {
+                const s = shapes.find(sh => sh.id === id);
+                if (s) s.fontSize = size;
+            });
+            if (selectedShapes.length > 0) { saveShapes(); draw(); }
+        });
 
         document.getElementById('addOval').addEventListener('click', () => addShape('oval', '開始/終了', canvas.width / 2, canvas.height / 2));
         document.getElementById('addRectangle').addEventListener('click', () => addShape('rectangle', '処理', canvas.width / 2, canvas.height / 2));
         document.getElementById('addDiamond').addEventListener('click', () => addShape('diamond', '条件分岐', canvas.width / 2, canvas.height / 2));
 
         function deleteSelectedShape() {
+            if (selectedConnection) {
+                connections = connections.filter(c => c !== selectedConnection);
+                selectedConnection = null;
+                saveShapes(); draw(); updateUndoConnectionButton();
+                return;
+            }
             if (selectedShapes.length > 0) {
                 const idsToDelete = new Set(selectedShapes);
-                
                 shapes = shapes.filter(s => !idsToDelete.has(s.id));
-                
                 connections = connections.filter(c => !idsToDelete.has(c.fromId) && !idsToDelete.has(c.toId));
-                
                 selectedShapes = []; 
-                saveShapes(); 
-                draw(); 
-                updateUndoConnectionButton();
+                saveShapes(); draw(); updateUndoConnectionButton();
             }
         }
         document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedShape);
 
         function updateDeleteButtonState() {
             const deleteBtn = document.getElementById('deleteSelectedBtn');
-            const statusText = document.getElementById('deleteStatusText');
-            if (selectedShapes.length > 0) {
+            if (selectedConnection) {
+                deleteBtn.disabled = false;
+                deleteBtn.title = '矢印を削除';
+            } else if (selectedShapes.length > 0) {
                 deleteBtn.disabled = false;
                 if (selectedShapes.length === 1) {
                     const shape = shapes.find(s => s.id === selectedShapes[0]);
                     deleteBtn.title = `「${shape ? shape.text : '選択図形'}」を削除`;
-                    statusText.textContent = `「${shape ? shape.text : '選択図形'}」が選択中`;
                 } else {
                     deleteBtn.title = `${selectedShapes.length}個の図形を削除`;
-                    statusText.textContent = `${selectedShapes.length}個の図形が選択中`;
                 }
             } else {
                 deleteBtn.disabled = true;
                 deleteBtn.title = '削除する図形を選択してください';
-                statusText.textContent = '図形をクリック、またはドラッグで囲んで選択...';
             }
         }
 
-        function undoLastConnection() {
-            if (connections.length > 0) { connections.pop(); saveShapes(); draw(); updateUndoConnectionButton(); }
-        }
-        document.getElementById('undoConnectionBtn').addEventListener('click', undoLastConnection);
-
-        function updateUndoConnectionButton() { const undoBtn = document.getElementById('undoConnectionBtn'); undoBtn.disabled = connections.length === 0; }
+        function updateUndoConnectionButton() {}
 
         function getShapeAt(px, py) {
             for (let i = shapes.length - 1; i >= 0; i--) {
@@ -538,6 +546,32 @@
                             return { connection: connection, index: i, x: p.x, y: p.y };
                         }
                     }
+                }
+            }
+            return null;
+        }
+
+        function getConnectionAt(px, py) {
+            const HIT = 8;
+            for (let ci = connections.length - 1; ci >= 0; ci--) {
+                const conn = connections[ci];
+                const fromShape = shapes.find(s => s.id === conn.fromId);
+                const toShape = shapes.find(s => s.id === conn.toId);
+                if (!fromShape || !toShape) continue;
+                const pts = [getShapeBoundaryPoint(fromShape, conn, true),
+                             ...(conn.waypoints || []),
+                             getShapeBoundaryPoint(toShape, conn, false)];
+                for (let i = 0; i < pts.length - 1; i++) {
+                    const ax = pts[i].x, ay = pts[i].y;
+                    const bx = pts[i+1].x, by = pts[i+1].y;
+                    const dx = bx - ax, dy = by - ay;
+                    const lenSq = dx*dx + dy*dy;
+                    if (lenSq === 0) continue;
+                    const t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+                    const closestX = ax + t * dx;
+                    const closestY = ay + t * dy;
+                    const distSq = (closestX - px) * (closestX - px) + (closestY - py) * (closestY - py);
+                    if (distSq <= HIT * HIT) return conn;
                 }
             }
             return null;
@@ -577,20 +611,28 @@
 
             if (!connectMode) {
                 if (shape) {
+                    selectedConnection = null;
                     if (!selectedShapes.includes(shape.id)) {
                         selectedShapes = [shape.id];
                         draw();
                     }
-                    
                     draggingShape = shape; dragOffsetX = x - shape.x; dragOffsetY = y - shape.y; 
                     canvas.style.cursor = 'move'; 
                     return;
-                } else {
-                    isSelecting = true;
-                    selectionRect = { x, y, width: 0, height: 0 };
+                }
+                const conn = getConnectionAt(x, y);
+                if (conn) {
+                    selectedConnection = conn;
                     selectedShapes = [];
                     draw();
+                    updateDeleteButtonState();
+                    return;
                 }
+                selectedConnection = null;
+                isSelecting = true;
+                selectionRect = { x, y, width: 0, height: 0 };
+                selectedShapes = [];
+                draw();
                 return;
             }
 
@@ -800,7 +842,7 @@
         });
 
         document.addEventListener('keydown', (e) => {
-            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedShapes.length > 0 && !editingShape) { 
+            if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedShapes.length > 0 || selectedConnection) && !editingShape) { 
                 e.preventDefault(); 
                 deleteSelectedShape(); 
             }
@@ -808,14 +850,34 @@
                 if (currentDrawing) {
                     currentDrawing = null; document.getElementById('connectStatus').textContent = '接続をキャンセルしました。'; draw();
                 }
-                if (selectedShapes.length > 0) {
-                    selectedShapes = []; draw();
+                if (selectedShapes.length > 0 || selectedConnection) {
+                    selectedShapes = []; selectedConnection = null; draw();
                 }
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedShapes.length > 0 && !editingShape) {
+                e.preventDefault();
+                window._clipboard = selectedShapes.map(id => JSON.parse(JSON.stringify(shapes.find(s => s.id === id)))).filter(Boolean);
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'v' && window._clipboard && window._clipboard.length > 0 && !editingShape) {
+                e.preventDefault();
+                const offset = 30;
+                const newIds = [];
+                window._clipboard.forEach(orig => {
+                    const newShape = { ...orig, id: generateId(), x: orig.x + offset, y: orig.y + offset };
+                    shapes.push(newShape);
+                    newIds.push(newShape.id);
+                });
+                selectedShapes = newIds;
+                saveShapes(); draw();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 's' && !editingShape) {
+                e.preventDefault();
+                document.getElementById('screenshotBtn').click();
             }
         });
 
         document.getElementById('connectModeToggle').addEventListener('click', () => {
-            connectMode = !connectMode; currentDrawing = null; selectedShapes = [];
+            connectMode = !connectMode; currentDrawing = null; selectedShapes = []; selectedConnection = null;
             const toggleBtn = document.getElementById('connectModeToggle'); const statusMsg = document.getElementById('connectStatus'); const connectIcon = document.getElementById('connectIcon'); const connectText = document.getElementById('connectText');
             if (connectMode) {
                 toggleBtn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600'); toggleBtn.classList.add('bg-orange-500', 'hover:bg-orange-600'); connectIcon.classList.add('animate-pulse'); connectText.textContent = '接続モードを終了'; statusMsg.textContent = '図形をクリックして開始、空白クリックで中間点、図形クリックで終了'; statusMsg.classList.remove('hidden');
@@ -827,6 +889,17 @@
 
         document.getElementById('snapToGridCheckbox').addEventListener('change', (e) => {});
         document.getElementById('showGridCheckbox').addEventListener('change', (e) => { if (e.target.checked) canvasContainer.classList.add('show-grid'); else canvasContainer.classList.remove('show-grid'); });
+
+        document.getElementById('newBtn').addEventListener('click', () => {
+            if (!window.confirm('新規作成します。現在の内容は上書きされます。よろしいですか？')) return;
+            shapes = []; connections = []; selectedShapes = [];
+            localStorage.removeItem('flowchartShapes'); localStorage.removeItem('flowchartConnections');
+            hideTextEditor(); draw(); updateUndoConnectionButton();
+            const centerX = canvas.width / 2;
+            addShape('oval', '開始/終了', centerX, 80, false);
+            addShape('rectangle', '処理', centerX, 180, false);
+            addShape('diamond', '条件分岐', centerX, 280, false);
+        });
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             if (!window.confirm('すべての図形と接続を削除しますか？')) return;
@@ -864,6 +937,60 @@
                 draw();
             }
         });
+
+        document.getElementById('saveHtmlBtn').addEventListener('click', () => {
+            const data = { shapes, connections };
+            const json = JSON.stringify(data);
+            const el = document.getElementById('flowchart-data');
+            if (el) {
+                el.content.textContent = json;
+            } else {
+                const tmpl = document.createElement('template');
+                tmpl.id = 'flowchart-data';
+                tmpl.content.textContent = json;
+                document.body.appendChild(tmpl);
+            }
+            const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([html], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'flowchart_' + Date.now() + '.html';
+            a.click();
+        });
+
+        document.getElementById('loadHtmlInput').addEventListener('change', (e) => {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(ev.target.result, 'text/html');
+                const dataEl = doc.getElementById('flowchart-data');
+                if (!dataEl) { alert('このHTMLにはフローチャートデータが含まれていません。'); return; }
+                try {
+                    const raw = dataEl.tagName === 'TEMPLATE' ? dataEl.content.textContent : dataEl.textContent;
+                    const data = JSON.parse(raw);
+                    shapes = data.shapes || []; connections = data.connections || [];
+                    selectedShapes = []; selectedConnection = null; saveShapes(); draw(); updateUndoConnectionButton();
+                } catch { alert('データの読み込みに失敗しました。'); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        document.getElementById('loadHtmlBtn').addEventListener('click', () => {
+            document.getElementById('loadHtmlInput').click();
+        });
+
+        const embeddedData = document.getElementById('flowchart-data');
+        if (embeddedData) {
+            try {
+                const raw = embeddedData.tagName === 'TEMPLATE' ? embeddedData.content.textContent : embeddedData.textContent;
+                const data = JSON.parse(raw);
+                if (data.shapes && data.shapes.length > 0) {
+                    shapes = data.shapes; connections = data.connections || [];
+                }
+            } catch {}
+        }
 
     </script>
 </body>
