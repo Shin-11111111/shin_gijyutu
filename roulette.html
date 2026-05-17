@@ -1,311 +1,252 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ルーレット</title>
-<!-- Tailwind CSSを読み込み -->
-<script src="https://cdn.tailwindcss.com"></script>
-<style>
-  /* Interフォントを使用 */
-  @layer base {
-    html, body {
-      font-family: 'Inter', sans-serif;
-    }
-  }
-  
-  /* ルーレットコンテナ: 以前のデザインのvminベースの幅を採用 */
-  #wheelContainer {
-    position: relative;
-    /* モバイル・縦画面では70vmin、横画面では親の幅に合わせる */
-    width: 70vmin; 
-    aspect-ratio: 1 / 1;
-    margin: 0 auto;
-    flex-shrink: 0; /* 親がflexでも縮まないようにする */
-  }
-  
-  /* ポインター（12時方向）: 以前のデザインを採用 */
-  #pointer {
-    position: absolute;
-    top: -25px; 
-    left: calc(50% - 15px);
-    width: 0;
-    height: 0;
-    border-left: 15px solid transparent;
-    border-right: 15px solid transparent;
-    border-top: 30px solid #ef4444; /* 赤色のポインター */
-    z-index: 10;
-  }
-  
-  #wheel { /* IDをロジックに合わせて 'wheel' に統一 */
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    border: 8px solid #333;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
-    position: relative;
-    overflow: hidden;
-  }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ルーレットシミュレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @layer base {
+            html, body {
+                font-family: 'Inter', sans-serif;
+            }
+        }
+    
+        #wheelContainer {
+            position: relative;
+            width: 70vmin; 
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+    
+        #pointer {
+            position: absolute;
+            top: -25px; 
+            left: calc(50% - 15px);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ef4444;
+            z-index: 10;
+        }
+    
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #333;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.5); 
+            position: relative;
+            overflow: hidden;
+        }
 
-  /* Canvas要素自体がコンテナにフィットするように */
-  canvas {
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-  }
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
 
-  /* モバイル向け調整 */
-  @media (max-width: 1023px) {
-    /* 縦画面ではルーレットを中央に配置 */
-    #wheelContainer { width: 90vmin; }
-  }
-</style>
+        @media (max-width: 1023px) {
+            #wheelContainer { width: 90vmin; }
+        }
+    </style>
 </head>
-<!-- bodyから垂直中央寄せ(justify-center)を削除。h1は上部に固定される -->
+
 <body class="bg-gray-100 p-6 min-h-screen flex flex-col items-center">
+    <h1 class="text-3xl font-bold mb-6 text-gray-800 w-full text-center flex-shrink-0">ルーレットシミュレーター</h1>
+    <div class="w-full max-w-6xl">
+        <div class="w-full max-w-6xl lg:flex lg:space-x-12 lg:items-start">
+            <div class="lg:w-1/2 flex justify-center items-start mb-8 lg:mb-0 lg:sticky lg:top-6">
+                <div id="wheelContainer">
+                    <div id="pointer"></div>
+                    <canvas id="wheel"></canvas>
+                </div>
+            </div>
 
-<!-- h1は固定で上部に表示される -->
-<h1 class="text-3xl font-bold mb-6 text-gray-800 w-full text-center flex-shrink-0">ルーレット</h1>
+            <div class="lg:w-1/2 flex flex-col items-center lg:items-start justify-start pt-4">
+                <div class="w-full max-w-md lg:max-w-full">
+                    <div class="flex items-center gap-3 mb-4">
+                        <label class="text-gray-700 font-semibold whitespace-nowrap">等分数:</label>
+                        <input id="divCount" type="number" min="2" max="40" value="3"
+                            class="w-20 border rounded-lg p-2 text-center shadow-sm focus:border-red-500 focus:ring focus:ring-red-500 focus:ring-opacity-50 font-bold text-lg">
+                        <span class="text-gray-500 text-sm">（2〜40）</span>
+                    </div>
 
-<!-- メインコンテンツをラップするコンテナ。残りのスペースを使い(flex-grow)、内容を垂直中央に配置(justify-center) -->
-<div class="flex-grow w-full max-w-6xl flex justify-center items-center">
+                    <div id="segmentFields" class="flex flex-col gap-2 mb-4 max-h-72 overflow-y-auto pr-1"></div>
 
-  <!-- 柔軟なレイアウトコンテナ (元々あったもの) -->
-  <div class="w-full max-w-6xl lg:flex lg:space-x-12">
-    
-    <!-- 左側: ルーレット表示エリア -->
-    <div class="lg:w-1/2 flex justify-center items-center mb-8 lg:mb-0">
-      <div id="wheelContainer">
-        <div id="pointer"></div>
-        <canvas id="wheel"></canvas>
-      </div>
+                    <button id="spinButton" class="mt-2 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-lg disabled:opacity-50">
+                        スタート
+                    </button>
+                </div>
+
+                <div id="result" class="mt-6 p-4 bg-white border border-red-300 text-red-700 text-4xl font-extrabold rounded-lg shadow-inner w-full max-w-md lg:max-w-full text-center">
+                    項目を入力してください
+                </div>
+            </div>
+
+        </div>
     </div>
 
-    <!-- 右側: 入力と結果表示エリア - justify-centerを追加して、内部要素を垂直中央に配置 -->
-    <div class="lg:w-1/2 flex flex-col items-center lg:items-start justify-center"> 
-      
-      <!-- 入力とボタン -->
-      <div class="w-full max-w-md lg:max-w-full">
-        <textarea id="segmentsInput" rows="3" class="border rounded-lg w-full p-3 shadow-md focus:border-red-500 focus:ring focus:ring-red-500 focus:ring-opacity-50" placeholder="例: あたり|#22c55e,はずれ|#ef4444,再挑戦|#facc15"></textarea>
-        <button id="spinButton" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-150 ease-in-out shadow-lg disabled:opacity-50">
-          スタート
-        </button>
-      </div>
-      
-      <!-- 結果表示エリア -->
-      <div id="result" class="mt-6 p-4 bg-white border border-red-300 text-red-700 text-4xl font-extrabold rounded-lg shadow-inner w-full max-w-md lg:max-w-full text-center">
-        項目を入力してください
-      </div>
-    </div>
+    <script>
+        const canvas = document.getElementById('wheel');
+        const ctx = canvas.getContext('2d');
+        const spinButton = document.getElementById('spinButton');
+        const resultDiv = document.getElementById('result');
+        const divCountInput = document.getElementById('divCount');
+        const segmentFields = document.getElementById('segmentFields');
 
-  </div>
-</div>
+        let segments = [];
+        let rotation = 0;
+        let spinning = false;
 
-<script>
-// --- 初期設定とDOM要素の取得 ---
-const canvas = document.getElementById('wheel');
-const ctx = canvas.getContext('2d');
-const segmentsInput = document.getElementById('segmentsInput');
-const spinButton = document.getElementById('spinButton');
-const resultDiv = document.getElementById('result');
+        function getDefaultColor(i, total) {
+            const hue = Math.round((i / total) * 360);
+            return `hsl(${hue}, 85%, 58%)`;
+        }
 
-let segments = [];
-let rotation = 0; // 累積回転角度 (度)
-let spinning = false;
+        function buildSegmentFields(count, prevData) {
+            segmentFields.innerHTML = '';
+            const userColors = new Set();
+            if (prevData) {
+                prevData.forEach((d, i) => {
+                    if (i < count && d && d.userDefined) userColors.add(i);
+                });
+            }
 
-// --- Canvasのリサイズと高解像度対応 ---
-function resizeCanvas() {
-  const rect = canvas.getBoundingClientRect(); 
-  canvas.width = rect.width * window.devicePixelRatio;
-  canvas.height = rect.height * window.devicePixelRatio;
-  ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-  drawWheel();
-}
+            const autoIndices = [];
+            for (let i = 0; i < count; i++) {
+                if (!userColors.has(i)) autoIndices.push(i);
+            }
 
-window.addEventListener('resize', resizeCanvas);
+            for (let i = 0; i < count; i++) {
+                const label = prevData && prevData[i] ? prevData[i].label : String(i + 1);
+                let color;
+                if (userColors.has(i) && prevData[i]) {
+                    color = prevData[i].color;
+                } else {
+                    const autoRank = autoIndices.indexOf(i);
+                    const hue = Math.round((autoRank / autoIndices.length) * 360);
+                    color = `hsl(${hue}, 85%, 58%)`;
+                }
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                row.innerHTML = `
+                    <span class="text-gray-500 text-sm w-5 text-right flex-shrink-0">${i + 1}</span>
+                    <input type="text" class="seg-label border rounded-lg p-2 flex-grow shadow-sm focus:border-red-500 focus:ring focus:ring-red-500 focus:ring-opacity-50" value="${label}" placeholder="ラベル">
+                    <input type="color" class="seg-color w-10 h-10 rounded-lg border cursor-pointer shadow-sm flex-shrink-0" value="${color}">
+                `;
+                segmentFields.appendChild(row);
+            }
+            segmentFields.querySelectorAll('.seg-label').forEach(el => {
+                el.addEventListener('input', buildSegmentsFromFields);
+            });
+            segmentFields.querySelectorAll('.seg-color').forEach(el => {
+                el.addEventListener('input', () => {
+                    el.dataset.userDefined = 'true';
+                    buildSegmentsFromFields();
+                });
+            });
+            buildSegmentsFromFields();
+        }
 
-// --- ヘルパー関数 ---
-function getRandomBrightColor(i, total) {
-  const hue = (i * (360 / total)) % 360;
-  return `hsl(${hue}, 80%, 60%)`;
-}
-
-// --- ルーレットの設定 (入力に基づいて項目を生成) ---
-function setupWheel() {
-  const input = segmentsInput.value.trim();
-  localStorage.setItem('rouletteSegments', input);
-  segments = [];
-  
-  if (!input) {
-    resultDiv.textContent = '項目を入力してください';
-    drawWheel();
-    spinButton.disabled = true;
-    return;
-  }
-  spinButton.disabled = false;
-
-  // 「数字のみ」の場合
-  if (/^\d+$/.test(input)) {
-    const num = parseInt(input);
-    for (let i = 0; i < num; i++) { // 0始まりに変更
-      segments.push({ label: String(i + 1), color: getRandomBrightColor(i, num) });
+    function buildSegmentsFromFields() {
+        const labels = segmentFields.querySelectorAll('.seg-label');
+        const colors = segmentFields.querySelectorAll('.seg-color');
+        segments = [];
+        labels.forEach((lbl, i) => {
+            segments.push({
+                label: lbl.value.trim() || String(i + 1),
+                color: colors[i].value,
+                userDefined: colors[i].dataset.userDefined === 'true'
+            });
+        });
+        saveToStorage();
+        spinButton.disabled = segments.length < 2;
+        if (segments.length >= 2) resultDiv.textContent = '準備完了！';
+        drawWheel();
     }
-  // 「項目|色コード,...」の場合
-  } else {
-    const parts = input.split(',').map(s => s.split('|'));
-    segments = parts.map((p, i) => ({ 
-      label: p[0].trim(), 
-      color: p[1] ? p[1].trim() : getRandomBrightColor(i, parts.length) 
-    })).filter(s => s.label);
-  }
-  drawWheel();
-}
 
-segmentsInput.addEventListener('input', setupWheel);
-
-// --- Canvas描画処理 ---
-function drawWheel() {
-  if (!segments.length) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    return;
-  }
-  
-  const rect = canvas.getBoundingClientRect(); 
-  const cx = rect.width / 2;
-  const cy = rect.height / 2;
-  const radius = Math.min(cx, cy);
-  
-  const segmentAngleRad = 2 * Math.PI / segments.length;
-
-  ctx.clearRect(0, 0, rect.width, rect.height);
-  
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.rotate(rotation * Math.PI / 180);
-
-  segments.forEach((seg, i) => {
-    const start = i * segmentAngleRad;
-    const end = start + segmentAngleRad;
-    
-    // --- セグメントの描画 ---
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.arc(0, 0, radius, start, end);
-    ctx.closePath();
-    
-    ctx.fillStyle = seg.color;
-    ctx.fill();
-    
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2; 
-    ctx.stroke();
-
-    // --- ラベルの描画 (Canvas内) ---
-    ctx.save();
-    
-    // ラベルの中心位置まで回転
-    ctx.rotate(start + segmentAngleRad / 2);
-    
-    // ラベルの位置調整とスタイル
-    ctx.textAlign = 'right'; 
-    ctx.fillStyle = '#000';
-    
-    // フォントサイズを動的に設定（半径の約10%） - 文字を大きくする対応
-    const fontSize = Math.max(18, radius * 0.1); // 最小18pxを保証
-    ctx.font = `bold ${fontSize}px sans-serif`;
-    
-    // テキストオフセットも動的に
-    const textOffset = Math.max(10, radius * 0.03); 
-
-    // 半径の内側、中心から少し離れた位置にテキストを描画
-    ctx.fillText(seg.label, radius - textOffset, 5); 
-    
-    ctx.restore(); // ラベル回転の解除
-  });
-  
-  ctx.restore(); // 全体回転の解除と原点位置の復元
-}
-
-// --- スピン処理 ---
-function spin() {
-  if (spinning || !segments.length) return;
-  spinning = true;
-  spinButton.disabled = true;
-  resultDiv.textContent = '回転中...';
-
-  const segmentAngleDeg = 360 / segments.length; // 度数法
-  const targetIndex = Math.floor(Math.random() * segments.length);
-  
-  // ----------------------------------------------------
-  // 【ポインターと結果の一致ロジック】
-  
-  // 停止目標角度: 12時方向（270度）に、targetIndex番目のセグメントの中心が合うようにする。
-  const targetCenterAngle = targetIndex * segmentAngleDeg + (segmentAngleDeg / 2);
-  let finalAngleOffset = 270 - targetCenterAngle; 
-  
-  finalAngleOffset = finalAngleOffset % 360;
-  if (finalAngleOffset < 0) {
-    finalAngleOffset += 360;
-  }
-
-  const currentRelativeRotation = rotation % 360;
-  let angleDifference = finalAngleOffset - currentRelativeRotation;
-  if (angleDifference < 0) {
-    angleDifference += 360;
-  }
-  
-  // 5〜8回転（ランダム）
-  const spins = 5 + Math.random() * 3;
-  
-  const targetRotation = rotation + (spins * 360) + angleDifference;
-  // ----------------------------------------------------
-  
-  const start = rotation;
-  const duration = 5000;
-  const startTime = performance.now();
-
-  function animate(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    const ease = 1 - Math.pow(1 - progress, 3);
-    
-    rotation = start + (targetRotation - start) * ease;
-    
-    drawWheel();
-    
-    if (progress < 1) {
-      requestAnimationFrame(animate);
-    } else {
-      rotation %= 360; 
-      
-      const resultLabel = segments[targetIndex].label;
-      //resultDiv.textContent = `結果: ${resultLabel}`;
-      resultDiv.textContent = `結果`;
-      
-      spinning = false;
-      spinButton.disabled = false;
+    function saveToStorage() {
     }
-  }
-  requestAnimationFrame(animate);
-}
 
-document.getElementById('spinButton').addEventListener('click', spin);
-
-// ページロード時の初期設定
-window.onload = () => {
-    const saved = localStorage.getItem('rouletteSegments');
-    if (saved) {
-      segmentsInput.value = saved;
-    } else {
-        // 初期値の例
-        segmentsInput.value = '1,2,3,4,5,6';
+    function loadFromStorage() {
+        divCountInput.value = 3;
+        buildSegmentFields(3, null);
     }
-    resizeCanvas();
-    setupWheel();
-};
-</script>
+
+    divCountInput.addEventListener('change', () => {
+        let count = parseInt(divCountInput.value);
+        if (isNaN(count) || count < 2) count = 2;
+        if (count > 40) count = 40;
+        divCountInput.value = count;
+        const prevData = segments.map(s => ({ label: s.label, color: s.color, userDefined: s.userDefined }));
+        buildSegmentFields(count, prevData);
+    });
+
+    function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+        drawWheel();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function drawWheel() {
+        if (!segments.length) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+        const rect = canvas.getBoundingClientRect();
+        const cx = rect.width / 2, cy = rect.height / 2;
+        const radius = Math.min(cx, cy);
+        const segmentAngleRad = 2 * Math.PI / segments.length;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(rotation * Math.PI / 180);
+        segments.forEach((seg, i) => {
+            const start = i * segmentAngleRad, end = start + segmentAngleRad;
+            ctx.beginPath(); ctx.moveTo(0, 0);
+            ctx.arc(0, 0, radius, start, end); ctx.closePath();
+            ctx.fillStyle = seg.color; ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.save();
+            ctx.rotate(start + segmentAngleRad / 2);
+            ctx.textAlign = 'right'; ctx.fillStyle = '#000';
+            const fontSize = Math.max(14, radius * 0.1);
+            ctx.font = `bold ${fontSize}px sans-serif`;
+            ctx.fillText(seg.label, radius - Math.max(10, radius * 0.03), 5);
+            ctx.restore();
+        });
+        ctx.restore();
+    }
+
+    function spin() {
+        if (spinning || !segments.length) return;
+        spinning = true;
+        spinButton.disabled = true;
+        resultDiv.textContent = '回転中...';
+        const targetRotation = rotation + (5 + Math.random() * 3) * 360 + Math.random() * 360;
+        const start = rotation, duration = 5000, startTime = performance.now();
+        function animate(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            rotation = start + (targetRotation - start) * (1 - Math.pow(1 - progress, 3));
+            drawWheel();
+            if (progress < 1) { requestAnimationFrame(animate); return; }
+            rotation = ((rotation % 360) + 360) % 360;
+            const segDeg = 360 / segments.length;
+            const pointerAngle = ((270 - rotation) % 360 + 360) % 360;
+            const resultIndex = Math.floor(pointerAngle / segDeg) % segments.length;
+            resultDiv.textContent = `結果: ${segments[resultIndex].label}`;
+            spinning = false;
+            spinButton.disabled = false;
+        }
+        requestAnimationFrame(animate);
+    }
+
+    spinButton.addEventListener('click', spin);
+
+    window.onload = () => { loadFromStorage(); resizeCanvas(); };
+    </script>
 </body>
 </html>
-
-
