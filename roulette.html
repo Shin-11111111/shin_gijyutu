@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ルーレットシミュレーター</title>
+    <title>ルーレット</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @layer base {
@@ -11,7 +11,6 @@
                 font-family: 'Inter', sans-serif;
             }
         }
-    
         #wheelContainer {
             position: relative;
             width: 70vmin; 
@@ -19,7 +18,6 @@
             margin: 0 auto;
             flex-shrink: 0;
         }
-    
         #pointer {
             position: absolute;
             top: -25px; 
@@ -31,7 +29,6 @@
             border-top: 30px solid #ef4444;
             z-index: 10;
         }
-    
         #wheel {
             width: 100%;
             height: 100%;
@@ -41,7 +38,6 @@
             position: relative;
             overflow: hidden;
         }
-
         canvas {
             width: 100%;
             height: 100%;
@@ -55,7 +51,7 @@
 </head>
 
 <body class="bg-gray-100 p-6 min-h-screen flex flex-col items-center">
-    <h1 class="text-3xl font-bold mb-6 text-gray-800 w-full text-center flex-shrink-0">ルーレットシミュレーター</h1>
+    <h1 class="text-3xl font-bold mb-6 text-gray-800 w-full text-center flex-shrink-0">ルーレット</h1>
     <div class="w-full max-w-6xl">
         <div class="w-full max-w-6xl lg:flex lg:space-x-12 lg:items-start">
             <div class="lg:w-1/2 flex justify-center items-start mb-8 lg:mb-0 lg:sticky lg:top-6">
@@ -69,7 +65,7 @@
                 <div class="w-full max-w-md lg:max-w-full">
                     <div class="flex items-center gap-3 mb-4">
                         <label class="text-gray-700 font-semibold whitespace-nowrap">等分数:</label>
-                        <input id="divCount" type="number" min="2" max="40" value="3"
+                        <input id="divCount" type="number" min="2" max="40" value="10"
                             class="w-20 border rounded-lg p-2 text-center shadow-sm focus:border-red-500 focus:ring focus:ring-red-500 focus:ring-opacity-50 font-bold text-lg">
                         <span class="text-gray-500 text-sm">（2〜40）</span>
                     </div>
@@ -100,6 +96,11 @@
         let segments = [];
         let rotation = 0;
         let spinning = false;
+
+        function loadFromStorage() {
+            divCountInput.value = 10;
+            buildSegmentFields(10, null);
+        }
 
         function getDefaultColor(i, total) {
             const hue = Math.round((i / total) * 360);
@@ -151,102 +152,98 @@
             buildSegmentsFromFields();
         }
 
-    function buildSegmentsFromFields() {
-        const labels = segmentFields.querySelectorAll('.seg-label');
-        const colors = segmentFields.querySelectorAll('.seg-color');
-        segments = [];
-        labels.forEach((lbl, i) => {
-            segments.push({
-                label: lbl.value.trim() || String(i + 1),
-                color: colors[i].value,
-                userDefined: colors[i].dataset.userDefined === 'true'
+        function buildSegmentsFromFields() {
+            const labels = segmentFields.querySelectorAll('.seg-label');
+            const colors = segmentFields.querySelectorAll('.seg-color');
+            segments = [];
+            labels.forEach((lbl, i) => {
+                segments.push({
+                    label: lbl.value.trim() || String(i + 1),
+                    color: colors[i].value,
+                    userDefined: colors[i].dataset.userDefined === 'true'
+                });
             });
-        });
-        saveToStorage();
-        spinButton.disabled = segments.length < 2;
-        if (segments.length >= 2) resultDiv.textContent = '準備完了！';
-        drawWheel();
-    }
-
-    function saveToStorage() {
-    }
-
-    function loadFromStorage() {
-        divCountInput.value = 3;
-        buildSegmentFields(3, null);
-    }
-
-    divCountInput.addEventListener('change', () => {
-        let count = parseInt(divCountInput.value);
-        if (isNaN(count) || count < 2) count = 2;
-        if (count > 40) count = 40;
-        divCountInput.value = count;
-        const prevData = segments.map(s => ({ label: s.label, color: s.color, userDefined: s.userDefined }));
-        buildSegmentFields(count, prevData);
-    });
-
-    function resizeCanvas() {
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * window.devicePixelRatio;
-        canvas.height = rect.height * window.devicePixelRatio;
-        ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
-        drawWheel();
-    }
-    window.addEventListener('resize', resizeCanvas);
-
-    function drawWheel() {
-        if (!segments.length) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
-        const rect = canvas.getBoundingClientRect();
-        const cx = rect.width / 2, cy = rect.height / 2;
-        const radius = Math.min(cx, cy);
-        const segmentAngleRad = 2 * Math.PI / segments.length;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(rotation * Math.PI / 180);
-        segments.forEach((seg, i) => {
-            const start = i * segmentAngleRad, end = start + segmentAngleRad;
-            ctx.beginPath(); ctx.moveTo(0, 0);
-            ctx.arc(0, 0, radius, start, end); ctx.closePath();
-            ctx.fillStyle = seg.color; ctx.fill();
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-            ctx.save();
-            ctx.rotate(start + segmentAngleRad / 2);
-            ctx.textAlign = 'right'; ctx.fillStyle = '#000';
-            const fontSize = Math.max(14, radius * 0.1);
-            ctx.font = `bold ${fontSize}px sans-serif`;
-            ctx.fillText(seg.label, radius - Math.max(10, radius * 0.03), 5);
-            ctx.restore();
-        });
-        ctx.restore();
-    }
-
-    function spin() {
-        if (spinning || !segments.length) return;
-        spinning = true;
-        spinButton.disabled = true;
-        resultDiv.textContent = '回転中...';
-        const targetRotation = rotation + (5 + Math.random() * 3) * 360 + Math.random() * 360;
-        const start = rotation, duration = 5000, startTime = performance.now();
-        function animate(now) {
-            const progress = Math.min((now - startTime) / duration, 1);
-            rotation = start + (targetRotation - start) * (1 - Math.pow(1 - progress, 3));
+            spinButton.disabled = segments.length < 2;
+            if (segments.length >= 2) resultDiv.textContent = '準備完了！';
             drawWheel();
-            if (progress < 1) { requestAnimationFrame(animate); return; }
-            rotation = ((rotation % 360) + 360) % 360;
-            const segDeg = 360 / segments.length;
-            const pointerAngle = ((270 - rotation) % 360 + 360) % 360;
-            const resultIndex = Math.floor(pointerAngle / segDeg) % segments.length;
-            resultDiv.textContent = `結果: ${segments[resultIndex].label}`;
-            spinning = false;
-            spinButton.disabled = false;
         }
-        requestAnimationFrame(animate);
-    }
 
-    spinButton.addEventListener('click', spin);
+        function handleDivCountChange() {
+            let count = parseInt(divCountInput.value);
+            if (isNaN(count) || count < 2) count = 2;
+            if (count > 40) count = 40;
+            divCountInput.value = count;
+            const prevData = segments.map(s => ({ label: s.label, color: s.color, userDefined: s.userDefined }));
+            buildSegmentFields(count, prevData);
+        }
+        divCountInput.addEventListener('change', handleDivCountChange);
+        divCountInput.addEventListener('input', handleDivCountChange);
 
-    window.onload = () => { loadFromStorage(); resizeCanvas(); };
+        function resizeCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width * window.devicePixelRatio;
+            canvas.height = rect.height * window.devicePixelRatio;
+            ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+            if (!spinning) drawWheel();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawWheel() {
+            if (!segments.length) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+            const rect = canvas.getBoundingClientRect();
+            const cx = rect.width / 2, cy = rect.height / 2;
+            const radius = Math.min(cx, cy);
+            const segmentAngleRad = 2 * Math.PI / segments.length;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(rotation * Math.PI / 180);
+            segments.forEach((seg, i) => {
+                const start = i * segmentAngleRad, end = start + segmentAngleRad;
+                ctx.beginPath(); ctx.moveTo(0, 0);
+                ctx.arc(0, 0, radius, start, end); ctx.closePath();
+                ctx.fillStyle = seg.color; ctx.fill();
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+                ctx.save();
+                ctx.rotate(start + segmentAngleRad / 2);
+                ctx.textAlign = 'right'; ctx.fillStyle = '#000';
+                const fontSize = Math.max(14, radius * 0.1);
+                ctx.font = `bold ${fontSize}px sans-serif`;
+                ctx.fillText(seg.label, radius - Math.max(10, radius * 0.03), 5);
+                ctx.restore();
+            });
+            ctx.restore();
+        }
+
+        function spin() {
+            if (spinning || !segments.length) return;
+            spinning = true;
+            spinButton.disabled = true;
+            resultDiv.textContent = '回転中...';
+            const targetRotation = rotation + (5 + Math.random() * 3) * 360 + Math.random() * 360;
+            const start = rotation, duration = 5000, startTime = performance.now();
+            function animate(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                rotation = start + (targetRotation - start) * (1 - Math.pow(1 - progress, 3));
+                drawWheel();
+                if (progress < 1) { requestAnimationFrame(animate); return; }
+                rotation = ((rotation % 360) + 360) % 360;
+                const segDeg = 360 / segments.length;
+                const pointerAngle = ((360 - (rotation % 360)) + 270) % 360;
+                const resultIndex = Math.floor(pointerAngle / segDeg) % segments.length;
+                resultDiv.textContent = `結果: ${segments[resultIndex].label}`;
+                spinning = false;
+                spinButton.disabled = false;
+            }
+            requestAnimationFrame(animate);
+        }
+
+        spinButton.addEventListener('click', spin);
+
+        window.onload = () => {
+            loadFromStorage();
+            requestAnimationFrame(() => resizeCanvas());
+        };
     </script>
 </body>
 </html>
