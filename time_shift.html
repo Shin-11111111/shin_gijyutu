@@ -66,10 +66,9 @@
             letter-spacing: 0.05em;
         }
 
-        /* スライダーの警告修正とスタイル適用 */
         input[type=range] {
             -webkit-appearance: none;
-            appearance: none; /* 標準プロパティを追加 */
+            appearance: none;
             background: transparent;
             cursor: pointer;
             width: 100%;
@@ -79,17 +78,15 @@
             outline: none;
         }
 
-        /* Webkit (Chrome, Safari, Edge) 用の溝 */
         input[type=range]::-webkit-slider-runnable-track {
             background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
             height: 8px;
         }
 
-        /* Webkit 用のつまみ */
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            appearance: none; /* ここにも追加 */
+            appearance: none;
             margin-top: -10px;
             background-color: #3b82f6;
             border-radius: 50%;
@@ -99,7 +96,6 @@
             border: 2px solid white;
         }
 
-        /* Firefox 用のスタイル */
         input[type=range]::-moz-range-track {
             background: rgba(255, 255, 255, 0.2);
             border-radius: 10px;
@@ -125,7 +121,7 @@
 
         <div class="controls" id="controls">
             <button id="toggleBtn" class="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center transition shrink-0 shadow-lg">
-                <span id="toggleIcon" class="text-white text-xl">II</span>
+                <span id="toggleIcon" class="text-white text-xl">⏸</span>
             </button>
 
             <div class="flex flex-col flex-grow">
@@ -162,9 +158,6 @@
         const TARGET_FPS = 30;
         const FRAME_INTERVAL = 1000 / TARGET_FPS;
         let lastFrameTime = 0;
-
-        const SAVE_WIDTH = 854;
-        const SAVE_HEIGHT = 480;
 
         async function initCamera() {
             try {
@@ -209,9 +202,13 @@
             lastFrameTime = now;
 
             if (liveVideo.readyState >= 2) {
+                const scale = Math.min(1, 854 / liveVideo.videoWidth);
+                const saveW = Math.round(liveVideo.videoWidth * scale);
+                const saveH = Math.round(liveVideo.videoHeight * scale);
+
                 createImageBitmap(liveVideo, {
-                    resizeWidth: SAVE_WIDTH,
-                    resizeHeight: SAVE_HEIGHT,
+                    resizeWidth: saveW,
+                    resizeHeight: saveH,
                     resizeQuality: 'low'
                 }).then(bitmap => {
                     const timestamp = performance.now();
@@ -220,7 +217,7 @@
                     const delayMs = parseFloat(delayRange.value) * 1000;
                     const targetTime = timestamp - delayMs;
                     
-                    while (buffer.length > 0 && buffer[0].time < targetTime - 2000) {
+                    while (buffer.length > 0 && buffer[0].time < targetTime - 500) {
                         const oldFrame = buffer.shift();
                         oldFrame.img.close();
                     }
@@ -265,9 +262,10 @@
             e.stopPropagation(); 
             isRunning = !isRunning;
             if (isRunning) {
-                toggleIcon.textContent = "II";
+                toggleIcon.textContent = "⏸";
                 toggleBtn.classList.replace('bg-green-600', 'bg-blue-600');
                 statusBadge.style.display = "block";
+                lastFrameTime = 0;
                 requestAnimationFrame(processFrame);
             } else {
                 toggleIcon.textContent = "▶";
@@ -295,10 +293,6 @@
         });
 
         window.addEventListener('resize', () => {
-            if (liveVideo.videoWidth) {
-                outputCanvas.width = liveVideo.videoWidth;
-                outputCanvas.height = liveVideo.videoHeight;
-            }
         });
 
         window.onload = initCamera;
