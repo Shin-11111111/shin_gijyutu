@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>等角図 / 正投影図</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            background-color: #f1f5f9;
+        }
+
+        canvas {
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .toolbar-btn {
+            padding: 0.4rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6b7280;
+            width: 2.25rem;
+            height: 2.25rem;
+        }
+
+        .toolbar-btn:hover {
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .toolbar-btn.active {
+            background-color: #4f46e5;
+            color: #ffffff;
+            box-shadow: 0 10px 15px -3px #a5b4fc;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .color-swatch {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 9999px;
+            border: 2px solid #ffffff;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.15s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch:active {
+            transform: scale(0.95);
+        }
+
+        .color-swatch.active {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-3 gap-1 z-10 shadow-lg overflow-y-auto">
+        <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-base mb-2 shadow-inner flex-shrink-0">
+            <i class="fas fa-cube"></i>
+        </div>
+
+        <button id="tool-line" class="toolbar-btn tool-btn active" title="線を描く (L)"><i class="fas fa-pen-nib"></i></button>
+        <button id="tool-face" class="toolbar-btn tool-btn" title="面を描く (F)"><i class="fas fa-draw-polygon"></i></button>
+
+        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+
+        <button id="tool-eraser" class="toolbar-btn tool-btn" title="消しゴム (E)"><i class="fas fa-eraser"></i></button>
+        <button id="undo-btn" class="toolbar-btn" title="元に戻す (Ctrl+Z)"><i class="fas fa-undo"></i></button>
+        <button id="clear-btn" class="toolbar-btn" title="全消去" style="color:#ef4444"><i class="fas fa-trash-alt"></i></button>
+
+        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+
+        <button id="grid-toggle" class="toolbar-btn active" title="グリッド切替"><i class="fas fa-th"></i></button>
+        <button id="ortho-toggle" class="toolbar-btn active" title="正投影図の表示切替 (O)"><i class="fas fa-border-all"></i></button>
+
+        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+
+        <button id="save-btn" class="toolbar-btn" title="保存" style="color:#10b981"><i class="fas fa-download"></i></button>
+
+        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+
+        <!-- 色：2列グリッド -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:2px">
+            <button class="color-swatch sidebar-swatch active" data-color="#ef4444" title="赤" style="width:1.25rem;height:1.25rem;background-color:#ef4444"></button>
+            <button class="color-swatch sidebar-swatch" data-color="#3b82f6" title="青" style="width:1.25rem;height:1.25rem;background-color:#3b82f6"></button>
+            <button class="color-swatch sidebar-swatch" data-color="#facc15" title="黄" style="width:1.25rem;height:1.25rem;background-color:#facc15"></button>
+            <button class="color-swatch sidebar-swatch" data-color="#22c55e" title="緑" style="width:1.25rem;height:1.25rem;background-color:#22c55e"></button>
+            <button class="color-swatch sidebar-swatch" data-color="#1e293b" title="黒" style="width:1.25rem;height:1.25rem;background-color:#1e293b"></button>
+            <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色" style="width:1.25rem;height:1.25rem;border-radius:9999px;border:2px solid #fff;cursor:pointer;padding:0">
+        </div>
+
+        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+
+        <!-- 太さ -->
+        <div style="height:5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <input type="range" id="line-weight" min="1" max="12" value="3"
+                   style="width:4.5rem;cursor:pointer;accent-color:#4f46e5;transform:rotate(-90deg);">
+        </div>
+        <span id="weight-label" class="text-[10px] font-bold text-gray-500">3</span>
+    </aside>
+
+    <main class="flex-1 relative overflow-hidden">
+        <div id="canvas-container" class="w-full h-full flex">
+            <div id="ortho-pane" class="relative bg-slate-50 border-r-2 border-dashed border-indigo-200" style="width:40%">
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full pointer-events-none">正投影図</div>
+                <canvas id="ortho-grid-canvas" class="absolute inset-0 pointer-events-none"></canvas>
+                <canvas id="ortho-canvas" class="absolute inset-0"></canvas>
+            </div>
+            <div id="iso-pane" class="relative bg-slate-100 flex-1">
+                <div class="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-gray-200 text-gray-500 text-xs font-bold px-3 py-1 rounded-full pointer-events-none">等角図</div>
+                <canvas id="grid-canvas" class="absolute inset-0 pointer-events-none"></canvas>
+                <canvas id="main-canvas" class="absolute inset-0"></canvas>
+            </div>
+        </div>
+        <div id="message-box" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-sm px-5 py-2 rounded-full shadow-lg opacity-0 transition-all duration-500 pointer-events-none z-50"></div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById('main-canvas');
+        const gridCanvas = document.getElementById('grid-canvas');
+        const ctx = canvas.getContext('2d');
+        const gCtx = gridCanvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        const msgBox = document.getElementById('message-box');
+
+        let config = {
+            unit: 40,
+            color: '#ef4444',
+            weight: 3,
+            tool: 'line',
+            showGrid: true
+        };
+
+        let shapes = [];
+        let faces = [];
+        let history = [];
+        
+        let currentShape = null;
+        let polyPoints = []; 
+        let isDrawing = false;
+        let lastMousePoint = null;
+
+        const ANGLE = Math.PI / 6; 
+        const sin30 = Math.sin(ANGLE);
+        const cos30 = Math.cos(ANGLE);
+
+
+        function getSnappedPoint(rawX, rawY) {
+            const cx = rawX - canvas.width/2;
+            const cy = rawY - canvas.height/2;
+
+            const u = cx / (2 * cos30) + cy / (2 * sin30);
+            const v = -cx / (2 * cos30) + cy / (2 * sin30);
+
+            const snappedU = Math.round(u / config.unit) * config.unit;
+            const snappedV = Math.round(v / config.unit) * config.unit;
+
+            return {
+                x: (snappedU - snappedV) * cos30 + canvas.width/2,
+                y: (snappedU + snappedV) * sin30 + canvas.height/2,
+                u: Math.round(snappedU / config.unit),
+                v: Math.round(snappedV / config.unit)
+            };
+        }
+
+        function resize() {
+            const isoPane = document.getElementById('iso-pane');
+            canvas.width = isoPane.clientWidth;
+            canvas.height = isoPane.clientHeight;
+            gridCanvas.width = isoPane.clientWidth;
+            gridCanvas.height = isoPane.clientHeight;
+            drawGrid();
+            redraw();
+        }
+
+        function drawGrid() {
+            gCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
+            if (!config.showGrid) return;
+
+            gCtx.strokeStyle = '#64748b';
+            gCtx.lineWidth = 1.0;
+
+            const cols = Math.ceil(gridCanvas.width / (config.unit * cos30)) + 15;
+            const rows = Math.ceil(gridCanvas.height / (config.unit * sin30)) + 10;
+
+            const getP = (uIdx, vIdx) => ({
+                x: (uIdx - vIdx) * config.unit * cos30 + gridCanvas.width/2,
+                y: (uIdx + vIdx) * config.unit * sin30 + gridCanvas.height/2
+            });
+
+            for (let v = -rows; v <= rows; v++) {
+                gCtx.beginPath();
+                const p1 = getP(-cols, v);
+                const p2 = getP(cols, v);
+                gCtx.moveTo(p1.x, p1.y);
+                gCtx.lineTo(p2.x, p2.y);
+                gCtx.stroke();
+            }
+
+            for (let u = -cols; u <= cols; u++) {
+                gCtx.beginPath();
+                const p1 = getP(u, -rows);
+                const p2 = getP(u, rows);
+                gCtx.moveTo(p1.x, p1.y);
+                gCtx.lineTo(p2.x, p2.y);
+                gCtx.stroke();
+            }
+
+            gCtx.strokeStyle = '#e2e8f0';
+            gCtx.setLineDash([2, 8]);
+            for (let i = -cols; i <= cols; i++) {
+                const p = getP(i, -i);
+                gCtx.beginPath();
+                gCtx.moveTo(p.x, 0);
+                gCtx.lineTo(p.x, gridCanvas.height);
+                gCtx.stroke();
+            }
+            gCtx.setLineDash([]);
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.setLineDash([]);
+            
+            faces.forEach(face => {
+                ctx.beginPath();
+                ctx.fillStyle = face.color + "99";
+                ctx.strokeStyle = face.color;
+                ctx.lineWidth = 1;
+                ctx.moveTo(face.points[0].x, face.points[0].y);
+                for(let i=1; i<face.points.length; i++) {
+                    ctx.lineTo(face.points[i].x, face.points[i].y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+
+            shapes.forEach(s => {
+                ctx.beginPath();
+                ctx.strokeStyle = s.color;
+                ctx.lineWidth = s.weight;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.moveTo(s.start.x, s.start.y);
+                ctx.lineTo(s.end.x, s.end.y);
+                ctx.stroke();
+            });
+
+            if (config.tool === 'line' && currentShape) {
+                ctx.beginPath();
+                ctx.strokeStyle = currentShape.color;
+                ctx.lineWidth = currentShape.weight;
+                ctx.setLineDash([5, 5]);
+                ctx.moveTo(currentShape.start.x, currentShape.start.y);
+                ctx.lineTo(currentShape.end.x, currentShape.end.y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            if (config.tool === 'face' && polyPoints.length > 0) {
+                ctx.beginPath();
+                ctx.strokeStyle = config.color;
+                ctx.lineWidth = 2;
+                ctx.moveTo(polyPoints[0].x, polyPoints[0].y);
+                polyPoints.forEach(p => ctx.lineTo(p.x, p.y));
+                
+                if (lastMousePoint) {
+                    ctx.lineTo(lastMousePoint.x, lastMousePoint.y);
+                }
+                ctx.stroke();
+
+                polyPoints.forEach(p => {
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 4, 0, Math.PI*2);
+                    ctx.fill();
+                    ctx.stroke();
+                });
+            }
+        }
+
+
+        canvas.addEventListener('mousedown', (e) => {
+            const snapped = getSnappedPoint(e.offsetX, e.offsetY);
+            isDrawing = true;
+
+            if (config.tool === 'line') {
+                currentShape = {
+                    start: snapped,
+                    end: snapped,
+                    color: config.color,
+                    weight: config.weight
+                };
+            } else if (config.tool === 'face') {
+                if (polyPoints.length > 2) {
+                    const dist = Math.hypot(snapped.x - polyPoints[0].x, snapped.y - polyPoints[0].y);
+                    if (dist < 15) {
+                        faces.push({ points: [...polyPoints], color: config.color });
+                        history.push('face');
+                        polyPoints = [];
+                        showMessage("面を作成しました");
+                        redraw();
+                        return;
+                    }
+                }
+                polyPoints.push(snapped);
+            } else if (config.tool === 'eraser') {
+                eraseAt(e.offsetX, e.offsetY);
+            }
+            redraw();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const snapped = getSnappedPoint(x, y);
+            lastMousePoint = snapped;
+
+
+            if (isDrawing && config.tool === 'line' && currentShape) {
+                let end = snapped;
+                if (e.shiftKey) {
+                    const dx = end.x - currentShape.start.x;
+                    const dy = end.y - currentShape.start.y;
+                    const angle = Math.atan2(dy, dx);
+                    const snappedAngle = Math.round(angle / (Math.PI / 6)) * (Math.PI / 6);
+                    const dist = Math.hypot(dx, dy);
+                    const rawEnd = {
+                        x: currentShape.start.x + dist * Math.cos(snappedAngle),
+                        y: currentShape.start.y + dist * Math.sin(snappedAngle)
+                    };
+                    end = getSnappedPoint(rawEnd.x, rawEnd.y);
+                }
+                currentShape.end = end;
+            }
+            redraw();
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (config.tool === 'line' && currentShape) {
+                const dist = Math.hypot(currentShape.end.x - currentShape.start.x, currentShape.end.y - currentShape.start.y);
+                if (dist > 5) {
+                    shapes.push({...currentShape});
+                    history.push('shape');
+                }
+                currentShape = null;
+            }
+            isDrawing = false;
+            redraw();
+        });
+
+
+        function eraseAt(x, y) {
+            const threshold = 15;
+            shapes = shapes.filter(s => {
+                const d = distToSegment({x, y}, s.start, s.end);
+                return d > threshold;
+            });
+            faces = faces.filter(f => !isPointInPoly({x, y}, f.points));
+            redraw();
+        }
+
+        function distToSegment(p, v, w) {
+            const l2 = Math.pow(v.x - w.x, 2) + Math.pow(v.y - w.y, 2);
+            if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+            let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+        }
+
+        function isPointInPoly(p, poly) {
+            let inside = false;
+            for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+                if (((poly[i].y > p.y) != (poly[j].y > p.y)) &&
+                    (p.x < (poly[j].x - poly[i].x) * (p.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+
+        function showMessage(text) {
+            msgBox.innerText = text;
+            msgBox.style.opacity = '1';
+            msgBox.style.bottom = '40px';
+            setTimeout(() => { 
+                msgBox.style.opacity = '0'; 
+                msgBox.style.bottom = '30px';
+            }, 2000);
+        }
+
+        function setColor(color) {
+            config.color = color;
+            document.getElementById('color-picker').value = color;
+            document.getElementById('color-picker-side').value = color;
+        }
+
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', function() {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll(`.color-swatch[data-color="${this.dataset.color}"]`).forEach(s => s.classList.add('active'));
+                setColor(this.dataset.color);
+                redraw();
+            });
+        });
+
+        document.getElementById('color-picker-side').oninput = (e) => {
+            setColor(e.target.value);
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        };
+
+        document.getElementById('line-weight').oninput = (e) => {
+            config.weight = parseInt(e.target.value);
+            document.getElementById('weight-label').innerText = config.weight;
+        };
+
+        document.getElementById('tool-line').onclick = function() {
+            config.tool = 'line'; polyPoints = [];
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        };
+
+        document.getElementById('tool-face').onclick = function() {
+            config.tool = 'face';
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            showMessage("面を描画: 頂点を順にクリックしてください。始点クリックで確定。");
+        };
+
+        document.getElementById('tool-eraser').onclick = function() {
+            config.tool = 'eraser'; polyPoints = [];
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        };
+
+        document.getElementById('undo-btn').onclick = () => {
+            if (polyPoints.length > 0) { polyPoints.pop(); }
+            else if (history.length > 0) {
+                const last = history.pop();
+                if (last === 'shape') shapes.pop();
+                else faces.pop();
+            }
+            redraw();
+        };
+
+        document.getElementById('clear-btn').onclick = () => {
+            shapes = []; faces = []; polyPoints = []; history = [];
+            redraw();
+            showMessage("クリアしました");
+        };
+
+        document.getElementById('grid-toggle').onclick = function() {
+            config.showGrid = !config.showGrid;
+            this.classList.toggle('active');
+            drawGrid();
+        };
+
+        document.getElementById('save-btn').onclick = () => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.fillStyle = '#ffffff';
+            tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            if (config.showGrid) {
+                tCtx.globalAlpha = 0.3;
+                tCtx.drawImage(gridCanvas, 0, 0);
+                tCtx.globalAlpha = 1.0;
+            }
+            tCtx.drawImage(canvas, 0, 0);
+            const link = document.createElement('a');
+            link.download = 'isometric-art.png';
+            link.href = tempCanvas.toDataURL();
+            link.click();
+        };
+        
+        window.onkeydown = (e) => {
+            if (e.ctrlKey && e.key === 'z') { e.preventDefault(); document.getElementById('undo-btn').click(); }
+            if (e.key === 'l') document.getElementById('tool-line').click();
+            if (e.key === 'f') document.getElementById('tool-face').click();
+            if (e.key === 'e') document.getElementById('tool-eraser').click();
+            if (e.key === 'o') document.getElementById('ortho-toggle').click();
+            if (e.key === 'Escape') { polyPoints = []; orthoPolyPoints = []; redraw(); orthoRedraw(); }
+        };
+
+        // ── 正投影図 ──────────────────────────────────────────
+        const orthoCanvas = document.getElementById('ortho-canvas');
+        const orthoGridCanvas = document.getElementById('ortho-grid-canvas');
+        const orthoCtx = orthoCanvas.getContext('2d');
+        const orthoGCtx = orthoGridCanvas.getContext('2d');
+        const orthoPane = document.getElementById('ortho-pane');
+
+        let orthoShapes = [];
+        let orthoFaces = [];
+        let orthoHistory = [];
+        let orthoCurrentShape = null;
+        let orthoPolyPoints = [];
+        let orthoIsDrawing = false;
+        let orthoLastMousePoint = null;
+
+        function getOrthoSnappedPoint(rawX, rawY) {
+            const unit = config.unit;
+            return {
+                x: Math.round(rawX / unit) * unit,
+                y: Math.round(rawY / unit) * unit
+            };
+        }
+
+        function orthoResize() {
+            orthoCanvas.width = orthoPane.clientWidth;
+            orthoCanvas.height = orthoPane.clientHeight;
+            orthoGridCanvas.width = orthoPane.clientWidth;
+            orthoGridCanvas.height = orthoPane.clientHeight;
+            orthoDrawGrid();
+            orthoRedraw();
+        }
+
+        function orthoDrawGrid() {
+            orthoGCtx.clearRect(0, 0, orthoGridCanvas.width, orthoGridCanvas.height);
+            if (!config.showGrid) return;
+            const unit = config.unit;
+            orthoGCtx.strokeStyle = '#94a3b8';
+            orthoGCtx.lineWidth = 0.5;
+            for (let x = 0; x <= orthoGridCanvas.width; x += unit) {
+                orthoGCtx.beginPath();
+                orthoGCtx.moveTo(x, 0);
+                orthoGCtx.lineTo(x, orthoGridCanvas.height);
+                orthoGCtx.stroke();
+            }
+            for (let y = 0; y <= orthoGridCanvas.height; y += unit) {
+                orthoGCtx.beginPath();
+                orthoGCtx.moveTo(0, y);
+                orthoGCtx.lineTo(orthoGridCanvas.width, y);
+                orthoGCtx.stroke();
+            }
+        }
+
+        function orthoRedraw() {
+            orthoCtx.clearRect(0, 0, orthoCanvas.width, orthoCanvas.height);
+            orthoCtx.setLineDash([]);
+            orthoFaces.forEach(face => {
+                orthoCtx.beginPath();
+                orthoCtx.fillStyle = face.color + "99";
+                orthoCtx.strokeStyle = face.color;
+                orthoCtx.lineWidth = 1;
+                orthoCtx.moveTo(face.points[0].x, face.points[0].y);
+                for (let i = 1; i < face.points.length; i++) orthoCtx.lineTo(face.points[i].x, face.points[i].y);
+                orthoCtx.closePath();
+                orthoCtx.fill();
+                orthoCtx.stroke();
+            });
+            orthoShapes.forEach(s => {
+                orthoCtx.beginPath();
+                orthoCtx.strokeStyle = s.color;
+                orthoCtx.lineWidth = s.weight;
+                orthoCtx.lineCap = 'round';
+                orthoCtx.lineJoin = 'round';
+                orthoCtx.moveTo(s.start.x, s.start.y);
+                orthoCtx.lineTo(s.end.x, s.end.y);
+                orthoCtx.stroke();
+            });
+            if (config.tool === 'line' && orthoCurrentShape) {
+                orthoCtx.beginPath();
+                orthoCtx.strokeStyle = orthoCurrentShape.color;
+                orthoCtx.lineWidth = orthoCurrentShape.weight;
+                orthoCtx.setLineDash([5, 5]);
+                orthoCtx.moveTo(orthoCurrentShape.start.x, orthoCurrentShape.start.y);
+                orthoCtx.lineTo(orthoCurrentShape.end.x, orthoCurrentShape.end.y);
+                orthoCtx.stroke();
+                orthoCtx.setLineDash([]);
+            }
+            if (config.tool === 'face' && orthoPolyPoints.length > 0) {
+                orthoCtx.beginPath();
+                orthoCtx.strokeStyle = config.color;
+                orthoCtx.lineWidth = 2;
+                orthoCtx.moveTo(orthoPolyPoints[0].x, orthoPolyPoints[0].y);
+                orthoPolyPoints.forEach(p => orthoCtx.lineTo(p.x, p.y));
+                if (orthoLastMousePoint) orthoCtx.lineTo(orthoLastMousePoint.x, orthoLastMousePoint.y);
+                orthoCtx.stroke();
+                orthoPolyPoints.forEach(p => {
+                    orthoCtx.fillStyle = '#fff';
+                    orthoCtx.beginPath();
+                    orthoCtx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                    orthoCtx.fill();
+                    orthoCtx.stroke();
+                });
+            }
+        }
+
+        orthoCanvas.addEventListener('mousedown', (e) => {
+            const snapped = getOrthoSnappedPoint(e.offsetX, e.offsetY);
+            orthoIsDrawing = true;
+            if (config.tool === 'line') {
+                orthoCurrentShape = { start: snapped, end: snapped, color: config.color, weight: config.weight };
+            } else if (config.tool === 'face') {
+                if (orthoPolyPoints.length > 2) {
+                    const dist = Math.hypot(snapped.x - orthoPolyPoints[0].x, snapped.y - orthoPolyPoints[0].y);
+                    if (dist < 15) {
+                        orthoFaces.push({ points: [...orthoPolyPoints], color: config.color });
+                        orthoHistory.push('face');
+                        orthoPolyPoints = [];
+                        showMessage("面を作成しました");
+                        orthoRedraw();
+                        return;
+                    }
+                }
+                orthoPolyPoints.push(snapped);
+            } else if (config.tool === 'eraser') {
+                orthoShapes = orthoShapes.filter(s => distToSegment({x: e.offsetX, y: e.offsetY}, s.start, s.end) > 15);
+                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: e.offsetX, y: e.offsetY}, f.points));
+            }
+            orthoRedraw();
+        });
+
+        orthoCanvas.addEventListener('mousemove', (e) => {
+            const snapped = getOrthoSnappedPoint(e.offsetX, e.offsetY);
+            orthoLastMousePoint = snapped;
+            if (orthoIsDrawing && config.tool === 'line' && orthoCurrentShape) {
+                let end = snapped;
+                if (e.shiftKey) {
+                    const dx = end.x - orthoCurrentShape.start.x;
+                    const dy = end.y - orthoCurrentShape.start.y;
+                    end = Math.abs(dx) > Math.abs(dy)
+                        ? { x: end.x, y: orthoCurrentShape.start.y }
+                        : { x: orthoCurrentShape.start.x, y: end.y };
+                }
+                orthoCurrentShape.end = end;
+            }
+            orthoRedraw();
+        });
+
+        orthoCanvas.addEventListener('mouseup', () => {
+            if (config.tool === 'line' && orthoCurrentShape) {
+                const dist = Math.hypot(orthoCurrentShape.end.x - orthoCurrentShape.start.x, orthoCurrentShape.end.y - orthoCurrentShape.start.y);
+                if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); }
+                orthoCurrentShape = null;
+            }
+            orthoIsDrawing = false;
+            orthoRedraw();
+        });
+
+        document.getElementById('undo-btn').addEventListener('click', () => {
+            if (orthoPolyPoints.length > 0) { orthoPolyPoints.pop(); orthoRedraw(); }
+            else if (orthoHistory.length > 0) {
+                const last = orthoHistory.pop();
+                if (last === 'shape') orthoShapes.pop(); else orthoFaces.pop();
+                orthoRedraw();
+            }
+        });
+
+        document.getElementById('clear-btn').addEventListener('click', () => {
+            orthoShapes = []; orthoFaces = []; orthoPolyPoints = []; orthoHistory = [];
+            orthoRedraw();
+        });
+
+        document.getElementById('grid-toggle').addEventListener('click', () => {
+            orthoDrawGrid();
+        });
+
+        document.getElementById('ortho-toggle').onclick = function() {
+            const pane = document.getElementById('ortho-pane');
+            const hidden = pane.style.display === 'none';
+            pane.style.display = hidden ? '' : 'none';
+            this.classList.toggle('active', hidden);
+            resize();
+        };
+
+        const _origResize = resize;
+        window.onload = () => { _origResize(); orthoResize(); };
+        window.onresize = () => { _origResize(); orthoResize(); };
+
+    </script>
+</body>
+</html>
