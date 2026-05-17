@@ -6,7 +6,6 @@
     <title>レジシステム</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Interフォントを設定 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
         body {
             font-family: 'Inter', sans-serif;
@@ -27,53 +26,48 @@
             overflow: hidden;
             display: flex;
         }
-        /* サイドバー (縦型タブ) */
         #sidebar {
             width: 200px; 
-            background-color: #1f2937; /* Dark Gray */
+            background-color: #1f2937;
             padding: 20px 0;
             display: flex;
             flex-direction: column;
             flex-shrink: 0;
             overflow-y: auto;
         }
-        /* メインコンテンツエリア */
         #main-content {
             flex-grow: 1;
             overflow: hidden; 
             display: flex;
             flex-direction: column;
         }
-        /* タブボタンのスタイル */
         .tab-button {
             display: flex;
             align-items: center;
             padding: 12px 16px; 
             margin: 4px 12px; 
-            color: #d1d5db; /* Gray 300 */
+            color: #d1d5db;
             font-weight: 600;
             transition: background-color 0.2s, color 0.2s;
             border-radius: 8px;
         }
         .tab-button:hover {
-            background-color: #374151; /* Gray 700 */
+            background-color: #374151;
             color: white;
         }
         .tab-button.active-tab {
-            background-color: #4f46e5; /* Indigo 600 */
+            background-color: #4f46e5;
             color: white;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
-        /* 商品ボタンのカスタムスタイル */
         .product-button {
             transition: transform 0.1s, background-color 0.1s;
-            background-color: #eef2ff; /* Indigo 50 */
+            background-color: #eef2ff;
             color: #1f2937; 
-            border: 1px solid #c7d2fe; /* Indigo 200 */
+            border: 1px solid #c7d2fe;
         }
         .product-button:hover {
-            background-color: #e0e7ff; /* Indigo 100 */
+            background-color: #e0e7ff;
         }
         .product-button:active {
             transform: scale(0.98);
@@ -85,8 +79,6 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
-        
-        /* 電卓ボタンのカスタムスタイル */
         .calc-button {
             height: 64px;
             font-size: 2rem;
@@ -98,8 +90,6 @@
             box-shadow: none;
             transform: translateY(1px);
         }
-        
-        /* モバイルでの調整 */
         @media (max-width: 767px) {
             body { padding: 0; }
             #app-container {
@@ -135,7 +125,6 @@
             .tab-button:hover { background-color: transparent; }
             .tab-button svg { margin-bottom: 2px; margin-right: 0 !important; width: 20px; height: 20px; }
             
-            /* レジ画面のレイアウトを縦型に強制 */
             .tab-content[data-content="pos"] { flex-direction: column; }
             .tab-content[data-content="pos"] > div { height: 50%; width: 100% !important; }
             #menu-area { border-bottom: 1px solid #e5e7eb; }
@@ -152,16 +141,13 @@
 
     <div id="app-container" class="transition-all duration-300">
         
-        <!-- 縦型タブ (サイドバー) -->
         <div id="sidebar">
             <h1 class="text-white text-xl font-extrabold mb-6 px-3 text-center hidden md:block">POS System</h1>
-            <!-- タブ切り替えボタン -->
             <button data-tab="pos" onclick="switchTab('pos')" class="tab-button active-tab">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
-                <span class="hidden md:inline">レジ</span>
-                <span class="inline md:hidden">レジ</span>
+                <span>レジ</span>
             </button>
             <button data-tab="settings" onclick="switchTab('settings')" class="tab-button">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -190,12 +176,8 @@
             </button>
         </div>
 
-        <!-- メインコンテンツ (タブ内容) -->
         <div id="main-content">
-            
-            <!-- 1. レジ画面 (POS) タブ -->
             <div data-content="pos" class="tab-content w-full h-full flex active-content">
-                <!-- 1.1. メニュー (左側) -->
                 <div id="menu-area" class="w-3/5 p-4 md:p-6 flex flex-col h-full overflow-hidden">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">商品メニュー</h2>
                     <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 flex-grow overflow-y-auto no-scrollbar pb-4">
@@ -203,17 +185,14 @@
                     </div>
                 </div>
 
-                <!-- 1.2. レジ/カート (右側) -->
                 <div id="register-area" class="w-2/5 p-4 md:p-6 bg-gray-50 flex flex-col h-full border-l border-gray-200">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">カート</h2>
                     
-                    <!-- カートアイテムリスト -->
                     <div id="cart-list-container" class="flex-grow overflow-y-auto no-scrollbar mb-4 border-b border-gray-200">
                         <ul id="cart-list" class="space-y-2"></ul>
                         <div id="empty-cart-message" class="text-center py-12 text-gray-400">カートは空です</div>
                     </div>
 
-                    <!-- 合計金額と割引 -->
                     <div class="space-y-2 text-lg font-medium mb-4">
                         <div class="flex justify-between text-gray-600">
                             <span>小計:</span>
@@ -238,7 +217,6 @@
                         </div>
                     </div>
 
-                    <!-- アクションボタン -->
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="clearCart()" class="action-button bg-red-500 hover:bg-red-600 text-white font-semibold py-4 rounded-xl shadow-lg transition duration-150">
                             <span class="text-xl">取消</span>
@@ -250,18 +228,15 @@
                 </div>
             </div>
 
-            <!-- 2. 設定タブ (商品編集 + 支払い方法編集) -->
             <div data-content="settings" class="tab-content w-full h-full p-4 md:p-6 flex flex-col hidden overflow-y-auto no-scrollbar">
                 <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">販売設定・管理</h3>
 
-                <!-- 2.1 支払い方法の管理 (新しいセクション) -->
                 <div class="p-4 mb-6 bg-green-50 rounded-xl shadow-md border border-green-200">
                     <h4 class="text-lg font-bold mb-3 text-green-700 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
                         支払い方法の管理
                     </h4>
                     <div id="payment-methods-list" class="flex flex-wrap gap-2 mb-3">
-                        <!-- 支払い方法タグがここに描画されます -->
                         <span class="text-sm text-gray-500">支払い方法を読み込み中...</span>
                     </div>
 
@@ -273,7 +248,6 @@
                     </div>
                 </div>
                 
-                <!-- 2.2. 商品追加フォーム -->
                 <div class="p-4 mb-6 bg-indigo-50 rounded-xl shadow-md border border-indigo-200">
                     <h4 class="text-lg font-bold mb-3 text-indigo-700 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -288,11 +262,9 @@
                     </div>
                 </div>
 
-                <!-- 2.3. 編集リスト -->
                 <div class="flex-grow overflow-y-auto no-scrollbar">
                     <h4 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">商品一覧・編集</h4>
                     <ul id="edit-list" class="space-y-3">
-                        <!-- ヘッダー -->
                         <li class="hidden md:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-500 border-b pb-2 px-2">
                             <span class="col-span-3">商品名</span>
                             <span class="col-span-1 text-right">価格</span>
@@ -304,7 +276,6 @@
                 </div>
             </div>
 
-            <!-- 3. 販売履歴タブ (フル幅) -->
             <div data-content="history" class="tab-content w-full h-full p-4 md:p-6 flex flex-col hidden overflow-y-auto no-scrollbar">
                 <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">販売履歴</h3>
 
@@ -339,41 +310,33 @@
                 </div>
             </div>
             
-            <!-- 4. 電卓タブ (フル幅) -->
             <div data-content="calculator" class="tab-content w-full h-full p-4 md:p-6 flex flex-col hidden">
                 <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">電卓</h3>
                 <div class="flex-grow flex items-center justify-center">
                     <div class="w-full max-w-sm p-4 bg-white rounded-xl shadow-2xl">
-                        <!-- 電卓ディスプレイ -->
                         <div id="calc-display" class="bg-gray-800 text-white text-right p-4 rounded-lg text-6xl font-light mb-4 overflow-hidden" style="min-height: 80px;">0</div>
                         
-                        <!-- ボタン -->
                         <div id="calc-buttons" class="grid grid-cols-4 gap-3">
-                            <!-- AC, +/-, %, ÷ -->
                             <button class="calc-button bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full" onclick="calcAction('clear')">AC</button>
                             <button class="calc-button bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full" onclick="calcAction('toggleSign')">+/-</button>
                             <button class="calc-button bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full" onclick="calcAction('operator', '%')">%</button>
                             <button class="calc-button bg-orange-500 hover:bg-orange-600 text-white rounded-full" onclick="calcAction('operator', '/')">÷</button>
 
-                            <!-- 7, 8, 9, × -->
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '7')">7</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '8')">8</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '9')">9</button>
                             <button class="calc-button bg-orange-500 hover:bg-orange-600 text-white rounded-full" onclick="calcAction('operator', '*')">×</button>
 
-                            <!-- 4, 5, 6, - -->
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '4')">4</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '5')">5</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '6')">6</button>
                             <button class="calc-button bg-orange-500 hover:bg-orange-600 text-white rounded-full" onclick="calcAction('operator', '-')">-</button>
 
-                            <!-- 1, 2, 3, + -->
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '1')">1</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '2')">2</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('digit', '3')">3</button>
                             <button class="calc-button bg-orange-500 hover:bg-orange-600 text-white rounded-full" onclick="calcAction('operator', '+')">+</button>
 
-                            <!-- 0, ., = -->
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full col-span-2" onclick="calcAction('digit', '0')">0</button>
                             <button class="calc-button bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-full" onclick="calcAction('decimal', '.')">.</button>
                             <button class="calc-button bg-orange-600 hover:bg-orange-700 text-white rounded-full" onclick="calcAction('calculate', '=')">=</button>
@@ -384,7 +347,6 @@
         </div>
     </div>
 
-    <!-- 支払いモーダル -->
     <div id="payment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm transform transition-all">
             <h3 class="text-2xl font-bold mb-4">会計</h3>
@@ -394,23 +356,19 @@
                 <p id="modal-total-display" class="text-5xl font-extrabold text-indigo-600">¥0</p>
             </div>
             
-            <!-- 支払い方法選択 (動的に更新される) -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">支払い方法</label>
                 <select id="payment-method-select" class="block w-full p-3 border border-gray-300 rounded-lg bg-white text-lg"
                         onchange="updatePaymentStatus()">
-                    <!-- JSでオプションを追加 -->
                 </select>
             </div>
 
-            <!-- 入力された金額 -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">お預かり金額 (現金の場合のみ変更可能)</label>
                 <input type="number" id="cash-tendered-input" value="0" min="0" class="mt-1 block w-full text-3xl p-3 border border-gray-300 rounded-lg text-right focus:ring-indigo-500 focus:border-indigo-500"
                        oninput="updateChange()">
             </div>
 
-            <!-- お釣り表示 -->
             <div class="flex justify-between items-center bg-yellow-50 p-3 rounded-lg border border-yellow-200 mb-6">
                 <span class="text-lg font-semibold text-gray-700">お釣り:</span>
                 <span id="change-display" class="text-3xl font-extrabold text-green-600">¥0</span>
@@ -428,7 +386,6 @@
         </div>
     </div>
     
-    <!-- メッセージボックス -->
     <div id="message-box" class="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-2xl z-50 hidden transition-opacity duration-300 opacity-0 max-w-xs">
         <p id="message-text" class="font-medium"></p>
     </div>
@@ -461,22 +418,20 @@
     </div>
 
     <script type="module">
-        // --- 設定・定数 ---
         const LS_KEYS = {
             MENU: 'pos_menu_items',
             HISTORY: 'pos_sales_history',
             PAYMENT: 'pos_payment_methods'
         };
 
-        // --- 状態管理 ---
         window.inventory = [];
         window.cart = [];
+        let cart = window.cart;
         window.paymentMethods = [];
         window.currentTotal = 0;
         window.currentSubtotal = 0;
         window.currentDiscount = 0;
 
-        // --- ユーティリティ ---
         const loadFromLocalStorage = (key, defaultValue) => {
             try {
                 const data = localStorage.getItem(key);
@@ -514,7 +469,6 @@
             }, 3000);
         };
 
-        // --- タブ切り替えロジック ---
         window.switchTab = (tabName) => {
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.add('hidden');
@@ -540,10 +494,6 @@
             }
         };
         
-        window.addEventListener('load', () => window.switchTab('pos'));
-
-
-        // --- メニュー描画ロジック ---
         window.renderMenu = () => {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
@@ -565,13 +515,12 @@
             });
         };
 
-        // --- カートロジック (POSタブ) ---
         window.addToCart = (item) => {
-            const existingItem = cart.find(cartItem => cartItem.docId === item.docId); 
+            const existingItem = window.cart.find(cartItem => cartItem.docId === item.docId); 
             if (existingItem) {
                 existingItem.quantity++;
             } else {
-                cart.push({
+                window.cart.push({
                     docId: item.docId,
                     name: item.name,
                     price: item.price,
@@ -583,12 +532,12 @@
         };
         
         window.updateQuantity = (docId, change) => {
-            const itemIndex = cart.findIndex(item => item.docId === docId);
+            const itemIndex = window.cart.findIndex(item => item.docId === docId);
             if (itemIndex > -1) {
                 const item = cart[itemIndex];
                 item.quantity += change;
                 if (item.quantity <= 0) {
-                    cart.splice(itemIndex, 1);
+                    window.cart.splice(itemIndex, 1);
                 }
             }
             updateCart();
@@ -623,14 +572,14 @@
             
             let subtotal = 0;
             
-            if (cart.length === 0) {
+            if (window.cart.length === 0) {
                 emptyMessage.classList.remove('hidden');
                 paymentButton.disabled = true;
             } else {
                 emptyMessage.classList.add('hidden');
                 paymentButton.disabled = false;
                 
-                cart.forEach(item => {
+                window.cart.forEach(item => {
                     const lineTotal = item.quantity * item.price;
                     subtotal += lineTotal;
                     
@@ -666,8 +615,8 @@
         };
         
         window.clearCart = () => {
-            if (cart.length > 0 || window.currentDiscount > 0) {
-                cart = [];
+            if (window.cart.length > 0 || window.currentDiscount > 0) {
+                window.cart = [];
                 document.getElementById('discount-input').value = '';
                 updateCart();
                 showMessage('カートをクリアしました');
@@ -676,20 +625,17 @@
             }
         };
 
-
-        // --- 支払いモーダルロジック ---
         window.showPaymentModal = () => {
             if (window.currentTotal <= 0) {
                 showMessage('合計金額が0円以下です。会計できません。');
                 return;
             }
-            if (cart.length === 0) return;
+            if (window.cart.length === 0) return;
 
             const modal = document.getElementById('payment-modal');
             const totalDisplay = document.getElementById('modal-total-display');
             const methodSelect = document.getElementById('payment-method-select');
             
-            // 支払い方法リストを最新の状態で描画
             methodSelect.innerHTML = window.paymentMethods.map(method => 
                 `<option value="${method}">${method}</option>`
             ).join('');
@@ -732,7 +678,6 @@
                 return;
             }
 
-            // 「現金」の場合のみお預かり金額のチェックが必要
             if (selectedMethod === "現金") {
                 const tendered = parseInt(tenderedInput.value || 0);
                 completeButton.disabled = tendered < total;
@@ -749,33 +694,29 @@
             
             const selectedMethod = methodSelect.value;
             const total = window.currentTotal;
-            // 現金以外の場合は合計金額をお預かり金額とする
             const tendered = selectedMethod === "現金" ? parseInt(tenderedInput.value || 0) : total;
             const change = tendered - total;
 
             const saleData = {
                 timestamp: new Date().toISOString(),
-                // total, subtotal, discount は既にグローバル変数に保持されている
-                total: total, // 修正: totalを使用
+                total: total,
                 subtotal: window.currentSubtotal,
                 discount: window.currentDiscount,
                 
-                // 上記で定義した変数を使用
                 method: selectedMethod,
                 tendered: tendered,
                 change: change,
                 
-                items: cart.map(item => ({
+                items: window.cart.map(item => ({
                     docId: item.docId, 
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity
                 })),
-                saleId: generateId() // 履歴IDを追加
+                saleId: generateId()
             };
 
             try {
-                // DB通信の代わりにローカルストレージに保存
                 const history = loadFromLocalStorage(LS_KEYS.HISTORY, []);
                 history.push(saleData);
                 saveToLocalStorage(LS_KEYS.HISTORY, history);
@@ -788,53 +729,42 @@
 
             hidePaymentModal();
             clearCart();
-            window.renderHistoryList(); // 履歴リストを更新
+            window.renderHistoryList();
         };
 
-        // --- 履歴描画ロジック (Historyタブ) ---
         window.renderHistoryList = () => {
             const historyList = document.getElementById('history-list');
-            // 初期メッセージをセット
             historyList.innerHTML = '<li class="text-center py-8 text-gray-500">履歴を読み込み中...</li>';
 
             try {
-                // DB通信の代わりにローカルストレージから取得
                 let historyData = loadFromLocalStorage(LS_KEYS.HISTORY, []);
 
-                // タイムスタンプの新しい順にソート
                 historyData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
                 
-                // ----------------------------------------------------
-                // ↓↓↓ [追加] 統計情報集計ロジック ↓↓↓
-                // ----------------------------------------------------
                 const today = new Date().toLocaleDateString('ja-JP');
                 let dailyRevenue = 0;
-                let todayItemCounts = {}; // 変数名を変更して、今日の商品個数であることを明確化
-                let todayVisitors = 0;    // 変数名を変更して、今日の来場者数であることを明確化
+                let todayItemCounts = {};
+                let todayVisitors = 0;
                 
                 historyData.forEach(sale => {
                     const saleDate = new Date(sale.timestamp).toLocaleDateString('ja-JP');
                     
                     if (saleDate === today) {
-                        // '今日'のデータのみをカウント・集計
-                        todayVisitors++; // 今日の来場者数のみカウント
+                        todayVisitors++;
                         dailyRevenue += sale.total;
                         
                         sale.items.forEach(item => {
-                            todayItemCounts[item.name] = (todayItemCounts[item.name] || 0) + item.quantity; // ★修正2: 今日売れた商品のみ集計
+                            todayItemCounts[item.name] = (todayItemCounts[item.name] || 0) + item.quantity;
                         });
                     }
                 });
                 
-                // 集計結果をグローバルに保存 (モーダル表示用)
-                window.currentItemCounts = todayItemCounts; // グローバル変数を今日のデータで更新
+                window.currentItemCounts = todayItemCounts;
 
-                // 集計結果の表示更新
-                document.getElementById('stats-visitors').textContent = todayVisitors.toLocaleString(); // ★修正3: 今日の来場者数を表示
+                document.getElementById('stats-visitors').textContent = todayVisitors.toLocaleString();
                 document.getElementById('stats-revenue').textContent = formatYen(dailyRevenue);
                 
-                // 商品別販売個数の表示を生成 (上位3つを表示)
-                const sortedItems = Object.entries(todayItemCounts) // ★修正4: 今日の商品集計データを使用
+                const sortedItems = Object.entries(todayItemCounts)
                     .sort(([, a], [, b]) => b - a)
                     .map(([name, count]) => `${name}: ${count}個`);
                 
@@ -845,30 +775,22 @@
                 const statsItemsCountElement = document.getElementById('stats-items-count');
                 statsItemsCountElement.textContent = itemStatsText;
                 
-                // ★ クリックでモーダルを表示するイベントを設定 ★
                 const itemStatsContainer = statsItemsCountElement.closest('.bg-white');
                 if (itemStatsContainer) {
                     itemStatsContainer.onclick = showItemStatsModal;
                     itemStatsContainer.classList.add('cursor-pointer', 'hover:bg-gray-50');
                 }
 
-                // ----------------------------------------------------
-                // ↑↑↑ 統計情報集計ロジック ↑↑↑
-                // ----------------------------------------------------
-
                 let listHtml = '';
 
                 if (historyData.length === 0) {
-                    // 履歴がない場合のメッセージ
                     listHtml = '<li class="text-center py-8 text-gray-400">まだ販売履歴はありません。</li>';
                 } else {
-                    // 履歴がある場合の描画ロジック
                     listHtml = historyData.map(sale => {
                         const dateTime = new Date(sale.timestamp);
                         const dateStr = dateTime.toLocaleDateString('ja-JP');
                         const timeStr = dateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
                         
-                        // 販売アイテム詳細を文字列化
                         const itemsDetail = sale.items.map(item => 
                             `${item.name} x ${item.quantity} (${formatYen(item.price * item.quantity)})`
                         ).join(', ');
@@ -885,46 +807,33 @@
                                 <div class="text-sm text-gray-700 space-y-1">
                                     <p><strong>支払い:</strong> ${sale.method} &bull; <strong>小計:</strong> ${formatYen(sale.subtotal)} &bull; <strong>割引:</strong> ${formatYen(sale.discount)}</p>
                                     <p class="truncate"><strong>内訳:</strong> ${itemsDetail}</p>
-                                    <p class="text-xs text-gray-500"><strong>お預かり/お釣り:</strong> ${formatYen(sale.tendered)} / ${formatYen(sale.change)}</p>
+                                    <p class="text-xs text-gray-500"><strong>お預かり/お釣り:</strong> ${formatYen(sale.tendered)} / ${sale.change < 0 ? '<span class="text-red-500">-' + formatYen(Math.abs(sale.change)) + '</span>' : formatYen(sale.change)}</p>
                                 </div>
                             </li>
                         `;
                     }).join('');
                 }
                 
-                // 最終的なHTMLをリストに反映 (読み込み中メッセージを上書き)
                 historyList.innerHTML = listHtml;
                 
             } catch (e) {
                 console.error("Failed to fetch history locally:", e);
-                // エラー時の表示
                 historyList.innerHTML = `<li class="text-center py-8 text-red-500">履歴の取得エラー: ${e.message}</li>`;
             }
         };
         
-        // --- 履歴リセットロジック ---
-        
-        /**
-         * 履歴リセットの確認ダイアログを表示
-         */
         window.confirmResetHistory = () => {
             if (confirm("【警告】 全ての販売履歴を完全に削除します。この操作は元に戻せません。よろしいですか？")) {
                 resetHistory();
             }
         };
 
-        /**
-         * 履歴をリセット（削除）する
-         */
         window.resetHistory = () => {
             try {
-                // ローカルストレージから履歴キーを削除
                 localStorage.removeItem(LS_KEYS.HISTORY);
                 
-                // 履歴リストの再描画（空になる）
                 window.renderHistoryList(); 
                 
-                // 成功メッセージ
                 showMessage('全ての販売履歴がリセットされました');
             } catch (e) {
                 console.error("Failed to reset history locally:", e);
@@ -932,37 +841,28 @@
             }
         };
 
-        // 新しいヘルパー関数（一部履歴削除機能、ここ？）
         const filterHistoryByDate = (historyData, dateToKeep) => {
-            // 保持したい日付（今日）と一致するデータのみをフィルタリング
             return historyData.filter(sale => {
                 const saleDate = new Date(sale.timestamp).toLocaleDateString('ja-JP');
                 return saleDate === dateToKeep;
             });
         };
 
-        // 今日以外の履歴をリセットするための確認処理
         window.confirmResetOthersResetHistory = () => {
             if (confirm("【警告】今日以外の販売履歴を完全に削除します。この操作は元に戻せません。よろしいですか？")) {
                 resetOthersResetHistory();
             }
         };
 
-        // 今日以外の履歴をリセットする処理
         window.resetOthersResetHistory = () => {
             try {
                 let historyData = loadFromLocalStorage(LS_KEYS.HISTORY, []);
                 
-                // 今日の日付を取得 (日本ローカル形式)
                 const today = new Date().toLocaleDateString('ja-JP');
-
-                // 今日のデータのみを抽出
                 const todayHistory = filterHistoryByDate(historyData, today);
                 
-                // 今日のデータのみを保存し直す
                 saveToLocalStorage(LS_KEYS.HISTORY, todayHistory);
                 
-                // 履歴リストを再描画
                 renderHistoryList();
                 
                 alert(`今日 (${today}) の販売履歴 ${todayHistory.length} 件を残し、それ以外の履歴を削除しました。`);
@@ -972,18 +872,15 @@
             }
         };
 
-        /**
-         * 商品別販売個数モーダルを表示
-         */
         window.showItemStatsModal = () => {
             const modal = document.getElementById('item-stats-modal');
             const tableBody = document.getElementById('item-stats-table-body');
             
-            tableBody.innerHTML = ''; // テーブルをクリア
+            tableBody.innerHTML = '';
 
             const itemCounts = window.currentItemCounts || {};
             const sortedItems = Object.entries(itemCounts)
-                .sort(([, a], [, b]) => b - a); // 個数で降順ソート
+                .sort(([, a], [, b]) => b - a);
             
             if (sortedItems.length === 0) {
                  tableBody.innerHTML = `
@@ -1008,14 +905,10 @@
             modal.classList.remove('hidden');
         };
 
-        /**
-         * 商品別販売個数モーダルを非表示
-         */
         window.hideItemStatsModal = () => {
             document.getElementById('item-stats-modal').classList.add('hidden');
         };
 
-        // --- 商品編集ロジック (Settingsタブ) ---
         window.renderEditList = () => {
             const editList = document.getElementById('edit-list');
             const header = editList.querySelector('li:first-child');
@@ -1068,7 +961,6 @@
                 return;
             }
 
-            // DB通信の代わりに、ローカルストレージと配列を更新
             const newItem = { docId: generateId(), name: name, price: price, isHidden: false };
             window.inventory.push(newItem);
             saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
@@ -1078,8 +970,8 @@
             nameInput.value = '';
             priceInput.value = '';
             
-            window.renderEditList(); // 編集リストの再描画
-            window.renderMenu(); // メニューの再描画
+            window.renderEditList();
+            window.renderMenu();
         };
 
         window.updateItem = (docId) => {
@@ -1092,14 +984,12 @@
             }
 
             try {
-                // 1. 配列内のアイテムを見つけて更新
                 const itemIndex = window.inventory.findIndex(item => item.docId === docId);
                 if (itemIndex > -1) {
                     window.inventory[itemIndex].name = name;
                     window.inventory[itemIndex].price = price;
                 }
                 
-                // 2. ローカルストレージに保存
                 saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
 
                 showMessage(`${name} の情報を更新しました`);
@@ -1114,13 +1004,11 @@
             const newHiddenState = !isChecked;
 
             try {
-                // 1. 配列内のアイテムを見つけて更新
                 const itemIndex = window.inventory.findIndex(item => item.docId === docId);
                 if (itemIndex > -1) {
                     window.inventory[itemIndex].isHidden = newHiddenState;
                 }
 
-                // 2. ローカルストレージに保存
                 saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
                 
                 const itemName = window.inventory[itemIndex]?.name || '商品';
@@ -1138,15 +1026,13 @@
             }
 
             try {
-                // 1. 配列からアイテムを削除
                 const initialLength = window.inventory.length;
                 window.inventory = window.inventory.filter(item => item.docId !== docId);
                 
                 if (window.inventory.length < initialLength) {
-                    // 2. ローカルストレージに保存
                     saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
                     showMessage(`${itemName} を削除しました`);
-                    window.renderEditList(); // 編集リストを更新
+                    window.renderEditList();
                     window.renderMenu();
                 } else {
                     showMessage(`エラー: ${itemName}が見つかりませんでした`);
@@ -1156,8 +1042,6 @@
                 showMessage(`エラー: 商品の削除に失敗しました`);
             }
         };
-
-        // --- 支払い方法編集ロジック (Settingsタブ) ---
 
         window.renderPaymentEditSection = () => {
             const listContainer = document.getElementById('payment-methods-list');
@@ -1176,7 +1060,6 @@
                 listContainer.appendChild(badge);
             });
             
-            // 支払いモーダルのselectが現在開いている可能性を考慮して再描画
             const methodSelect = document.getElementById('payment-method-select');
             if(methodSelect) {
                  methodSelect.innerHTML = window.paymentMethods.map(method => 
@@ -1199,15 +1082,17 @@
                 return;
             }
             
-            // DB通信の代わりに、ローカルストレージと配列を更新
             window.paymentMethods.push(newName);
             saveToLocalStorage(LS_KEYS.PAYMENT, window.paymentMethods);
 
             showMessage(`${newName} を支払い方法に追加しました`);
             nameInput.value = '';
             
-            window.renderPaymentEditSection(); // 描画更新
-            updatePaymentStatus(); // モーダルの状態を更新
+            window.renderPaymentEditSection();
+            const modal = document.getElementById('payment-modal');
+            if (!modal.classList.contains('hidden')) {
+                updatePaymentStatus();
+            }
         };
 
         window.deletePaymentMethod = (methodName) => {
@@ -1221,15 +1106,16 @@
             }
 
             try {
-                // 1. 配列からアイテムを削除
                 window.paymentMethods = window.paymentMethods.filter(m => m !== methodName);
                 
-                // 2. ローカルストレージに保存
                 saveToLocalStorage(LS_KEYS.PAYMENT, window.paymentMethods); 
 
                 showMessage(`${methodName} を削除しました`);
-                window.renderPaymentEditSection(); // 描画更新
-                updatePaymentStatus(); // モーダルの状態を更新
+                window.renderPaymentEditSection();
+                const modal = document.getElementById('payment-modal');
+                if (!modal.classList.contains('hidden')) {
+                    updatePaymentStatus();
+                }
 
             } catch (e) {
                 console.error("Failed to delete payment method locally:", e);
@@ -1237,7 +1123,6 @@
             }
         };
         
-        // --- 電卓ロジック (Calculatorタブ) ---
         let currentDisplay = '0';
         let firstOperand = null;
         let operator = null;
@@ -1251,7 +1136,6 @@
         const formatCalcValue = (value) => {
             const num = parseFloat(value);
             if (isNaN(num)) return 'Error';
-            // 小数点以下が0の場合は整数として表示
             if (num.toString().includes('e') || Math.abs(num) > 999999999) return num.toExponential(3);
             if (num.toString().split('.')[1]?.length > 10) return num.toFixed(10).replace(/0+$/, '');
             return num.toString();
@@ -1290,8 +1174,15 @@
                     handleOperator(value);
                     break;
                 case 'calculate':
-                    handleOperator(value);
-                    break;
+                if (operator !== null && firstOperand !== null) {
+                    const secondOperand = parseFloat(currentDisplay);
+                    performCalculation(secondOperand);
+                    currentDisplay = formatCalcValue(firstOperand);
+                    firstOperand = null;
+                    operator = null;
+                    waitingForSecondOperand = true;
+                }
+                break;
             }
             updateCalcDisplay();
         };
@@ -1331,39 +1222,22 @@
             else if (operator === '%') { firstOperand = op1 % op2; }
         };
 
-        // --- 初期化ロジック (正しいバージョンを関数の定義として配置) ---
+        window.initApp = () => {
+        window.inventory = loadFromLocalStorage(LS_KEYS.MENU, [
+            { docId: generateId(), name: "クレープ", price: 300, isHidden: false },
+            { docId: generateId(), name: "サイダー", price: 250, isHidden: false },
+            { docId: generateId(), name: "アイス", price: 450, isHidden: false }
+        ]);
         
-        window.fetchData = () => {
-            // 1. メニューアイテム
-            window.initApp = () => {
-            // 1. データの読み込み
-            window.inventory = loadFromLocalStorage(LS_KEYS.MENU, [
-                { docId: generateId(), name: "クレープ", price: 300, isHidden: false },
-                { docId: generateId(), name: "サイダー", price: 250, isHidden: false },
-                { docId: generateId(), name: "アイス", price: 450, isHidden: false }
-            ]);
-            
-            window.paymentMethods = loadFromLocalStorage(LS_KEYS.PAYMENT, ["現金", "二次元コード決済", "クレジットカード"]);
+        window.paymentMethods = loadFromLocalStorage(LS_KEYS.PAYMENT, ["現金", "二次元コード決済", "クレジットカード"]);
 
-            // 2. 初回描画
-            window.renderMenu();
-            window.updateCart();
-            
-            // 3. 初期タブの設定
-            window.switchTab('pos');
-        };
+        window.renderMenu();
+        window.updateCart();
+        
+        window.switchTab('pos');
+    };
 
-        // ページ読み込み完了時に実行
-        window.addEventListener('load', window.initApp);
-        };
-
-        window.fetchData();     // データの読み込み
-        window.switchTab('pos'); // 最初の画面を表示
-
-        window.setupListeners = () => {
-            window.fetchData(); 
-            updateCart();
-        };
+    window.addEventListener('load', window.initApp);
     </script>
 </body>
 </html>
