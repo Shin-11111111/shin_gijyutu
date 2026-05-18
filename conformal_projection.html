@@ -50,8 +50,10 @@
         }
 
         .color-swatch {
-            width: 2rem;
-            height: 2rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            min-width: 1.5rem;
+            min-height: 1.5rem;
             border-radius: 9999px;
             border: 2px solid #ffffff;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
@@ -59,6 +61,7 @@
             transition: transform 0.15s;
             -webkit-appearance: none;
             appearance: none;
+            flex-shrink: 0;
         }
 
         .color-swatch:hover {
@@ -77,13 +80,14 @@
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-3 gap-1 z-10 shadow-lg overflow-y-auto">
+    <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-3 gap-1 z-10 shadow-lg overflow-y-auto overflow-x-hidden">
         <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-base mb-2 shadow-inner flex-shrink-0">
             <i class="fas fa-cube"></i>
         </div>
 
         <button id="tool-line" class="toolbar-btn tool-btn active" title="線を描く (L)"><i class="fas fa-pen-nib"></i></button>
         <button id="tool-face" class="toolbar-btn tool-btn" title="面を描く (F)"><i class="fas fa-draw-polygon"></i></button>
+        <button id="tool-laser" class="toolbar-btn tool-btn" title="レーザーポインター (P)" style="color:#ef4444"><i class="fas fa-circle" style="font-size:0.5rem"></i></button>
 
         <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
 
@@ -102,19 +106,15 @@
 
         <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
 
-        <!-- 色：2列グリッド -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:2px">
-            <button class="color-swatch sidebar-swatch active" data-color="#ef4444" title="赤" style="width:1.25rem;height:1.25rem;background-color:#ef4444"></button>
-            <button class="color-swatch sidebar-swatch" data-color="#3b82f6" title="青" style="width:1.25rem;height:1.25rem;background-color:#3b82f6"></button>
-            <button class="color-swatch sidebar-swatch" data-color="#facc15" title="黄" style="width:1.25rem;height:1.25rem;background-color:#facc15"></button>
-            <button class="color-swatch sidebar-swatch" data-color="#22c55e" title="緑" style="width:1.25rem;height:1.25rem;background-color:#22c55e"></button>
-            <button class="color-swatch sidebar-swatch" data-color="#1e293b" title="黒" style="width:1.25rem;height:1.25rem;background-color:#1e293b"></button>
-            <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色" style="width:1.25rem;height:1.25rem;border-radius:9999px;border:2px solid #fff;cursor:pointer;padding:0">
-        </div>
+        <button class="color-swatch sidebar-swatch active" data-color="#ef4444" title="赤" style="width:1.5rem;height:1.5rem;background-color:#ef4444"></button>
+        <button class="color-swatch sidebar-swatch" data-color="#3b82f6" title="青" style="width:1.5rem;height:1.5rem;background-color:#3b82f6"></button>
+        <button class="color-swatch sidebar-swatch" data-color="#facc15" title="黄" style="width:1.5rem;height:1.5rem;background-color:#facc15"></button>
+        <button class="color-swatch sidebar-swatch" data-color="#22c55e" title="緑" style="width:1.5rem;height:1.5rem;background-color:#22c55e"></button>
+        <button class="color-swatch sidebar-swatch" data-color="#1e293b" title="黒" style="width:1.5rem;height:1.5rem;background-color:#1e293b"></button>
+        <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色" style="width:1.5rem;height:1.5rem;min-width:1.5rem;min-height:1.5rem;border-radius:9999px;border:2px solid #fff;cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;flex-shrink:0">
 
         <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
 
-        <!-- 太さ -->
         <div style="height:5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <input type="range" id="line-weight" min="1" max="12" value="3"
                    style="width:4.5rem;cursor:pointer;accent-color:#4f46e5;transform:rotate(-90deg);">
@@ -157,6 +157,7 @@
         let shapes = [];
         let faces = [];
         let history = [];
+        const globalHistory = [];
         
         let currentShape = null;
         let polyPoints = []; 
@@ -321,6 +322,7 @@
                     if (dist < 15) {
                         faces.push({ points: [...polyPoints], color: config.color });
                         history.push('face');
+                        globalHistory.push({ area: 'iso', type: 'face' });
                         polyPoints = [];
                         showMessage("面を作成しました");
                         redraw();
@@ -367,6 +369,7 @@
                 if (dist > 5) {
                     shapes.push({...currentShape});
                     history.push('shape');
+                    globalHistory.push({ area: 'iso', type: 'shape' });
                 }
                 currentShape = null;
             }
@@ -440,12 +443,14 @@
         };
 
         document.getElementById('tool-line').onclick = function() {
+            stopLaser();
             config.tool = 'line'; polyPoints = [];
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         };
 
         document.getElementById('tool-face').onclick = function() {
+            stopLaser();
             config.tool = 'face';
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
@@ -453,23 +458,31 @@
         };
 
         document.getElementById('tool-eraser').onclick = function() {
+            stopLaser();
             config.tool = 'eraser'; polyPoints = [];
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         };
 
         document.getElementById('undo-btn').onclick = () => {
-            if (polyPoints.length > 0) { polyPoints.pop(); }
-            else if (history.length > 0) {
-                const last = history.pop();
-                if (last === 'shape') shapes.pop();
-                else faces.pop();
+            if (polyPoints.length > 0) { polyPoints.pop(); redraw(); return; }
+            if (orthoPolyPoints.length > 0) { orthoPolyPoints.pop(); orthoRedraw(); return; }
+            if (globalHistory.length === 0) return;
+            const last = globalHistory.pop();
+            if (last.area === 'iso') {
+                history.pop();
+                if (last.type === 'shape') shapes.pop(); else faces.pop();
+                redraw();
+            } else {
+                orthoHistory.pop();
+                if (last.type === 'shape') orthoShapes.pop(); else orthoFaces.pop();
+                orthoRedraw();
             }
-            redraw();
         };
 
         document.getElementById('clear-btn').onclick = () => {
             shapes = []; faces = []; polyPoints = []; history = [];
+            globalHistory.length = 0;
             redraw();
             showMessage("クリアしました");
         };
@@ -481,30 +494,138 @@
         };
 
         document.getElementById('save-btn').onclick = () => {
+            const orthoVisible = document.getElementById('ortho-pane').style.display !== 'none';
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
             const tCtx = tempCanvas.getContext('2d');
-            tCtx.fillStyle = '#ffffff';
-            tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            if (config.showGrid) {
-                tCtx.globalAlpha = 0.3;
-                tCtx.drawImage(gridCanvas, 0, 0);
-                tCtx.globalAlpha = 1.0;
+
+            if (orthoVisible) {
+                const totalWidth = orthoCanvas.width + canvas.width;
+                const totalHeight = Math.max(orthoCanvas.height, canvas.height);
+                tempCanvas.width = totalWidth;
+                tempCanvas.height = totalHeight;
+                tCtx.fillStyle = '#ffffff';
+                tCtx.fillRect(0, 0, totalWidth, totalHeight);
+                if (config.showGrid) {
+                    tCtx.globalAlpha = 0.3;
+                    tCtx.drawImage(orthoGridCanvas, 0, 0);
+                    tCtx.globalAlpha = 1.0;
+                }
+                tCtx.drawImage(orthoCanvas, 0, 0);
+                tCtx.strokeStyle = '#a5b4fc';
+                tCtx.lineWidth = 2;
+                tCtx.setLineDash([6, 4]);
+                tCtx.beginPath();
+                tCtx.moveTo(orthoCanvas.width, 0);
+                tCtx.lineTo(orthoCanvas.width, totalHeight);
+                tCtx.stroke();
+                tCtx.setLineDash([]);
+                if (config.showGrid) {
+                    tCtx.globalAlpha = 0.3;
+                    tCtx.drawImage(gridCanvas, orthoCanvas.width, 0);
+                    tCtx.globalAlpha = 1.0;
+                }
+                tCtx.drawImage(canvas, orthoCanvas.width, 0);
+            } else {
+                tempCanvas.width = canvas.width;
+                tempCanvas.height = canvas.height;
+                tCtx.fillStyle = '#ffffff';
+                tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                if (config.showGrid) {
+                    tCtx.globalAlpha = 0.3;
+                    tCtx.drawImage(gridCanvas, 0, 0);
+                    tCtx.globalAlpha = 1.0;
+                }
+                tCtx.drawImage(canvas, 0, 0);
             }
-            tCtx.drawImage(canvas, 0, 0);
+
             const link = document.createElement('a');
             link.download = 'isometric-art.png';
             link.href = tempCanvas.toDataURL();
             link.click();
         };
         
+        // ── レーザーポインター ──────────────────────────────
+        let laserPos = null;
+        let laserTrail = [];
+        let laserAnimId = null;
+
+        const laserOverlay = document.createElement('canvas');
+        laserOverlay.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999';
+        document.body.appendChild(laserOverlay);
+        const laserCtx = laserOverlay.getContext('2d');
+
+        function resizeLaser() {
+            laserOverlay.width = window.innerWidth;
+            laserOverlay.height = window.innerHeight;
+        }
+        resizeLaser();
+        window.addEventListener('resize', resizeLaser);
+
+        function drawLaser() {
+            laserCtx.clearRect(0, 0, laserOverlay.width, laserOverlay.height);
+            if (!laserPos) return;
+            for (let i = 0; i < laserTrail.length; i++) {
+                const alpha = i / laserTrail.length;
+                const radius = 2 + 4 * alpha;
+                laserCtx.beginPath();
+                laserCtx.fillStyle = `rgba(255,50,50,${alpha * 0.55})`;
+                laserCtx.arc(laserTrail[i].x, laserTrail[i].y, radius, 0, Math.PI * 2);
+                laserCtx.fill();
+            }
+            const grd = laserCtx.createRadialGradient(laserPos.x, laserPos.y, 0, laserPos.x, laserPos.y, 18);
+            grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+            grd.addColorStop(0.15, 'rgba(255,60,60,0.9)');
+            grd.addColorStop(0.5, 'rgba(220,20,20,0.4)');
+            grd.addColorStop(1, 'rgba(255,0,0,0)');
+            laserCtx.beginPath();
+            laserCtx.fillStyle = grd;
+            laserCtx.arc(laserPos.x, laserPos.y, 18, 0, Math.PI * 2);
+            laserCtx.fill();
+        }
+
+        function laserLoop() {
+            laserTrail = laserTrail.slice(-24);
+            drawLaser();
+            laserAnimId = requestAnimationFrame(laserLoop);
+        }
+
+        function stopLaser() {
+            cancelAnimationFrame(laserAnimId);
+            laserPos = null; laserTrail = [];
+            laserCtx.clearRect(0, 0, laserOverlay.width, laserOverlay.height);
+            document.body.style.cursor = '';
+        }
+
+        document.getElementById('tool-laser').onclick = function() {
+            const isActive = config.tool === 'laser';
+            config.tool = isActive ? 'line' : 'laser';
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            if (config.tool === 'laser') {
+                this.classList.add('active');
+                document.body.style.cursor = 'none';
+                laserLoop();
+            } else {
+                document.getElementById('tool-line').classList.add('active');
+                document.body.style.cursor = '';
+                cancelAnimationFrame(laserAnimId);
+                laserPos = null; laserTrail = [];
+                laserCtx.clearRect(0, 0, laserOverlay.width, laserOverlay.height);
+            }
+        };
+
+        window.addEventListener('mousemove', (e) => {
+            if (config.tool !== 'laser') return;
+            laserPos = { x: e.clientX, y: e.clientY };
+            laserTrail.push({ ...laserPos });
+        });
+
         window.onkeydown = (e) => {
             if (e.ctrlKey && e.key === 'z') { e.preventDefault(); document.getElementById('undo-btn').click(); }
             if (e.key === 'l') document.getElementById('tool-line').click();
             if (e.key === 'f') document.getElementById('tool-face').click();
             if (e.key === 'e') document.getElementById('tool-eraser').click();
             if (e.key === 'o') document.getElementById('ortho-toggle').click();
+            if (e.key === 'p') document.getElementById('tool-laser').click();
             if (e.key === 'Escape') { polyPoints = []; orthoPolyPoints = []; redraw(); orthoRedraw(); }
         };
 
@@ -623,6 +744,7 @@
                     if (dist < 15) {
                         orthoFaces.push({ points: [...orthoPolyPoints], color: config.color });
                         orthoHistory.push('face');
+                        globalHistory.push({ area: 'ortho', type: 'face' });
                         orthoPolyPoints = [];
                         showMessage("面を作成しました");
                         orthoRedraw();
@@ -657,24 +779,16 @@
         orthoCanvas.addEventListener('mouseup', () => {
             if (config.tool === 'line' && orthoCurrentShape) {
                 const dist = Math.hypot(orthoCurrentShape.end.x - orthoCurrentShape.start.x, orthoCurrentShape.end.y - orthoCurrentShape.start.y);
-                if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); }
+                if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); globalHistory.push({ area: 'ortho', type: 'shape' }); }
                 orthoCurrentShape = null;
             }
             orthoIsDrawing = false;
             orthoRedraw();
         });
 
-        document.getElementById('undo-btn').addEventListener('click', () => {
-            if (orthoPolyPoints.length > 0) { orthoPolyPoints.pop(); orthoRedraw(); }
-            else if (orthoHistory.length > 0) {
-                const last = orthoHistory.pop();
-                if (last === 'shape') orthoShapes.pop(); else orthoFaces.pop();
-                orthoRedraw();
-            }
-        });
-
         document.getElementById('clear-btn').addEventListener('click', () => {
             orthoShapes = []; orthoFaces = []; orthoPolyPoints = []; orthoHistory = [];
+            globalHistory.length = 0;
             orthoRedraw();
         });
 
