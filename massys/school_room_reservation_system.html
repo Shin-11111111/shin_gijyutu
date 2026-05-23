@@ -40,17 +40,27 @@
 
         async function loadDataFromServer() {
             showToast('同期中...', 'info');
-            try {
-                const response = await fetch(GAS_WEB_APP_URL);
-                const data = await response.json();
-                
-                rooms = data.data.rooms;
-                reservations = data.data.reservations;
-                renderUI();
-            } catch (err) {
-                showToast('データの読み込みに失敗しました。', 'error');
-                console.error(err);
-            }
+            
+            return new Promise((resolve, reject) => {
+                window.handleGASResponse = function(data) {
+                    rooms = data.data.rooms;
+                    reservations = data.data.reservations;
+                    renderUI();
+                    
+                    document.getElementById('gas-jsonp-script')?.remove();
+                    delete window.handleGASResponse;
+                    resolve();
+                };
+
+                const script = document.createElement('script');
+                script.id = 'gas-jsonp-script';
+                script.src = `${GAS_WEB_APP_URL}?callback=handleGASResponse&_=${new Date().getTime()}`;
+                script.onerror = function() {
+                    showToast('データの読み込みに失敗しました。', 'error');
+                    reject();
+                };
+                document.body.appendChild(script);
+            });
         }
 
         async function sendDataToGAS(action, payload) {
