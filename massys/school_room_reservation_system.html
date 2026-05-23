@@ -55,9 +55,10 @@
                 const script = document.createElement('script');
                 script.id = 'gas-jsonp-script';
                 script.src = `${GAS_WEB_APP_URL}?callback=handleGASResponse&_=${new Date().getTime()}`;
-                script.onerror = function() {
-                    showToast('データの読み込みに失敗しました。', 'error');
-                    reject();
+                script.onerror = function(event) {
+                    console.error("GAS読み込みエラー詳細:", event);
+                    showToast('GASの読み込みに失敗しました。', 'error');
+                    reject(new Error('GAS script load failed'));
                 };
                 document.body.appendChild(script);
             });
