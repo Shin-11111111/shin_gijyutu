@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF エディタ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-encrypt-js@1.0.3/dist/index.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        .drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .page-card:hover .action-overlay {
+            opacity: 1;
+        }
+        .transition-all-custom {
+            transition: all 0.2s ease-in-out;
+        }
+        .page-card.dragging {
+            opacity: 0.4;
+            border: 2px dashed #3b82f6;
+        }
+        .page-card.drag-target {
+            border: 2px solid #3b82f6;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col font-sans text-slate-800">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-red-500 text-white rounded-xl">
+                    <i data-lucide="layers" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                        PDF エディタ
+                        <span class="text-xs font-normal bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-semibold font-sans">ローカル動作</span>
+                    </h1>
+                    <p class="text-xs text-slate-500">圧縮・暗号保護・結合・分離・回転・2つ折り小冊子面付け機能</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button id="clear-all-btn" class="px-4 py-2 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 flex items-center gap-1.5 transition">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i> 全てクリア
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+        
+        <div id="status-bar" class="hidden bg-slate-900 text-white rounded-xl p-4 flex-col md:flex-row md:items-center justify-between gap-4 shadow-md">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-slate-800 text-teal-400 rounded-full">
+                    <i data-lucide="info" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="text-slate-300">現在のワークスペース：</span>
+                    <span id="total-sources-count" class="text-white font-semibold">0個のPDF</span> から 
+                    <span id="total-pages-count" class="text-teal-300 font-bold underline text-lg">0枚のページ</span> を構成中
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <div id="dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 bg-white text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[160px] shadow-sm">
+                    <input type="file" id="pdf-file-input" class="hidden" accept=".pdf" multiple />
+                    <div class="p-3 bg-blue-50 rounded-full text-blue-500 mb-3 pointer-events-none">
+                        <i data-lucide="upload-cloud" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-sm mb-1">PDFファイルをアップロード</h3>
+                    <p class="text-xs text-slate-400 mb-3">ファイルをドロップ、またはここをクリックしてファイルを選択</p>
+                    <span class="px-3 py-1.5 bg-slate-100 text-slate-700 rounded-md text-xs font-semibold">ファイルを追加する</span>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                    <h3 class="font-bold text-slate-800 mb-3 flex items-center gap-2 text-xs uppercase tracking-wider">
+                        <i data-lucide="file-check" class="w-4 h-4 text-emerald-500"></i> アップロードしたPDF
+                    </h3>
+                    <div id="files-list" class="flex flex-col gap-2 max-h-[150px] overflow-y-auto pr-1 text-xs text-slate-400 italic">
+                        アップロードしたファイルはありません。
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
+                    <h3 class="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2 text-sm">
+                        <i data-lucide="sliders" class="w-4 h-4 text-blue-600"></i> 編集設定
+                    </h3>
+
+                    
+
+                    <div class="border-t border-slate-100 pt-3 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-xs font-bold text-slate-700 uppercase">PDF画像軽量化・圧縮</label>
+                            <span id="compress-status" class="text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600">標準</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">PDF内の画像を再サンプリングして容量を削減します。</p>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="setCompression('none')" id="compress-btn-none" class="flex-1 py-1.5 text-xs font-semibold rounded bg-blue-600 text-white border border-blue-600 transition">無圧縮</button>
+                            <button type="button" onclick="setCompression('mid')" id="compress-btn-mid" class="flex-1 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">中圧縮</button>
+                            <button type="button" onclick="setCompression('high')" id="compress-btn-high" class="flex-1 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition">高圧縮</button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-slate-100 pt-3 space-y-2">
+                        <label class="block text-xs font-bold text-slate-700 uppercase flex items-center gap-1">
+                            <i data-lucide="lock" class="w-3.5 h-3.5 text-amber-500"></i>
+                            パスワード保護
+                        </label>
+                        <div class="relative">
+                            <input type="password" id="pdf-password" placeholder="パスワードを入力 (空欄で無効)" class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-blue-500 pr-8" />
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                                <i data-lucide="eye" id="password-toggle-icon" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm flex flex-col gap-4">
+                    <h3 class="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2 text-sm">
+                        <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> 保存してダウンロード
+                    </h3>
+
+                    <div class="border-t border-slate-100 pt-3 space-y-2">
+                        <button id="export-pdf-btn" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="save" class="w-4 h-4"></i> 編集設定した内容でPDFを保存
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button id="split-pdf-btn" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="scissors" class="w-3.5 h-3.5"></i> 1ページずつPDFを分離して保存 (ZIP)
+                        </button>
+                    </div>
+
+                    <div class="space-y-2">
+                        <button id="export-booklet-btn" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                            <i data-lucide="book-open" class="w-3.5 h-3.5"></i> 小冊子にしてPDFを保存
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="lg:col-span-8 bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col min-h-[500px]">
+                
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-100 pb-4 mb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="layout-grid" class="w-5 h-5 text-slate-500"></i>
+                        <h2 class="font-bold text-lg text-slate-900">並び替え・回転ワークスペース</h2>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button id="reverse-all-btn" class="flex-1 sm:flex-initial px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 flex items-center justify-center gap-1 transition disabled:opacity-50" disabled>
+                            <i data-lucide="arrow-left-right" class="w-3.5 h-3.5"></i> 順序を全反転
+                        </button>
+                        <button id="rotate-all-btn" class="flex-1 sm:flex-initial px-3 py-1.5 text-xs font-semibold border border-slate-300 rounded-lg text-slate-700 bg-white hover:bg-slate-50 flex items-center justify-center gap-1 transition disabled:opacity-50" disabled>
+                            <i data-lucide="rotate-cw" class="w-3.5 h-3.5"></i> 全ページを右90°回転
+                        </button>
+                    </div>
+                </div>
+
+                <div id="pages-loading" class="hidden flex-grow flex flex-col items-center justify-center py-12">
+                    <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-red-500 mb-3"></div>
+                    <p class="text-sm text-slate-500">PDFからプレビューを抽出・レンダリング中...</p>
+                </div>
+
+                <div id="workspace-empty" class="flex-grow flex flex-col items-center justify-center py-16 text-center">
+                    <div class="p-4 bg-slate-50 text-slate-300 rounded-full mb-4">
+                        <i data-lucide="files" class="w-12 h-12"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-700 text-base mb-1">ページがありません</h3>
+                    <p class="text-xs text-slate-400 max-w-sm px-4">
+                        左側のアップロードエリアからPDFファイルを読み込んでください。自動的にここに全ページが展開されます。
+                    </p>
+                </div>
+
+                <div id="pages-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto max-h-[500px] p-1">
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+    <div id="modal-container" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+            <div id="modal-icon-wrapper" class="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100 text-red-600">
+            </div>
+            <h3 id="modal-title" class="text-lg font-bold text-center text-slate-900 mb-2">タイトル</h3>
+            <p id="modal-message" class="text-sm text-slate-600 text-center mb-6">メッセージ</p>
+            <div class="flex justify-center gap-3">
+                <button id="modal-close-btn" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-lg text-sm transition">
+                    閉じる
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="processing-overlay" class="fixed inset-0 bg-slate-900/80 z-50 flex flex-col items-center justify-center text-white hidden">
+        <div class="relative flex items-center justify-center mb-6">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-slate-600 border-t-teal-400"></div>
+        </div>
+        <h3 id="processing-title" class="text-lg font-bold mb-2">PDFプロセス実行中...</h3>
+        <p id="processing-desc" class="text-xs text-slate-300 max-w-xs text-center leading-relaxed">これには数秒、またはページ数が多い場合はそれ以上かかる場合があります。ブラウザを閉じずにそのままお待ちください。</p>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        let loadedFiles = [];
+        let workspacePages = [];
+        let fileCounter = 0;
+        let pageCounter = 0;
+        let compressionSetting = 'none';
+
+        const dropzone = document.getElementById('dropzone');
+        const pdfFileInput = document.getElementById('pdf-file-input');
+        const filesListContainer = document.getElementById('files-list');
+        const pagesGrid = document.getElementById('pages-grid');
+        const workspaceEmpty = document.getElementById('workspace-empty');
+        const pagesLoading = document.getElementById('pages-loading');
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        const splitPdfBtn = document.getElementById('split-pdf-btn');
+        const exportBookletBtn = document.getElementById('export-booklet-btn');
+        const reverseAllBtn = document.getElementById('reverse-all-btn');
+        const rotateAllBtn = document.getElementById('rotate-all-btn');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        
+        const statusBar = document.getElementById('status-bar');
+        const totalSourcesCount = document.getElementById('total-sources-count');
+        const totalPagesCount = document.getElementById('total-pages-count');
+
+        const modalContainer = document.getElementById('modal-container');
+        const modalIconWrapper = document.getElementById('modal-icon-wrapper');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        const processingOverlay = document.getElementById('processing-overlay');
+        const processingTitle = document.getElementById('processing-title');
+        const pdfPasswordInput = document.getElementById('pdf-password');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.add('drag-over');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+            }, false);
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleSelectedFiles(files);
+        });
+
+        dropzone.addEventListener('click', () => {
+            pdfFileInput.click();
+        });
+
+        pdfFileInput.addEventListener('change', (e) => {
+            handleSelectedFiles(e.target.files);
+        });
+
+        window.setCompression = function(level) {
+            compressionSetting = level;
+            const btnNone = document.getElementById('compress-btn-none');
+            const btnMid = document.getElementById('compress-btn-mid');
+            const btnHigh = document.getElementById('compress-btn-high');
+            const statusBadge = document.getElementById('compress-status');
+
+            [btnNone, btnMid, btnHigh].forEach(btn => {
+                btn.className = "flex-1 py-1.5 text-xs font-semibold rounded bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 transition";
+            });
+
+            if (level === 'none') {
+                btnNone.className = "flex-1 py-1.5 text-xs font-semibold rounded bg-blue-600 text-white border border-blue-600 transition";
+                statusBadge.textContent = "標準";
+                statusBadge.className = "text-[10px] bg-slate-100 px-1.5 py-0.5 rounded font-bold text-slate-600";
+            } else if (level === 'mid') {
+                btnMid.className = "flex-1 py-1.5 text-xs font-semibold rounded bg-amber-500 text-white border border-amber-500 transition";
+                statusBadge.textContent = "中圧縮 (150 DPI)";
+                statusBadge.className = "text-[10px] bg-amber-100 px-1.5 py-0.5 rounded font-bold text-amber-700";
+            } else if (level === 'high') {
+                btnHigh.className = "flex-1 py-1.5 text-xs font-semibold rounded bg-red-500 text-white border border-red-500 transition";
+                statusBadge.textContent = "高圧縮 (90 DPI)";
+                statusBadge.className = "text-[10px] bg-red-100 px-1.5 py-0.5 rounded font-bold text-red-700";
+            }
+        };
+
+        async function handleSelectedFiles(files) {
+            const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf' || file.name.endsWith('.pdf'));
+            
+            if (pdfFiles.length === 0) {
+                showModal('error', 'PDFファイルがありません', '有効なPDFファイル（拡張子 .pdf）をドロップするか選択してください。');
+                return;
+            }
+
+            pagesLoading.classList.remove('hidden');
+            workspaceEmpty.classList.add('hidden');
+
+            for (const file of pdfFiles) {
+                try {
+                    const arrayBuffer = await readFileAsArrayBuffer(file);
+                    const fileId = `file-${Date.now()}-${fileCounter++}`;
+                    
+                    const addedFile = {
+                        id: fileId,
+                        name: file.name,
+                        arrayBuffer: arrayBuffer
+                    };
+                    
+                    loadedFiles.push(addedFile);
+                    await extractAndRenderPages(addedFile);
+                } catch (error) {
+                    console.error("PDF読み込みエラー:", error);
+                    showModal('error', 'ファイルの読み込みに失敗しました', `${file.name} を読み込めませんでした。暗号化されているか、破損している可能性があります。`);
+                } finally {
+                }
+            }
+
+            pagesLoading.classList.add('hidden');
+            updateUI();
+        }
+
+        function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        async function extractAndRenderPages(fileObj) {
+            const loadingTask = pdfjsLib.getDocument({ data: fileObj.arrayBuffer.slice(0) });
+            const pdf = await loadingTask.promise;
+            
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                
+                const viewport = page.getViewport({ scale: 0.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: context,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                const canvasDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+                
+                workspacePages.push({
+                    id: `page-${Date.now()}-${pageCounter++}`,
+                    fileId: fileObj.id,
+                    fileName: fileObj.name,
+                    originalPageIndex: i - 1,
+                    canvasDataUrl: canvasDataUrl,
+                    rotation: 0,
+                    width: page.view[2] - page.view[0],
+                    height: page.view[3] - page.view[1]
+                });
+            }
+        }
+
+        function updateUI() {
+            if (loadedFiles.length === 0) {
+                filesListContainer.innerHTML = `<span class="italic text-slate-400">ファイルがインポートされていません。</span>`;
+            } else {
+                filesListContainer.innerHTML = '';
+                loadedFiles.forEach((file, index) => {
+                    const fileDiv = document.createElement('div');
+                    fileDiv.className = "flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg p-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition";
+                    fileDiv.innerHTML = `
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="w-5 h-5 bg-slate-200 text-slate-700 rounded-full flex items-center justify-center font-bold text-[10px] flex-shrink-0">${index + 1}</span>
+                            <span class="truncate" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</span>
+                        </div>
+                        <button onclick="removeWholeFile('${file.id}')" class="p-1 hover:text-red-600 text-slate-400 transition" title="このファイルをリストから除外">
+                            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                        </button>
+                    `;
+                    filesListContainer.appendChild(fileDiv);
+                });
+            }
+
+            if (workspacePages.length === 0) {
+                workspaceEmpty.classList.remove('hidden');
+                pagesGrid.innerHTML = '';
+                statusBar.classList.add('hidden');
+                exportPdfBtn.disabled = true;
+                splitPdfBtn.disabled = true;
+                exportBookletBtn.disabled = true;
+                reverseAllBtn.disabled = true;
+                rotateAllBtn.disabled = true;
+            } else {
+                workspaceEmpty.classList.add('hidden');
+                statusBar.classList.remove('hidden');
+                statusBar.classList.add('flex');
+                
+                exportPdfBtn.disabled = false;
+                splitPdfBtn.disabled = false;
+                exportBookletBtn.disabled = false;
+                reverseAllBtn.disabled = false;
+                rotateAllBtn.disabled = false;
+                
+                pagesGrid.innerHTML = '';
+                workspacePages.forEach((page, index) => {
+                    const card = document.createElement('div');
+                    card.className = "page-card relative bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-blue-400 transition duration-150 flex flex-col";
+                    card.setAttribute('data-page-id', page.id);
+                    
+                    const rotationStyle = `transform: rotate(${page.rotation}deg); transition: transform 0.2s ease-in-out;`;
+
+                    card.innerHTML = `
+                        <!-- Thumbnail Box -->
+                        <div class="aspect-[1/1.41] bg-slate-100 rounded-lg overflow-hidden border border-slate-200 relative mb-2 flex items-center justify-center p-1">
+                            <div class="w-full h-full flex items-center justify-center overflow-hidden">
+                                <img src="${page.canvasDataUrl}" style="${rotationStyle}" class="object-contain max-w-full max-h-full" alt="Page preview">
+                            </div>
+                            
+                            <!-- Actions Overlay (Hover/Tap) -->
+                            <div class="action-overlay opacity-0 bg-slate-900/40 absolute inset-0 transition duration-150 flex items-center justify-center gap-2 p-1">
+                                <button onclick="rotatePage('${page.id}')" class="p-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded shadow transition-transform hover:scale-110" title="右へ90度回転">
+                                    <i data-lucide="rotate-cw" class="w-4 h-4 text-amber-400"></i>
+                                </button>
+                                <button onclick="removePage('${page.id}')" class="p-1.5 bg-red-600 hover:bg-red-700 text-white rounded shadow transition-transform hover:scale-110" title="このページを除外">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+
+                            <!-- Floating badge index -->
+                            <span class="absolute top-1.5 left-1.5 bg-slate-900/85 text-white font-bold text-xs px-2 py-0.5 rounded-md shadow backdrop-blur-sm">
+                                ${index + 1}
+                            </span>
+
+                            <!-- Floating badge rotation indicator -->
+                            ${page.rotation !== 0 ? `
+                            <span class="absolute top-1.5 right-1.5 bg-amber-500 text-white font-bold text-[10px] px-1.5 py-0.5 rounded-md shadow flex items-center gap-0.5">
+                                <i data-lucide="rotate-cw" class="w-3 h-3"></i> ${page.rotation}°
+                            </span>` : ''}
+                        </div>
+
+                        <!-- Card controls and file source description -->
+                        <div class="mt-auto">
+                            <p class="text-[9px] text-slate-400 font-medium truncate mb-2" title="${escapeHtml(page.fileName)}">
+                                ${escapeHtml(page.fileName)}
+                            </p>
+                            
+                            <!-- Control buttons -->
+                            <div class="flex gap-1 justify-between items-center border-t border-slate-100 pt-1.5">
+                                <div class="flex gap-1">
+                                    <button onclick="movePageLeft('${page.id}')" ${index === 0 ? 'disabled' : ''} class="p-1 border border-slate-200 rounded text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition" title="左へ移動">
+                                        <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button onclick="movePageRight('${page.id}')" ${index === workspacePages.length - 1 ? 'disabled' : ''} class="p-1 border border-slate-200 rounded text-slate-500 hover:bg-slate-50 disabled:opacity-30 disabled:pointer-events-none transition" title="右へ移動">
+                                        <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
+                                <span class="text-[10px] font-semibold text-slate-500">p.${page.originalPageIndex + 1}</span>
+                            </div>
+                        </div>
+                    `;
+                    card.setAttribute('draggable', 'true');
+
+                    card.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('text/plain', page.id);
+                        setTimeout(() => card.classList.add('dragging'), 0);
+                    });
+                    card.addEventListener('dragend', () => {
+                        card.classList.remove('dragging');
+                        document.querySelectorAll('.page-card').forEach(c => c.classList.remove('drag-target'));
+                    });
+                    card.addEventListener('dragover', (e) => {
+                        e.preventDefault();
+                        document.querySelectorAll('.page-card').forEach(c => c.classList.remove('drag-target'));
+                        card.classList.add('drag-target');
+                    });
+                    card.addEventListener('drop', (e) => {
+                        e.preventDefault();
+                        card.classList.remove('drag-target');
+                        const fromId = e.dataTransfer.getData('text/plain');
+                        const toId = page.id;
+                        if (fromId === toId) return;
+                        const fromIdx = workspacePages.findIndex(p => p.id === fromId);
+                        const toIdx = workspacePages.findIndex(p => p.id === toId);
+                        if (fromIdx === -1 || toIdx === -1) return;
+                        const [moved] = workspacePages.splice(fromIdx, 1);
+                        workspacePages.splice(toIdx, 0, moved);
+                        updateUI();
+                    });
+
+                    pagesGrid.appendChild(card);
+                });
+            }
+
+            totalSourcesCount.textContent = `${loadedFiles.length}個のPDF`;
+            totalPagesCount.textContent = `${workspacePages.length}枚のページ`;
+
+            lucide.createIcons();
+        }
+
+        window.rotatePage = function(pageId) {
+            const pageIndex = workspacePages.findIndex(p => p.id === pageId);
+            if (pageIndex !== -1) {
+                const currentRot = workspacePages[pageIndex].rotation || 0;
+                workspacePages[pageIndex].rotation = (currentRot + 90) % 360;
+                updateUI();
+            }
+        };
+
+        window.movePageLeft = function(pageId) {
+            const index = workspacePages.findIndex(p => p.id === pageId);
+            if (index > 0) {
+                const temp = workspacePages[index];
+                workspacePages[index] = workspacePages[index - 1];
+                workspacePages[index - 1] = temp;
+                updateUI();
+            }
+        };
+
+        window.movePageRight = function(pageId) {
+            const index = workspacePages.findIndex(p => p.id === pageId);
+            if (index >= 0 && index < workspacePages.length - 1) {
+                const temp = workspacePages[index];
+                workspacePages[index] = workspacePages[index + 1];
+                workspacePages[index + 1] = temp;
+                updateUI();
+            }
+        };
+
+        window.removePage = function(pageId) {
+            workspacePages = workspacePages.filter(p => p.id !== pageId);
+            cleanupUnusedFiles();
+            updateUI();
+        };
+
+        window.removeWholeFile = function(fileId) {
+            loadedFiles = loadedFiles.filter(f => f.id !== fileId);
+            workspacePages = workspacePages.filter(p => p.fileId !== fileId);
+            updateUI();
+        };
+
+        function cleanupUnusedFiles() {
+            const activeFileIds = new Set(workspacePages.map(p => p.fileId));
+            loadedFiles = loadedFiles.filter(f => activeFileIds.has(f.id));
+        }
+
+        reverseAllBtn.addEventListener('click', () => {
+            if (workspacePages.length > 1) {
+                workspacePages.reverse();
+                updateUI();
+            }
+        });
+
+        rotateAllBtn.addEventListener('click', () => {
+            if (workspacePages.length > 0) {
+                workspacePages.forEach(p => {
+                    p.rotation = (p.rotation + 90) % 360;
+                });
+                updateUI();
+            }
+        });
+
+        clearAllBtn.addEventListener('click', () => {
+            if (loadedFiles.length === 0 && workspacePages.length === 0) return;
+            const confirmed = confirm("ワークスペースをすべてクリアしますか？インポートされた全ファイルと編集状態がリセットされます。");
+            if (confirmed) {
+                loadedFiles = [];
+                workspacePages = [];
+                updateUI();
+            }
+        });
+
+        window.togglePasswordVisibility = function() {
+            const type = pdfPasswordInput.type === 'password' ? 'text' : 'password';
+            pdfPasswordInput.type = type;
+            const icon = document.getElementById('password-toggle-icon');
+            if (type === 'text') {
+                icon.setAttribute('data-lucide', 'eye-off');
+            } else {
+                icon.setAttribute('data-lucide', 'eye');
+            }
+            lucide.createIcons();
+        };
+
+        async function getCompresedPageImage(pageItem, targetDpi) {
+            const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
+            const loadingTask = pdfjsLib.getDocument({ data: fileData.arrayBuffer.slice(0) });
+            const pdf = await loadingTask.promise;
+            const originalPage = await pdf.getPage(pageItem.originalPageIndex + 1);
+
+            const targetScale = targetDpi / 72;
+            const viewport = originalPage.getViewport({ scale: targetScale });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            const renderContext = {
+                canvasContext: context,
+                viewport: viewport
+            };
+            await originalPage.render(renderContext).promise;
+
+            const quality = targetDpi === 150 ? 0.65 : 0.45;
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+            return compressedDataUrl;
+        }
+
+        async function applySecurityIfConfigured(pdfBytes) {
+            const password = pdfPasswordInput.value;
+            if (password && password.trim() !== '') {
+                if (typeof pdfEncryptJs !== 'undefined') {
+                    try {
+                        const encryptedBytes = await pdfEncryptJs.encrypt(pdfBytes, { userPassword: password, ownerPassword: password });
+                        return encryptedBytes;
+                    } catch (e) {
+                        console.error("PDF暗号化エラー:", e);
+                        throw new Error("暗号化処理中にエラーが発生しました。パスワードをご確認いただくか、パスワードなしで再試行してください。");
+                    }
+                } else {
+                    console.warn("暗号化ライブラリが読み込まれていません。");
+                    throw new Error("ローカル暗号化モジュールの準備ができていません。インターネット接続状態を確認してください。");
+                }
+            }
+            return pdfBytes;
+        }
+
+        async function handleExportPDF() {
+            if (workspacePages.length === 0) return;
+
+            showProcessingOverlay(true, "PDFを再編集・生成中...", "ページの順序を組み立てて、最終PDFファイルを生成しています。");
+
+            try {
+                const mergedPdf = await PDFLib.PDFDocument.create();
+                const pdfDocsCache = {};
+
+                for (const pageItem of workspacePages) {
+                    if (compressionSetting !== 'none') {
+                        const dpi = compressionSetting === 'mid' ? 150 : 90;
+                        const compressedImgUrl = await getCompresedPageImage(pageItem, dpi);
+                        
+                        const imageBytes = await fetch(compressedImgUrl).then(res => res.arrayBuffer());
+                        const embeddedImg = await mergedPdf.embedJpg(imageBytes);
+                        
+                        let targetWidth = pageItem.width;
+                        let targetHeight = pageItem.height;
+
+                        const isRotatedOdd = (pageItem.rotation % 180 !== 0);
+                        const finalPage = mergedPdf.addPage([targetWidth, targetHeight]);
+                        
+                        finalPage.drawImage(embeddedImg, {
+                            x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
+                            y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
+                            width: isRotatedOdd ? targetHeight : targetWidth,
+                            height: isRotatedOdd ? targetWidth : targetHeight,
+                        });
+                        
+                        if (pageItem.rotation !== 0) {
+                            finalPage.setRotation(PDFLib.degrees(pageItem.rotation));
+                        }
+
+                    } else {
+                        if (!pdfDocsCache[pageItem.fileId]) {
+                            const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
+                            pdfDocsCache[pageItem.fileId] = await PDFLib.PDFDocument.load(fileData.arrayBuffer);
+                        }
+                        
+                        const srcDoc = pdfDocsCache[pageItem.fileId];
+                        const [copiedPage] = await mergedPdf.copyPages(srcDoc, [pageItem.originalPageIndex]);
+                        
+                        const originalRotation = copiedPage.getRotation().angle;
+                        const targetRotation = (originalRotation + pageItem.rotation) % 360;
+                        copiedPage.setRotation(PDFLib.degrees(targetRotation));
+
+                        mergedPdf.addPage(copiedPage);
+                    }
+                }
+
+                let pdfBytes = await mergedPdf.save();
+                
+                try {
+                    pdfBytes = await applySecurityIfConfigured(pdfBytes);
+                } catch (encryptError) {
+                    showProcessingOverlay(false);
+                    showModal('error', 'パスワード暗号化エラー', encryptError.message);
+                    return;
+                }
+
+                downloadBlob(pdfBytes, `processed_combined_${Date.now()}.pdf`, 'application/pdf');
+
+                showProcessingOverlay(false);
+                showModal('success', 'PDFの保存が完了しました', '編集したPDFファイルがダウンロードされました。');
+
+            } catch (error) {
+                console.error(error);
+                showProcessingOverlay(false);
+                showModal('error', 'PDFのエクスポートに失敗しました', `エラー詳細: ${error.message || error}`);
+            }
+        }
+
+        async function handleExportBooklet() {
+            if (workspacePages.length === 0) return;
+
+            showProcessingOverlay(true, "小冊子面付けを実行中...", "ページ数を4の倍数に拡張・白紙を追加し、半分に折った際に本になる順に横向き2-in-1レイアウトに統合しています。");
+
+            try {
+                const pagesList = [...workspacePages];
+                
+                while (pagesList.length % 4 !== 0) {
+                    pagesList.push({
+                        id: `blank-page-${Date.now()}-${Math.random()}`,
+                        fileId: 'blank',
+                        originalPageIndex: -1,
+                        rotation: 0,
+                        width: 595.276,
+                        height: 841.890,
+                        isBlank: true
+                    });
+                }
+
+                const totalPaddedPages = pagesList.length;
+                const bookletDoc = await PDFLib.PDFDocument.create();
+                
+                const tempProcessorDoc = await PDFLib.PDFDocument.create();
+                const pdfDocsCache = {};
+                const embeddedPagesRefs = [];
+
+                for (let i = 0; i < totalPaddedPages; i++) {
+                    const pageItem = pagesList[i];
+                    
+                    if (pageItem.isBlank) {
+                        const blankPage = tempProcessorDoc.addPage([595.276, 841.890]);
+                        embeddedPagesRefs.push({ page: blankPage, w: 595.276, h: 841.890 });
+                    } else {
+                        if (compressionSetting !== 'none') {
+                            const dpi = compressionSetting === 'mid' ? 150 : 90;
+                            const imgUrl = await getCompresedPageImage(pageItem, dpi);
+                            const imgBytes = await fetch(imgUrl).then(res => res.arrayBuffer());
+                            const embeddedImg = await tempProcessorDoc.embedJpg(imgBytes);
+
+                            let targetWidth = pageItem.width;
+                            let targetHeight = pageItem.height;
+                            const isRotatedOdd = (pageItem.rotation % 180 !== 0);
+
+                            const newTempPage = tempProcessorDoc.addPage([targetWidth, targetHeight]);
+                            newTempPage.drawImage(embeddedImg, {
+                                x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
+                                y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
+                                width: isRotatedOdd ? targetHeight : targetWidth,
+                                height: isRotatedOdd ? targetWidth : targetHeight,
+                            });
+                            if (pageItem.rotation !== 0) {
+                                newTempPage.setRotation(PDFLib.degrees(pageItem.rotation));
+                            }
+                            embeddedPagesRefs.push({ page: newTempPage, w: targetWidth, h: targetHeight });
+                        } else {
+                            if (!pdfDocsCache[pageItem.fileId]) {
+                                const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
+                                pdfDocsCache[pageItem.fileId] = await PDFLib.PDFDocument.load(fileData.arrayBuffer);
+                            }
+                            const srcDoc = pdfDocsCache[pageItem.fileId];
+                            const [copiedPage] = await tempProcessorDoc.copyPages(srcDoc, [pageItem.originalPageIndex]);
+                            
+                            const originalRotation = copiedPage.getRotation().angle;
+                            const targetRotation = (originalRotation + pageItem.rotation) % 360;
+                            copiedPage.setRotation(PDFLib.degrees(targetRotation));
+
+                            tempProcessorDoc.addPage(copiedPage);
+                            embeddedPagesRefs.push({ page: copiedPage, w: pageItem.width, h: pageItem.height });
+                        }
+                    }
+                }
+
+                const tempBytes = await tempProcessorDoc.save();
+                const loaderDoc = await PDFLib.PDFDocument.load(tempBytes);
+                const loaderPages = loaderDoc.getPages();
+
+                const numSheets = totalPaddedPages / 4;
+                
+                const embeddedLoaderPages = await bookletDoc.embedPages(loaderDoc, loaderDoc.getPageIndices());
+
+                for (let s = 0; s < numSheets; s++) {
+                    const outerLeftIdx = totalPaddedPages - 1 - (2 * s);
+                    const outerRightIdx = 2 * s;
+                    const innerLeftIdx = 2 * s + 1;
+                    const innerRightIdx = totalPaddedPages - 2 - (2 * s);
+
+                    addBookletLandscapePage(bookletDoc, embeddedLoaderPages, outerLeftIdx, outerRightIdx, pagesList);
+                    
+                    addBookletLandscapePage(bookletDoc, embeddedLoaderPages, innerLeftIdx, innerRightIdx, pagesList);
+                }
+
+                let finalBookletBytes = await bookletDoc.save();
+                
+                try {
+                    finalBookletBytes = await applySecurityIfConfigured(finalBookletBytes);
+                } catch (encryptError) {
+                    showProcessingOverlay(false);
+                    showModal('error', 'パスワード暗号化エラー', encryptError.message);
+                    return;
+                }
+
+                downloadBlob(finalBookletBytes, `booklet_imposed_${Date.now()}.pdf`, 'application/pdf');
+
+                showProcessingOverlay(false);
+                showModal('success', '小冊子PDFの面付けに成功しました！', `ページ数は自動で4の倍数である ${totalPaddedPages} ページ（不足分は自動追加された白紙ページ）に補正され、両面印刷に適した横向き2-in-1でダウンロードされました。印刷設定は「横向き・両面（短辺とじ）」で印刷してください。`);
+
+            } catch (error) {
+                console.error(error);
+                showProcessingOverlay(false);
+                showModal('error', '小冊子面の作成に失敗しました', `エラー: ${error.message || error}`);
+            }
+        }
+
+        exportPdfBtn.addEventListener('click', handleExportPDF);
+        exportBookletBtn.addEventListener('click', handleExportBooklet);
+
+        splitPdfBtn.addEventListener('click', async () => {
+            if (workspacePages.length === 0) return;
+
+            showProcessingOverlay(true, "PDFファイルを分離中...", "各ページを1ページのPDFファイルに分離し、ZIPにアーカイブしています。");
+
+            try {
+                const zip = new JSZip();
+                const pdfDocsCache = {};
+
+                for (let idx = 0; idx < workspacePages.length; idx++) {
+                    const pageItem = workspacePages[idx];
+                    const singlePagePdf = await PDFLib.PDFDocument.create();
+
+                    if (compressionSetting !== 'none') {
+                        const dpi = compressionSetting === 'mid' ? 150 : 90;
+                        const compressedImgUrl = await getCompresedPageImage(pageItem, dpi);
+                        const imageBytes = await fetch(compressedImgUrl).then(res => res.arrayBuffer());
+                        const embeddedImg = await singlePagePdf.embedJpg(imageBytes);
+
+                        let targetWidth = pageItem.width;
+                        let targetHeight = pageItem.height;
+                        const isRotatedOdd = (pageItem.rotation % 180 !== 0);
+                        
+                        const newPage = singlePagePdf.addPage([targetWidth, targetHeight]);
+                        newPage.drawImage(embeddedImg, {
+                            x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
+                            y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
+                            width: isRotatedOdd ? targetHeight : targetWidth,
+                            height: isRotatedOdd ? targetWidth : targetHeight,
+                        });
+                        if (pageItem.rotation !== 0) {
+                            newPage.setRotation(PDFLib.degrees(pageItem.rotation));
+                        }
+                    } else {
+                        if (!pdfDocsCache[pageItem.fileId]) {
+                            const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
+                            pdfDocsCache[pageItem.fileId] = await PDFLib.PDFDocument.load(fileData.arrayBuffer);
+                        }
+                        const srcDoc = pdfDocsCache[pageItem.fileId];
+                        const [copiedPage] = await singlePagePdf.copyPages(srcDoc, [pageItem.originalPageIndex]);
+                        
+                        const originalRotation = copiedPage.getRotation().angle;
+                        const targetRotation = (originalRotation + pageItem.rotation) % 360;
+                        copiedPage.setRotation(PDFLib.degrees(targetRotation));
+
+                        singlePagePdf.addPage(copiedPage);
+                    }
+
+                    let pageBytes = await singlePagePdf.save();
+                    try {
+                        pageBytes = await applySecurityIfConfigured(pageBytes);
+                    } catch (encryptError) {
+                        showProcessingOverlay(false);
+                        showModal('error', 'パスワード暗号化エラー', encryptError.message);
+                        return;
+                    }
+
+                    const paddedIndex = String(idx + 1).padStart(3, '0');
+                    zip.file(`page_${paddedIndex}_split.pdf`, pageBytes);
+                }
+
+                const zipBlob = await zip.generateAsync({ type: 'blob' });
+                
+                const url = URL.createObjectURL(zipBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `split_pages_${Date.now()}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+
+                showProcessingOverlay(false);
+                showModal('success', 'PDFの分離に成功しました！', '各ページが分離され、ZIPファイルとして一括ダウンロードされました。');
+
+            } catch (error) {
+                console.error(error);
+                showProcessingOverlay(false);
+                showModal('error', '分離処理に失敗しました', `エラー: ${error.message || error}`);
+            }
+        });
+
+        function addBookletLandscapePage(targetDoc, embeddedPages, leftIndex, rightIndex, originalPagesMetadata) {
+            const sheetW = 841.890;
+            const sheetH = 595.276;
+            
+            const sheetPage = targetDoc.addPage([sheetW, sheetH]);
+
+            const leftEmbed = embeddedPages[leftIndex];
+            const rightEmbed = embeddedPages[rightIndex];
+
+            const leftMeta = originalPagesMetadata[leftIndex];
+            const rightMeta = originalPagesMetadata[rightIndex];
+
+            const halfW = sheetW / 2;
+            const halfH = sheetH;
+
+            drawFitPageHalf(sheetPage, leftEmbed, leftMeta, 0, halfW, halfH);
+
+            drawFitPageHalf(sheetPage, rightEmbed, rightMeta, halfW, halfW, halfH);
+
+            sheetPage.drawLine({
+                start: { x: halfW, y: 15 },
+                end: { x: halfW, y: sheetH - 15 },
+                thickness: 0.5,
+                color: PDFLib.rgb(0.85, 0.85, 0.85),
+                dashArray: [5, 5]
+            });
+        }
+
+        function drawFitPageHalf(sheetPage, embeddedPageObj, meta, startX, maxW, maxH) {
+            let srcW = meta.width;
+            let srcH = meta.height;
+
+            if (meta.rotation % 180 !== 0) {
+                const temp = srcW;
+                srcW = srcH;
+                srcH = temp;
+            }
+
+            const scale = Math.min(maxW / srcW, maxH / srcH) * 0.94; // slight spacing padding
+            const finalW = srcW * scale;
+            const finalH = srcH * scale;
+
+            const paddingX = (maxW - finalW) / 2;
+            const paddingY = (maxH - finalH) / 2;
+
+            sheetPage.drawPage(embeddedPageObj, {
+                x: startX + paddingX,
+                y: paddingY,
+                width: finalW,
+                height: finalH
+            });
+        }
+
+        function downloadBlob(bytes, filename, contentType) {
+            const blob = new Blob([bytes], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 100);
+        }
+
+        function showModal(type, title, message) {
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            
+            if (type === 'success') {
+                modalIconWrapper.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-green-100 text-green-600";
+                modalIconWrapper.innerHTML = `<i data-lucide="check-circle" class="w-6 h-6"></i>`;
+            } else if (type === 'error') {
+                modalIconWrapper.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-red-100 text-red-600";
+                modalIconWrapper.innerHTML = `<i data-lucide="alert-triangle" class="w-6 h-6"></i>`;
+            } else {
+                modalIconWrapper.className = "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-100 text-blue-600";
+                modalIconWrapper.innerHTML = `<i data-lucide="info" class="w-6 h-6"></i>`;
+            }
+            
+            lucide.createIcons();
+            modalContainer.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            modalContainer.classList.add('hidden');
+        });
+
+        modalContainer.addEventListener('click', (e) => {
+            if (e.target === modalContainer) {
+                modalContainer.classList.add('hidden');
+            }
+        });
+
+        function showProcessingOverlay(show, title = "PDFプロセス実行中...", desc = "") {
+            if (show) {
+                processingTitle.textContent = title;
+                document.getElementById('processing-desc').textContent = desc || "少々お待ちください。ブラウザ内で高速にファイルを安全に組み立てています。";
+                processingOverlay.classList.remove('hidden');
+            } else {
+                processingOverlay.classList.add('hidden');
+            }
+        }
+
+        function escapeHtml(string) {
+            return String(string).replace(/[&<>"']/g, function (s) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[s];
+            });
+        }
+    </script>
+</body>
+</html>
