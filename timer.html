@@ -582,7 +582,7 @@
             clearInterval(alarmInterval); 
             alarmInterval = null; 
             playAlarm(); 
-            document.getElementById('alarmCountdown').textContent = 'アラーム時刻です！';
+            document.getElementById('alarmCountdown').textContent = '時間です！';
             alarmTargetTime = null;
             return;
         }
@@ -662,7 +662,7 @@
             document.getElementById('timer1Value').textContent = formatTime(timer1Seconds);
         } else {
             timer2Seconds = targetSeconds;
-            document.getElementById('timer2Value').textContent = formatTime(targetSeconds); // 修正: targetSecondsを使用
+            document.getElementById('timer2Value').textContent = formatTime(targetSeconds);
         }
     }
     function updateRepeatCount() {
