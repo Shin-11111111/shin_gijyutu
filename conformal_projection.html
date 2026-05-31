@@ -164,6 +164,20 @@
         let isDrawing = false;
         let lastMousePoint = null;
 
+        const orthoCanvas = document.getElementById('ortho-canvas');
+        const orthoGridCanvas = document.getElementById('ortho-grid-canvas');
+        const orthoCtx = orthoCanvas.getContext('2d');
+        const orthoGCtx = orthoGridCanvas.getContext('2d');
+        const orthoPane = document.getElementById('ortho-pane');
+
+        let orthoShapes = [];
+        let orthoFaces = [];
+        let orthoHistory = [];
+        let orthoCurrentShape = null;
+        let orthoPolyPoints = [];
+        let orthoIsDrawing = false;
+        let orthoLastMousePoint = null;
+
         const ANGLE = Math.PI / 6; 
         const sin30 = Math.sin(ANGLE);
         const cos30 = Math.cos(ANGLE);
@@ -378,6 +392,63 @@
         });
 
 
+        function getTouchOffset(e, targetCanvas) {
+            const touch = e.touches[0] || e.changedTouches[0];
+            const rect = targetCanvas.getBoundingClientRect();
+            return { offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top };
+        }
+
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const { offsetX, offsetY } = getTouchOffset(e, canvas);
+            const snapped = getSnappedPoint(offsetX, offsetY);
+            isDrawing = true;
+            if (config.tool === 'line') {
+                currentShape = { start: snapped, end: snapped, color: config.color, weight: config.weight };
+            } else if (config.tool === 'face') {
+                if (polyPoints.length > 2) {
+                    const dist = Math.hypot(snapped.x - polyPoints[0].x, snapped.y - polyPoints[0].y);
+                    if (dist < 15) {
+                        faces.push({ points: [...polyPoints], color: config.color });
+                        history.push('face'); globalHistory.push({ area: 'iso', type: 'face' });
+                        polyPoints = []; showMessage("面を作成しました"); redraw(); return;
+                    }
+                }
+                polyPoints.push(snapped);
+            } else if (config.tool === 'eraser') {
+                eraseAt(offsetX, offsetY);
+            }
+            redraw();
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const { offsetX, offsetY } = getTouchOffset(e, canvas);
+            const snapped = getSnappedPoint(offsetX, offsetY);
+            lastMousePoint = snapped;
+            if (isDrawing && config.tool === 'line' && currentShape) {
+                currentShape.end = snapped;
+            } else if (config.tool === 'eraser') {
+                eraseAt(offsetX, offsetY);
+            } else if (config.tool === 'laser') {
+                const touch = e.touches[0];
+                laserPos = { x: touch.clientX, y: touch.clientY };
+                laserTrail.push({ ...laserPos });
+            }
+            redraw();
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (config.tool === 'line' && currentShape) {
+                const dist = Math.hypot(currentShape.end.x - currentShape.start.x, currentShape.end.y - currentShape.start.y);
+                if (dist > 5) { shapes.push({...currentShape}); history.push('shape'); globalHistory.push({ area: 'iso', type: 'shape' }); }
+                currentShape = null;
+            }
+            isDrawing = false;
+            redraw();
+        }, { passive: false });
+
         function eraseAt(x, y) {
             const threshold = 15;
             shapes = shapes.filter(s => {
@@ -419,7 +490,6 @@
 
         function setColor(color) {
             config.color = color;
-            document.getElementById('color-picker').value = color;
             document.getElementById('color-picker-side').value = color;
         }
 
@@ -480,17 +550,11 @@
             }
         };
 
-        document.getElementById('clear-btn').onclick = () => {
-            shapes = []; faces = []; polyPoints = []; history = [];
-            globalHistory.length = 0;
-            redraw();
-            showMessage("クリアしました");
-        };
-
         document.getElementById('grid-toggle').onclick = function() {
             config.showGrid = !config.showGrid;
             this.classList.toggle('active');
             drawGrid();
+            orthoDrawGrid();
         };
 
         document.getElementById('save-btn').onclick = () => {
@@ -629,21 +693,6 @@
             if (e.key === 'Escape') { polyPoints = []; orthoPolyPoints = []; redraw(); orthoRedraw(); }
         };
 
-        // ── 正投影図 ──────────────────────────────────────────
-        const orthoCanvas = document.getElementById('ortho-canvas');
-        const orthoGridCanvas = document.getElementById('ortho-grid-canvas');
-        const orthoCtx = orthoCanvas.getContext('2d');
-        const orthoGCtx = orthoGridCanvas.getContext('2d');
-        const orthoPane = document.getElementById('ortho-pane');
-
-        let orthoShapes = [];
-        let orthoFaces = [];
-        let orthoHistory = [];
-        let orthoCurrentShape = null;
-        let orthoPolyPoints = [];
-        let orthoIsDrawing = false;
-        let orthoLastMousePoint = null;
-
         function getOrthoSnappedPoint(rawX, rawY) {
             const unit = config.unit;
             return {
@@ -733,6 +782,55 @@
             }
         }
 
+        orthoCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const { offsetX, offsetY } = getTouchOffset(e, orthoCanvas);
+            const snapped = getOrthoSnappedPoint(offsetX, offsetY);
+            orthoIsDrawing = true;
+            if (config.tool === 'line') {
+                orthoCurrentShape = { start: snapped, end: snapped, color: config.color, weight: config.weight };
+            } else if (config.tool === 'face') {
+                if (orthoPolyPoints.length > 2) {
+                    const dist = Math.hypot(snapped.x - orthoPolyPoints[0].x, snapped.y - orthoPolyPoints[0].y);
+                    if (dist < 15) {
+                        orthoFaces.push({ points: [...orthoPolyPoints], color: config.color });
+                        orthoHistory.push('face'); globalHistory.push({ area: 'ortho', type: 'face' });
+                        orthoPolyPoints = []; showMessage("面を作成しました"); orthoRedraw(); return;
+                    }
+                }
+                orthoPolyPoints.push(snapped);
+            } else if (config.tool === 'eraser') {
+                orthoShapes = orthoShapes.filter(s => distToSegment({x: offsetX, y: offsetY}, s.start, s.end) > 15);
+                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: offsetX, y: offsetY}, f.points));
+            }
+            orthoRedraw();
+        }, { passive: false });
+
+        orthoCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const { offsetX, offsetY } = getTouchOffset(e, orthoCanvas);
+            const snapped = getOrthoSnappedPoint(offsetX, offsetY);
+            orthoLastMousePoint = snapped;
+            if (orthoIsDrawing && config.tool === 'line' && orthoCurrentShape) {
+                orthoCurrentShape.end = snapped;
+            } else if (config.tool === 'eraser') {
+                orthoShapes = orthoShapes.filter(s => distToSegment({x: offsetX, y: offsetY}, s.start, s.end) > 15);
+                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: offsetX, y: offsetY}, f.points));
+            }
+            orthoRedraw();
+        }, { passive: false });
+
+        orthoCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (config.tool === 'line' && orthoCurrentShape) {
+                const dist = Math.hypot(orthoCurrentShape.end.x - orthoCurrentShape.start.x, orthoCurrentShape.end.y - orthoCurrentShape.start.y);
+                if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); globalHistory.push({ area: 'ortho', type: 'shape' }); }
+                orthoCurrentShape = null;
+            }
+            orthoIsDrawing = false;
+            orthoRedraw();
+        }, { passive: false });
+
         orthoCanvas.addEventListener('mousedown', (e) => {
             const snapped = getOrthoSnappedPoint(e.offsetX, e.offsetY);
             orthoIsDrawing = true;
@@ -787,13 +885,12 @@
         });
 
         document.getElementById('clear-btn').addEventListener('click', () => {
+            shapes = []; faces = []; polyPoints = []; history = [];
             orthoShapes = []; orthoFaces = []; orthoPolyPoints = []; orthoHistory = [];
             globalHistory.length = 0;
+            redraw();
             orthoRedraw();
-        });
-
-        document.getElementById('grid-toggle').addEventListener('click', () => {
-            orthoDrawGrid();
+            showMessage("クリアしました");
         });
 
         document.getElementById('ortho-toggle').onclick = function() {
@@ -804,9 +901,8 @@
             resize();
         };
 
-        const _origResize = resize;
-        window.onload = () => { _origResize(); orthoResize(); };
-        window.onresize = () => { _origResize(); orthoResize(); };
+        window.addEventListener('load', () => { resize(); orthoResize(); });
+        window.addEventListener('resize', () => { resize(); orthoResize(); });
 
     </script>
 </body>
