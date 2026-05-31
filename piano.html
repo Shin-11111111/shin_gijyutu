@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>プレミアム WEB ピアノ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .white-key {
+            background: linear-gradient(to bottom, #eeeeee 0%, #ffffff 100%);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                        inset -1px -3px 3px rgba(0, 0, 0, 0.1),
+                        inset 1px 0 3px rgba(0, 0, 0, 0.05);
+            transition: transform 0.05s, background-color 0.05s, box-shadow 0.05s;
+            border-radius: 0 0 6px 6px;
+        }
+        .white-key.active {
+            background: linear-gradient(to bottom, #e0e0e0 0%, #d5d5d5 100%);
+            box-shadow: 0 2px 2px rgba(0, 0, 0, 0.1), 
+                        inset 0 4px 6px rgba(0, 0, 0, 0.15);
+            transform: translateY(3px);
+        }
+        .black-key {
+            background: linear-gradient(to bottom, #111111 0%, #2c2c2c 100%);
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.4),
+                        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+                        inset -1px -2px 2px rgba(0, 0, 0, 0.4);
+            transition: transform 0.05s, background-color 0.05s, box-shadow 0.05s;
+            z-index: 10;
+            border-radius: 0 0 4px 4px;
+        }
+        .black-key.active {
+            background: linear-gradient(to bottom, #000000 0%, #1a1a1a 100%);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.4),
+                        inset 0 2px 3px rgba(0, 0, 0, 0.6);
+            transform: translateY(2px) scaleY(0.99);
+        }
+        /* スクロールバーの非表示 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans selection:bg-emerald-500 selection:text-slate-900">
+
+    <header class="bg-slate-950 border-b border-slate-800 py-4 px-6 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-emerald-500 to-teal-400 p-2 rounded-lg shadow-lg">
+                <i class="fa-solid fa-music text-slate-950 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Virtual Grand Piano</h1>
+                <p class="text-xs text-slate-400">Web piano with premium sound</p>
+            </div>
+        </div>
+
+        <div id="audio-status-banner" class="bg-amber-950/40 border border-amber-800/60 px-4 py-1.5 rounded-full text-xs text-amber-300 flex items-center gap-2">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+            キーをタッチ、またはキーボードを押して開始してください
+        </div>
+    </header>
+
+    <main class="flex-1 flex flex-col items-center justify-center p-4 lg:p-8 max-w-7xl mx-auto w-full gap-6">
+        
+        <div class="w-full bg-slate-950/80 border border-slate-800 p-5 rounded-2xl shadow-2xl backdrop-blur-md grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <div class="flex flex-col gap-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800 pb-2">
+                    <i class="fa-solid fa-sliders mr-2 text-emerald-400"></i>音色 ＆ エフェクト
+                </h2>
+                
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5">ピアノ音色タイプ</label>
+                    <div class="grid grid-cols-3 gap-2 bg-slate-900 p-1 rounded-lg border border-slate-800">
+                        <button onclick="setTimbre('classic')" id="btn-timbre-classic" class="py-1.5 text-xs rounded font-medium transition duration-200 bg-emerald-500 text-slate-950 shadow">
+                            Classic
+                        </button>
+                        <button onclick="setTimbre('bright')" id="btn-timbre-bright" class="py-1.5 text-xs rounded font-medium transition duration-200 text-slate-400 hover:text-slate-200">
+                            Bright
+                        </button>
+                        <button onclick="setTimbre('soft')" id="btn-timbre-soft" class="py-1.5 text-xs rounded font-medium transition duration-200 text-slate-400 hover:text-slate-200">
+                            Soft
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">ボリューム</span>
+                            <span id="val-volume" class="text-emerald-400 font-mono">80%</span>
+                        </div>
+                        <input id="slider-volume" type="range" min="0" max="100" value="80" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-slate-400">リバーブ (残響空間)</span>
+                            <span id="val-reverb" class="text-emerald-400 font-mono">40%</span>
+                        </div>
+                        <input id="slider-reverb" type="range" min="0" max="100" value="40" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800 pb-2">
+                    <i class="fa-solid fa-gamepad mr-2 text-emerald-400"></i>演奏アシスト
+                </h2>
+
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1.5">ベースオクターブ (現在: C<span id="val-octave">4</span>)</label>
+                    <div class="flex items-center gap-2">
+                        <button onclick="changeOctave(-1)" class="flex-1 bg-slate-900 border border-slate-800 hover:border-slate-700 py-2 rounded-lg text-xs font-semibold transition active:scale-95">
+                            <i class="fa-solid fa-minus mr-1"></i> 低く
+                        </button>
+                        <button onclick="resetOctave()" class="px-3 bg-slate-900 border border-slate-800 hover:border-slate-700 py-2 rounded-lg text-xs font-semibold transition active:scale-95">
+                            標準 (C4)
+                        </button>
+                        <button onclick="changeOctave(1)" class="flex-1 bg-slate-900 border border-slate-800 hover:border-slate-700 py-2 rounded-lg text-xs font-semibold transition active:scale-95">
+                            高く <i class="fa-solid fa-plus ml-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900 transition">
+                        <span class="text-xs text-slate-300">キーボードガイド (A, S, D...) を表示</span>
+                        <input id="toggle-labels" type="checkbox" checked class="w-4 h-4 rounded text-emerald-500 bg-slate-800 border-slate-700 focus:ring-emerald-500">
+                    </label>
+                    <label class="flex items-center justify-between p-2 bg-slate-900/60 rounded-lg border border-slate-800 cursor-pointer hover:bg-slate-900 transition">
+                        <span class="text-xs text-slate-300">音名表示 (ド, レ, ミ...) を表示</span>
+                        <input id="toggle-notes" type="checkbox" checked class="w-4 h-4 rounded text-emerald-500 bg-slate-800 border-slate-700 focus:ring-emerald-500">
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <h2 class="text-sm font-semibold tracking-wider text-slate-400 uppercase border-b border-slate-800 pb-2">
+                    <i class="fa-solid fa-circle-dot mr-2 text-red-500"></i>MIDI風 レコーダー
+                </h2>
+                
+                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex flex-col justify-between h-full min-h-[100px]">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs text-slate-400">レコーダー状況:</span>
+                        <span id="rec-status" class="text-xs font-bold text-slate-500">停止中</span>
+                    </div>
+
+                    <div id="rec-info" class="text-xs text-slate-500 my-2">
+                        演奏したメロディを一時保存できます。
+                    </div>
+
+                    <div class="flex gap-2">
+                        <!-- 録音ボタン -->
+                        <button id="btn-rec" onclick="toggleRecording()" class="flex-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5">
+                            <i id="icon-rec" class="fa-solid fa-circle text-[10px]"></i> <span id="text-rec">録音開始</span>
+                        </button>
+                        <!-- 再生ボタン -->
+                        <button id="btn-play" onclick="playRecording()" disabled class="flex-1 bg-slate-800 text-slate-500 border border-slate-700/50 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-not-allowed">
+                            <i class="fa-solid fa-play"></i> 再生
+                        </button>
+                        <!-- クリアボタン -->
+                        <button id="btn-clear" onclick="clearRecording()" disabled class="px-3 bg-slate-800 text-slate-500 border border-slate-700/50 py-2 rounded-lg text-xs font-semibold transition hover:text-rose-400 cursor-not-allowed" title="クリア">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="w-full bg-slate-950 border border-slate-800 p-4 lg:p-8 rounded-3xl shadow-2xl relative overflow-hidden select-none">
+            
+            <div class="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-red-800 via-red-950 to-red-900 border-b border-yellow-600/30"></div>
+            
+            <div class="w-full overflow-x-auto no-scrollbar py-2">
+                <div class="flex relative min-w-[700px] h-64 md:h-80 select-none" id="piano-keyboard">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let audioCtx = null;
+        let masterGain = null;
+        let reverbNode = null;
+        let reverbWet = null;
+        let activeNodes = {};
+        
+        let baseOctave = 4;
+        let currentTimbre = 'classic';
+        let showLabels = true;
+        let showNotes = true;
+
+        let isMouseDown = false;
+        let lastMouseKeyId = null;
+        let lastTouchedKeyId = null;
+
+        let isRecording = false;
+        let isPlaying = false;
+        let recordStartTime = 0;
+        let recordedNotes = [];
+        let playbackTimeouts = [];
+
+        const keyMap = [
+            { note: 'C',  isBlack: false, offset: 0,  label: 'ド', key: 'a' },
+            { note: 'C#', isBlack: true,  offset: 1,  label: 'ド#', key: 'w' },
+            { note: 'D',  isBlack: false, offset: 2,  label: 'レ', key: 's' },
+            { note: 'D#', isBlack: true,  offset: 3,  label: 'レ#', key: 'e' },
+            { note: 'E',  isBlack: false, offset: 4,  label: 'ミ', key: 'd' },
+            { note: 'F',  isBlack: false, offset: 5,  label: 'ファ', key: 'f' },
+            { note: 'F#', isBlack: true,  offset: 6,  label: 'ファ#', key: 't' },
+            { note: 'G',  isBlack: false, offset: 7,  label: 'ソ', key: 'g' },
+            { note: 'G#', isBlack: true,  offset: 8,  label: 'ソ#', key: 'y' },
+            { note: 'A',  isBlack: false, offset: 9,  label: 'ラ', key: 'h' },
+            { note: 'A#', isBlack: true,  offset: 10, label: 'ラ#', key: 'u' },
+            { note: 'B',  isBlack: false, offset: 11, label: 'シ', key: 'j' },
+            { note: 'C2', isBlack: false, offset: 12, label: 'ド', key: 'k' },
+            { note: 'C2#',isBlack: true,  offset: 13, label: 'ド#', key: 'o' },
+            { note: 'D2', isBlack: false, offset: 14, label: 'レ', key: 'l' },
+            { note: 'D2#',isBlack: true,  offset: 15, label: 'レ#', key: 'p' },
+            { note: 'E2', isBlack: false, offset: 16, label: 'ミ', key: ';' }
+        ];
+
+        function initAudio() {
+            if (audioCtx) return;
+            
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            
+            masterGain = audioCtx.createGain();
+            const volumeSlider = document.getElementById('slider-volume');
+            masterGain.gain.setValueAtTime(volumeSlider.value / 100 * 0.35, audioCtx.currentTime);
+
+            reverbNode = audioCtx.createConvolver();
+            
+            const rate = audioCtx.sampleRate;
+            const len = rate * 3.0; 
+            const impulse = audioCtx.createBuffer(2, len, rate);
+            const left = impulse.getChannelData(0);
+            const right = impulse.getChannelData(1);
+            
+            for (let i = 0; i < len; i++) {
+                const decay = Math.exp(-i / (rate * 1.5));
+                left[i] = (Math.random() * 2 - 1) * decay;
+                right[i] = (Math.random() * 2 - 1) * decay;
+            }
+            reverbNode.buffer = impulse;
+
+            reverbWet = audioCtx.createGain();
+            const reverbSlider = document.getElementById('slider-reverb');
+            reverbWet.gain.setValueAtTime(reverbSlider.value / 100 * 0.8, audioCtx.currentTime);
+
+            masterGain.connect(audioCtx.destination);
+            
+            const banner = document.getElementById('audio-status-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+
+        function getFrequency(offset) {
+            const baseFreq = 261.63; // C4
+            const octaveDiff = baseOctave - 4;
+            const noteOffset = offset + (octaveDiff * 12);
+            return baseFreq * Math.pow(2, noteOffset / 12);
+        }
+
+        function setTimbre(type) {
+            currentTimbre = type;
+            const buttons = ['classic', 'bright', 'soft'];
+            buttons.forEach(b => {
+                const btn = document.getElementById(`btn-timbre-${b}`);
+                if (b === type) {
+                    btn.className = "py-1.5 text-xs rounded font-medium transition duration-200 bg-emerald-500 text-slate-950 shadow";
+                } else {
+                    btn.className = "py-1.5 text-xs rounded font-medium transition duration-200 text-slate-400 hover:text-slate-200";
+                }
+            });
+        }
+
+        function playNote(offset, keyId) {
+            initAudio();
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            if (activeNodes[keyId]) {
+                stopNote(keyId, true);
+            }
+
+            const now = audioCtx.currentTime;
+            const freq = getFrequency(offset);
+
+            const oscs = [];
+            const gains = [];
+            
+            const harmonicSpecs = [
+                { ratio: 1.0,  detune: -1.5, gain: 0.8 },  
+                { ratio: 1.0,  detune: 1.5,  gain: 0.7 },  
+                { ratio: 2.0,  detune: -0.8, gain: 0.45 }, 
+                { ratio: 3.0,  detune: 0.5,  gain: 0.25 }, 
+                { ratio: 4.0,  detune: 0.0,  gain: 0.15 }, 
+                { ratio: 5.0,  detune: 1.2,  gain: 0.08 }  
+            ];
+
+            const mainGainNode = audioCtx.createGain();
+            const filterNode = audioCtx.createBiquadFilter();
+
+            harmonicSpecs.forEach(spec => {
+                const osc = audioCtx.createOscillator();
+                const gNode = audioCtx.createGain();
+
+                if (currentTimbre === 'bright') {
+                    osc.type = (spec.ratio === 1) ? 'triangle' : 'sine';
+                    gNode.gain.setValueAtTime(spec.gain * 1.2, now);
+                } else if (currentTimbre === 'soft') {
+                    osc.type = 'sine';
+                    gNode.gain.setValueAtTime(spec.gain * 0.7, now);
+                } else {
+                    osc.type = (spec.ratio <= 2) ? 'triangle' : 'sine';
+                    gNode.gain.setValueAtTime(spec.gain * 0.9, now);
+                }
+
+                osc.frequency.setValueAtTime(freq * spec.ratio, now);
+                osc.detune.setValueAtTime(spec.detune, now);
+
+                osc.connect(gNode);
+                gNode.connect(filterNode);
+                
+                oscs.push(osc);
+                gains.push(gNode);
+            });
+
+            const attackOsc = audioCtx.createOscillator();
+            const attackGain = audioCtx.createGain();
+            
+            attackOsc.type = 'sine';
+            attackOsc.frequency.setValueAtTime(freq * 8, now); 
+            attackOsc.frequency.exponentialRampToValueAtTime(freq, now + 0.03); 
+            
+            attackGain.gain.setValueAtTime(0.4, now);
+            attackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03); 
+
+            attackOsc.connect(attackGain);
+            attackGain.connect(filterNode);
+            
+            oscs.push(attackOsc);
+
+            filterNode.type = 'lowpass';
+            filterNode.Q.setValueAtTime(1.2, now);
+            
+            if (currentTimbre === 'bright') {
+                filterNode.frequency.setValueAtTime(3500, now);
+                filterNode.frequency.exponentialRampToValueAtTime(1200, now + 2.5);
+            } else if (currentTimbre === 'soft') {
+                filterNode.frequency.setValueAtTime(1200, now);
+                filterNode.frequency.exponentialRampToValueAtTime(350, now + 1.2);
+            } else {
+                filterNode.frequency.setValueAtTime(2200, now);
+                filterNode.frequency.exponentialRampToValueAtTime(600, now + 1.8);
+            }
+
+            mainGainNode.gain.setValueAtTime(0, now);
+            mainGainNode.gain.linearRampToValueAtTime(1.0, now + 0.005); 
+            
+            mainGainNode.gain.setValueAtTime(1.0, now + 0.01);
+            mainGainNode.gain.exponentialRampToValueAtTime(0.35, now + 0.4); 
+            mainGainNode.gain.exponentialRampToValueAtTime(0.001, now + 7.5); 
+
+            filterNode.connect(mainGainNode);
+            mainGainNode.connect(masterGain);
+
+            if (reverbNode && reverbWet) {
+                mainGainNode.connect(reverbNode);
+                reverbNode.connect(reverbWet);
+                reverbWet.connect(masterGain);
+            }
+
+            oscs.forEach(o => o.start(now));
+
+            activeNodes[keyId] = {
+                oscillators: oscs,
+                gainNode: mainGainNode,
+                startTime: now
+            };
+
+            const element = document.getElementById(`key-${keyId}`);
+            if (element) element.classList.add('active');
+
+            if (isRecording) {
+                recordedNotes.push({
+                    offset: offset,
+                    keyId: keyId,
+                    time: Date.now() - recordStartTime,
+                    type: 'start'
+                });
+            }
+        }
+
+        function stopNote(keyId, fastRelease = false) {
+            const nodeInfo = activeNodes[keyId];
+            if (!nodeInfo) return;
+
+            const now = audioCtx ? audioCtx.currentTime : 0;
+            const releaseTime = fastRelease ? 0.05 : 0.25; 
+
+            try {
+                nodeInfo.gainNode.gain.cancelScheduledValues(now);
+                nodeInfo.gainNode.gain.setValueAtTime(nodeInfo.gainNode.gain.value, now);
+                nodeInfo.gainNode.gain.exponentialRampToValueAtTime(0.0001, now + releaseTime);
+
+                const oscs = nodeInfo.oscillators;
+                setTimeout(() => {
+                    oscs.forEach(o => {
+                        try { o.stop(); } catch(e) {}
+                        try { o.disconnect(); } catch(e) {}
+                    });
+                }, releaseTime * 1000 + 100);
+            } catch (err) {
+                console.error("Stop note error:", err);
+            }
+
+            delete activeNodes[keyId];
+
+            const element = document.getElementById(`key-${keyId}`);
+            if (element) element.classList.remove('active');
+
+            if (isRecording && !fastRelease) {
+                recordedNotes.push({
+                    keyId: keyId,
+                    time: Date.now() - recordStartTime,
+                    type: 'end'
+                });
+            }
+        }
+
+        function stopAllNotes() {
+            Object.keys(activeNodes).forEach(keyId => {
+                stopNote(keyId);
+            });
+            lastMouseKeyId = null;
+            lastTouchedKeyId = null;
+            isMouseDown = false;
+        }
+
+        function renderKeyboard() {
+            const container = document.getElementById('piano-keyboard');
+            container.innerHTML = '';
+
+            document.getElementById('piano-keyboard').addEventListener('contextmenu', (e) => e.preventDefault());
+
+            const whiteKeysContainer = document.createElement('div');
+            whiteKeysContainer.className = "flex w-full h-full relative";
+            container.appendChild(whiteKeysContainer);
+
+            let whiteKeyIndex = 0;
+            const whiteKeyWidthPercent = 100 / keyMap.filter(k => !k.isBlack).length;
+
+            keyMap.forEach((keyData, idx) => {
+                const keyElement = document.createElement('div');
+                keyElement.id = `key-${idx}`;
+                
+                keyElement.classList.add('piano-key');
+                keyElement.dataset.keyIndex = idx;
+                
+                keyElement.addEventListener('dragstart', (e) => e.preventDefault());
+                
+                const noteName = keyData.note.replace('2', '');
+                
+                const labelText = showLabels ? `<span class="text-[10px] font-bold block opacity-70">${keyData.key.toUpperCase()}</span>` : '';
+                const noteText = showNotes ? `<span class="text-xs font-semibold mt-1 block">${keyData.label}</span>` : '';
+
+                if (!keyData.isBlack) {
+                    keyElement.className += " white-key flex-1 flex flex-col justify-end items-center pb-4 text-slate-800 border-r border-slate-300 relative cursor-pointer select-none";
+                    keyElement.innerHTML = `
+                        <div class="pointer-events-none text-center">
+                            ${labelText}
+                            ${noteText}
+                        </div>
+                    `;
+                    
+                    keyElement.dataset.whiteIndex = whiteKeyIndex;
+                    whiteKeyIndex++;
+                    whiteKeysContainer.appendChild(keyElement);
+                } else {
+                    const prevWhiteKeyIndex = whiteKeyIndex - 1;
+                    const leftPos = (prevWhiteKeyIndex * whiteKeyWidthPercent) - (whiteKeyWidthPercent * 0.25);
+                    
+                    const blackNoteText = showNotes ? `<span class="text-[9px] block opacity-80 mt-1">${noteName}</span>` : '';
+
+                    keyElement.className += " black-key absolute h-3/5 text-slate-300 flex flex-col justify-end items-center pb-3 cursor-pointer select-none";
+                    keyElement.style.width = `${whiteKeyWidthPercent * 0.6}%`;
+                    keyElement.style.left = `${leftPos}%`;
+                    keyElement.innerHTML = `
+                        <div class="pointer-events-none text-center">
+                            ${labelText}
+                            ${blackNoteText}
+                        </div>
+                    `;
+                    whiteKeysContainer.appendChild(keyElement);
+                }
+
+                keyElement.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    initAudio();
+                    isMouseDown = true;
+                    lastMouseKeyId = idx;
+                    playNote(keyData.offset, idx);
+                });
+
+                keyElement.addEventListener('mouseenter', (e) => {
+                    if (isMouseDown) {
+                        if (lastMouseKeyId !== null && lastMouseKeyId !== idx) {
+                            stopNote(lastMouseKeyId);
+                        }
+                        lastMouseKeyId = idx;
+                        playNote(keyData.offset, idx);
+                    }
+                });
+
+                keyElement.addEventListener('mouseleave', (e) => {
+                    if (isMouseDown && lastMouseKeyId === idx) {
+                        stopNote(idx);
+                    }
+                });
+            });
+
+            container.addEventListener('mouseleave', () => {
+                if (isMouseDown && lastMouseKeyId !== null) {
+                    stopNote(lastMouseKeyId);
+                    lastMouseKeyId = null;
+                }
+            });
+        }
+
+        const setupTouchGlissando = () => {
+            const keyboard = document.getElementById('piano-keyboard');
+
+            keyboard.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                initAudio();
+                
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                const keyElement = element ? element.closest('.piano-key') : null;
+                
+                if (keyElement) {
+                    const idx = parseInt(keyElement.dataset.keyIndex);
+                    lastTouchedKeyId = idx;
+                    playNote(keyMap[idx].offset, idx);
+                }
+            }, { passive: false });
+
+            keyboard.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const element = document.elementFromPoint(touch.clientX, touch.clientY);
+                const keyElement = element ? element.closest('.piano-key') : null;
+                
+                if (keyElement) {
+                    const idx = parseInt(keyElement.dataset.keyIndex);
+                    if (lastTouchedKeyId !== idx) {
+                        if (lastTouchedKeyId !== null) {
+                            stopNote(lastTouchedKeyId);
+                        }
+                        lastTouchedKeyId = idx;
+                        playNote(keyMap[idx].offset, idx);
+                    }
+                } else {
+                    if (lastTouchedKeyId !== null) {
+                        stopNote(lastTouchedKeyId);
+                        lastTouchedKeyId = null;
+                    }
+                }
+            }, { passive: false });
+
+            keyboard.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                if (lastTouchedKeyId !== null) {
+                    stopNote(lastTouchedKeyId);
+                    lastTouchedKeyId = null;
+                }
+            }, { passive: false });
+
+            keyboard.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                if (lastTouchedKeyId !== null) {
+                    stopNote(lastTouchedKeyId);
+                    lastTouchedKeyId = null;
+                }
+            }, { passive: false });
+        };
+
+        window.addEventListener('mouseup', () => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                if (lastMouseKeyId !== null) {
+                    stopNote(lastMouseKeyId);
+                    lastMouseKeyId = null;
+                }
+            }
+        });
+
+        window.addEventListener('blur', () => {
+            stopAllNotes();
+        });
+
+        function changeOctave(direction) {
+            const newOctave = baseOctave + direction;
+            if (newOctave >= 1 && newOctave <= 8) {
+                baseOctave = newOctave;
+                document.getElementById('val-octave').innerText = baseOctave;
+                renderKeyboard();
+            }
+        }
+
+        function resetOctave() {
+            baseOctave = 4;
+            document.getElementById('val-octave').innerText = baseOctave;
+            renderKeyboard();
+        }
+
+        const keyboardActiveKeys = {};
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            const keyPressed = e.key.toLowerCase();
+            const keyIdx = keyMap.findIndex(k => k.key === keyPressed);
+
+            if (keyIdx !== -1 && !keyboardActiveKeys[keyPressed]) {
+                keyboardActiveKeys[keyPressed] = true;
+                playNote(keyMap[keyIdx].offset, keyIdx);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            const keyPressed = e.key.toLowerCase();
+            const keyIdx = keyMap.findIndex(k => k.key === keyPressed);
+
+            if (keyIdx !== -1) {
+                keyboardActiveKeys[keyPressed] = false;
+                stopNote(keyIdx);
+            }
+        });
+
+        document.getElementById('slider-volume').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-volume').innerText = `${val}%`;
+            if (masterGain && audioCtx) {
+                masterGain.gain.setValueAtTime((val / 100) * 0.35, audioCtx.currentTime);
+            }
+        });
+
+        document.getElementById('slider-reverb').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('val-reverb').innerText = `${val}%`;
+            if (reverbWet && audioCtx) {
+                reverbWet.gain.setValueAtTime(val / 100 * 0.8, audioCtx.currentTime);
+            }
+        });
+
+        document.getElementById('toggle-labels').addEventListener('change', (e) => {
+            showLabels = e.target.checked;
+            renderKeyboard();
+        });
+
+        document.getElementById('toggle-notes').addEventListener('change', (e) => {
+            showNotes = e.target.checked;
+            renderKeyboard();
+        });
+
+        function toggleRecording() {
+            initAudio();
+            
+            const btnRec = document.getElementById('btn-rec');
+            const iconRec = document.getElementById('icon-rec');
+            const textRec = document.getElementById('text-rec');
+            const recStatus = document.getElementById('rec-status');
+            const recInfo = document.getElementById('rec-info');
+
+            if (!isRecording) {
+                isRecording = true;
+                recordedNotes = [];
+                recordStartTime = Date.now();
+                
+                btnRec.classList.replace('bg-red-600/20', 'bg-red-600');
+                btnRec.classList.replace('text-red-400', 'text-slate-100');
+                iconRec.className = "fa-solid fa-square text-[10px] animate-pulse";
+                textRec.innerText = "録音停止";
+                
+                recStatus.innerText = "録音中...";
+                recStatus.className = "text-xs font-bold text-red-500 animate-pulse";
+                recInfo.innerText = "キーを弾いてください。演奏データが保存されます。";
+                
+                togglePlayControls(false);
+            } else {
+                isRecording = false;
+                
+                btnRec.classList.replace('bg-red-600', 'bg-red-600/20');
+                btnRec.classList.replace('text-slate-100', 'text-red-400');
+                iconRec.className = "fa-solid fa-circle text-[10px]";
+                textRec.innerText = "録音開始";
+                
+                recStatus.innerText = recordedNotes.length > 0 ? "データあり" : "空";
+                recStatus.className = "text-xs font-bold text-emerald-400";
+                
+                if (recordedNotes.length > 0) {
+                    const noteCount = recordedNotes.filter(n => n.type === 'start').length;
+                    recInfo.innerText = `${noteCount} 個のノートが保存されました。`;
+                    togglePlayControls(true);
+                } else {
+                    recInfo.innerText = "演奏データが記録されませんでした。";
+                    togglePlayControls(false);
+                }
+            }
+        }
+
+        function playRecording() {
+            if (recordedNotes.length === 0 || isPlaying) return;
+            
+            isPlaying = true;
+            document.getElementById('rec-status').innerText = "再生中...";
+            document.getElementById('rec-status').className = "text-xs font-bold text-teal-400";
+            
+            document.getElementById('btn-rec').disabled = true;
+            document.getElementById('btn-rec').classList.add('opacity-50');
+
+            playbackTimeouts = [];
+
+            recordedNotes.forEach(event => {
+                const timeoutId = setTimeout(() => {
+                    if (event.type === 'start') {
+                        playNote(event.offset, event.keyId);
+                    } else if (event.type === 'end') {
+                        stopNote(event.keyId);
+                    }
+                }, event.time);
+                
+                playbackTimeouts.push(timeoutId);
+            });
+
+            const totalDuration = recordedNotes[recordedNotes.length - 1].time;
+            const endTimeout = setTimeout(() => {
+                finishPlayback();
+            }, totalDuration + 1200); 
+
+            playbackTimeouts.push(endTimeout);
+        }
+
+        function finishPlayback() {
+            isPlaying = false;
+            stopAllNotes();
+            document.getElementById('rec-status').innerText = "データあり";
+            document.getElementById('rec-status').className = "text-xs font-bold text-emerald-400";
+            document.getElementById('btn-rec').disabled = false;
+            document.getElementById('btn-rec').classList.remove('opacity-50');
+        }
+
+        function clearRecording() {
+            playbackTimeouts.forEach(clearTimeout);
+            playbackTimeouts = [];
+            
+            stopAllNotes();
+
+            recordedNotes = [];
+            isPlaying = false;
+            isRecording = false;
+            
+            document.getElementById('rec-status').innerText = "停止中";
+            document.getElementById('rec-status').className = "text-xs font-bold text-slate-500";
+            document.getElementById('rec-info').innerText = "演奏したメロディを一時保存できます。";
+            
+            togglePlayControls(false);
+            
+            const btnRec = document.getElementById('btn-rec');
+            btnRec.disabled = false;
+            btnRec.classList.remove('opacity-50');
+            btnRec.className = "flex-1 bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5";
+            btnRec.classList.remove('opacity-50');
+            document.getElementById('icon-rec').className = "fa-solid fa-circle text-[10px]";
+            document.getElementById('text-rec').innerText = "録音開始";
+        }
+
+        function togglePlayControls(enabled) {
+            const btnPlay = document.getElementById('btn-play');
+            const btnClear = document.getElementById('btn-clear');
+            
+            if (enabled) {
+                btnPlay.disabled = false;
+                btnPlay.className = "flex-1 bg-teal-600 hover:bg-teal-500 text-slate-950 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-lg active:scale-95";
+                
+                btnClear.disabled = false;
+                btnClear.className = "px-3 bg-slate-900 border border-slate-800 text-slate-400 hover:text-rose-400 py-2 rounded-lg text-xs font-semibold transition active:scale-95";
+            } else {
+                btnPlay.disabled = true;
+                btnPlay.className = "flex-1 bg-slate-800 text-slate-500 border border-slate-700/50 py-2 rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 cursor-not-allowed";
+                
+                btnClear.disabled = true;
+                btnClear.className = "px-3 bg-slate-800 text-slate-500 border border-slate-700/50 py-2 rounded-lg text-xs font-semibold transition cursor-not-allowed";
+            }
+        }
+
+        window.onload = function() {
+            renderKeyboard();
+            setupTouchGlissando();
+            
+            document.body.addEventListener('click', function() {
+                initAudio();
+            }, { once: true });
+            document.body.addEventListener('keydown', function() {
+                initAudio();
+            }, { once: true });
+        };
+    </script>
+</body>
+</html>
