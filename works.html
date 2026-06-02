@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品閲覧サイト</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+        }
+        .error-message {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-xl bg-white p-8 md:p-10 rounded-xl shadow-2xl border border-gray-100">
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">【技術科・情報分野】</h1>
+        <h1 class="text-3xl font-extrabold text-gray-900 mb-2 text-center">作品閲覧サイト</h1>
+        <p class="text-gray-500 mb-8 text-center">年度・学年・組・番号を入力してください</p>
+
+        <form id="urlForm" class="space-y-6">
+
+            <div class="grid gap-4" style="grid-template-columns: 2fr 1fr 1fr 1fr;">
+                <div>
+                    <label for="year" class="block text-sm font-medium text-gray-700 mb-1">年度</label>
+                    <select id="year" name="year" required
+                            class="w-full px-2 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-lg">
+                    </select>
+                </div>
+
+                <div>
+                    <label for="grade" class="block text-sm font-medium text-gray-700 mb-1">学年</label>
+                    <input type="number" id="grade" name="grade" min="1" max="3" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-lg" oninput="toHankaku(this)">
+                </div>
+
+                <div>
+                    <label for="class" class="block text-sm font-medium text-gray-700 mb-1">組</label>
+                    <input type="text" id="class" name="class" required
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-lg" oninput="toHankaku(this)">
+                </div>
+
+                <div>
+                    <label for="number" class="block text-sm font-medium text-gray-700 mb-1">番号</label>
+                    <input type="number" id="number" name="number" min="1" required
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 text-lg" oninput="toHankaku(this)">
+                </div>
+            </div>
+
+            <p id="errorMessage" class="error-message text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                ⚠️ すべての項目を正しく入力してください。（例：年度 2025, 学年 1, 組 A または 3, 番号 15）
+            </p>
+
+            <button type="button" onclick="navigateToStudentPage(event)"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-200 ease-in-out transform hover:scale-[1.01] active:scale-95">
+                サイトへ移動
+            </button>
+        </form>
+    </div>
+
+    <script>
+        (function buildYearOptions() {
+            const sel = document.getElementById('year');
+            const currentYear = new Date().getFullYear();
+            const currentFiscalYear = new Date().getMonth() >= 3 ? currentYear : currentYear - 1;
+            for (let y = currentFiscalYear; y >= currentFiscalYear - 4; y--) {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = `${y}年度`;
+                sel.appendChild(opt);
+            }
+        })();
+
+        function toHankaku(input) {
+            input.value = input.value
+                .replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+                .replace(/　/g, ' ');
+        }
+
+        function navigateToStudentPage(event) {
+            event.preventDefault();
+
+            const errorMessage = document.getElementById('errorMessage');
+            
+            const yearStr = document.getElementById('year').value;
+            const gradeStr = document.getElementById('grade').value;
+            const classStr = document.getElementById('class').value;
+            const numberStr = document.getElementById('number').value;
+
+            const grade = parseInt(gradeStr, 10);
+            const studentClass = classStr.trim();
+            const studentNumber = parseInt(numberStr, 10);
+
+            if (isNaN(grade) || grade < 1 || grade > 3 || 
+                studentClass === '' || 
+                isNaN(studentNumber) || studentNumber < 1) {
+                
+                errorMessage.style.display = 'block';
+                return;
+            }
+
+            errorMessage.style.display = 'none';
+
+            // 学年・組・番号
+            const paddedNumber = String(studentNumber).padStart(2, '0');
+            const path = `https://aaa/${yearStr}/${grade}_${studentClass}_${paddedNumber}.html`;
+            
+            window.location.href = path;
+
+
+        }
+    </script>
+</body>
+</html>
