@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>技術科ってどんな授業？</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --neon-cyan:   #00f5ff;
+    --neon-pink:   #ff0090;
+    --neon-green:  #39ff14;
+    --neon-yellow: #fff700;
+    --neon-purple: #bf00ff;
+    --neon-orange: #ff6600;
+    --bg-dark: #040810;
+    --text-main: #e0eaff;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--bg-dark);
+    color: var(--text-main);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content:'';
+    position:fixed; inset:0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.035) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events:none; z-index:0;
+  }
+
+  /* ── NEON TEXT ── */
+  .neon-cyan   { color:var(--neon-cyan);   text-shadow:0 0 8px var(--neon-cyan),  0 0 25px var(--neon-cyan),  0 0 60px var(--neon-cyan); }
+  .neon-pink   { color:var(--neon-pink);   text-shadow:0 0 8px var(--neon-pink),  0 0 25px var(--neon-pink),  0 0 60px var(--neon-pink); }
+  .neon-green  { color:var(--neon-green);  text-shadow:0 0 8px var(--neon-green), 0 0 25px var(--neon-green), 0 0 60px var(--neon-green); }
+  .neon-yellow { color:var(--neon-yellow); text-shadow:0 0 8px var(--neon-yellow),0 0 25px var(--neon-yellow),0 0 60px var(--neon-yellow); }
+  .neon-purple { color:var(--neon-purple); text-shadow:0 0 8px var(--neon-purple),0 0 25px var(--neon-purple),0 0 60px var(--neon-purple); }
+  .neon-orange { color:var(--neon-orange); text-shadow:0 0 8px var(--neon-orange),0 0 25px var(--neon-orange),0 0 60px var(--neon-orange); }
+
+  /* ── SCROLL REVEAL ── */
+  .reveal        { opacity:0; transform:translateY(50px);  transition:opacity .8s ease,transform .8s ease; }
+  .reveal-left   { opacity:0; transform:translateX(-60px); transition:opacity .8s ease,transform .8s ease; }
+  .reveal-right  { opacity:0; transform:translateX(60px);  transition:opacity .8s ease,transform .8s ease; }
+  .reveal.visible,.reveal-left.visible,.reveal-right.visible { opacity:1; transform:none; }
+
+  /* ── NAV ── */
+  nav {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.9rem 5%;
+    background:rgba(4,8,16,.88); backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(0,245,255,.13);
+  }
+  .nav-logo { font-family:'Share Tech Mono',monospace; font-size:.95rem; color:var(--neon-cyan); text-shadow:0 0 8px var(--neon-cyan); }
+  .nav-links { display:flex; gap:1.8rem; list-style:none; }
+  .nav-links a { font-size:.82rem; color:rgba(200,220,255,.55); text-decoration:none; letter-spacing:.06em; transition:color .2s; }
+  .nav-links a:hover { color:var(--neon-cyan); text-shadow:0 0 6px var(--neon-cyan); }
+
+  /* ── HERO ── */
+  #hero {
+    position:relative; height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; overflow:hidden; z-index:1;
+  }
+  #hero canvas { position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .hero-content { position:relative; z-index:2; padding:0 1rem; }
+
+  .hero-label {
+    font-family:'Share Tech Mono',monospace; font-size:.8rem; letter-spacing:.35em;
+    color:var(--neon-cyan); text-shadow:0 0 10px var(--neon-cyan);
+    margin-bottom:1.2rem; animation:fadeInDown 1s ease both;
+  }
+  .hero-title {
+    font-size:clamp(3rem,9vw,7rem); font-weight:900; line-height:1.05;
+    animation:fadeInUp 1s ease .3s both;
+  }
+  .hero-title .line2 {
+    display:block; color:var(--neon-pink);
+    text-shadow:0 0 12px var(--neon-pink),0 0 40px var(--neon-pink),0 0 100px var(--neon-pink);
+    animation:flickerPink 5s ease-in-out 2.5s infinite;
+  }
+  .hero-sub {
+    margin-top:1.8rem; font-size:clamp(.95rem,2.2vw,1.25rem);
+    color:rgba(200,220,255,.8); line-height:1.9;
+    animation:fadeInUp 1s ease .7s both;
+  }
+  .hero-sub strong { color:var(--neon-cyan); }
+  .scroll-hint {
+    position:absolute; bottom:2.2rem; left:50%; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:.4rem;
+    color:var(--neon-cyan); font-size:.7rem; font-family:'Share Tech Mono',monospace;
+    letter-spacing:.2em; animation:bounce 2s ease-in-out infinite; opacity:.65;
+  }
+  .scroll-hint svg { width:18px; height:18px; fill:var(--neon-cyan); filter:drop-shadow(0 0 5px var(--neon-cyan)); }
+
+  /* ── SECTION LAYOUT ── */
+  .sec {
+    position:relative; z-index:1;
+    padding:90px 5% 80px;
+    max-width:1080px; margin:0 auto;
+  }
+  .sec-label { font-family:'Share Tech Mono',monospace; font-size:.75rem; letter-spacing:.35em; opacity:.55; margin-bottom:.7rem; }
+  .sec-title { font-size:clamp(1.9rem,4.5vw,3.2rem); font-weight:900; line-height:1.2; margin-bottom:.9rem; }
+  .sec-lead  { font-size:1.05rem; line-height:1.95; color:rgba(200,220,255,.82); max-width:780px; margin-bottom:3rem; }
+
+  .divider {
+    max-width:1080px; margin:0 auto;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--neon-cyan),transparent);
+    box-shadow:0 0 10px var(--neon-cyan);
+  }
+
+  /* ── GOAL CARDS ── */
+  .goal-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:1.6rem; }
+  .goal-card {
+    background:rgba(0,18,38,.75); border:1px solid rgba(0,245,255,.2);
+    border-radius:14px; padding:2rem; position:relative; overflow:hidden;
+    transition:transform .3s,box-shadow .3s;
+  }
+  .goal-card::before { content:''; position:absolute; top:0;left:0;right:0; height:3px; background:var(--neon-cyan); box-shadow:0 0 12px var(--neon-cyan); }
+  .goal-card:hover { transform:translateY(-6px); box-shadow:0 0 30px rgba(0,245,255,.18); }
+  .goal-num { font-family:'Share Tech Mono',monospace; font-size:2.4rem; font-weight:700; color:var(--neon-cyan); text-shadow:0 0 14px var(--neon-cyan); margin-bottom:.8rem; }
+  .goal-card h3 { font-size:1.05rem; font-weight:900; margin-bottom:.6rem; }
+  .goal-card p  { font-size:.93rem; line-height:1.85; color:rgba(200,220,255,.82); }
+
+  /* ── AREA ITEMS ── */
+  .area-list { display:flex; flex-direction:column; gap:3rem; }
+  .area-item { display:grid; grid-template-columns:120px 1fr; gap:2rem; align-items:start; }
+
+  .area-badge {
+    width:110px; height:110px; border-radius:16px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Share Tech Mono',monospace; font-size:2rem; font-weight:700; flex-shrink:0;
+  }
+  .area-badge small { font-size:.62rem; margin-top:.3rem; letter-spacing:.04em; }
+  .badge-a { background:rgba(0,245,255,.09);  border:2px solid var(--neon-cyan);   color:var(--neon-cyan);   box-shadow:0 0 20px rgba(0,245,255,.18); }
+  .badge-b { background:rgba(57,255,20,.09);  border:2px solid var(--neon-green);  color:var(--neon-green);  box-shadow:0 0 20px rgba(57,255,20,.18); }
+  .badge-c { background:rgba(255,102,0,.09);  border:2px solid var(--neon-orange); color:var(--neon-orange); box-shadow:0 0 20px rgba(255,102,0,.18); }
+  .badge-d { background:rgba(191,0,255,.09);  border:2px solid var(--neon-purple); color:var(--neon-purple); box-shadow:0 0 20px rgba(191,0,255,.18); }
+
+  .area-name { font-size:1.45rem; font-weight:900; margin-bottom:.55rem; }
+  .area-desc { font-size:.97rem; line-height:1.9; color:rgba(200,220,255,.83); margin-bottom:1rem; }
+  .tags { display:flex; flex-wrap:wrap; gap:.45rem; }
+  .tag { font-family:'Share Tech Mono',monospace; font-size:.72rem; padding:.28rem .75rem; border-radius:100px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.13); color:rgba(200,220,255,.65); }
+
+  /* ── PROCESS ── */
+  .process-wrap { display:flex; flex-direction:column; gap:0; position:relative; }
+  .process-wrap::before {
+    content:''; position:absolute; left:35px; top:40px; bottom:40px; width:2px;
+    background:linear-gradient(180deg,var(--neon-pink),var(--neon-purple));
+    box-shadow:0 0 8px var(--neon-pink);
+  }
+
+  /* phase headers */
+  .phase-header {
+    display:flex; align-items:center; gap:1rem;
+    margin:2.5rem 0 .8rem 0; padding-left:80px;
+  }
+  .phase-header:first-child { margin-top:0; }
+  .phase-tag {
+    font-family:'Share Tech Mono',monospace; font-size:.7rem; letter-spacing:.15em;
+    padding:.3rem .9rem; border-radius:100px;
+  }
+  .phase-tag.pt-know  { color:var(--neon-cyan);   border:1px solid var(--neon-cyan);   box-shadow:0 0 8px rgba(0,245,255,.3); }
+  .phase-tag.pt-make  { color:var(--neon-pink);   border:1px solid var(--neon-pink);   box-shadow:0 0 8px rgba(255,0,144,.3); }
+  .phase-tag.pt-think { color:var(--neon-green);  border:1px solid var(--neon-green);  box-shadow:0 0 8px rgba(57,255,20,.3); }
+  .phase-title { font-size:1rem; font-weight:700; opacity:.7; }
+
+  .process-step { display:flex; align-items:flex-start; gap:2rem; padding:1.3rem 0; }
+  .step-circle {
+    width:70px; height:70px; border-radius:50%; background:var(--bg-dark);
+    border:2px solid var(--neon-pink); box-shadow:0 0 14px rgba(255,0,144,.4);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Share Tech Mono',monospace; font-size:1.2rem;
+    color:var(--neon-pink); text-shadow:0 0 8px var(--neon-pink);
+    flex-shrink:0; z-index:1;
+  }
+  .step-title { font-size:1.1rem; font-weight:700; margin-bottom:.35rem; padding-top:.3rem; }
+  .step-desc  { font-size:.92rem; color:rgba(200,220,255,.78); line-height:1.78; }
+
+  /* ── FUTURE ── */
+  .future-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(215px,1fr)); gap:1.4rem; }
+  .future-card {
+    background:rgba(8,10,25,.85); border:1px solid rgba(255,255,255,.07);
+    border-radius:12px; padding:1.7rem; text-align:center;
+    transition:transform .3s,border-color .3s;
+  }
+  .future-card:hover { transform:scale(1.04); border-color:rgba(0,245,255,.28); }
+  .future-icon { font-size:2.6rem; margin-bottom:.9rem; }
+  .future-card h3 { font-size:1rem; font-weight:700; margin-bottom:.5rem; }
+  .future-card p  { font-size:.85rem; color:rgba(200,220,255,.65); line-height:1.75; }
+
+  /* ── WARNING BOX ── */
+  .warn-box {
+    background:rgba(255,102,0,.07); border:1px solid rgba(255,102,0,.35);
+    border-left:4px solid var(--neon-orange); border-radius:10px;
+    padding:1.6rem 2rem; margin-top:2.5rem;
+  }
+  .warn-box h3 { color:var(--neon-orange); font-size:1rem; font-weight:700; margin-bottom:.7rem; }
+  .warn-box p  { font-size:.93rem; color:rgba(200,220,255,.8); line-height:1.85; }
+
+  /* ── THINKING FRAMEWORK (技術の見方・考え方) ── */
+  .viewpoint-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1.4rem;
+    margin-bottom:2.5rem;
+  }
+  .vp-card {
+    background:rgba(0,10,28,.8); border:1px solid rgba(0,245,255,.18);
+    border-radius:12px; padding:1.6rem; position:relative;
+    transition:transform .3s,box-shadow .3s;
+  }
+  .vp-card:hover { transform:translateY(-5px); box-shadow:0 0 24px rgba(0,245,255,.15); }
+  .vp-icon { font-size:2rem; margin-bottom:.8rem; }
+  .vp-card h3 { font-size:1rem; font-weight:700; margin-bottom:.5rem; color:var(--neon-cyan); }
+  .vp-card p  { font-size:.88rem; line-height:1.8; color:rgba(200,220,255,.75); }
+
+  .optimal-box {
+    background:rgba(0,245,255,.05); border:1px dashed rgba(0,245,255,.35);
+    border-radius:12px; padding:1.8rem 2rem; text-align:center;
+  }
+  .optimal-box p { font-size:1rem; line-height:1.9; color:rgba(200,220,255,.85); }
+  .optimal-box strong { color:var(--neon-cyan); }
+
+  /* ── SAFETY & RULES ── */
+  .rules-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:1.4rem;
+  }
+  .rule-card {
+    border-radius:12px; padding:1.6rem; border:1px solid;
+    transition:transform .3s;
+  }
+  .rule-card:hover { transform:translateY(-4px); }
+  .rule-card.red   { background:rgba(255,0,60,.06);  border-color:rgba(255,0,60,.3);  }
+  .rule-card.amber { background:rgba(255,170,0,.06); border-color:rgba(255,170,0,.3); }
+  .rule-card.blue  { background:rgba(0,120,255,.06); border-color:rgba(0,120,255,.3); }
+  .rule-card.green { background:rgba(57,255,20,.06); border-color:rgba(57,255,20,.3); }
+  .rule-tag {
+    display:inline-block; font-family:'Share Tech Mono',monospace;
+    font-size:.65rem; letter-spacing:.15em; padding:.2rem .7rem;
+    border-radius:100px; margin-bottom:.8rem;
+  }
+  .rule-tag.red   { color:#ff003c; border:1px solid #ff003c; }
+  .rule-tag.amber { color:#ffaa00; border:1px solid #ffaa00; }
+  .rule-tag.blue  { color:#0078ff; border:1px solid #0078ff; }
+  .rule-tag.green { color:var(--neon-green); border:1px solid var(--neon-green); }
+  .rule-card h3 { font-size:1rem; font-weight:700; margin-bottom:.5rem; }
+  .rule-card ul { padding-left:1.2rem; }
+  .rule-card ul li { font-size:.88rem; line-height:1.85; color:rgba(200,220,255,.78); }
+
+  /* ── IP & ETHICS ── */
+  .ip-row {
+    display:grid; grid-template-columns:1fr 1fr; gap:1.6rem;
+    margin-bottom:2rem;
+  }
+  .ip-box {
+    background:rgba(191,0,255,.06); border:1px solid rgba(191,0,255,.25);
+    border-radius:12px; padding:1.7rem;
+  }
+  .ip-box h3 { font-size:1.05rem; font-weight:700; margin-bottom:.7rem; color:var(--neon-purple); }
+  .ip-box p  { font-size:.9rem; line-height:1.85; color:rgba(200,220,255,.78); }
+  .ip-rule-list { display:flex; flex-direction:column; gap:1rem; }
+  .ip-rule {
+    display:flex; gap:1rem; align-items:flex-start;
+    background:rgba(255,255,255,.03); border-radius:10px; padding:1.1rem 1.3rem;
+    border:1px solid rgba(255,255,255,.07);
+  }
+  .ip-rule-icon { font-size:1.5rem; flex-shrink:0; margin-top:.1rem; }
+  .ip-rule-body h4 { font-size:.95rem; font-weight:700; margin-bottom:.3rem; }
+  .ip-rule-body p  { font-size:.86rem; color:rgba(200,220,255,.72); line-height:1.75; }
+
+  /* ── CAREER ── */
+  .career-grid {
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:1.4rem;
+    margin-bottom:2.5rem;
+  }
+  .career-card {
+    background:rgba(8,10,25,.85); border:1px solid rgba(255,255,255,.07);
+    border-radius:12px; padding:1.6rem; transition:transform .3s,border-color .3s;
+  }
+  .career-card:hover { transform:translateY(-5px); border-color:rgba(57,255,20,.3); }
+  .career-area {
+    font-family:'Share Tech Mono',monospace; font-size:.65rem; letter-spacing:.15em;
+    padding:.2rem .7rem; border-radius:100px; display:inline-block; margin-bottom:.9rem;
+  }
+  .ca-a { color:var(--neon-cyan);   border:1px solid var(--neon-cyan); }
+  .ca-b { color:var(--neon-green);  border:1px solid var(--neon-green); }
+  .ca-c { color:var(--neon-orange); border:1px solid var(--neon-orange); }
+  .ca-d { color:var(--neon-purple); border:1px solid var(--neon-purple); }
+  .career-card h3 { font-size:1rem; font-weight:700; margin-bottom:.4rem; }
+  .career-card p  { font-size:.86rem; color:rgba(200,220,255,.68); line-height:1.75; }
+  .career-jobs { display:flex; flex-wrap:wrap; gap:.4rem; margin-top:.8rem; }
+  .career-job {
+    font-size:.72rem; padding:.22rem .65rem; border-radius:100px;
+    background:rgba(255,255,255,.06); color:rgba(200,220,255,.6);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .career-message {
+    background:rgba(57,255,20,.05); border:1px solid rgba(57,255,20,.25);
+    border-left:4px solid var(--neon-green); border-radius:10px;
+    padding:1.6rem 2rem;
+  }
+  .career-message p { font-size:.95rem; line-height:1.9; color:rgba(200,220,255,.82); }
+
+  /* ── CTA ── */
+  #cta {
+    text-align:center; padding:110px 5% 130px;
+    position:relative; z-index:1;
+  }
+  #cta::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse at center,rgba(0,245,255,.06) 0%,transparent 68%);
+    pointer-events:none;
+  }
+  .cta-title { font-size:clamp(1.9rem,4.5vw,3rem); font-weight:900; line-height:1.3; margin-bottom:1.4rem; }
+
+  footer { text-align:center; padding:1.8rem 5%; border-top:1px solid rgba(0,245,255,.1); font-size:.75rem; color:rgba(200,220,255,.25); font-family:'Share Tech Mono',monospace; position:relative; z-index:1; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeInDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:none} }
+  @keyframes fadeInUp   { from{opacity:0;transform:translateY(28px)}  to{opacity:1;transform:none} }
+  @keyframes bounce { 0%,100%{transform:translateX(-50%) translateY(0)} 50%{transform:translateX(-50%) translateY(-9px)} }
+  @keyframes flickerPink {
+    0%,18%,20%,22%,24%,53%,55%,100%{ opacity:1; text-shadow:0 0 12px var(--neon-pink),0 0 40px var(--neon-pink),0 0 100px var(--neon-pink); }
+    19%,23%,54%{ opacity:.65; text-shadow:none; }
+  }
+
+  @media(max-width:640px){
+    .area-item { grid-template-columns:1fr; }
+    .process-wrap::before { display:none; }
+    .nav-links { display:none; }
+    .phase-header { padding-left:0; }
+    .ip-row { grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">&lt;GIJUTSU/&gt;</div>
+  <ul class="nav-links">
+    <li><a href="#about">技術科とは</a></li>
+    <li><a href="#goals">目標</a></li>
+    <li><a href="#areas">4つの分野</a></li>
+    <li><a href="#process">学習の流れ</a></li>
+    <li><a href="#thinking">見方・考え方</a></li>
+    <li><a href="#safety">安全・ルール</a></li>
+    <li><a href="#future">未来へ</a></li>
+    <li><a href="#career">キャリア</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════ HERO ══════════ -->
+<section id="hero">
+  <canvas id="heroCanvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-label">久保田の技術部屋 — 技術科特設サイト</div>
+    <h1 class="hero-title">
+      技術科って<br>
+      <span class="line2">どんな授業？</span>
+    </h1>
+    <p class="hero-sub">
+      技術を学び、ものをつくり、<strong>未来を創造する</strong>。<br>
+      生活・社会・環境を「技術の目」で見つめる教科、それが<strong>技術科</strong>。
+    </p>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h12z"/></svg>
+  </div>
+</section>
+
+<!-- ══════════ WHAT IS ══════════ -->
+<div class="divider reveal" style="margin-top:0"></div>
+<div class="sec" id="about">
+  <div class="reveal">
+    <p class="sec-label neon-cyan">// 01 — WHAT IS GIJUTSU-KA</p>
+    <h2 class="sec-title neon-cyan">技術科は<br>どんな授業？</h2>
+    <p class="sec-lead">
+      技術科は、<strong>「ものづくり」などの実践的・体験的な活動</strong>を通して、私たちの生活を支えている技術について学ぶ授業です。単に何かを作るだけではなく、材料・生き物・エネルギー・情報といった様々な技術が、どのように私たちの生活や社会、環境と関わっているかを<strong>科学的に理解</strong>していきます。
+    </p>
+  </div>
+
+  <!-- 3-column feature boxes -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.4rem;" class="reveal">
+    <div style="background:rgba(0,245,255,.06);border:1px solid rgba(0,245,255,.2);border-radius:12px;padding:1.6rem;">
+      <div style="font-size:2rem;margin-bottom:.7rem;">⚙️</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">実践・体験が中心</h3>
+      <p style="font-size:.88rem;line-height:1.8;color:rgba(200,220,255,.75);">教科書を読むだけでなく、実際に手を動かして設計・製作・育成・プログラミングを体験する。</p>
+    </div>
+    <div style="background:rgba(255,0,144,.06);border:1px solid rgba(255,0,144,.2);border-radius:12px;padding:1.6rem;">
+      <div style="font-size:2rem;margin-bottom:.7rem;">🔬</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">科学と技術をつなぐ</h3>
+      <p style="font-size:.88rem;line-height:1.8;color:rgba(200,220,255,.75);">「なぜそうなるのか」を科学的に理解した上で、技術を応用して問題を解決する力を育てる。</p>
+    </div>
+    <div style="background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.2);border-radius:12px;padding:1.6rem;">
+      <div style="font-size:2rem;margin-bottom:.7rem;">🌍</div>
+      <h3 style="font-size:1rem;font-weight:700;margin-bottom:.5rem;">社会・環境とのつながり</h3>
+      <p style="font-size:.88rem;line-height:1.8;color:rgba(200,220,255,.75);">技術が社会・環境にどう影響するかを考え、持続可能な社会の担い手となる視点を育む。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ GOALS ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="goals">
+  <div class="reveal">
+    <p class="sec-label neon-pink">// 02 — THREE GOALS</p>
+    <h2 class="sec-title neon-pink">技術科の<br>3つの目標</h2>
+    <p class="sec-lead">技術科では、以下の3つの力を身に付けることを目指しています。</p>
+  </div>
+
+  <div class="goal-grid">
+    <div class="goal-card reveal" style="transition-delay:.05s">
+      <div class="goal-num">01</div>
+      <h3>知識と技能</h3>
+      <p>材料と加工・生物育成・エネルギー変換・情報の技術の仕組みを理解し、それらを<strong>安全・適切に使いこなすスキル</strong>を身に付ける。</p>
+    </div>
+    <div class="goal-card reveal" style="transition-delay:.2s">
+      <div class="goal-num">02</div>
+      <h3>考える力（問題解決力）</h3>
+      <p>生活や社会の中から「もっとこうしたい」「ここが不便だ」という問題を見つけ、技術の力を使ってどう解決するかを考え、<strong>設計→製作→振り返り</strong>を実践する力。</p>
+    </div>
+    <div class="goal-card reveal" style="transition-delay:.35s">
+      <div class="goal-num">03</div>
+      <h3>実践的な態度</h3>
+      <p>よりよい未来や、地球にやさしい持続可能な社会を作るために、技術を「<strong>適切に</strong>」「<strong>誠実に</strong>」工夫して生かそうとする心をもつ。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ AREAS ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="areas">
+  <div class="reveal">
+    <p class="sec-label neon-yellow">// 03 — FOUR CONTENT AREAS</p>
+    <h2 class="sec-title neon-yellow">4つの分野</h2>
+    <p class="sec-lead">技術科では、現代社会を支える技術を次の4つに整理して学習します。</p>
+  </div>
+
+  <div class="area-list">
+
+    <!-- A -->
+    <div class="area-item reveal-left">
+      <div class="area-badge badge-a">A<small>材料と加工</small></div>
+      <div>
+        <div class="area-name neon-cyan">A：材料と加工の技術</div>
+        <p class="area-desc">木材・金属・プラスチックなどの<strong>特徴を知り</strong>、目的に合わせて丈夫で使いやすいものを作る技術です。材料の組織・成分、切断・切削・塑性加工などの原理を理解し、設計図を描いて実際に製作します。</p>
+        <div class="tags">
+          <span class="tag">材料の特性</span><span class="tag">木材</span><span class="tag">金属</span><span class="tag">プラスチック</span>
+          <span class="tag">設計・製図</span><span class="tag">ものづくり</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="area-item reveal-right">
+      <div class="area-badge badge-b">B<small>生物育成</small></div>
+      <div>
+        <div class="area-name neon-green">B：生物育成の技術</div>
+        <p class="area-desc">作物・動物・水産生物などが育つ仕組みを理解し、環境を整えて上手に育てる技術です。私たちの「<strong>食</strong>」や「<strong>環境</strong>」を支えており、バイオテクノロジーや持続可能な農業とも深く関わります。</p>
+        <div class="tags">
+          <span class="tag">植物</span><span class="tag">動物</span><span class="tag">水産生物</span>
+          <span class="tag">生物育成</span><span class="tag">環境との共存</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="area-item reveal-left">
+      <div class="area-badge badge-c">C<small>エネルギー変換</small></div>
+      <div>
+        <div class="area-name neon-orange">C：エネルギー変換の技術</div>
+        <p class="area-desc">電気・運動・熱などのエネルギーを、目的に合わせて効率よく変換し、伝え、利用する技術です。家電製品や乗り物のしくみに関わり、電気回路の製作や機械の整備・調整を通して<strong>省エネルギー</strong>の視点も育てます。</p>
+        <div class="tags">
+          <span class="tag">電気回路</span><span class="tag">電子工作</span><span class="tag">機械のしくみ</span>
+          <span class="tag">省エネルギー</span><span class="tag">再生可能エネルギー</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- D -->
+    <div class="area-item reveal-right">
+      <div class="area-badge badge-d">D<small>情報の技術</small></div>
+      <div>
+        <div class="area-name neon-purple">D：情報の技術</div>
+        <p class="area-desc">コンピュータやネットワークを使って、情報をデジタル化したり、自動で処理（プログラミング）したりする技術です。今の情報社会を動かす基盤であり、<strong>IoT・AI・セキュリティ</strong>など最先端の技術とも直結します。</p>
+        <div class="tags">
+          <span class="tag">情報モラル</span><span class="tag">ネットワーク</span><span class="tag">セキュリティ</span>
+          <span class="tag">双方向性</span><span class="tag">計測・制御</span><span class="tag">プログラミング</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ PROCESS ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="process">
+  <div class="reveal">
+    <p class="sec-label neon-green">// 04 — LEARNING CYCLE</p>
+    <h2 class="sec-title neon-green">技術科の<br>学習の流れ</h2>
+    <p class="sec-lead">技術科の学習は一方通行ではなく、3つのフェーズが循環するサイクルで進みます。</p>
+  </div>
+
+  <div class="process-wrap">
+
+    <!-- Phase 1 -->
+    <div class="phase-header reveal">
+      <span class="phase-tag pt-know">PHASE 1</span>
+      <span class="phase-title">生活や社会を支える技術 ── 知る・調べる</span>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.05s">
+      <div class="step-circle">01</div>
+      <div>
+        <div class="step-title">すでにある技術を知る</div>
+        <div class="step-desc">身のまわりにある製品・生物・電気機器・情報システムが、どのような技術で成り立っているかを調べます。開発された背景（人々の願い）と科学的な原理・法則を結びつけて理解しましょう。</div>
+      </div>
+    </div>
+
+    <!-- Phase 2 -->
+    <div class="phase-header reveal" style="transition-delay:.1s">
+      <span class="phase-tag pt-make">PHASE 2</span>
+      <span class="phase-title">技術による問題の解決 ── つくる・試す</span>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.15s">
+      <div class="step-circle">02</div>
+      <div>
+        <div class="step-title">問題を見つけ、課題を設定する</div>
+        <div class="step-desc">生活の中の「不便」や「もっとこうしたい」という問題を発見。何を目標に解決するかを自分で設定します。これが技術科のスタートライン！</div>
+      </div>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.22s">
+      <div class="step-circle">03</div>
+      <div>
+        <div class="step-title">設計・計画する</div>
+        <div class="step-desc">解決策を構想し、製作図・回路図・フローチャートなどで表現。材料や手順を計画的に考える「見通す力」を養います。</div>
+      </div>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.3s">
+      <div class="step-circle">04</div>
+      <div>
+        <div class="step-title">製作・育成・制作する</div>
+        <div class="step-desc">実際に手を動かして作る・プログラムする・育てる。うまくいかないことがあれば原因を考えて改善する。この試行錯誤こそが技術科の醍醐味！</div>
+      </div>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.37s">
+      <div class="step-circle">05</div>
+      <div>
+        <div class="step-title">評価・改善する</div>
+        <div class="step-desc">完成したものを実際に使って問題点を発見し、よりよい解決策へブラッシュアップ。このサイクルは何度でも繰り返します。</div>
+      </div>
+    </div>
+
+    <!-- Phase 3 -->
+    <div class="phase-header reveal" style="transition-delay:.42s">
+      <span class="phase-tag pt-think">PHASE 3</span>
+      <span class="phase-title">社会の発展と技術 ── 考える・つなげる</span>
+    </div>
+    <div class="process-step reveal" style="transition-delay:.47s">
+      <div class="step-circle">06</div>
+      <div>
+        <div class="step-title">未来に向けて展望する</div>
+        <div class="step-desc">自分が学んだことや作ったものを振り返り、これからの社会でその技術がどうあるべきかを考えます。「技術の光と影」を見据えた、未来を切り拓く視点を育てます。</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ THINKING FRAMEWORK ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="thinking">
+  <div class="reveal">
+    <p class="sec-label neon-cyan">// 07 — WAY OF THINKING</p>
+    <h2 class="sec-title neon-cyan">技術の<br>見方・考え方</h2>
+    <p class="sec-lead">技術科ならではの思考プロセスがあります。問題を解決するとき、ひとつの「正解」ではなく、<strong>複数の視点を同時に考えながら「最適」な解を導き出す</strong>のが技術の見方・考え方です。</p>
+  </div>
+
+  <div class="viewpoint-grid">
+    <div class="vp-card reveal" style="transition-delay:.05s">
+      <div class="vp-icon">👥</div>
+      <h3>社会からの要求</h3>
+      <p>「どんな人が・どんな場面で・何を必要としているか」を出発点にする。ユーザーのニーズを理解しなければ、技術は役に立たない。</p>
+    </div>
+    <div class="vp-card reveal" style="transition-delay:.12s">
+      <div class="vp-icon">🛡️</div>
+      <h3>安全性</h3>
+      <p>使う人・作る人・周囲の人が危険にさらされないか？万が一の事故・トラブルを想定した設計と管理が求められる。</p>
+    </div>
+    <div class="vp-card reveal" style="transition-delay:.19s">
+      <div class="vp-icon">🌱</div>
+      <h3>環境への負荷</h3>
+      <p>製造・使用・廃棄のどの段階でも地球環境への影響を最小化する。持続可能な社会を作るために欠かせない視点。</p>
+    </div>
+    <div class="vp-card reveal" style="transition-delay:.26s">
+      <div class="vp-icon">💰</div>
+      <h3>経済性</h3>
+      <p>コストが高すぎると普及しない。材料費・製造コスト・維持費など、現実的に実現できる解決策を考える。</p>
+    </div>
+  </div>
+
+  <div class="optimal-box reveal">
+    <p>
+      これらの視点は<strong>相反する</strong>ことが多い。たとえば「安全性を高めるとコストが上がる」「環境負荷を下げると機能が制限される」…。<br>
+      技術科では、こうした<strong>トレードオフを理解し、最適なバランスを見つける思考力</strong>を鍛えます。
+    </p>
+  </div>
+</div>
+
+<!-- ══════════ SAFETY & IP ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="safety">
+  <div class="reveal">
+    <p class="sec-label neon-orange">// 08 — SAFETY, RULES & ETHICS</p>
+    <h2 class="sec-title neon-orange">安全・衛生と<br>知的財産・倫理</h2>
+    <p class="sec-lead">技術科の活動には、一歩間違えると危険を伴うものも多くあります。また、デジタル社会を生きる上で、他者の権利を尊重する倫理観も欠かせません。</p>
+  </div>
+
+  <div class="reveal" style="margin-bottom:2.5rem">
+    <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;color:var(--neon-orange);">⚠️ 安全管理・衛生のルール</h3>
+    <div class="rules-grid">
+      <div class="rule-card red reveal-left" style="transition-delay:.05s">
+        <span class="rule-tag red">工具・刃物</span>
+        <h3>工具の正しい使い方</h3>
+        <ul>
+          <li>机上を片付けてから作業を始める</li>
+          <li>刃物の持ち方や受け渡し、使用方法に注意する</li>
+          <li>けが・事故・破損は必ず報告する</li>
+        </ul>
+      </div>
+      <div class="rule-card amber reveal-left" style="transition-delay:.12s">
+        <span class="rule-tag amber">やけど</span>
+        <h3>エネルギーの取り扱い</h3>
+        <ul>
+          <li>はんだごては置き場所や受け渡しに注意する</li>
+          <li>電気回路は電源を切ってから配線する</li>
+          <li>ショートに注意し、むやみに電源を入れない</li>
+        </ul>
+      </div>
+      <div class="rule-card blue reveal-right" style="transition-delay:.05s">
+        <span class="rule-tag blue">モラルと安全</span>
+        <h3>情報モラルとセキュリティ</h3>
+        <ul>
+          <li>個人情報を不用意にネット上に公開しない</li>
+          <li>不審なリンクやファイルは開かない</li>
+          <li>他人を傷つける書き込みは絶対にしない</li>
+        </ul>
+      </div>
+      <div class="rule-card green reveal-right" style="transition-delay:.12s">
+        <span class="rule-tag green">生物</span>
+        <h3>生物育成の衛生管理</h3>
+        <ul>
+          <li>作業後は必ず手を洗う</li>
+          <li>目的外の道具の使い方をしない</li>
+          <li>生き物を無断で外に持ち出さない</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="reveal">
+    <h3 style="font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;color:var(--neon-purple);">💡 知的財産権と倫理観</h3>
+    <div class="ip-row">
+      <div class="ip-box">
+        <h3>🔒 知的財産権とは？</h3>
+        <p>人間の知的な創造活動から生まれたアイデア・デザイン・プログラム・作品などは「財産」として法律で守られています。技術科で自分が設計した作品やプログラムにも、その権利があります。</p>
+      </div>
+      <div class="ip-box">
+        <h3>📜 著作権・特許権</h3>
+        <p><strong>著作権</strong>はプログラム・文章・画像・音楽など創作物を守る権利。<strong>特許権</strong>は新しい技術的アイデアを守る権利。どちらも「無断コピー・無断使用はNG」が基本です。</p>
+      </div>
+    </div>
+    <div class="ip-rule-list">
+      <div class="ip-rule reveal" style="transition-delay:.05s">
+        <div class="ip-rule-icon">🚫</div>
+        <div class="ip-rule-body">
+          <h4>他人のプログラムや作品を無断でコピー・改ざんしない</h4>
+          <p>ネットで公開されているコードや画像にも著作権があります。ライセンスを確認し、正しく利用しましょう。</p>
+        </div>
+      </div>
+      <div class="ip-rule reveal" style="transition-delay:.12s">
+        <div class="ip-rule-icon">✅</div>
+        <div class="ip-rule-body">
+          <h4>自分のアイデアを記録する習慣をつける</h4>
+          <p>設計図やプログラムを日付入りで記録しておくことが、将来のアイデア保護につながります。</p>
+        </div>
+      </div>
+      <div class="ip-rule reveal" style="transition-delay:.19s">
+        <div class="ip-rule-icon">🤝</div>
+        <div class="ip-rule-body">
+          <h4>他者と協力しながら、倫理的に技術を活用する</h4>
+          <p>チームで製作するときも、アイデアの貢献者を明確にし、お互いの権利を尊重する姿勢が大切です。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ FUTURE (moved here) ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="future">
+  <div class="reveal">
+    <p class="sec-label neon-purple">// 08 — YOUR FUTURE</p>
+    <h2 class="sec-title neon-purple">技術科が<br>あなたの未来を切り開く</h2>
+    <p class="sec-lead">
+      技術は、私たちの願いを形にする力です。しかし、技術には便利な反面、<strong>環境破壊やネット犯罪</strong>などの「影」の側面もあります。技術科での学びは、皆さんが将来、技術をただ使うだけでなく、それが社会や環境にどんな影響を与えるかを「<strong>評価</strong>」し、よりよい未来のために「<strong>選択</strong>」できる力を育てます。
+    </p>
+  </div>
+
+  <div class="future-grid">
+    <div class="future-card reveal" style="transition-delay:.05s">
+      <div class="future-icon">🤖</div>
+      <h3>AI・ロボット工学</h3>
+      <p>プログラミング×エネルギー変換の知識が、AI・ロボット開発のベースに。</p>
+    </div>
+    <div class="future-card reveal" style="transition-delay:.12s">
+      <div class="future-icon">🌿</div>
+      <h3>スマート農業</h3>
+      <p>生物育成×情報技術の融合で、食の未来を変える農業テクノロジーが生まれる。</p>
+    </div>
+    <div class="future-card reveal" style="transition-delay:.19s">
+      <div class="future-icon">⚡</div>
+      <h3>再生可能エネルギー</h3>
+      <p>エネルギー変換の原理を知ることが、地球環境を守るエンジニアへの第一歩。</p>
+    </div>
+    <div class="future-card reveal" style="transition-delay:.26s">
+      <div class="future-icon">💻</div>
+      <h3>ソフトウェア開発</h3>
+      <p>情報の技術で学ぶプログラミングは、あらゆるデジタルサービスの基盤となる。</p>
+    </div>
+    <div class="future-card reveal" style="transition-delay:.33s">
+      <div class="future-icon">🏗️</div>
+      <h3>ものづくり産業</h3>
+      <p>材料と加工の技術は、製造・建設・航空宇宙産業に直結する知識。</p>
+    </div>
+    <div class="future-card reveal" style="transition-delay:.40s">
+      <div class="future-icon">🔬</div>
+      <h3>バイオテクノロジー</h3>
+      <p>生物育成の原理は、医薬品・食品・環境技術など幅広い分野で活用される。</p>
+    </div>
+  </div>
+
+  <div class="warn-box reveal">
+    <h3>⚠ 技術の「光」と「影」を知ることも学びのひとつ</h3>
+    <p>科学技術の発展は、生活環境の向上や運輸・食料生産の効率化をもたらした一方で、資源・エネルギーの浪費や自然環境の破壊、情報活用に関するモラルの問題なども生じさせています。技術には光と影があり、社会や環境と相互に影響し合うことを理解した上で、技術を評価・選択・管理・運用できる力を、技術科は育てます。</p>
+  </div>
+</div>
+
+<!-- ══════════ CAREER ══════════ -->
+<div class="divider reveal"></div>
+<div class="sec" id="career">
+  <div class="reveal">
+    <p class="sec-label neon-green">// 09 — CAREER CONNECTION</p>
+    <h2 class="sec-title neon-green">技術科の学びが<br>職業につながる</h2>
+    <p class="sec-lead">技術科で学ぶことは、将来のさまざまな職業と深くつながっています。今、教室でやっていることが、未来の仕事の<strong>はじめの一歩</strong>になるかもしれません。</p>
+  </div>
+
+  <div class="career-grid">
+    <div class="career-card reveal" style="transition-delay:.05s">
+      <span class="career-area ca-a">A 材料と加工</span>
+      <h3>ものをつくる仕事</h3>
+      <p>材料の特性を知り、精密に加工する技術は、製造業・建築・航空宇宙の現場で必要とされる基礎スキル。</p>
+      <div class="career-jobs">
+        <span class="career-job">建設</span>
+        <span class="career-job">建築士</span>
+        <span class="career-job">製造技術者</span>
+        <span class="career-job">工業デザイナー</span>
+      </div>
+    </div>
+    <div class="career-card reveal" style="transition-delay:.12s">
+      <span class="career-area ca-b">B 生物育成</span>
+      <h3>食と生命に関わる仕事</h3>
+      <p>植物・動物・微生物の育成技術は、農業・食品・医療・環境保全の分野を支える知識の土台となる。</p>
+      <div class="career-jobs">
+        <span class="career-job">農家・農業技術者</span>
+        <span class="career-job">食品研究者</span>
+        <span class="career-job">農林水産技術者</span>
+        <span class="career-job">環境コンサルタント</span>
+      </div>
+    </div>
+    <div class="career-card reveal" style="transition-delay:.19s">
+      <span class="career-area ca-c">C エネルギー変換</span>
+      <h3>エネルギーを扱う仕事</h3>
+      <p>電気回路や機械の仕組みを理解する力は、電気工事・自動車・再生可能エネルギー産業の基盤になる。</p>
+      <div class="career-jobs">
+        <span class="career-job">電気工事士</span>
+        <span class="career-job">自動車整備士</span>
+        <span class="career-job">電気エンジニア</span>
+        <span class="career-job">電気主任技術者</span>
+      </div>
+    </div>
+    <div class="career-card reveal" style="transition-delay:.26s">
+      <span class="career-area ca-d">D 情報の技術</span>
+      <h3>デジタルを動かす仕事</h3>
+      <p>プログラミング・ネットワーク・データ活用の知識は、IT・AI・ゲーム・サイバーセキュリティ業界で直結して使われる。</p>
+      <div class="career-jobs">
+        <span class="career-job">プログラマー</span>
+        <span class="career-job">AIエンジニア</span>
+        <span class="career-job">ホワイトハッカー</span>
+        <span class="career-job">ゲームクリエイター</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="career-message reveal">
+    <p>
+      💬 <strong>「働くこと」の意味を考えよう。</strong><br>
+      職業はただ「お金を稼ぐ手段」ではありません。技術を通して社会の問題を解決し、誰かの生活をよりよくすることが、働く本質的な意義です。技術科の授業で「ものをつくる・育てる・プログラムする」経験を積むことは、<strong>自分の得意・好きを発見し、社会とつながる力を育てる</strong>ことでもあります。
+    </p>
+  </div>
+</div>
+
+<!-- ══════════ CTA ══════════ -->
+<section id="cta">
+  <div class="reveal">
+    <h2 class="cta-title">
+      予測困難な時代を<br>
+      <span class="neon-cyan">技術で切り拓こう</span>
+    </h2>
+    <p class="hero-sub">
+      他者と協力しながら技術を誠実に工夫し、新しい価値を生み出していく経験は、<br>
+      皆さんが未来を切り拓いていくための大きな武器になるはずです。<br><br>
+      <strong>技術科の授業</strong>で、そのはじめの一歩を踏み出しましょう。
+    </p>
+  </div>
+</section>
+
+<footer>
+  中学校学習指導要領（平成29年告示）解説 技術・家庭編 ── 文部科学省 / designed for students
+</footer>
+
+<script>
+// ── PARTICLE CANVAS ──
+const canvas = document.getElementById('heroCanvas');
+const ctx = canvas.getContext('2d');
+const COLORS = ['#00f5ff','#ff0090','#39ff14','#fff700','#bf00ff'];
+
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+resize(); addEventListener('resize', resize);
+
+class P {
+  constructor(){ this.reset(); }
+  reset(){
+    this.x = Math.random()*canvas.width;
+    this.y = Math.random()*canvas.height;
+    this.vx = (Math.random()-.5)*.5;
+    this.vy = (Math.random()-.5)*.5;
+    this.r  = Math.random()*1.8+.4;
+    this.c  = COLORS[Math.random()*COLORS.length|0];
+    this.a  = Math.random()*.55+.2;
+    this.life = 0;
+    this.max  = Math.random()*280+180;
+  }
+  tick(){
+    this.x += this.vx; this.y += this.vy; this.life++;
+    if(this.life > this.max) this.reset();
+  }
+  draw(){
+    const a = this.a * Math.sin(Math.PI*this.life/this.max);
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.fillStyle = ctx.shadowColor = this.c; ctx.shadowBlur = 8;
+    ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+
+const pts = Array.from({length:150}, ()=>new P());
+
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<pts.length;i++){
+    for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+      const d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){
+        ctx.save(); ctx.globalAlpha=(1-d/110)*.13;
+        ctx.strokeStyle='#00f5ff'; ctx.lineWidth=.5;
+        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke();
+        ctx.restore();
+      }
+    }
+    pts[i].tick(); pts[i].draw();
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+
+// ── SCROLL REVEAL ──
+const obs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible'); });
+},{threshold:.1});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
