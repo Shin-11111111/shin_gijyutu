@@ -81,7 +81,7 @@
         #content {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: stretch;
             flex-direction: column;
             position: relative;
             max-width: 90%;
@@ -99,6 +99,10 @@
             text-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
             transition: font-size 0.3s;
             margin-bottom: 2rem;
+            min-height: 1.2em;
+            white-space: nowrap;
+            width: 100%;
+            display: block;
         }
 
         @media (min-width: 768px) {
@@ -116,7 +120,7 @@
             justify-content: center;
             gap: 15px;
             padding: 1rem;
-            margin-top: 1rem;
+            margin: 1rem auto 0;
         }
     
         button.control, input[type="time"], input[type="number"] {
@@ -402,6 +406,7 @@
                     <button class="control pause-btn" onclick="pauseTimer()">一時停止</button>
                     <button class="control reset-btn" onclick="resetTimer()">リセット</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+                    <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
                 </div>
             </div>
 
@@ -412,6 +417,7 @@
                     <button class="control start-btn" onclick="setAlarm()">アラーム設定</button>
                     <button class="control reset-btn" onclick="clearAlarm()">アラーム解除</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+                    <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
                 </div>
             </div>
 
@@ -422,6 +428,7 @@
                     <button class="control pause-btn" onclick="pauseStopwatch()">一時停止</button>
                     <button class="control reset-btn" onclick="resetStopwatch()">リセット</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+                    <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
                 </div>
             </div>
 
@@ -436,12 +443,17 @@
                         タイマー②<br><span id="timer2Value">00:00</span>
                     </div>
                     <div class="timer-box">
-                        進捗<br><span id="repeatProgress">0 / 0</span>
+                        繰り返し回数<br>
+                        <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:4px;">
+                            <button class="control" onclick="changeRepeatCount(-1)" style="padding:4px 10px; font-size:0.9rem; box-shadow:none;">▼</button>
+                            <span id="repeatTimesInput" style="min-width:36px; text-align:center; font-size:1.2rem; font-weight:700;">0回</span>
+                            <button class="control" onclick="changeRepeatCount(1)" style="padding:4px 10px; font-size:0.9rem; box-shadow:none;">▲</button>
+                        </div>
+                        <span id="repeatProgress" style="font-size:0.85rem; color:#94a3b8; margin-top:4px; display:block;">0 / 0</span>
                     </div>
                 </div>
 
                 <div class="controls">
-                    <input type="number" id="repeatTimesInput" placeholder="繰り返し回数" min="1" style="width:120px;" oninput="updateRepeatCount()" />
                     <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
                     <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
                     <button class="control" onclick="addTimeToSelected(60)">+1分</button>
@@ -450,6 +462,7 @@
                     <button class="control pause-btn" onclick="pauseRepeatTimer(true)">一時停止</button>
                     <button class="control reset-btn" onclick="resetRepeatTimer(true, true)">リセット</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+                    <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
                 </div>
             </div>
             <div id="clock" style="display:none; align-items: center;">
@@ -457,6 +470,7 @@
                 <div class="time-display" id="clockDisplay">--:--:--</div>
                 <div class="controls">
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
+                    <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
                 </div>
             </div>
         </div>
@@ -535,10 +549,12 @@
             if (totalTime > 0) {
                 totalTime--;
                 updateTimerDisplay();
-            } else {
-                clearInterval(timerId);
-                timerId = null;
-                playAlarm();
+                if (totalTime === 0) {
+                    document.getElementById('timerDisplay').textContent = '時間です！';
+                    clearInterval(timerId);
+                    timerId = null;
+                    playAlarm();
+                }
             }
         }, 1000);
     }
@@ -666,17 +682,22 @@
         }
     }
     function updateRepeatCount() {
-        repeatCount = Math.max(0, parseInt(document.getElementById('repeatTimesInput').value) || 0);
+        document.getElementById('repeatTimesInput').textContent = repeatCount + '回';
         document.getElementById('repeatProgress').textContent = `${Math.ceil(currentRepeat / 2)} / ${repeatCount}`;
     }
-    function updateRepeatTimerDisplay() {
+    function changeRepeatCount(delta) {
+        if (repeatTimerId !== null) return;
+        repeatCount = Math.max(0, repeatCount + delta);
+        updateRepeatCount();
+    }
+    function updateRepeatTimerDisplay(running = (repeatTimerId !== null)) {
         document.getElementById('repeatTimerDisplay').textContent = formatTime(repeatTimeLeft);
         document.getElementById('repeatProgress').textContent = `${Math.ceil(currentRepeat / 2)} / ${repeatCount}`;
         
-        document.getElementById('timer1Box').classList.toggle('selected', repeatTimerId !== null && isTimer1Turn);
-        document.getElementById('timer2Box').classList.toggle('selected', repeatTimerId !== null && !isTimer1Turn);
-        
-        if (repeatTimerId === null) {
+        if (running) {
+            document.getElementById('timer1Box').classList.toggle('selected', isTimer1Turn);
+            document.getElementById('timer2Box').classList.toggle('selected', !isTimer1Turn);
+        } else {
             document.getElementById('timer1Box').classList.toggle('selected', selectedTimer === 'timer1');
             document.getElementById('timer2Box').classList.toggle('selected', selectedTimer === 'timer2');
         }
@@ -692,6 +713,9 @@
             isTimer1Turn = true;
             currentRepeat = 1;
         }
+
+        document.getElementById('repeatTimesInput').style.color = '#94a3b8';
+        document.getElementById('repeatProgress').style.color = '';
         
         runNextRepeat();
     }
@@ -699,13 +723,13 @@
         if (Math.ceil(currentRepeat / 2) > repeatCount) {
             playAlarm();
             resetRepeatTimer(false, false);
-            document.getElementById('repeatTimerDisplay').textContent = '完了';
+            document.getElementById('repeatTimerDisplay').textContent = '完了です！';
             showMessage('繰り返しタイマーが完了しました', 'success');
             return;
         }
       
         repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
-        updateRepeatTimerDisplay();
+        updateRepeatTimerDisplay(true);
         
         showMessage(isTimer1Turn ? `タイマー① 開始 (${formatTime(timer1Seconds)})` : `タイマー② 開始 (${formatTime(timer2Seconds)})`, 'info');
 
@@ -744,8 +768,10 @@
             repeatCount = 0;
             document.getElementById('timer1Value').textContent = '00:00';
             document.getElementById('timer2Value').textContent = '00:00';
-            document.getElementById('repeatTimesInput').value = '';
             document.getElementById('repeatProgress').textContent = '0 / 0';
+            document.getElementById('repeatTimesInput').textContent = '0回';
+            document.getElementById('repeatTimesInput').style.color = '';
+            document.getElementById('repeatProgress').style.color = '#94a3b8';
         }
         selectTimer('timer1');
         
@@ -766,6 +792,66 @@
             document.exitFullscreen();
         }
     }
+    let pipAnimId = null;
+    async function togglePiP() {
+        const video = document.getElementById('pipVideo');
+        if (document.pictureInPictureElement) {
+            await document.exitPictureInPicture();
+            cancelAnimationFrame(pipAnimId);
+            return;
+        }
+        const canvas = document.getElementById('pipCanvas');
+        const dpr = window.devicePixelRatio || 2;
+        canvas.width = 800 * dpr;
+        canvas.height = 400 * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+
+        const font = new FontFace('Inter', 'url(https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2)');
+        await font.load().then(f => document.fonts.add(f)).catch(() => {});
+
+        function drawFrame() {
+            const display = document.querySelector('#' + currentTab + ' .time-display');
+            const text = display ? display.textContent : '--';
+            const isDark = !document.body.classList.contains('light');
+            const W = 800, H = 400;
+            ctx.fillStyle = isDark ? '#1e293b' : '#f1f5f9';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#0ea5e9';
+            ctx.textAlign = 'center';
+
+            if (currentTab === 'clock') {
+                const dateText = document.getElementById('clock-date').textContent;
+                ctx.font = '500 52px Inter, sans-serif';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(dateText, W / 2, H / 2 - 100);
+                ctx.font = 'bold 160px Inter, sans-serif';
+                ctx.fillText(text, W / 2, H / 2 + 60);
+            } else {
+                ctx.font = 'bold 160px Inter, sans-serif';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(text, W / 2, H / 2);
+            }
+
+            pipAnimId = requestAnimationFrame(drawFrame);
+        }
+        drawFrame();
+
+        const stream = canvas.captureStream(30);
+        video.srcObject = stream;
+        await video.play();
+        try {
+            await video.requestPictureInPicture();
+        } catch (e) {
+            showMessage('PiPに対応していないブラウザです', 'error');
+            cancelAnimationFrame(pipAnimId);
+        }
+    }
+
+    document.addEventListener('leavepictureinpicture', () => {
+        cancelAnimationFrame(pipAnimId);
+    });
+
     document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement) {
             document.body.classList.remove('fullscreen');
@@ -775,20 +861,22 @@
     function playAlarm() {
         const sound = document.getElementById('alarmSound');
         let count = 0, max = 5;
-      
-        sound.pause(); 
-        sound.currentTime = 0;
-      
-        function loopPlay() {
-            if (++count <= max) {
-                sound.play().catch(e => console.error("Audio play failed:", e));
-            } else {
-                sound.onended = null;
-            }
-        }
 
-        sound.onended = loopPlay;
-        loopPlay();
+        sound.onended = null;
+        const startPlay = () => {
+            sound.currentTime = 0;
+            sound.onended = () => {
+                if (++count < max) startPlay();
+            };
+            sound.play().catch(e => console.error("Audio play failed:", e));
+        };
+
+        if (sound.paused) {
+            startPlay();
+        } else {
+            sound.addEventListener('pause', startPlay, { once: true });
+            sound.pause();
+        }
         showMessage('時間です！', 'success');
     }
     
@@ -838,5 +926,7 @@
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
     }
   </script>
+<canvas id="pipCanvas" style="display:none;"></canvas>
+<video id="pipVideo" style="display:none;" muted playsinline></video>
 </body>
 </html>
