@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>等角図 / 正投影図</title>
+    <title>正投影図 / 等角図</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -76,55 +76,161 @@
             outline: 2px solid #6366f1;
             outline-offset: 2px;
         }
+
+        .side-label {
+            font-size: 0.6rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            padding: 0 0.5rem;
+            margin-top: 0.25rem;
+        }
+
+        .tool-row-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: #374151;
+            transition: all 0.15s;
+            text-align: left;
+        }
+
+        .tool-row-btn:hover {
+            background-color: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .tool-row-btn.active {
+            background-color: #4f46e5;
+            color: #fff;
+            box-shadow: 0 4px 10px -2px #a5b4fc;
+        }
+
+        .tool-row-btn i {
+            width: 1rem;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .side-divider {
+            height: 1px;
+            background: #f1f5f9;
+            margin: 0.4rem 0.5rem;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.35rem;
+            padding: 0 0.5rem;
+        }
+
+        .color-swatch-lg {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 0.375rem;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+
+        .color-swatch-lg:hover {
+            transform: scale(1.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .color-swatch-lg.active {
+            outline: 2.5px solid #6366f1;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
 
-    <aside class="w-14 bg-white border-r border-gray-200 flex flex-col items-center py-3 gap-1 z-10 shadow-lg overflow-y-auto overflow-x-hidden">
-        <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-base mb-2 shadow-inner flex-shrink-0">
-            <i class="fas fa-cube"></i>
+    <aside style="width:11rem;flex-shrink:0" class="bg-white border-r border-gray-200 flex flex-col py-3 gap-0 z-10 shadow-lg overflow-y-auto overflow-x-hidden">
+
+        <div class="flex items-center gap-2 px-3 mb-3">
+            <div class="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center text-white text-sm shadow-inner flex-shrink-0">
+                <i class="fas fa-cube"></i>
+            </div>
+            <span style="font-size:0.8rem;font-weight:700;color:#1e293b;letter-spacing:-0.01em">描画ツール</span>
         </div>
 
-        <button id="tool-line" class="toolbar-btn tool-btn active" title="線を描く (L)"><i class="fas fa-pen-nib"></i></button>
-        <button id="tool-face" class="toolbar-btn tool-btn" title="面を描く (F)"><i class="fas fa-draw-polygon"></i></button>
-        <button id="tool-laser" class="toolbar-btn tool-btn" title="レーザーポインター (P)" style="color:#ef4444"><i class="fas fa-circle" style="font-size:0.5rem"></i></button>
+        <div class="side-label">ツール</div>
+        <div class="flex flex-col gap-0.5 px-2 mt-1">
+            <button id="tool-line" class="tool-row-btn tool-btn active"><i class="fas fa-pen-nib"></i>線を描く<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">L</span></button>
+            <button id="tool-face" class="tool-row-btn tool-btn"><i class="fas fa-draw-polygon"></i>面を描く<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">F</span></button>
+            <button id="tool-eraser" class="tool-row-btn tool-btn"><i class="fas fa-eraser"></i>消しゴム<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">E</span></button>
+            <button id="tool-laser" class="tool-row-btn tool-btn" style="color:#ef4444"><i class="fas fa-circle" style="font-size:0.45rem;color:#ef4444"></i>レーザー<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">P</span></button>
+        </div>
 
-        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+        <h1 class="side-label mt-3">スペースキーを押しながらマウスでドラッグすると移動できます</h1>
 
-        <button id="tool-eraser" class="toolbar-btn tool-btn" title="消しゴム (E)"><i class="fas fa-eraser"></i></button>
-        <button id="undo-btn" class="toolbar-btn" title="元に戻す (Ctrl+Z)"><i class="fas fa-undo"></i></button>
-        <button id="clear-btn" class="toolbar-btn" title="全消去" style="color:#ef4444"><i class="fas fa-trash-alt"></i></button>
+        <div class="side-divider"></div>
 
-        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+        <div class="side-label">操作</div>
+        <div class="flex flex-col gap-0.5 px-2 mt-1">
+            <button id="undo-btn" class="tool-row-btn"><i class="fas fa-undo"></i>元に戻す</button>
+            <button id="clear-btn" class="tool-row-btn" style="color:#ef4444"><i class="fas fa-trash-alt" style="color:#ef4444"></i>全消去</button>
+        </div>
 
-        <button id="grid-toggle" class="toolbar-btn active" title="グリッド切替"><i class="fas fa-th"></i></button>
-        <button id="ortho-toggle" class="toolbar-btn active" title="正投影図の表示切替 (O)"><i class="fas fa-border-all"></i></button>
+        <div class="side-divider"></div>
 
-        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+        <div class="side-label">表示</div>
+        <div class="flex flex-col gap-0.5 px-2 mt-1">
+            <button id="grid-toggle" class="tool-row-btn active"><i class="fas fa-th"></i>グリッド</button>
+            <button id="ortho-toggle" class="tool-row-btn active"><i class="fas fa-border-all"></i>正投影図<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">O</span></button>
+        </div>
+        
+        <div class="side-divider"></div>
 
-        <button id="save-btn" class="toolbar-btn" title="保存" style="color:#10b981"><i class="fas fa-download"></i></button>
+        <div class="flex flex-col gap-0.5 px-2">
+            <button id="save-btn" class="tool-row-btn" style="color:#10b981"><i class="fas fa-download" style="color:#10b981"></i>保存</button>
+        </div>
 
-        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+        <div class="side-divider"></div>
 
-        <button class="color-swatch sidebar-swatch active" data-color="#ef4444" title="赤" style="width:1.5rem;height:1.5rem;background-color:#ef4444"></button>
-        <button class="color-swatch sidebar-swatch" data-color="#3b82f6" title="青" style="width:1.5rem;height:1.5rem;background-color:#3b82f6"></button>
-        <button class="color-swatch sidebar-swatch" data-color="#facc15" title="黄" style="width:1.5rem;height:1.5rem;background-color:#facc15"></button>
-        <button class="color-swatch sidebar-swatch" data-color="#22c55e" title="緑" style="width:1.5rem;height:1.5rem;background-color:#22c55e"></button>
-        <button class="color-swatch sidebar-swatch" data-color="#1e293b" title="黒" style="width:1.5rem;height:1.5rem;background-color:#1e293b"></button>
-        <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色" style="width:1.5rem;height:1.5rem;min-width:1.5rem;min-height:1.5rem;border-radius:9999px;border:2px solid #fff;cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;flex-shrink:0">
+        <div class="side-label">カラー</div>
+        <div class="color-grid mt-1">
+            <button class="color-swatch-lg sidebar-swatch active" data-color="#ef4444" title="赤" style="background:#ef4444"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#3b82f6" title="青" style="background:#3b82f6"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#facc15" title="黄" style="background:#facc15"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#22c55e" title="緑" style="background:#22c55e"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#1e293b" title="黒" style="background:#1e293b"></button>
+            <div style="width:100%;aspect-ratio:1;position:relative;">
+                <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色"
+                       style="position:absolute;inset:0;width:100%;height:100%;border-radius:0.375rem;border:2px solid #fff;cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;box-shadow:0 1px 3px rgba(0,0,0,0.15)">
+            </div>
+        </div>
 
-        <div class="h-px w-8 bg-gray-100 my-1 flex-shrink-0"></div>
+        <div class="side-divider"></div>
 
-        <div style="height:5rem;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <div class="side-label">線の太さ</div>
+        <div class="px-3 mt-1 flex flex-col gap-1">
             <input type="range" id="line-weight" min="1" max="12" value="3"
-                   style="width:4.5rem;cursor:pointer;accent-color:#4f46e5;transform:rotate(-90deg);">
+                   style="width:100%;cursor:pointer;accent-color:#4f46e5;">
+            <div class="flex justify-between" style="font-size:0.65rem;color:#94a3b8">
+                <span>細</span>
+                <span id="weight-label" style="font-weight:700;color:#4f46e5">3</span>
+                <span>太</span>
+            </div>
         </div>
-        <span id="weight-label" class="text-[10px] font-bold text-gray-500">3</span>
+
     </aside>
 
     <main class="flex-1 relative overflow-hidden">
         <div id="canvas-container" class="w-full h-full flex">
-            <div id="ortho-pane" class="relative bg-slate-50 border-r-2 border-dashed border-indigo-200" style="width:40%">
+            <div id="ortho-pane" class="relative bg-slate-50" style="width:40%">
+            <div id="divider" style="position:absolute;top:0;right:-4px;width:8px;height:100%;cursor:col-resize;z-index:20;background:transparent;display:flex;align-items:center;justify-content:center;">
+                <div style="width:3px;height:100%;background:repeating-linear-gradient(to bottom,#a5b4fc 0px,#a5b4fc 6px,transparent 6px,transparent 10px);border-radius:2px;pointer-events:none;"></div>
+            </div>
                 <div class="absolute top-2 left-1/2 -translate-x-1/2 z-10 bg-indigo-100 text-indigo-600 text-xs font-bold px-3 py-1 rounded-full pointer-events-none">正投影図</div>
                 <canvas id="ortho-grid-canvas" class="absolute inset-0 pointer-events-none"></canvas>
                 <canvas id="ortho-canvas" class="absolute inset-0"></canvas>
@@ -153,6 +259,20 @@
             tool: 'line',
             showGrid: true
         };
+
+        let isoZoom = 1.0;
+        let orthoZoom = 1.0;
+        const ZOOM_MIN = 0.2;
+        const ZOOM_MAX = 5.0;
+        const ZOOM_STEP = 0.1;
+
+        let isoOffset = { x: 0, y: 0 };
+        let orthoOffset = { x: 0, y: 0 };
+        let isPanning = false;
+        let panTarget = null;
+        let panStart = { x: 0, y: 0 };
+        let panOffsetStart = { x: 0, y: 0 };
+        let spaceDown = false;
 
         let shapes = [];
         let faces = [];
@@ -184,8 +304,8 @@
 
 
         function getSnappedPoint(rawX, rawY) {
-            const cx = rawX - canvas.width/2;
-            const cy = rawY - canvas.height/2;
+            const cx = (rawX - canvas.width/2 - isoOffset.x) / isoZoom;
+            const cy = (rawY - canvas.height/2 - isoOffset.y) / isoZoom;
 
             const u = cx / (2 * cos30) + cy / (2 * sin30);
             const v = -cx / (2 * cos30) + cy / (2 * sin30);
@@ -215,11 +335,16 @@
             gCtx.clearRect(0, 0, gridCanvas.width, gridCanvas.height);
             if (!config.showGrid) return;
 
+            gCtx.save();
+            gCtx.translate(gridCanvas.width / 2 + isoOffset.x, gridCanvas.height / 2 + isoOffset.y);
+            gCtx.scale(isoZoom, isoZoom);
+            gCtx.translate(-gridCanvas.width / 2, -gridCanvas.height / 2);
+
             gCtx.strokeStyle = '#64748b';
             gCtx.lineWidth = 1.0;
 
-            const cols = Math.ceil(gridCanvas.width / (config.unit * cos30)) + 15;
-            const rows = Math.ceil(gridCanvas.height / (config.unit * sin30)) + 10;
+            const cols = Math.ceil(gridCanvas.width / (config.unit * cos30 * isoZoom)) + 15;
+            const rows = Math.ceil(gridCanvas.height / (config.unit * sin30 * isoZoom)) + 10;
 
             const getP = (uIdx, vIdx) => ({
                 x: (uIdx - vIdx) * config.unit * cos30 + gridCanvas.width/2,
@@ -254,10 +379,15 @@
                 gCtx.stroke();
             }
             gCtx.setLineDash([]);
+            gCtx.restore();
         }
 
         function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(canvas.width / 2 + isoOffset.x, canvas.height / 2 + isoOffset.y);
+            ctx.scale(isoZoom, isoZoom);
+            ctx.translate(-canvas.width / 2, -canvas.height / 2);
             ctx.setLineDash([]);
             
             faces.forEach(face => {
@@ -316,6 +446,7 @@
                     ctx.stroke();
                 });
             }
+            ctx.restore();
         }
 
 
@@ -493,10 +624,10 @@
             document.getElementById('color-picker-side').value = color;
         }
 
-        document.querySelectorAll('.color-swatch').forEach(swatch => {
+        document.querySelectorAll('.color-swatch-lg').forEach(swatch => {
             swatch.addEventListener('click', function() {
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                document.querySelectorAll(`.color-swatch[data-color="${this.dataset.color}"]`).forEach(s => s.classList.add('active'));
+                document.querySelectorAll('.color-swatch-lg').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll(`.color-swatch-lg[data-color="${this.dataset.color}"]`).forEach(s => s.classList.add('active'));
                 setColor(this.dataset.color);
                 redraw();
             });
@@ -550,9 +681,11 @@
             }
         };
 
-        document.getElementById('grid-toggle').onclick = function() {
-            config.showGrid = !config.showGrid;
-            this.classList.toggle('active');
+        document.getElementById('ortho-toggle').onclick = function() {
+            const pane = document.getElementById('ortho-pane');
+            const hidden = pane.style.display === 'none';
+            pane.style.display = hidden ? '' : 'none';
+            this.classList.toggle('active', hidden);
             drawGrid();
             orthoDrawGrid();
         };
@@ -691,13 +824,102 @@
             if (e.key === 'o') document.getElementById('ortho-toggle').click();
             if (e.key === 'p') document.getElementById('tool-laser').click();
             if (e.key === 'Escape') { polyPoints = []; orthoPolyPoints = []; redraw(); orthoRedraw(); }
+            if (e.key === ' ' && !spaceDown) {
+                spaceDown = true;
+                document.body.style.cursor = 'grab';
+                e.preventDefault();
+            }
         };
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === ' ') {
+                spaceDown = false;
+                isPanning = false;
+                document.body.style.cursor = config.tool === 'laser' ? 'none' : '';
+            }
+        });
+
+        // ── パン（移動）処理 ──────────────────────────────
+        function getPanTarget(e) {
+            const rect = canvas.getBoundingClientRect();
+            const oRect = orthoCanvas.getBoundingClientRect();
+            const cx = e.clientX, cy = e.clientY;
+            if (cx >= rect.left && cx <= rect.right && cy >= rect.top && cy <= rect.bottom) return 'iso';
+            if (cx >= oRect.left && cx <= oRect.right && cy >= oRect.top && cy <= oRect.bottom) return 'ortho';
+            return null;
+        }
+
+        window.addEventListener('mousedown', (e) => {
+            // スペース押下中の左クリック、または中クリックでパン開始
+            if ((spaceDown && e.button === 0) || e.button === 1) {
+                e.preventDefault();
+                panTarget = getPanTarget(e);
+                if (!panTarget) return;
+                isPanning = true;
+                panStart = { x: e.clientX, y: e.clientY };
+                panOffsetStart = panTarget === 'iso' ? { ...isoOffset } : { ...orthoOffset };
+                document.body.style.cursor = 'grabbing';
+            }
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isPanning || !panTarget) return;
+            const dx = e.clientX - panStart.x;
+            const dy = e.clientY - panStart.y;
+            if (panTarget === 'iso') {
+                isoOffset = { x: panOffsetStart.x + dx, y: panOffsetStart.y + dy };
+                drawGrid(); redraw();
+            } else {
+                orthoOffset = { x: panOffsetStart.x + dx, y: panOffsetStart.y + dy };
+                orthoDrawGrid(); orthoRedraw();
+            }
+        });
+
+        window.addEventListener('mouseup', (e) => {
+            if (isPanning) {
+                isPanning = false;
+                document.body.style.cursor = spaceDown ? 'grab' : (config.tool === 'laser' ? 'none' : '');
+            }
+        });
+
+        // タッチ2本指パン（ズームと共存）
+        function addPanTouch(element, getOffset, setOffset, redrawFn, drawGridFn) {
+            let lastMid = null;
+            element.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    lastMid = {
+                        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    };
+                }
+            }, { passive: true });
+            element.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && lastMid) {
+                    const mid = {
+                        x: (e.touches[0].clientX + e.touches[1].clientX) / 2,
+                        y: (e.touches[0].clientY + e.touches[1].clientY) / 2
+                    };
+                    const o = getOffset();
+                    setOffset({ x: o.x + mid.x - lastMid.x, y: o.y + mid.y - lastMid.y });
+                    lastMid = mid;
+                    drawGridFn(); redrawFn();
+                }
+            }, { passive: true });
+            element.addEventListener('touchend', () => { lastMid = null; }, { passive: true });
+        }
+
+        addPanTouch(canvas,
+            () => isoOffset, (v) => { isoOffset = v; }, redraw, drawGrid);
+        addPanTouch(orthoCanvas,
+            () => orthoOffset, (v) => { orthoOffset = v; }, orthoRedraw, orthoDrawGrid);
 
         function getOrthoSnappedPoint(rawX, rawY) {
             const unit = config.unit;
+            const cx = (rawX - orthoCanvas.width/2 - orthoOffset.x) / orthoZoom + orthoCanvas.width/2;
+            const cy = (rawY - orthoCanvas.height/2 - orthoOffset.y) / orthoZoom + orthoCanvas.height/2;
             return {
-                x: Math.round(rawX / unit) * unit,
-                y: Math.round(rawY / unit) * unit
+                x: Math.round(cx / unit) * unit,
+                y: Math.round(cy / unit) * unit
             };
         }
 
@@ -713,25 +935,37 @@
         function orthoDrawGrid() {
             orthoGCtx.clearRect(0, 0, orthoGridCanvas.width, orthoGridCanvas.height);
             if (!config.showGrid) return;
+
+            orthoGCtx.save();
+            orthoGCtx.translate(orthoGridCanvas.width / 2 + orthoOffset.x, orthoGridCanvas.height / 2 + orthoOffset.y);
+            orthoGCtx.scale(orthoZoom, orthoZoom);
+            orthoGCtx.translate(-orthoGridCanvas.width / 2, -orthoGridCanvas.height / 2);
+
             const unit = config.unit;
             orthoGCtx.strokeStyle = '#94a3b8';
             orthoGCtx.lineWidth = 0.5;
-            for (let x = 0; x <= orthoGridCanvas.width; x += unit) {
+            const extra = unit * Math.ceil((orthoCanvas.width + orthoCanvas.height) / (2 * unit * orthoZoom));
+            for (let x = -extra; x <= orthoGridCanvas.width + extra; x += unit) {
                 orthoGCtx.beginPath();
-                orthoGCtx.moveTo(x, 0);
-                orthoGCtx.lineTo(x, orthoGridCanvas.height);
+                orthoGCtx.moveTo(x, -extra);
+                orthoGCtx.lineTo(x, orthoGridCanvas.height + extra);
                 orthoGCtx.stroke();
             }
-            for (let y = 0; y <= orthoGridCanvas.height; y += unit) {
+            for (let y = -extra; y <= orthoGridCanvas.height + extra; y += unit) {
                 orthoGCtx.beginPath();
-                orthoGCtx.moveTo(0, y);
-                orthoGCtx.lineTo(orthoGridCanvas.width, y);
+                orthoGCtx.moveTo(-extra, y);
+                orthoGCtx.lineTo(orthoGridCanvas.width + extra, y);
                 orthoGCtx.stroke();
             }
+            orthoGCtx.restore();
         }
 
         function orthoRedraw() {
             orthoCtx.clearRect(0, 0, orthoCanvas.width, orthoCanvas.height);
+            orthoCtx.save();
+            orthoCtx.translate(orthoCanvas.width / 2 + orthoOffset.x, orthoCanvas.height / 2 + orthoOffset.y);
+            orthoCtx.scale(orthoZoom, orthoZoom);
+            orthoCtx.translate(-orthoCanvas.width / 2, -orthoCanvas.height / 2);
             orthoCtx.setLineDash([]);
             orthoFaces.forEach(face => {
                 orthoCtx.beginPath();
@@ -780,6 +1014,7 @@
                     orthoCtx.stroke();
                 });
             }
+            orthoCtx.restore();
         }
 
         orthoCanvas.addEventListener('touchstart', (e) => {
@@ -903,6 +1138,91 @@
 
         window.addEventListener('load', () => { resize(); orthoResize(); });
         window.addEventListener('resize', () => { resize(); orthoResize(); });
+
+        (function() {
+            const divider = document.getElementById('divider');
+            const orthoPane = document.getElementById('ortho-pane');
+            const container = document.getElementById('canvas-container');
+            let dragging = false;
+
+            function startDrag(clientX) {
+                dragging = true;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            }
+
+            function doDrag(clientX) {
+                if (!dragging) return;
+                const rect = container.getBoundingClientRect();
+                const pct = Math.min(85, Math.max(15, (clientX - rect.left) / rect.width * 100));
+                orthoPane.style.width = pct + '%';
+                resize();
+                orthoResize();
+            }
+
+            function endDrag() {
+                dragging = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+
+            divider.addEventListener('mousedown',  (e) => { e.preventDefault(); startDrag(e.clientX); });
+            window.addEventListener('mousemove',   (e) => doDrag(e.clientX));
+            window.addEventListener('mouseup',     endDrag);
+
+            divider.addEventListener('touchstart', (e) => { startDrag(e.touches[0].clientX); }, { passive: true });
+            window.addEventListener('touchmove',   (e) => { if (dragging) doDrag(e.touches[0].clientX); }, { passive: true });
+            window.addEventListener('touchend',    endDrag, { passive: true });
+        })();
+
+        document.getElementById('main-canvas').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            isoZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, isoZoom - e.deltaY * 0.001));
+            drawGrid();
+            redraw();
+        }, { passive: false });
+
+        document.getElementById('ortho-canvas').addEventListener('wheel', (e) => {
+            e.preventDefault();
+            orthoZoom = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, orthoZoom - e.deltaY * 0.001));
+            orthoDrawGrid();
+            orthoRedraw();
+        }, { passive: false });
+
+        function addPinchZoom(element, getZoom, setZoom, redrawFn, drawGridFn) {
+            let lastDist = null;
+            element.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) lastDist = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            }, { passive: true });
+            element.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && lastDist !== null) {
+                    const dist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const delta = dist - lastDist;
+                    setZoom(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, getZoom() + delta * 0.005)));
+                    lastDist = dist;
+                    drawGridFn();
+                    redrawFn();
+                }
+            }, { passive: true });
+            element.addEventListener('touchend', () => { lastDist = null; }, { passive: true });
+        }
+
+        addPinchZoom(
+            document.getElementById('main-canvas'),
+            () => isoZoom, (v) => { isoZoom = v; },
+            redraw, drawGrid
+        );
+        addPinchZoom(
+            document.getElementById('ortho-canvas'),
+            () => orthoZoom, (v) => { orthoZoom = v; },
+            orthoRedraw, orthoDrawGrid
+        );
 
     </script>
 </body>
