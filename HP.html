@@ -23,12 +23,9 @@
                         'button2': '#b3f3ff', // 便利ツールのボタン背景色
                         'button2-h': '#7aeaff', // 便利ツールのボタン背景色（ホバー時）
                         'dark-heading': '#2c3e50', // タイトル・リンク文字色
-                        'teacher-button': '#2ecc71', // 教員モードボタンの背景色
-                        'teacher-button-h': '#27ae60', // 教員モードボタンの背景色（ホバー時）
                         'teacher': '#34495e', // 教員専用セクションの背景色
                         'content': '#005ca8', // 目次とボタン
                         'content-h': '#003d70', // 目次とボタン（ホバー時）
-                        //'table': '#0066e6', // 表のヘッダー
                     }
                 }
             }
@@ -37,7 +34,7 @@
     </script>
     <script>
         const APP_CONFIG = {
-            password: "qwert",
+            password: "qwer",
             colors: {
                 success: 'bg-[#2ecc71]', // 緑色 (成功時)
                 error: 'bg-[#e74c3c]'   // 赤色 (エラー時)
@@ -53,13 +50,16 @@
     <main class="max-w-4xl mx-auto">
         <div class="flex justify-end mb-4">
             <button id="teacher-mode-button" 
-                    class="bg-teacher-button hover:bg-teacher-button-h text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher-button/50">
+                    class="bg-teacher hover:bg-teacher/50 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher/50">
                 教員モードに切り替える
             </button>
         </div>
 
-        <h1 id="top" class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary pb-3 mb-6">
+        <h1 id="top" class="text-3xl md:text-4xl font-extrabold text-dark-heading border-b-4 border-primary pb-3 mb-6 flex items-center justify-between">
             久保田の技術部屋
+            <a href="https://shin-11111111.github.io/shin_gijyutu/technology.html" target="_blank" class="text-xl font-bold bg-secondary hover:bg-blue-700 text-white py-1.5 px-3 rounded-lg shadow transition duration-300 whitespace-nowrap">
+                技術科とは？<small> ≪特設サイト≫</small>
+            </a>
         </h1>
 
         <!-- ==================== お知らせ ==================== -->
@@ -238,6 +238,7 @@
             便利ツール（久保田手作りプログラム）
         </h2>
 
+        <p class="text-blue-500 text-xl font-bold mb-2 mt-2">タイピングサイト</p>
         <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <li class="group bg-slate-900 p-5 text-center rounded-xl border-2 border-slate-700
                        hover:bg-blue-500 hover:shadow-xl hover:shadow-blue-400 transition duration-300 cursor-pointer">
@@ -247,6 +248,9 @@
                     <span class="text-sm block mt-1">タイピング練習</span>
                 </a>
             </li>
+        </ul>
+        <p class="text-blue-500 text-xl font-bold mb-2 mt-2">時間・数</p>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
                        hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/timer.html" target="_blank" class="text-dark-heading font-bold text-lg block">
@@ -282,13 +286,9 @@
                     <span class="text-sm text-gray-600 block mt-1">人数、選択肢を指定できます</span>
                 </a>
             </li>
-            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
-                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
-                <a href="https://shin-11111111.github.io/shin_gijyutu/QR.html" target="_blank" class="text-dark-heading font-bold text-lg block">
-                    QRコード読み取り
-                    <span class="text-sm text-gray-600 block mt-1">読み取り＆作成</span>
-                </a>
-            </li>
+        </ul>
+        <p class="text-blue-500 text-xl font-bold mb-2 mt-2">作成・記録</p>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
                        hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
                 <a href="https://shin-11111111.github.io/shin_gijyutu/whiteboard.html" target="_blank" class="text-dark-heading font-bold text-lg block">
@@ -322,6 +322,16 @@
                 <a href="https://shin-11111111.github.io/shin_gijyutu/pdf.html" target="_blank" class="text-dark-heading font-bold text-lg block">
                     PDF エディタ
                     <span class="text-sm text-gray-600 block mt-1">PDFの編集</span>
+                </a>
+            </li>
+        </ul>
+        <p class="text-blue-500 text-xl font-bold mb-2 mt-2">ツール</p>
+        <ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
+                       hover:bg-button2-h hover:shadow-xl hover:shadow-blue-300/50 transition duration-300 cursor-pointer">
+                <a href="https://shin-11111111.github.io/shin_gijyutu/QR.html" target="_blank" class="text-dark-heading font-bold text-lg block">
+                    QRコード読み取り
+                    <span class="text-sm text-gray-600 block mt-1">読み取り＆作成</span>
                 </a>
             </li>
             <li class="bg-button2 p-5 text-center rounded-xl border-2 border-primary
