@@ -685,8 +685,10 @@
 
             setupChannelNodes(ch);
 
-            if (!isPolyMode && ch.activeSources.length > 0) {
-                stopChannel(idx);
+            if (!isPolyMode) {
+                channels.forEach((_, i) => {
+                    if (channels[i].activeSources.length > 0) stopChannel(i);
+                });
             }
 
             const source = audioCtx.createBufferSource();
