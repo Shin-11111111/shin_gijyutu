@@ -6,7 +6,6 @@
     <title>PDF エディタ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pdf-encrypt-js@1.0.3/dist/index.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -639,17 +638,26 @@
         async function applySecurityIfConfigured(pdfBytes) {
             const password = pdfPasswordInput.value;
             if (password && password.trim() !== '') {
-                if (typeof pdfEncryptJs !== 'undefined') {
-                    try {
-                        const encryptedBytes = await pdfEncryptJs.encrypt(pdfBytes, { userPassword: password, ownerPassword: password });
-                        return encryptedBytes;
-                    } catch (e) {
-                        console.error("PDF暗号化エラー:", e);
-                        throw new Error("暗号化処理中にエラーが発生しました。パスワードをご確認いただくか、パスワードなしで再試行してください。");
-                    }
-                } else {
-                    console.warn("暗号化ライブラリが読み込まれていません。");
-                    throw new Error("ローカル暗号化モジュールの準備ができていません。インターネット接続状態を確認してください。");
+                try {
+                    const { PDFDocument } = PDFLib;
+                    const pdfDoc = await PDFDocument.load(pdfBytes);
+                    const encryptedBytes = await pdfDoc.save({
+                        userPassword: password,
+                        ownerPassword: password,
+                        permissions: {
+                            printing: 'highResolution',
+                            modifying: false,
+                            copying: false,
+                            annotating: false,
+                            fillingForms: false,
+                            contentAccessibility: true,
+                            documentAssembly: false
+                        }
+                    });
+                    return encryptedBytes;
+                } catch (e) {
+                    console.error("PDF暗号化エラー:", e);
+                    throw new Error("暗号化処理中にエラーが発生しました。パスワードをご確認いただくか、パスワードなしで再試行してください。");
                 }
             }
             return pdfBytes;
