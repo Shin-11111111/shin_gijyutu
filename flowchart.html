@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>フローチャートエディタ</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -18,6 +18,7 @@
             border: 1px solid #e0e0e0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
             cursor: default;
+            overflow-y: auto;
         }
         #textEditInput {
             position: absolute;
@@ -51,11 +52,11 @@
 </head>
 <body class="flex flex-col h-screen">
 
-<header class="bg-indigo-600 p-4 shadow-lg">
+<header class="bg-blue-600 p-4 shadow-lg">
         <h1 class="text-2xl font-bold text-white">フローチャート</h1>
     </header>
 
-    <main class="flex flex-1 overflow-hidden p-4">
+    <main class="flex flex-1 overflow-hidden p-4" style="min-height:0;">
 
         <aside class="w-64 bg-white p-4 rounded-xl shadow-lg flex flex-col space-y-4 mr-4 overflow-y-auto">
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2">図形の追加</h2>
@@ -151,10 +152,12 @@
         let draggingShape = null;
         let draggingWaypoint = null;
         let highlightedWaypoint = null;
+        let selectedWaypoint = null;
         let dragOffsetX = 0;
         let dragOffsetY = 0;
         let connectMode = false;
         let editingShape = null;
+        let isScreenshotMode = false;
         let isSelecting = false; 
         let selectionRect = { x: 0, y: 0, width: 0, height: 0 }; 
         let lastMouseX = 0;
@@ -183,9 +186,26 @@
             return dx > 0 && Math.abs(dy / dx) < (shape.h / shape.w);
         }
 
+        const CANVAS_HEIGHT = 3000;
+
         function resizeCanvas() {
-            canvas.width = canvasContainer.clientWidth;
-            canvas.height = canvasContainer.clientHeight;
+            const prevWidth = canvas.width || canvasContainer.clientWidth;
+            const newWidth = canvasContainer.clientWidth;
+            const dx = newWidth - prevWidth;
+
+            if (dx !== 0 && shapes.length > 0) {
+                const shift = dx / 2;
+                shapes.forEach(s => { s.x += shift; });
+                connections.forEach(c => {
+                    if (c.waypoints) c.waypoints.forEach(p => { p.x += shift; });
+                });
+                saveShapes();
+            }
+
+            canvas.width = newWidth;
+            canvas.height = CANVAS_HEIGHT;
+            canvas.style.width = '100%';
+            canvas.style.height = CANVAS_HEIGHT + 'px';
             draw();
         }
 
@@ -339,7 +359,7 @@
                 let labelX, labelY;
                 const p1 = startPoint;
                 const p2 = (connection.waypoints && connection.waypoints.length > 0) ? connection.waypoints[0] : endPoint;
-                const labelPositionRatio = 0.25;
+                const labelPositionRatio = (fromShape.type === 'diamond' && connection.label === 'Yes') ? 0.08 : 0.25;
                 labelX = p1.x * (1 - labelPositionRatio) + p2.x * labelPositionRatio;
                 labelY = p1.y * (1 - labelPositionRatio) + p2.y * labelPositionRatio;
 
@@ -364,7 +384,7 @@
                 }
             }
 
-            if (connection.waypoints && connection.waypoints.length) {
+            if (!isScreenshotMode && connection.waypoints && connection.waypoints.length) {
                 connection.waypoints.forEach((p, index) => {
                     const isHighlighted = highlightedWaypoint && highlightedWaypoint.connection === connection && highlightedWaypoint.index === index;
                     const isDragging = draggingWaypoint && draggingWaypoint.connection === connection && draggingWaypoint.index === index;
@@ -490,6 +510,12 @@
         document.getElementById('addDiamond').addEventListener('click', () => addShape('diamond', '条件分岐', canvas.width / 2, canvas.height / 2));
 
         function deleteSelectedShape() {
+            if (selectedWaypoint) {
+                selectedWaypoint.connection.waypoints.splice(selectedWaypoint.index, 1);
+                selectedWaypoint = null;
+                saveShapes(); draw();
+                return;
+            }
             if (selectedConnection) {
                 connections = connections.filter(c => c !== selectedConnection);
                 selectedConnection = null;
@@ -508,7 +534,10 @@
 
         function updateDeleteButtonState() {
             const deleteBtn = document.getElementById('deleteSelectedBtn');
-            if (selectedConnection) {
+            if (selectedWaypoint) {
+                deleteBtn.disabled = false;
+                deleteBtn.title = '折れ曲がり点を削除';
+            } else if (selectedConnection) {
                 deleteBtn.disabled = false;
                 deleteBtn.title = '矢印を削除';
             } else if (selectedShapes.length > 0) {
@@ -601,12 +630,15 @@
             const waypoint = getWaypointAt(x, y);
             if (waypoint) {
                 draggingWaypoint = waypoint;
+                selectedWaypoint = waypoint;
                 canvas.style.cursor = 'move';
                 selectedShapes = [];
+                selectedConnection = null;
                 draw();
                 return;
             }
 
+            selectedWaypoint = null;
             const shape = getShapeAt(x, y);
 
             if (!connectMode) {
@@ -842,6 +874,14 @@
         });
 
         document.addEventListener('keydown', (e) => {
+            if ((e.key === 'Delete' || e.key === 'Backspace') && selectedWaypoint && !editingShape) {
+                e.preventDefault();
+                const { connection, index } = selectedWaypoint;
+                connection.waypoints.splice(index, 1);
+                selectedWaypoint = null;
+                saveShapes(); draw();
+                return;
+            }
             if ((e.key === 'Delete' || e.key === 'Backspace') && (selectedShapes.length > 0 || selectedConnection) && !editingShape) { 
                 e.preventDefault(); 
                 deleteSelectedShape(); 
@@ -849,6 +889,9 @@
             if (e.key === 'Escape') {
                 if (currentDrawing) {
                     currentDrawing = null; document.getElementById('connectStatus').textContent = '接続をキャンセルしました。'; draw();
+                }
+                if (connectMode) {
+                    document.getElementById('connectModeToggle').click();
                 }
                 if (selectedShapes.length > 0 || selectedConnection) {
                     selectedShapes = []; selectedConnection = null; draw();
@@ -907,22 +950,35 @@
         });
 
         document.getElementById('screenshotBtn').addEventListener('click', () => {
-            hideTextEditor(); 
+            hideTextEditor();
+            selectedShapes = [];
+            selectedConnection = null;
+            selectedWaypoint = null;
             const wasGridShown = canvasContainer.classList.contains('show-grid'); 
             
+            isScreenshotMode = true;
             if (wasGridShown) { 
                 canvasContainer.classList.remove('show-grid'); 
-                draw();
             }
+            draw();
 
+            let maxY = 100;
+            shapes.forEach(s => { maxY = Math.max(maxY, s.y + s.h / 2 + 40); });
+            connections.forEach(c => {
+                if (c.waypoints) c.waypoints.forEach(p => { maxY = Math.max(maxY, p.y + 40); });
+            });
+            const cropHeight = Math.min(Math.ceil(maxY), canvas.height);
+
+            const scale = 2;
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
+            tempCanvas.width = canvas.width * scale;
+            tempCanvas.height = cropHeight * scale;
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.fillStyle = '#ffffff';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(canvas, 0, 0);
-            const dataURL = tempCanvas.toDataURL('image/jpeg', 0.9); 
+            tempCtx.scale(scale, scale);
+            tempCtx.drawImage(canvas, 0, 0, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
+            const dataURL = tempCanvas.toDataURL('image/jpeg', 0.95);
             
             const a = document.createElement('a'); 
             a.href = dataURL; 
@@ -932,10 +988,11 @@
             a.click(); 
             document.body.removeChild(a);
 
-            if (wasGridShown) { 
+            isScreenshotMode = false;
+            if (wasGridShown) {
                 canvasContainer.classList.add('show-grid'); 
-                draw();
             }
+            draw();
         });
 
         document.getElementById('saveHtmlBtn').addEventListener('click', () => {
