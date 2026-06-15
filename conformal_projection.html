@@ -369,16 +369,16 @@
                 gCtx.stroke();
             }
 
-            gCtx.strokeStyle = '#e2e8f0';
-            gCtx.setLineDash([2, 8]);
-            for (let i = -cols; i <= cols; i++) {
+            gCtx.strokeStyle = '#64748b';
+            gCtx.lineWidth = 1.0;
+            const vExtra = (gridCanvas.height + Math.abs(isoOffset.y)) / isoZoom;
+            for (let i = -cols; i <= cols; i += 0.5) {
                 const p = getP(i, -i);
                 gCtx.beginPath();
-                gCtx.moveTo(p.x, 0);
-                gCtx.lineTo(p.x, gridCanvas.height);
+                gCtx.moveTo(p.x, -vExtra);
+                gCtx.lineTo(p.x, gridCanvas.height + vExtra);
                 gCtx.stroke();
             }
-            gCtx.setLineDash([]);
             gCtx.restore();
         }
 
