@@ -1016,6 +1016,9 @@
                         if ((expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
                             currentRomaArray.splice(charIndex, 0, 'y');
                             isCorrect = true;
+                        } else if (expected === 'y' && typedChar === next) {
+                            currentRomaArray.splice(charIndex, 1);
+                            isCorrect = true;
                         }
                     }
                 }
