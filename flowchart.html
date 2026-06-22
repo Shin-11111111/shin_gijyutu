@@ -164,6 +164,8 @@
         let lastMouseY = 0;
         let initialDragX = 0;
         let initialDragY = 0;
+        let resizingShape = null;
+        let resizeHandle = null;
 
         const SHAPE_DEFAULTS = {
             w: 120,
@@ -293,6 +295,25 @@
                 ctx.rect(rectX, rectY, rectW, rectH);
                 ctx.stroke();
                 ctx.restore();
+
+                const hw = 8;
+                const handles = [
+                    { side: 'left',   hx: x - halfW - 5,  hy: y },
+                    { side: 'right',  hx: x + halfW + 5,  hy: y },
+                    { side: 'top',    hx: x,               hy: y - halfH - 5 },
+                    { side: 'bottom', hx: x,               hy: y + halfH + 5 },
+                ];
+                handles.forEach(h => {
+                    ctx.save();
+                    ctx.fillStyle = '#4f46e5';
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.rect(h.hx - hw/2, h.hy - hw/2, hw, hw);
+                    ctx.fill();
+                    ctx.stroke();
+                    ctx.restore();
+                });
             }
 
             ctx.fillStyle = SHAPE_DEFAULTS.textColor;
@@ -505,9 +526,15 @@
             if (selectedShapes.length > 0) { saveShapes(); draw(); }
         });
 
-        document.getElementById('addOval').addEventListener('click', () => addShape('oval', '開始/終了', canvas.width / 2, canvas.height / 2));
-        document.getElementById('addRectangle').addEventListener('click', () => addShape('rectangle', '処理', canvas.width / 2, canvas.height / 2));
-        document.getElementById('addDiamond').addEventListener('click', () => addShape('diamond', '条件分岐', canvas.width / 2, canvas.height / 2));
+        function getNewShapeY() {
+            if (shapes.length === 0) return 80;
+            const maxBottom = Math.max(...shapes.map(s => s.y + s.h / 2));
+            return maxBottom + 60;
+        }
+
+        document.getElementById('addOval').addEventListener('click', () => addShape('oval', '開始/終了', canvas.width / 2, getNewShapeY()));
+        document.getElementById('addRectangle').addEventListener('click', () => addShape('rectangle', '処理', canvas.width / 2, getNewShapeY()));
+        document.getElementById('addDiamond').addEventListener('click', () => addShape('diamond', '条件分岐', canvas.width / 2, getNewShapeY()));
 
         function deleteSelectedShape() {
             if (selectedWaypoint) {
@@ -555,6 +582,27 @@
         }
 
         function updateUndoConnectionButton() {}
+
+        function getResizeHandleAt(px, py) {
+            if (selectedShapes.length !== 1) return null;
+            const shape = shapes.find(s => s.id === selectedShapes[0]);
+            if (!shape) return null;
+            const { x, y, w, h } = shape;
+            const halfW = w / 2, halfH = h / 2;
+            const hw = 10;
+            const handles = [
+                { side: 'left',   hx: x - halfW - 5, hy: y },
+                { side: 'right',  hx: x + halfW + 5, hy: y },
+                { side: 'top',    hx: x,              hy: y - halfH - 5 },
+                { side: 'bottom', hx: x,              hy: y + halfH + 5 },
+            ];
+            for (const h of handles) {
+                if (Math.abs(px - h.hx) <= hw && Math.abs(py - h.hy) <= hw) {
+                    return { shape, side: h.side };
+                }
+            }
+            return null;
+        }
 
         function getShapeAt(px, py) {
             for (let i = shapes.length - 1; i >= 0; i--) {
@@ -639,6 +687,17 @@
             }
 
             selectedWaypoint = null;
+
+            if (!connectMode) {
+                const handle = getResizeHandleAt(x, y);
+                if (handle) {
+                    resizingShape = handle.shape;
+                    resizeHandle = handle.side;
+                    canvas.style.cursor = (handle.side === 'left' || handle.side === 'right') ? 'ew-resize' : 'ns-resize';
+                    return;
+                }
+            }
+
             const shape = getShapeAt(x, y);
 
             if (!connectMode) {
@@ -737,6 +796,35 @@
                 return;
             }
 
+            if (resizingShape) {
+                e.preventDefault();
+                const MIN_SIZE = 40;
+                const GRID = SHAPE_DEFAULTS.gridSize;
+                if (resizeHandle === 'right') {
+                    let newW = Math.max(MIN_SIZE, lastMouseX - (resizingShape.x - resizingShape.w / 2));
+                    if (document.getElementById('snapToGridCheckbox').checked) newW = Math.round(newW / GRID) * GRID;
+                    resizingShape.w = newW;
+                } else if (resizeHandle === 'left') {
+                    const right = resizingShape.x + resizingShape.w / 2;
+                    let newW = Math.max(MIN_SIZE, right - lastMouseX);
+                    if (document.getElementById('snapToGridCheckbox').checked) newW = Math.round(newW / GRID) * GRID;
+                    resizingShape.x = right - newW / 2;
+                    resizingShape.w = newW;
+                } else if (resizeHandle === 'bottom') {
+                    let newH = Math.max(MIN_SIZE, lastMouseY - (resizingShape.y - resizingShape.h / 2));
+                    if (document.getElementById('snapToGridCheckbox').checked) newH = Math.round(newH / GRID) * GRID;
+                    resizingShape.h = newH;
+                } else if (resizeHandle === 'top') {
+                    const bottom = resizingShape.y + resizingShape.h / 2;
+                    let newH = Math.max(MIN_SIZE, bottom - lastMouseY);
+                    if (document.getElementById('snapToGridCheckbox').checked) newH = Math.round(newH / GRID) * GRID;
+                    resizingShape.y = bottom - newH / 2;
+                    resizingShape.h = newH;
+                }
+                draw();
+                return;
+            }
+
             if (isSelecting) {
                 e.preventDefault();
                 selectionRect.x = Math.min(initialDragX, lastMouseX);
@@ -785,6 +873,14 @@
         });
 
         canvas.addEventListener('mouseup', () => {
+            if (resizingShape) {
+                resizingShape = null;
+                resizeHandle = null;
+                canvas.style.cursor = 'default';
+                saveShapes();
+                draw();
+                return;
+            }
             if (draggingShape) {
                 draggingShape = null; canvas.style.cursor = 'default'; saveShapes(); draw();
             }
@@ -832,6 +928,7 @@
         });
 
         canvas.addEventListener('mouseleave', () => {
+            if (resizingShape) { resizingShape = null; resizeHandle = null; saveShapes(); }
             if (draggingShape) { draggingShape = null; saveShapes(); }
             if (draggingWaypoint) { draggingWaypoint = null; saveShapes(); }
             if (isSelecting) { 
