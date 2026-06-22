@@ -1066,7 +1066,7 @@
             });
             const cropHeight = Math.min(Math.ceil(maxY), canvas.height);
 
-            const scale = 2;
+            const scale = Math.max(window.devicePixelRatio || 1, 3);
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = canvas.width * scale;
             tempCanvas.height = cropHeight * scale;
@@ -1075,11 +1075,11 @@
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             tempCtx.scale(scale, scale);
             tempCtx.drawImage(canvas, 0, 0, canvas.width, cropHeight, 0, 0, canvas.width, cropHeight);
-            const dataURL = tempCanvas.toDataURL('image/jpeg', 0.95);
+            const dataURL = tempCanvas.toDataURL('image/png');
             
             const a = document.createElement('a'); 
             a.href = dataURL; 
-            a.download = 'flowchart_screenshot_' + Date.now() + '.jpg';
+            a.download = 'flowchart_screenshot_' + Date.now() + '.png';
             
             document.body.appendChild(a); 
             a.click(); 
