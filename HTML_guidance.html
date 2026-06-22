@@ -3,306 +3,1105 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>HTMLマスター編</title>
-  <!-- Google Fonts: Interと日本語フォントのフォールバックを設定 -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <title>HTMLガイダンス</title>
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    /*
-     * 全体レイアウトとフォントの設定
-     */
+    :root {
+      --bg: #0d1117;
+      --bg2: #161b22;
+      --bg3: #21262d;
+      --accent: #58d68d;
+      --accent2: #f7dc6f;
+      --accent3: #5dade2;
+      --accent4: #e74c3c;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --border: #30363d;
+      --mono: 'Share Tech Mono', monospace;
+      --sans: 'Zen Kaku Gothic New', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      font-family: 'Inter', "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
-      margin: 0;
-      padding: 20px;
-      background-color: #e9f5ff; /* 明るい水色背景 */
-      color: #333;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .container {
-      width: 100%;
-      max-width: 900px; /* PCでの見やすさのために最大幅を設定 */
-      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.7;
+      overflow-x: hidden;
     }
 
-    /*
-     * 見出しスタイル
-     */
-    h1 {
-      color: #004c99; /* 濃い青 */
-      font-size: 2.2rem;
-      border-bottom: 4px solid #00aaff;
-      padding-bottom: 10px;
-      margin-bottom: 30px;
-      font-weight: 600;
+    header {
+      background: var(--bg2);
+      border-bottom: 2px solid var(--accent);
+      padding: 40px 20px 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    h2 {
-      color: #0066cc; /* 標準的な青 */
-      font-size: 1.6rem;
-      margin-bottom: 15px;
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 30px,
+        rgba(88,214,141,0.03) 30px,
+        rgba(88,214,141,0.03) 31px
+      );
+      pointer-events: none;
     }
-
-    /*
-     * セクション（カード）スタイル
-     */
-    section {
-      background-color: #fff;
-      border-radius: 12px;
-      padding: 25px;
-      margin-bottom: 25px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); /* 立体感を出す影 */
+    .header-badge {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--bg);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      animation: fadein 0.5s ease;
     }
-
-    /*
-     * テキストとリスト
-     */
-    p {
-      line-height: 1.8;
-      margin-bottom: 15px;
+    header h1 {
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      font-weight: 900;
+      line-height: 1.2;
+      animation: slidein 0.6s ease;
     }
-    code {
-      background-color: #f0f0f0;
-      padding: 2px 5px;
-      border-radius: 4px;
-      font-weight: bold;
-      color: #d9480f; /* オレンジ系のコード色 */
+    header h1 span {
+      color: var(--accent);
     }
-    ul {
-      list-style-type: '・ '; /* 面白いリストスタイル */
-      padding-left: 20px;
-    }
-    li {
-      margin-bottom: 8px;
-    }
-    strong {
-      color: #0066cc; /* 強調文字を青に */
-      font-weight: bold;
-    }
-
-    /*
-     * 実験コーナーのエディタとプレビュー
-     */
-    textarea {
-      width: 100%;
-      height: 180px;
-      font-family: 'Consolas', 'Courier New', monospace;
-      font-size: 14px;
-      padding: 10px;
-      border: 2px solid #ccc;
-      border-radius: 8px;
-      resize: vertical;
-      margin-top: 10px;
-      box-sizing: border-box; /* paddingとborderをwidthに含める */
-    }
-    iframe {
-      width: 100%;
-      height: 200px;
-      background: #f0f8ff; /* プレビューを薄い水色に */
-      border: 1px solid #0066cc;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
-    button {
-      background-color: #00aaff; /* 明るい青のボタン */
-      color: white;
-      border: none;
-      padding: 10px 25px;
-      border-radius: 5px;
-      cursor: pointer;
+    .header-sub {
+      color: var(--text-muted);
       margin-top: 10px;
       font-size: 1rem;
-      transition: background-color 0.2s;
+      animation: fadein 0.8s ease;
     }
-    button:hover {
-      background-color: #0077cc; /* ホバーで少し濃い青 */
-    }
-    button:focus {
-      outline: 3px solid #ffd54f; /* フォーカス可視化 */
-      outline-offset: 2px;
+    .header-code {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--accent2);
+      margin-top: 18px;
+      opacity: 0.7;
+      animation: fadein 1s ease;
     }
 
-    /* モバイル対応 (480px以下) */
-    @media (max-width: 480px) {
-        body {
-            padding: 10px;
-        }
-        h1 {
-            font-size: 1.8rem;
-        }
-        h2 {
-            font-size: 1.4rem;
-        }
-        section {
-            padding: 15px;
-        }
+    @keyframes fadein { from { opacity:0 } to { opacity:1 } }
+    @keyframes slidein { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:translateY(0) } }
+
+    nav {
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+      padding: 0 20px;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      padding: 14px 20px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    nav a:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    section {
+      margin-bottom: 60px;
+    }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    section h2 {
+      font-size: 1.8rem;
+      font-weight: 900;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    section h2 .num {
+      background: var(--accent);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-size: 1rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    p { color: var(--text); margin-bottom: 16px; font-size: 1.05rem; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .card:hover { transform: translateY(-4px); border-color: var(--accent); }
+    .card-icon { font-size: 2rem; margin-bottom: 12px; }
+    .card h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 8px; }
+    .card p { font-size: 0.95rem; color: var(--text-muted); margin: 0; }
+
+    .lang-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .lang-card {
+      background: var(--bg2);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .lang-header {
+      padding: 16px 20px 14px;
+      font-weight: 900;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lang-header.html { background: rgba(231,76,60,0.2); border-bottom: 2px solid var(--accent4); }
+    .lang-header.css  { background: rgba(93,173,226,0.2); border-bottom: 2px solid var(--accent3); }
+    .lang-header.js   { background: rgba(247,220,111,0.2); border-bottom: 2px solid var(--accent2); }
+    .lang-body { padding: 16px 20px; font-size: 0.9rem; color: var(--text-muted); }
+    .lang-body strong { color: var(--text); }
+
+    .analogy {
+      background: linear-gradient(135deg, rgba(88,214,141,0.08), rgba(93,173,226,0.08));
+      border: 1px solid rgba(88,214,141,0.3);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-top: 20px;
+    }
+    .analogy-title {
+      font-weight: 900;
+      font-size: 1rem;
+      color: var(--accent);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .analogy-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .analogy-item {
+      background: var(--bg2);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .analogy-item .a-top { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .analogy-item .a-mid { font-size: 1.4rem; margin-bottom: 4px; }
+    .analogy-item .a-bot { font-weight: 700; font-size: 0.95rem; }
+    .analogy-item.c1 .a-bot { color: var(--accent4); }
+    .analogy-item.c2 .a-bot { color: var(--accent3); }
+    .analogy-item.c3 .a-bot { color: var(--accent2); }
+
+    .code-wrap {
+      background: #010409;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    .code-title {
+      background: var(--bg3);
+      padding: 10px 18px;
+      font-family: var(--mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .code-title .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-r { background: #e74c3c; }
+    .dot-y { background: #f7dc6f; }
+    .dot-g { background: #58d68d; }
+    pre {
+      padding: 20px 24px;
+      font-family: var(--mono);
+      font-size: 0.9rem;
+      line-height: 1.8;
+      overflow-x: auto;
+      color: #e6edf3;
+    }
+    .t-tag    { color: #e06c75; }
+    .t-attr   { color: #e5c07b; }
+    .t-val    { color: #98c379; }
+    .t-text   { color: #e6edf3; }
+    .t-com    { color: #6a737d; font-style: italic; }
+    .t-css-p  { color: #56b6c2; }
+    .t-css-v  { color: #d19a66; }
+
+    .t-java-kw   { color: #c678dd; }
+    .t-java-type { color: #e5c07b; }
+    .t-java-str  { color: #98c379; }
+    .t-java-num  { color: #d19a66; }
+    .t-java-com  { color: #6a737d; font-style: italic; }
+    .t-java-cls  { color: #5dade2; }
+    .t-java-met  { color: #f7dc6f; }
+
+    .preview-wrap {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-top: 16px;
+      color: #222;
+      font-family: sans-serif;
+    }
+    .preview-label {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .preview-label::before {
+      content: '▶ ';
+      color: var(--accent);
+    }
+
+    .tag-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      font-size: 0.95rem;
+    }
+    .tag-table thead tr {
+      background: var(--bg3);
+      border-bottom: 2px solid var(--accent);
+    }
+    .tag-table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .tag-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .tag-table tr:hover td { background: var(--bg2); }
+    .tag { font-family: var(--mono); color: var(--accent4); font-weight: 700; font-size: 0.95rem; }
+    .tag-desc { color: var(--text-muted); }
+    .tag-sample { font-size: 0.85rem; font-family: var(--mono); color: var(--accent3); }
+
+    .steps {
+      margin-top: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: var(--accent2); }
+    .step-num {
+      background: var(--accent2);
+      color: var(--bg);
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 1rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-body h3 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .step-body p { font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+
+    .fact-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .fact {
+      background: var(--bg2);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid var(--border);
+    }
+    .fact-num {
+      font-family: var(--mono);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .fact-label { font-size: 0.85rem; color: var(--text-muted); }
+
+    .quiz {
+      background: var(--bg2);
+      border: 1px solid var(--accent);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin-top: 20px;
+    }
+    .quiz h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .quiz-q {
+      font-size: 1rem;
+      margin-bottom: 12px;
+      padding: 16px;
+      background: var(--bg3);
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+    }
+    .quiz-q:hover { border-color: var(--accent2); }
+    .quiz-q.open { border-color: var(--accent); }
+    .quiz-q .q-text { font-weight: 700; margin-bottom: 0; }
+    .quiz-q .q-ans {
+      display: none;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--accent2);
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+    }
+    .quiz-q.open .q-ans { display: block; }
+
+    footer {
+      background: var(--bg2);
+      border-top: 1px solid var(--border);
+      padding: 24px 20px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    footer span { color: var(--accent); font-weight: 700; }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border), transparent);
+      margin: 20px 0;
+    }
+
+    .hl { color: var(--accent); font-weight: 700; }
+    .hl2 { color: var(--accent2); font-weight: 700; }
+    .hl3 { color: var(--accent3); font-weight: 700; }
+
+    html { scroll-behavior: smooth; }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>久保田の技術部屋 - HTMLマスター編</h1>
 
-    <section>
-      <h2>１　HTMLとは？</h2>
-      <p>
-        HTMLは "HyperText Markup Language" (ハイパーテキスト・マークアップ・ランゲージ) の略で、<strong>Webページを作るためのプログラミング言語</strong>です。
+<header>
+  <div class="header-badge">🖥 中学校 技術科 プログラミング授業</div>
+  <h1><span>&lt;HTML&gt;</span> ってなんだろう？</h1>
+  <p class="header-sub">ウェブページを作る「言語」のしくみを学ぼう</p>
+  <p class="header-code">&lt;!-- このページ自体もHTMLで作られています --&gt;</p>
+</header>
+
+<nav>
+  <a href="#what">💡 HTMLとは</a>
+  <a href="#three">🎨 3つの言語</a>
+  <a href="#tags">🏷 タグのしくみ</a>
+  <a href="#code">✍ 書いてみよう</a>
+  <a href="#can">🚀 できること</a>
+  <a href="#quiz">🧩 確認クイズ</a>
+  <a href="#try">✏️ 作ってみよう</a>
+</nav>
+
+<main>
+
+  <section id="what" class="reveal">
+    <div class="section-label">Section 01</div>
+    <h2><span class="num">1</span> HTMLとは何か？</h2>
+    <p>
+      <span class="hl">HTML（HyperText Markup Language）</span>は、
+      ウェブページの<span class="hl2">「骨格・構造」</span>を作るための言語です。
+      あなたが毎日見ているYouTubeやGoogleのページも、すべてHTMLで作られています。
+    </p>
+    <p>
+      HTMLは<span class="hl">マークアップ言語</span>と呼ばれます。
+      「マークアップ」とは、文章の一部に目印（タグ）をつけて意味を伝えること。
+      「ここは見出し」「ここは画像」「ここはリンク」……のように、
+      <span class="hl2">ブラウザへ指示を出す言語</span>です。
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📄</div>
+        <h3>テキストで書ける</h3>
+        <p>メモ帳などのテキストエディタで書けます。特別なソフトは不要です。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌐</div>
+        <h3>ブラウザが読む</h3>
+        <p>Chrome・Safari・Edgeなどのブラウザがファイルを読んで画面に表示します。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔖</div>
+        <h3>タグで意味をつける</h3>
+        <p>「&lt;&gt;」と「&lt;/&gt;」で文章を囲んで「これは何か」を伝えます。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <h3>すぐ確認できる</h3>
+        <p>ファイルを保存→ブラウザで開く、たったこれだけで結果が確認できます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="three" class="reveal">
+    <div class="section-label">Section 02</div>
+    <h2><span class="num">2</span> ウェブを作る3つの言語</h2>
+    <p>
+      ウェブページは1つの言語だけでできているわけではありません。
+      <span class="hl">HTML・CSS・JavaScript</span> の3つが組み合わさっています。
+      それぞれの役割をしっかり理解しましょう。
+    </p>
+
+    <div class="lang-row">
+      <div class="lang-card">
+        <div class="lang-header html">🏗 HTML</div>
+        <div class="lang-body">
+          <strong>構造・骨格</strong><br>
+          文章・見出し・画像・リンクなど
+          <span class="hl">「何を置くか」</span>を決める
+        </div>
+      </div>
+      <div class="lang-card">
+        <div class="lang-header css">🎨 CSS</div>
+        <div class="lang-body">
+          <strong>デザイン・見た目</strong><br>
+          色・フォント・レイアウトなど
+          <span class="hl">「どう見せるか」</span>を決める
+        </div>
+      </div>
+      <div class="lang-card">
+        <div class="lang-header js">⚡ JavaScript</div>
+        <div class="lang-body">
+          <strong>動き・機能</strong><br>
+          ボタンクリック・アニメーションなど
+          <span class="hl">「どう動かすか」</span>を決める
+        </div>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-title">🏠 身近な例えで考えよう ── 「家」で考えると？</div>
+      <div class="analogy-row">
+        <div class="analogy-item c1">
+          <div class="a-top">HTML</div>
+          <div class="a-mid">🧱</div>
+          <div class="a-bot">骨組み・間取り</div>
+        </div>
+        <div class="analogy-item c2">
+          <div class="a-top">CSS</div>
+          <div class="a-mid">🎨</div>
+          <div class="a-bot">壁の色・デザイン</div>
+        </div>
+        <div class="analogy-item c3">
+          <div class="a-top">JavaScript</div>
+          <div class="a-mid">🔌</div>
+          <div class="a-bot">電気・自動ドア</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="margin-top:20px; font-size:0.95rem; color:var(--text-muted);">
+      ※ 今回の授業では主に <span class="hl">HTML</span> と、少しの <span class="hl3">CSS</span> を学びます。
+    </p>
+  </section>
+
+  <section id="tags" class="reveal">
+    <div class="section-label">Section 03</div>
+    <h2><span class="num">3</span> タグのしくみ</h2>
+    <p>
+      HTMLの最大の特徴は<span class="hl">「タグ」</span>です。
+      タグは <code style="font-family:var(--mono); color:var(--accent4)">&lt;開始タグ&gt;内容&lt;/終了タグ&gt;</code> の形で書きます。
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-title">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        タグの基本パターン
+      </div>
+      <pre><span class="t-com">&lt;!-- 開始タグ &lt;h1&gt; と 終了タグ &lt;/h1&gt; で文章を囲む --&gt;</span>
+<span class="t-tag">&lt;h1&gt;</span><span class="t-text">これは大見出しです</span><span class="t-tag">&lt;/h1&gt;</span>
+
+<span class="t-com">&lt;!-- 段落(パラグラフ) --&gt;</span>
+<span class="t-tag">&lt;p&gt;</span><span class="t-text">これは本文の段落です。</span><span class="t-tag">&lt;/p&gt;</span>
+
+<span class="t-com">&lt;!-- リンク(属性 href でURLを指定) --&gt;</span>
+<span class="t-tag">&lt;a</span> <span class="t-attr">href=</span><span class="t-val">"https://www.google.com"</span><span class="t-tag">&gt;</span><span class="t-text">Googleへ</span><span class="t-tag">&lt;/a&gt;</span>
+
+<span class="t-com">&lt;!-- 画像(終了タグなし・src で画像ファイルを指定) --&gt;</span>
+<span class="t-tag">&lt;img</span> <span class="t-attr">src=</span><span class="t-val">"neko.jpg"</span> <span class="t-attr">alt=</span><span class="t-val">"ねこの写真"</span><span class="t-tag">&gt;</span></pre>
+    </div>
+
+    <div class="divider"></div>
+
+    <p>よく使うタグを表で確認しましょう：</p>
+
+    <table class="tag-table">
+      <thead>
+        <tr>
+          <th>タグ</th>
+          <th>意味・用途</th>
+          <th>書き方の例</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tag">&lt;h1&gt;〜&lt;h6&gt;</td>
+          <td class="tag-desc">見出し（h1が最大・h6が最小）</td>
+          <td class="tag-sample">&lt;h1&gt;大きな見出し&lt;/h1&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;p&gt;</td>
+          <td class="tag-desc">段落・本文テキスト</td>
+          <td class="tag-sample">&lt;p&gt;本文テキスト&lt;/p&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;a&gt;</td>
+          <td class="tag-desc">リンク（クリックで移動）</td>
+          <td class="tag-sample">&lt;a href="URL"&gt;テキスト&lt;/a&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;img&gt;</td>
+          <td class="tag-desc">画像の表示</td>
+          <td class="tag-sample">&lt;img src="画像ファイル"&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;ul&gt; / &lt;li&gt;</td>
+          <td class="tag-desc">箇条書きリスト</td>
+          <td class="tag-sample">&lt;ul&gt;&lt;li&gt;項目&lt;/li&gt;&lt;/ul&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;table&gt;</td>
+          <td class="tag-desc">表（テーブル）</td>
+          <td class="tag-sample">&lt;table&gt;〜&lt;/table&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;div&gt;</td>
+          <td class="tag-desc">まとめる箱（グループ化）</td>
+          <td class="tag-sample">&lt;div&gt;グループ&lt;/div&gt;</td>
+        </tr>
+        <tr>
+          <td class="tag">&lt;style&gt;</td>
+          <td class="tag-desc">CSS（デザイン）を書く場所</td>
+          <td class="tag-sample">&lt;style&gt; h1{color:red;} &lt;/style&gt;</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="code" class="reveal">
+    <div class="section-label">Section 04</div>
+    <h2><span class="num">4</span> 最初のHTMLを書いてみよう</h2>
+    <p>
+      HTMLファイルには決まった<span class="hl">「お作法」</span>があります。
+      下のコードが基本テンプレートです。まずはこれをメモ帳に貼り付けてみましょう。
+    </p>
+
+    <div class="code-wrap">
+      <div class="code-title">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        index.html — 基本テンプレート
+      </div>
+      <pre><span class="t-com">&lt;!-- 1行目: HTMLファイルですよ、という宣言 --&gt;</span>
+<span class="t-tag">&lt;!DOCTYPE html&gt;</span>
+
+<span class="t-com">&lt;!-- html タグ: 全体を囲む。lang="ja"は日本語を意味する --&gt;</span>
+<span class="t-tag">&lt;html</span> <span class="t-attr">lang=</span><span class="t-val">"ja"</span><span class="t-tag">&gt;</span>
+
+  <span class="t-com">&lt;!-- head: ブラウザへの設定（画面には表示されない） --&gt;</span>
+  <span class="t-tag">&lt;head&gt;</span>
+    <span class="t-tag">&lt;meta</span> <span class="t-attr">charset=</span><span class="t-val">"UTF-8"</span><span class="t-tag">&gt;</span>  <span class="t-com">&lt;!-- 文字コード（日本語対応） --&gt;</span>
+    <span class="t-tag">&lt;title&gt;</span><span class="t-text">はじめてのHTML</span><span class="t-tag">&lt;/title&gt;</span>  <span class="t-com">&lt;!-- タブに表示されるタイトル --&gt;</span>
+  <span class="t-tag">&lt;/head&gt;</span>
+
+  <span class="t-com">&lt;!-- body: 実際に画面に表示する内容 --&gt;</span>
+  <span class="t-tag">&lt;body&gt;</span>
+    <span class="t-tag">&lt;h1&gt;</span><span class="t-text">こんにちは、世界！</span><span class="t-tag">&lt;/h1&gt;</span>
+    <span class="t-tag">&lt;p&gt;</span><span class="t-text">はじめてのHTMLファイルです。</span><span class="t-tag">&lt;/p&gt;</span>
+  <span class="t-tag">&lt;/body&gt;</span>
+
+<span class="t-tag">&lt;/html&gt;</span></pre>
+    </div>
+
+    <div class="preview-label" style="margin-top:20px">ブラウザ表示イメージ</div>
+    <div class="preview-wrap">
+      <h1 style="font-size:1.6rem; margin-bottom:8px;">こんにちは、世界！</h1>
+      <p style="color:#333;">はじめてのHTMLファイルです。</p>
+    </div>
+
+    <div class="divider" style="margin-top:24px"></div>
+
+    <p>次に、CSSで色をつけてみましょう：</p>
+
+    <div class="code-wrap">
+      <div class="code-title">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        CSSで見た目を変える（&lt;style&gt;タグを追加）
+      </div>
+      <pre><span class="t-tag">&lt;head&gt;</span>
+  <span class="t-tag">&lt;meta</span> <span class="t-attr">charset=</span><span class="t-val">"UTF-8"</span><span class="t-tag">&gt;</span>
+  <span class="t-tag">&lt;title&gt;</span><span class="t-text">スタイルを加えよう</span><span class="t-tag">&lt;/title&gt;</span>
+
+  <span class="t-com">&lt;!-- ↓ ここにCSSを書く --&gt;</span>
+  <span class="t-tag">&lt;style&gt;</span>
+    <span class="t-css-p">body</span> {
+      <span class="t-css-p">background-color</span>: <span class="t-css-v">#f0f8ff</span>;  <span class="t-com">/* 背景色 */</span>
+      <span class="t-css-p">font-family</span>: <span class="t-css-v">sans-serif</span>;
+    }
+    <span class="t-css-p">h1</span> {
+      <span class="t-css-p">color</span>: <span class="t-css-v">#e74c3c</span>;   <span class="t-com">/* 文字色（赤） */</span>
+      <span class="t-css-p">text-align</span>: <span class="t-css-v">center</span>;
+    }
+    <span class="t-css-p">p</span> {
+      <span class="t-css-p">font-size</span>: <span class="t-css-v">18px</span>;
+      <span class="t-css-p">color</span>: <span class="t-css-v">#2c3e50</span>;
+    }
+  <span class="t-tag">&lt;/style&gt;</span>
+<span class="t-tag">&lt;/head&gt;</span></pre>
+    </div>
+
+    <div class="preview-label" style="margin-top:20px">ブラウザ表示イメージ（CSSあり）</div>
+    <div class="preview-wrap" style="background:#f0f8ff;">
+      <h1 style="color:#e74c3c; text-align:center; font-size:1.6rem; margin-bottom:10px;">こんにちは、世界！</h1>
+      <p style="font-size:18px; color:#2c3e50;">はじめてのHTMLファイルです。背景色と文字色が変わりました。</p>
+    </div>
+
+    <div class="divider" style="margin-top:24px"></div>
+
+    <p>さらに、<span class="hl" style="color:#c678dd">Java</span>はHTMLとは違う「本格的なプログラミング言語」です。比べてみましょう：</p>
+
+    <div class="code-wrap">
+      <div class="code-title">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        Hello.java — Javaの基本プログラム
+      </div>
+      <pre><span class="t-java-com">// Javaのプログラムはクラスの中に書く</span>
+<span class="t-java-kw">public class</span> <span class="t-java-cls">Hello</span> {
+
+    <span class="t-java-com">// main メソッド: プログラムの開始地点</span>
+    <span class="t-java-kw">public static void</span> <span class="t-java-met">main</span>(<span class="t-java-type">String</span>[] args) {
+
+        <span class="t-java-com">// 画面に文字を表示する</span>
+        <span class="t-java-cls">System</span>.out.<span class="t-java-met">println</span>(<span class="t-java-str">"こんにちは、世界！"</span>);
+
+        <span class="t-java-com">// 変数を使った計算</span>
+        <span class="t-java-type">int</span> score = <span class="t-java-num">100</span>;
+        <span class="t-java-cls">System</span>.out.<span class="t-java-met">println</span>(<span class="t-java-str">"得点: "</span> + score);
+
+        <span class="t-java-com">// くり返し（for文）</span>
+        <span class="t-java-kw">for</span> (<span class="t-java-type">int</span> i = <span class="t-java-num">1</span>; i &lt;= <span class="t-java-num">3</span>; i++) {
+            <span class="t-java-cls">System</span>.out.<span class="t-java-met">println</span>(i + <span class="t-java-str">"回目のループ"</span>);
+        }
+    }
+}</pre>
+    </div>
+
+    <div style="margin-top:20px;">
+      <div class="preview-label">スクロールして実行しよう！</div>
+      <div style="background:#1e1e1e; border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+        <div style="background:#2d2d2d; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #444;">
+          <span style="font-family:var(--mono); font-size:0.8rem; color:#888;">Hello.java</span>
+          <span id="java-scroll-hint" style="font-family:var(--mono); font-size:0.78rem; color:#58d68d; animation: blink 1.4s ease-in-out infinite;">↓ 下にスクロールすると実行されます</span>
+        </div>
+        <div id="java-console" style="padding:18px 20px; font-family:var(--mono); font-size:0.9rem; color:#d4d4d4; min-height:90px;">
+          <span style="color:#555; font-style:italic;">▶ このエリアが画面に入るとプログラムが走ります</span>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+      .java-line {
+        opacity: 0;
+        transform: translateX(-8px);
+        transition: opacity 0.28s ease, transform 0.28s ease;
+        margin-bottom: 4px;
+      }
+      .java-line.show {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    </style>
+
+    <div style="background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-top:20px;">
+      <p style="font-weight:900; color:var(--accent2); margin-bottom:12px;">🆚 HTMLとJavaの違い</p>
+      <table class="tag-table" style="margin-top:0">
+        <thead>
+          <tr>
+            <th>比較項目</th>
+            <th style="color:var(--accent4)">HTML</th>
+            <th style="color:#c678dd">Java</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="tag-desc">種類</td>
+            <td>マークアップ言語</td>
+            <td>プログラミング言語</td>
+          </tr>
+          <tr>
+            <td class="tag-desc">主な用途</td>
+            <td>ウェブページの構造</td>
+            <td>アプリ・システム開発</td>
+          </tr>
+          <tr>
+            <td class="tag-desc">実行方法</td>
+            <td>ブラウザで開く</td>
+            <td>コンパイルして実行</td>
+          </tr>
+          <tr>
+            <td class="tag-desc">計算・くり返し</td>
+            <td>できない</td>
+            <td>できる（for文・if文）</td>
+          </tr>
+          <tr>
+            <td class="tag-desc">使われる場所</td>
+            <td>ウェブサイト</td>
+            <td>Android・業務システムなど</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="steps" style="margin-top:28px">
+      <p style="font-weight:700; font-size:1rem; color:var(--accent2);">📋 ファイルの作り方（手順）</p>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>メモ帳（テキストエディタ）を開く</h3>
+          <p>Windowsなら「メモ帳」、Macなら「テキストエディット」で新規ファイルを作成します。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>HTMLコードを書いて保存する</h3>
+          <p>ファイル名を「index.html」にして保存します。拡張子が .html であることが重要です。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>ブラウザで開く</h3>
+          <p>保存したファイルをダブルクリックするか、ブラウザにドラッグ＆ドロップします。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>修正 → 保存 → 再読み込みを繰り返す</h3>
+          <p>コードを変えたら保存して、ブラウザの「更新（F5）」を押します。これがプログラミングの基本サイクル！</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="can" class="reveal">
+    <div class="section-label">Section 05</div>
+    <h2><span class="num">5</span> HTMLで「できること」</h2>
+    <p>
+      HTMLを学ぶと、どんなものが作れるようになるのでしょうか。
+      以下は<span class="hl">実際にHTMLから始まった技術</span>の例です。
+    </p>
+
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-icon">📰</div>
+        <h3>自分のウェブページ</h3>
+        <p>自己紹介ページ・ポートフォリオ・クラスのホームページなど、好きな内容を発信できます。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📊</div>
+        <h3>情報整理・表の作成</h3>
+        <p>時間割・行事予定表・データをHTMLで一覧表示できます。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🎮</div>
+        <h3>簡単なゲーム・クイズ</h3>
+        <p>HTMLにJavaScriptを組み合わせると、クリックゲームや○×クイズが作れます。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h3>スマートフォン対応</h3>
+        <p>CSSの工夫でPC・スマホ両方で見やすいページが作れます。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌍</div>
+        <h3>世界への発信</h3>
+        <p>サーバーにアップロードすれば、世界中の人が見られるウェブサイトになります。</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💼</div>
+        <h3>社会で役立つスキル</h3>
+        <p>ウェブ開発・UI/UX・アプリ開発など、多くの仕事の基礎になる技術です。</p>
+      </div>
+    </div>
+
+    <div class="fact-row" style="margin-top:32px">
+      <div class="fact">
+        <div class="fact-num" style="color:var(--accent)">1991</div>
+        <div class="fact-label">HTMLが誕生した年</div>
+      </div>
+      <div class="fact">
+        <div class="fact-num" style="color:var(--accent3)">18億+</div>
+        <div class="fact-label">世界のウェブサイト数</div>
+      </div>
+      <div class="fact">
+        <div class="fact-num" style="color:var(--accent2)">HTML5</div>
+        <div class="fact-label">現在の最新バージョン</div>
+      </div>
+      <div class="fact">
+        <div class="fact-num" style="color:var(--accent4)">無料</div>
+        <div class="fact-label">始めるのにお金はかからない</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="quiz" class="reveal">
+    <div class="section-label">Section 06</div>
+    <h2><span class="num">6</span> 確認クイズ</h2>
+    <p>クリックすると答えが表示されます。授業の復習に使いましょう！</p>
+
+    <div class="quiz">
+      <h3>🧩 理解度チェック</h3>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q1. HTMLの正式名称は何ですか？</p>
+        <div class="q-ans">✅ HyperText Markup Language（ハイパーテキスト・マークアップ・ランゲージ）<br>「ウェブ上の文書に意味をつける言語」という意味です。</div>
+      </div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q2. HTMLのタグはどんな記号で書きますか？</p>
+        <div class="q-ans">✅ 山括弧（&lt; と &gt;）を使います。例：&lt;h1&gt;見出し&lt;/h1&gt;<br>開始タグと終了タグ（/が入る）のペアで書きます。</div>
+      </div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q3. HTMLとCSSの違いは何ですか？</p>
+        <div class="q-ans">✅ HTMLは「構造・骨格（何を置くか）」を作り、CSSは「見た目・デザイン（どう見せるか）」を担当します。</div>
+      </div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q4. HTMLファイルを確認するには何を使いますか？</p>
+        <div class="q-ans">✅ ウェブブラウザ（ChromeやEdgeなど）を使います。ファイルをダブルクリックして開きます。</div>
+      </div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q5. 見出しを表すタグは何ですか？一番大きいものは？</p>
+        <div class="q-ans">✅ 見出しタグは &lt;h1&gt; 〜 &lt;h6&gt; です。一番大きい（重要な）見出しは &lt;h1&gt; です。</div>
+      </div>
+
+      <div class="quiz-q" onclick="this.classList.toggle('open')">
+        <p class="q-text">Q6. &lt;a href="..."&gt; タグは何のために使いますか？</p>
+        <div class="q-ans">✅ リンク（ハイパーリンク）を作るためのタグです。クリックすると href="" に書いたURLへ移動します。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="try" class="reveal">
+    <div class="section-label">Section 07</div>
+    <h2><span class="num">7</span> 実際に作ってみよう</h2>
+    <p>
+      説明を読んだだけでは身につきません。<span class="hl">今すぐ手を動かしてみましょう！</span><br>
+      AIアシスタントの <span class="hl2">Gemini</span> を使えば、
+      「こんなページを作りたい」と話しかけるだけでHTMLのヒントやコードを一緒に考えてもらえます。
+    </p>
+
+    <div style="background: linear-gradient(135deg, rgba(88,214,141,0.07), rgba(93,173,226,0.07)); border: 1px solid rgba(88,214,141,0.25); border-radius: 16px; padding: 36px 32px; margin-top: 24px; text-align: center;">
+
+      <div style="font-size: 3rem; margin-bottom: 16px;">✏️</div>
+      <h3 style="font-size: 1.4rem; font-weight: 900; margin-bottom: 12px; color: var(--accent2);">今日の課題にチャレンジ！</h3>
+      <p style="color: var(--text-muted); margin-bottom: 8px;">以下のテーマで自分だけのHTMLページを作ってみよう：</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 20px 0 28px;">
+        <div style="background: var(--bg2); border-radius: 10px; padding: 16px; border: 1px solid var(--border);">
+          <div style="font-size: 1.6rem; margin-bottom: 6px;">👤</div>
+          <div style="font-weight: 700; font-size: 0.95rem;">自己紹介ページ</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">名前・趣味・好きな食べ物</div>
+        </div>
+        <div style="background: var(--bg2); border-radius: 10px; padding: 16px; border: 1px solid var(--border);">
+          <div style="font-size: 1.6rem; margin-bottom: 6px;">📅</div>
+          <div style="font-weight: 700; font-size: 0.95rem;">クラスの時間割</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">tableタグを使って表にしよう</div>
+        </div>
+        <div style="background: var(--bg2); border-radius: 10px; padding: 16px; border: 1px solid var(--border);">
+          <div style="font-size: 1.6rem; margin-bottom: 6px;">🍔</div>
+          <div style="font-weight: 700; font-size: 0.95rem;">好きなものランキング</div>
+          <div style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">リストと見出しで表現</div>
+        </div>
+      </div>
+
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 24px;">
+        わからないことは <span style="color: var(--accent2); font-weight: 700;">Gemini に聞いてみよう。</span>
       </p>
-      <p>
-        これは、私たちが読む文章に<strong>「構造（箇条書きやリストなど）」</strong>や<strong>「意味（URLなど）」</strong>を与える役割があります。
+
+      <a href="https://gemini.google.com" target="_blank" rel="noopener noreferrer"
+        style="
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.1rem;
+            padding: 16px 36px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(66,133,244,0.35);
+            transition: transform 0.2s, box-shadow 0.2s;
+            letter-spacing: 0.02em;
+        "
+        onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 28px rgba(66,133,244,0.45)'"
+        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(66,133,244,0.35)'"
+      >
+        <svg width="24" height="24" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M96 20C96 20 120 72 144 96C120 120 96 172 96 172C96 172 72 120 48 96C72 72 96 20 96 20Z" fill="white"/>
+          <path d="M20 96C20 96 72 72 96 48C120 72 172 96 172 96C172 96 120 120 96 144C72 120 20 96 20 96Z" fill="rgba(255,255,255,0.7)"/>
+        </svg>
+        Gemini を開いて作ってみる
+      </a>
+
+      <p style="margin-top: 16px; font-size: 0.8rem; color: var(--text-muted);">
+        ※ 別タブで開きます。
       </p>
-      <p>
-        HTMLのファイルは、ブラウザ（ChromeやEdge、Safariなど）が読み込むことで、画面に表示されます。
-      </p>
-    </section>
+    </div>
+  </section>
 
-    <section>
-      <h2>２　その他の言語との組み合わせ</h2>
-      <p>
-        Webページは、このHTMLを骨組みにして、<strong>"CSS"</strong>や、<strong>"JavaScript"</strong>などのプログラミング言語と組み合わせて作られることが多いです。
-      </p>
-      <p>
-        <strong>CSS</strong>： Webページのデザインやレイアウトを設定するプログラミング言語です。Webページの見た目を整えることができます。
-      </p>
-      <p>
-        <strong>JavaScript</strong>： Webページに動きを付けることができるプログラミング言語です。スクロールをしたらアニメーションが動いたり、ボタンを押したら画像が変わったりするときに使われます。
-      </p>
-      <p>
-        見やすく、使いやすいWebページを考えて作成しましょう。
-      </p>
-    </section>
+</main>
 
-    <section>
-      <h2>３　基本となるHTMLの「タグ」</h2>
-      <p>HTMLでは、文章を <code>&lt; &gt;</code> で囲まれた<strong>「タグ」</strong>で囲い、どこからどこまでがそのプログラムなのかを指定します。多くのタグは「開始タグ」と「終了タグ」でセットになっています。</p>
+<footer>
+  <p>🖥 <span>技術科 情報の技術</span> — HTMLガイダンス</p>
+</footer>
 
-      <ul>
-        <li><code>&lt;html&gt; ～ &lt;/html&gt;</code>：<strong>全てのHTML文書の始まりと終わり</strong>。文書全体を囲みます。</li>
-        <li><code>&lt;head&gt; ～ &lt;/head&gt;</code>：ページ設定情報（タイトルや文字コードなど、<strong>画面には見えない情報</strong>）を入れます。</li>
-        <li><code>&lt;body&gt; ～ &lt;/body&gt;</code>：<strong>実際にWebページに表示される全てのコンテンツ</strong>（文章、画像、ボタンなど）が入る、最も重要な部分です。</li>
-        <li><code>&lt;h1&gt; ～ &lt;/h1&gt;</code>：<strong>見出し</strong>を表します。数字が小さいほど（<code>&lt;h1&gt;</code>が大きく、<code>&lt;h6&gt;</code>が小さい）重要な見出しになります。</li>
-        <li><code>&lt;p&gt; ～ &lt;/p&gt;</code>：<strong>段落</strong>（パラグラフ）を表します。普通の文章はこのタグで囲みます。</li>
-        <li><code>&lt;a href="..."&gt; ～ &lt;/a&gt;</code>：<strong>リンク</strong>（アンカー）を作ります。<code>href</code>属性でURLを指定します。</li>
-        <li><code>&lt;img src="..."&gt;</code>：<strong>画像</strong>を表示します。終了タグが不要な「空要素」です。<code>src</code>属性で画像の場所を指定します。</li>
-      </ul>
-    </section>
+<script>
+  (function() {
+    const lines = [
+      { text: '> java Hello.java', color: '#6a737d' },
+      { text: 'こんにちは、世界！',  color: '#58d68d' },
+      { text: '得点: 100',          color: '#d4d4d4' },
+      { text: '1回目のループ',       color: '#5dade2' },
+      { text: '2回目のループ',       color: '#5dade2' },
+      { text: '3回目のループ',       color: '#5dade2' },
+    ];
 
-    <section>
-      <h2>４　HTMLの例</h2>
-      <p>以下は、HTML文書の例です。このコードをブラウザで開くと、「こんにちは」という見出しと、「ここをクリック！」というテキストにGoogleのリンクが埋め込まれています。<br><br></p>
-        <pre>&lt;html lang="ja"&gt;
-&lt;body&gt;
-    &lt;h1&gt;こんにちは&lt;/h1&gt;
-    &lt;a href="https://www.google.com"&gt;ここをクリック！&lt;/a&gt;
-&lt;/body&gt;
-&lt;/html&gt;</pre>
-      <p><br>上記のコードを実際にブラウザで表示すると、以下のようになります：</p>
-      <iframe srcdoc='&lt;html lang="ja"&gt;
-&lt;body&gt;
-    &lt;h1&gt;こんにちは&lt;/h1&gt;
-    &lt;a href="https://www.google.com"&gt;ここをクリック！&lt;/a&gt;
-&lt;/body&gt;
-&lt;/html&gt;'></iframe>
+    let triggered = false;
 
-    </section>
-
-    <section>
-      <h2>５　実際にコードを書いてみよう！</h2>
-      <p>下の入力スペースにHTMLコードを書いて、「プレビュー」ボタンを押すと、プレビューエリアに記述したプログラムの結果が表示されます。</p>
-      <p>ボタンを押しても<strong>プレビュー画面が変わらない</strong>または<strong>タグも表示されている</strong>場合は、<strong>プログラムが間違っています。</strong> どこが間違っているか確認しましょう</p>
-
-      <textarea id="htmlInput" placeholder="例：
-<h1>タグで囲んで文字を入力してみましょう！</h1>
-<p>タグは半角（英語入力モード）で入力してください。</p>
-<p>タグを変えるとどうなるかな？試してみよう！タグの種類は上に載っています！</p>"></textarea>
-      <button onclick="previewHTML()">プレビュー</button>
-
-      <h3>プレビュー結果：</h3>
-      <iframe id="preview"></iframe>
-    </section>
-    
-    <section>
-      <h2>６　これからの授業（作成）の流れ</h2>
-      <p>みなさんに、実際にあったらいいなというwebサイトを作成します</p>
-      
-      <ul>
-        <li>Webサイトの構想</li>
-        <li>AIを使用しながらHTMLを記述</li>
-        <button type="button" onclick="openExternalURL('https://gemini.google.com/app?hl=ja')" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md" aria-label="Gemini のサイトを新しいタブで開く" title="Gemini を新しいタブで開く">
-            サイトに移動（Gemini）
-        </button>
-        <p>製作が終わったらTeamsに提出してください。</p>
-        <button type="button" onclick="openExternalURL('https://teams.cloud.microsoft/v2/')" class="inline-block mt-6 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-150 shadow-md" aria-label="Teams のサイトを新しいタブで開く" title="Teams を新しいタブで開く">
-            サイトに移動（Teams）
-        </button>
-      </ul>
-    </section>
-
-    <section>
-        <h2>７　AIのプロンプトの書き方</h2>
-        <p>AIを使用するときは、<strong>指示の出し方</strong>に注意してください。</p>
-        <p>例：<strong>「Webサイトを作成したいので、HTMLコードを作成してください。<br>HTMLとCSS、JavaScriptは同じファイルとして保存できるようにしてください。<br>Webサイトのテーマは〇〇〇で、条件は…。機能は…。」</strong></p>
-        <p>具体的に指示を出すことで、より良いコードが生成されます。</p>
-    </section>
-  </div>
-
-  <script>
-    /**
-     * 外部サイトを新しいタブで安全に開くヘルパー関数
-     */
-    function openExternalURL(url) {
-      const win = window.open(url, '_blank');
-      if (win) win.opener = null;
+    function buildLines() {
+      const con = document.getElementById('java-console');
+      con.innerHTML = '';
+      lines.forEach(({ text, color }) => {
+        const div = document.createElement('div');
+        div.className = 'java-line';
+        div.style.color = color;
+        div.textContent = text;
+        con.appendChild(div);
+      });
     }
 
-    /**
-     * ユーザーが入力したHTMLコードをiframe内に表示する関数
-     */
-    function previewHTML() {
-    
-      // 1. textareaからコードを取得
-      const code = document.getElementById('htmlInput').value;
-
-      // 2. プレビュー用のiframe要素を取得
-      const previewFrame = document.getElementById('preview');
-
-      // 3. iframe内のドキュメントを取得
-      const doc = previewFrame.contentDocument || previewFrame.contentWindow.document;
-
-      // 4. ドキュメントを開き、コードを書き込み、閉じる
-      doc.open();
-
-      // プレビュー内でタグが正しくレンダリングされるよう、簡単なCSSを埋め込みます
-      const styledCode = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="UTF-8">
-          <style>
-            /* プレビュー内の基本スタイルを定義 */
-            body { font-family: 'Inter', "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif; padding: 15px; margin: 0; background-color: white; line-height: 1.6;}
-            h1 { color: #004c99; font-size: 1.5rem; }
-            p { color: #333; }
-            strong { color: #d9480f; }
-          </style>
-        </head>
-        <body>
-          ${code}
-        </body>
-        </html>
-      `;
-      doc.write(styledCode);
-      doc.close();
+    function playLines() {
+      if (triggered) return;
+      triggered = true;
+      const hint = document.getElementById('java-scroll-hint');
+      if (hint) hint.style.display = 'none';
+      buildLines();
+      const items = document.querySelectorAll('#java-console .java-line');
+      items.forEach((el, i) => {
+        setTimeout(() => el.classList.add('show'), i * 280);
+      });
     }
 
-    // ページロード時に簡単な初期コードを挿入し、一度プレビューを生成
-    window.onload = function() {
-        const initialCode = `<h1>Hello World!</h1>\n<p>HTMLのタグをいくつか試してみよう！（タグのみ）</p>\n<p><strong>太字で強調することもできます。</strong> 太文字のタグを使いました。</p>`;
-        document.getElementById('htmlInput').value = initialCode;
-        previewHTML(); // 初期コードで一度プレビューを生成
-    }
-  </script>
+    const target = document.getElementById('java-console');
+    const io = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) playLines();
+    }, { threshold: 0.6 });
+    io.observe(target);
+  })();
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
 
 </body>
 </html>
-
