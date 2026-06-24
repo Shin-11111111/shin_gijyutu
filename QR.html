@@ -82,6 +82,10 @@
                 <button id="startButton" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
                     <span id="startStopText">カメラを起動</span>
                 </button>
+                <div class="flex rounded-lg overflow-hidden border border-gray-300 shadow-sm">
+                    <button id="camBack" class="flex-1 bg-emerald-100 text-emerald-800 font-semibold py-2 px-3 text-sm transition duration-150 ease-in-out cam-select-active">外カメ</button>
+                    <button id="camFront" class="flex-1 bg-white text-gray-600 font-semibold py-2 px-3 text-sm transition duration-150 ease-in-out">内カメ</button>
+                </div>
                 <button id="fileButton" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
                     画像をアップロード
                 </button>
@@ -139,6 +143,26 @@
         
         let isCameraActive = false;
         let animationFrameId = null;
+        let currentFacingMode = 'environment'; // 外カメ=environment, 内カメ=user
+
+        const camBack = document.getElementById('camBack');
+        const camFront = document.getElementById('camFront');
+
+        camBack.addEventListener('click', () => {
+            currentFacingMode = 'environment';
+            camBack.classList.add('bg-emerald-100', 'text-emerald-800');
+            camBack.classList.remove('bg-white', 'text-gray-600');
+            camFront.classList.add('bg-white', 'text-gray-600');
+            camFront.classList.remove('bg-emerald-100', 'text-emerald-800');
+        });
+
+        camFront.addEventListener('click', () => {
+            currentFacingMode = 'user';
+            camFront.classList.add('bg-emerald-100', 'text-emerald-800');
+            camFront.classList.remove('bg-white', 'text-gray-600');
+            camBack.classList.add('bg-white', 'text-gray-600');
+            camBack.classList.remove('bg-emerald-100', 'text-emerald-800');
+        });
 
         const scanCanvas = document.createElement('canvas');
         const scanContext = scanCanvas.getContext('2d');
@@ -206,7 +230,7 @@
             startButton.disabled = true;
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
                 video.srcObject = stream;
                 video.setAttribute("playsinline", true);
                 video.play();
@@ -283,14 +307,14 @@
                 const targetElement = isFromCamera ? video : canvas;
                 showHighlight(minX, minY, maxX, maxY, targetElement);
             }
+
+            if (isFromCamera) {
+                stopCamera();
+            }
             
             const urlPattern = /^https?:\/\//i;
             if (urlPattern.test(data)) {
-                if (isFromCamera) {
-                    stopCamera();
-                }
-
-                displayResult(`読み取り結果: ${data}。新しいタブで開きます...`);
+                displayResult(`読み取り結果: ${data}`);
                 window.open(data, '_blank'); 
             }
         }
