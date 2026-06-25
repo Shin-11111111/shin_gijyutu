@@ -933,8 +933,9 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                 const loaderPages = loaderDoc.getPages();
 
                 const numSheets = totalPaddedPages / 4;
-                
-                const embeddedLoaderPages = await bookletDoc.embedPages(loaderDoc, loaderDoc.getPageIndices());
+
+                const pageIndices = Array.from({ length: totalPaddedPages }, (_, i) => i);
+                const embeddedLoaderPages = await bookletDoc.embedPages(loaderDoc.getPages());
 
                 for (let s = 0; s < numSheets; s++) {
                     const outerLeftIdx = totalPaddedPages - 1 - (2 * s);
