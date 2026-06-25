@@ -143,7 +143,7 @@
         
         let isCameraActive = false;
         let animationFrameId = null;
-        let currentFacingMode = 'environment'; // 外カメ=environment, 内カメ=user
+        let currentFacingMode = 'environment';
 
         const camBack = document.getElementById('camBack');
         const camFront = document.getElementById('camFront');
@@ -154,6 +154,7 @@
             camBack.classList.remove('bg-white', 'text-gray-600');
             camFront.classList.add('bg-white', 'text-gray-600');
             camFront.classList.remove('bg-emerald-100', 'text-emerald-800');
+            if (isCameraActive) { stopCamera(); startCamera(); }
         });
 
         camFront.addEventListener('click', () => {
@@ -162,6 +163,7 @@
             camFront.classList.remove('bg-white', 'text-gray-600');
             camBack.classList.add('bg-white', 'text-gray-600');
             camBack.classList.remove('bg-emerald-100', 'text-emerald-800');
+            if (isCameraActive) { stopCamera(); startCamera(); }
         });
 
         const scanCanvas = document.createElement('canvas');
@@ -308,14 +310,15 @@
                 showHighlight(minX, minY, maxX, maxY, targetElement);
             }
 
+            const urlPattern = /^https?:\/\//i;
+            const isUrl = urlPattern.test(data);
+
             if (isFromCamera) {
                 stopCamera();
             }
             
-            const urlPattern = /^https?:\/\//i;
-            if (urlPattern.test(data)) {
-                displayResult(`読み取り結果: ${data}`);
-                window.open(data, '_blank'); 
+            if (isUrl) {
+                window.open(data, '_blank');
             }
         }
 
