@@ -668,7 +668,7 @@
             if (e.button === 2) return; 
 
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left; const y = e.clientY - rect.top;
+            const x = e.clientX - rect.left; const y = e.clientY - rect.top + canvasContainer.scrollTop;
             lastMouseX = x; lastMouseY = y;
             initialDragX = x;
             initialDragY = y;
@@ -747,12 +747,23 @@
                     const sourceShape = shapes.find(s => s.id === currentDrawing.fromId);
                     let label = '';
                     if (sourceShape.type === 'diamond') { label = currentDrawing.exitPoint === 'bottom' ? 'Yes' : 'No'; }
+                    let autoWaypoints = currentDrawing.waypoints.slice();
+                    if (currentDrawing.exitPoint === 'right' && autoWaypoints.length === 0) {
+                        const sourceShape = shapes.find(s => s.id === currentDrawing.fromId);
+                        const startPt = getShapeBoundaryPoint(sourceShape, currentDrawing, true);
+                        const endPt = getShapeBoundaryPoint(shape, null, false);
+                        const rightMargin = sourceShape.x + sourceShape.w / 2 + 40;
+                        autoWaypoints = [
+                            { x: rightMargin, y: startPt.y },
+                            { x: rightMargin, y: endPt.y }
+                        ];
+                    }
                     const newConn = {
                         fromId: currentDrawing.fromId,
                         toId: shape.id,
                         exitPoint: currentDrawing.exitPoint,
                         label: label,
-                        waypoints: currentDrawing.waypoints.slice()
+                        waypoints: autoWaypoints
                     };
                     const exists = connections.some(c => c.fromId === newConn.fromId && c.toId === newConn.toId && JSON.stringify(c.waypoints) === JSON.stringify(newConn.waypoints));
                     if (!exists) connections.push(newConn);
@@ -775,7 +786,7 @@
 
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            lastMouseX = e.clientX - rect.left; lastMouseY = e.clientY - rect.top;
+            lastMouseX = e.clientX - rect.left; lastMouseY = e.clientY - rect.top + canvasContainer.scrollTop;
             
             if (connectMode && currentDrawing) {
                 draw();
