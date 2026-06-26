@@ -149,21 +149,23 @@
         const camFront = document.getElementById('camFront');
 
         camBack.addEventListener('click', () => {
+            if (currentFacingMode === 'environment') return;
             currentFacingMode = 'environment';
             camBack.classList.add('bg-emerald-100', 'text-emerald-800');
             camBack.classList.remove('bg-white', 'text-gray-600');
             camFront.classList.add('bg-white', 'text-gray-600');
             camFront.classList.remove('bg-emerald-100', 'text-emerald-800');
-            if (isCameraActive) { stopCamera(); startCamera(); }
+            if (isCameraActive) { switchCamera(); }
         });
 
         camFront.addEventListener('click', () => {
+            if (currentFacingMode === 'user') return;
             currentFacingMode = 'user';
             camFront.classList.add('bg-emerald-100', 'text-emerald-800');
             camFront.classList.remove('bg-white', 'text-gray-600');
             camBack.classList.add('bg-white', 'text-gray-600');
             camBack.classList.remove('bg-emerald-100', 'text-emerald-800');
-            if (isCameraActive) { stopCamera(); startCamera(); }
+            if (isCameraActive) { switchCamera(); }
         });
 
         const scanCanvas = document.createElement('canvas');
@@ -263,7 +265,7 @@
                 
                 let errorMessage = 'カメラの起動に失敗しました。';
                 if (err.name === 'NotAllowedError') {
-                    errorMessage = 'カメラの使用が許可されませんでした。ブラウザの設定を確認してください。';
+                    errorMessage = 'カメラへのアクセスが拒否されました。ブラウザのアドレスバー横にある🔒アイコンからカメラの許可を「許可」に変更してください。';
                 } else if (err.name === 'NotFoundError') {
                     errorMessage = '利用可能なカメラが見つかりませんでした。';
                 }
@@ -271,6 +273,20 @@
                 displayResult(errorMessage, true);
                 console.error('カメラ起動エラー:', err);
             }
+        }
+
+        async function switchCamera() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            isCameraActive = false;
+            // 新しいカメラで再起動
+            await startCamera();
         }
 
         function stopCamera() {
