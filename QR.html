@@ -313,12 +313,12 @@
             const urlPattern = /^https?:\/\//i;
             const isUrl = urlPattern.test(data);
 
-            if (isFromCamera) {
-                stopCamera();
-            }
-            
             if (isUrl) {
                 window.open(data, '_blank');
+            }
+
+            if (isFromCamera) {
+                stopCamera();
             }
         }
 
