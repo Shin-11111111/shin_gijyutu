@@ -136,7 +136,7 @@
                 反転
             </button>
             <button id="cameraBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-bold transition shrink-0 border border-white/10">
-                📷切替
+                外カメ
             </button>
         </div>
     </div>
@@ -290,7 +290,7 @@
         cameraBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             facingMode = facingMode === "environment" ? "user" : "environment";
-            cameraBtn.textContent = facingMode === "environment" ? "📷切替" : "🤳切替";
+            cameraBtn.textContent = facingMode === "environment" ? "外カメ" : "内カメ";
             const tracks = liveVideo.srcObject?.getTracks();
             tracks?.forEach(t => t.stop());
             clearBuffer();
