@@ -9,6 +9,10 @@
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f7f9fb;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         #video, #canvas {
             max-width: 100%;
@@ -54,9 +58,9 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
-<body class="p-4 sm:p-6 md:p-8 min-h-screen flex flex-col">
+<body class="p-4 sm:p-6 md:p-8 min-h-screen h-screen flex flex-col overflow-hidden">
 
-    <div class="w-full max-w-4xl mx-auto">
+    <div class="w-full max-w-4xl mx-auto flex flex-col flex-1 overflow-hidden">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">二次元コードリーダー＆ジェネレーター</h1>
 
         <div class="flex border-b border-gray-200 mb-6">
@@ -68,10 +72,10 @@
             </button>
         </div>
 
-        <div id="readerView" class="tab-content">
+        <div id="readerView" class="tab-content flex flex-col flex-1 overflow-y-auto">
             <div class="relative w-full sm:w-3/4 md:w-2/3 mx-auto bg-gray-900 rounded-xl shadow-xl overflow-hidden mb-4">
-                <video id="video" class="w-full h-96 object-contain"></video>
-                <canvas id="canvas" class="hidden w-full h-96 object-contain"></canvas>
+                <video id="video" class="w-full h-56 object-contain"></video>
+                <canvas id="canvas" class="hidden w-full h-56 object-contain"></canvas>
                 <div id="highlightContainer" class="absolute inset-0"></div>
                 <div id="videoOverlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 transition-opacity duration-300">
                     <p class="text-white text-lg font-semibold" id="overlayMessage">カメラを起動するか、画像をアップロードしてください。</p>
@@ -97,7 +101,7 @@
             </div>
         </div>
 
-        <div id="generatorView" class="tab-content hidden">
+        <div id="generatorView" class="tab-content hidden flex flex-col flex-1 overflow-y-auto">
             <div class="bg-white p-6 rounded-xl shadow-xl">
                 <label for="qrText" class="block text-sm font-medium text-gray-700 mb-2">QRコードに含めるURLまたはテキスト:</label>
                 <textarea id="qrText" rows="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 mb-4" placeholder="サイトのURL または テキスト"></textarea>
