@@ -96,6 +96,10 @@
                     <button id="fileButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
                         画像をアップロード
                     </button>
+                    <button id="pasteButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
+                        クリップボードから貼り付け
+                    </button>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
                     <input type="file" id="fileInput" accept="image/*" class="hidden">
                     <div id="resultBox" class="result-box mt-2 flex-1">
                         ここに読み取り結果が表示されます。
@@ -543,7 +547,54 @@
         startButton.addEventListener('click', startCamera);
         tabReader.addEventListener('click', () => switchTab('reader'));
         tabGenerator.addEventListener('click', () => switchTab('generator'));
-        
+
+        document.getElementById('pasteButton').addEventListener('click', async () => {
+            try {
+                const clipboardItems = await navigator.clipboard.read();
+                let imageBlob = null;
+                for (const item of clipboardItems) {
+                    const imageType = item.types.find(t => t.startsWith('image/'));
+                    if (imageType) {
+                        imageBlob = await item.getType(imageType);
+                        break;
+                    }
+                }
+                if (!imageBlob) {
+                    displayResult('クリップボードに画像が見つかりません。', true);
+                    return;
+                }
+                const file = new File([imageBlob], 'pasted.png', { type: imageBlob.type });
+                if (isCameraActive) stopCamera();
+                displayResult('クリップボードの画像をスキャン中...');
+                clearHighlight();
+                canvas.classList.remove('hidden');
+                video.classList.add('hidden');
+                videoOverlay.classList.add('hidden');
+                startButton.classList.add('hidden');
+                const img = new Image();
+                const url = URL.createObjectURL(file);
+                img.src = url;
+                await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = reject; });
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code) {
+                    handleScanResult(code.data, code.location, false);
+                } else {
+                    displayResult('クリップボードの画像からQRコードを検出できませんでした。', true);
+                }
+                URL.revokeObjectURL(url);
+                startButton.classList.remove('hidden');
+                if (!isCameraActive) videoOverlay.classList.remove('hidden');
+            } catch (err) {
+                displayResult('クリップボードへのアクセスに失敗しました。ブラウザの許可が必要です。', true);
+                console.error('クリップボード貼り付けエラー:', err);
+            }
+        });
+
         window.addEventListener('resize', clearHighlight);
         
         window.onload = () => {
