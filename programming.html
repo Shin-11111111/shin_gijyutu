@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>プログラミングとは</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#1D9E75;--teal-dark:#085041;--teal-light:#E1F5EE;--teal-mid:#9FE1CB;
+  --amber:#BA7517;--amber-light:#FAEEDA;--amber-border:#FAC775;
+  --purple:#7F77DD;--purple-light:#EEEDFE;--purple-border:#AFA9EC;
+  --coral:#D85A30;--coral-light:#FAECE7;--coral-border:#F0997B;
+  --gray:#2C2C2A;--gray2:#444441;--gray3:#5F5E5A;--gray4:#888780;--gray5:#D3D1C7;--gray6:#E4E3DC;--gray7:#F8F7F4;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;color:var(--gray);background:var(--gray7);line-height:1.6}
+
+/* HERO */
+.hero{text-align:center;padding:4rem 1.5rem 3rem;background:linear-gradient(160deg,#C5EDD9 0%,#EAF9F2 60%,var(--gray7) 100%)}
+.hero-badge{display:inline-block;background:var(--teal);color:var(--teal-light);font-size:12px;padding:4px 16px;border-radius:20px;margin-bottom:1.25rem;letter-spacing:.06em;font-weight:600}
+.hero h1{font-size:clamp(24px,5vw,36px);font-weight:700;line-height:1.25;margin-bottom:.75rem;color:var(--teal-dark)}
+.hero p{font-size:15px;color:var(--gray3);max-width:500px;margin:0 auto 1.5rem}
+.robot{font-size:68px;margin-bottom:.75rem;display:inline-block;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.progress-nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.nav-pill{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--teal);color:var(--teal);background:#fff;transition:.2s;text-decoration:none}
+.nav-pill:hover{background:var(--teal);color:#fff}
+
+/* LAYOUT */
+.container{max-width:760px;margin:0 auto;padding:0 1.25rem}
+.section{padding:2.5rem 0}
+.section-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);font-weight:700;margin-bottom:.4rem;display:flex;align-items:center;gap:6px}
+.section h2{font-size:22px;font-weight:700;margin-bottom:1.25rem}
+.divider{height:1px;background:var(--gray6)}
+.card{background:#fff;border:1px solid var(--gray6);border-radius:14px;padding:1.4rem;margin-bottom:1rem}
+.card-title{font-size:15px;font-weight:700;margin-bottom:.5rem}
+.card-desc{font-size:13px;color:var(--gray3);line-height:1.6;margin-bottom:1rem}
+.note{font-size:13px;color:var(--gray2);line-height:1.7;margin-top:.85rem;padding:.8rem 1rem;background:#F1FFF8;border-radius:8px;border-left:3px solid var(--teal)}
+.note strong{color:var(--teal-dark)}
+
+/* BOXES */
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.b{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;flex-shrink:0;line-height:1.3}
+.b-g{background:var(--teal-light);color:var(--teal-dark);border:1px solid var(--teal-mid)}
+.b-y{background:var(--amber-light);color:#633806;border:1px solid var(--amber-border)}
+.b-p{background:var(--purple-light);color:#26215C;border:1px solid var(--purple-border)}
+.b-o{background:var(--coral-light);color:#4A1B0C;border:1px solid var(--coral-border)}
+.arr{color:var(--gray4);font-size:18px}
+
+/* INTERACTIVE COMMON */
+.demo{background:var(--gray7);border-radius:10px;padding:1rem;margin-top:1rem;border:1px solid var(--gray6)}
+.demo-title{font-size:12px;color:var(--gray3);margin-bottom:.75rem;font-weight:700;display:flex;align-items:center;gap:5px}
+.sl-row{display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+.sl-row label{font-size:13px;color:var(--gray3);min-width:80px}
+.sl-row input[type=range]{flex:1;accent-color:var(--teal);cursor:pointer}
+.sl-val{font-size:14px;font-weight:700;min-width:36px;text-align:right}
+.rlabel{font-size:11px;color:var(--gray4);margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.rbox{background:#fff;border:1px solid var(--gray6);border-radius:8px;padding:.8rem 1rem;font-size:14px;font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:8px;background:var(--teal);color:#fff;font-size:13px;font-weight:700;cursor:pointer;border:none;margin-top:.75rem;transition:.15s;font-family:inherit}
+.btn:hover{background:var(--teal-dark)}.btn:active{transform:scale(.97)}
+.btn-outline{background:#fff;color:var(--teal);border:1.5px solid var(--teal)}
+.btn-outline:hover{background:var(--teal-light)}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:1rem;flex-wrap:wrap}
+.tab{padding:7px 16px;border-radius:22px;font-size:13px;cursor:pointer;border:1px solid var(--gray5);background:#fff;color:var(--gray3);font-weight:600;transition:.2s;font-family:inherit}
+.tab:hover{border-color:var(--teal);color:var(--teal-dark)}
+.tab.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.panel{display:none}.panel.active{display:block}
+
+/* CODE */
+.code{background:#1E1E1E;color:#D4D4D4;font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;padding:1.1rem 1.25rem;border-radius:10px;line-height:1.9;overflow-x:auto;margin:.85rem 0;position:relative}
+.code .kw{color:#569CD6}.code .str{color:#CE9178}.code .num{color:#B5CEA8}.code .cm{color:#6A9955}.code .fn{color:#DCDCAA}.code .op{color:#D4D4D4}
+
+/* VAR VIZ */
+.var-viz{display:flex;gap:12px;flex-wrap:wrap;margin:.85rem 0}
+.var-box{border:2px dashed var(--gray5);border-radius:10px;padding:.6rem .9rem;min-width:100px;text-align:center;transition:.4s;position:relative}
+.var-box.filled{border-style:solid;border-color:var(--amber-border);background:var(--amber-light)}
+.var-box-label{font-size:11px;color:var(--gray4);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.var-box-val{font-size:18px;font-weight:700;color:#633806;min-height:24px}
+.var-assign{font-size:20px;color:var(--gray4);align-self:center;padding-top:18px}
+
+/* LOOP VIZ */
+.loop-viz{display:flex;gap:6px;flex-wrap:wrap;margin-top:.75rem;min-height:46px}
+.li{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;border:1px solid var(--gray6);background:#fff;transition:.3s}
+.li.active{background:var(--teal);border-color:var(--teal);transform:scale(1.2)}
+.li.done{background:var(--teal-light);border-color:var(--teal-mid)}
+
+/* STEP TRACE */
+.trace{margin-top:.85rem}
+.trace-step{display:flex;gap:10px;align-items:flex-start;padding:.6rem;border-radius:8px;margin-bottom:4px;opacity:.35;transition:.3s;border:1px solid transparent}
+.trace-step.active{opacity:1;background:var(--teal-light);border-color:var(--teal-mid)}
+.trace-step.done{opacity:.7}
+.trace-num{width:24px;height:24px;border-radius:50%;background:var(--teal);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.trace-step.done .trace-num{background:var(--gray4)}
+.trace-text{font-size:13px;line-height:1.5}
+.trace-out{font-size:12px;color:var(--teal-dark);font-family:monospace;margin-top:2px}
+
+/* FILL-IN CODE */
+.fill-code{font-family:'SFMono-Regular',Consolas,monospace;font-size:13px;background:#1E1E1E;color:#D4D4D4;border-radius:10px;padding:1.1rem 1.25rem;line-height:2;margin:.75rem 0}
+.fill-code .kw{color:#569CD6}.fill-code .str{color:#CE9178}.fill-code .num{color:#B5CEA8}.fill-code .cm{color:#6A9955}
+.blank{display:inline-block;background:#3C3C3C;border:1.5px dashed #888;border-radius:4px;padding:1px 8px;min-width:70px;cursor:pointer;color:#FFD700;transition:.2s;position:relative}
+.blank:hover{background:#4C4C4C}
+.blank.correct{background:#1D5C3A;border-color:#1D9E75;color:#9FE1CB}
+.blank.wrong{background:#5C1D1D;border-color:#E24B4A;color:#F09595;animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.options-row{display:flex;gap:6px;flex-wrap:wrap;margin:.5rem 0}
+.opt-chip{padding:5px 12px;border-radius:6px;background:#fff;border:1.5px solid var(--gray5);font-size:12px;font-weight:600;cursor:pointer;font-family:monospace;transition:.2s;color:var(--gray)}
+.opt-chip:hover{border-color:var(--teal);color:var(--teal-dark);background:var(--teal-light)}
+.opt-chip.used{opacity:.3;pointer-events:none}
+
+/* BUG HUNT */
+.buggy-code{font-family:monospace;font-size:13px;background:#1E1E1E;border-radius:10px;padding:1.1rem;line-height:2;margin:.75rem 0}
+.code-line{display:flex;align-items:center;gap:8px;padding:2px 4px;border-radius:4px;cursor:pointer;transition:.15s}
+.code-line:hover{background:#2A2A2A}
+.code-line.selected{background:#2C3E1E;outline:1.5px solid #1D9E75}
+.code-line.wrong-sel{background:#3E1E1E;outline:1.5px solid #E24B4A}
+.line-num{color:#555;font-size:11px;min-width:20px;text-align:right;user-select:none}
+.line-text{color:#D4D4D4}
+.line-text .kw{color:#569CD6}.line-text .str{color:#CE9178}.line-text .num{color:#B5CEA8}.line-text .err{color:#FF6B6B;text-decoration:underline wavy #FF6B6B}
+
+/* FUNC VIZ */
+.func-machine{display:flex;align-items:center;gap:12px;margin:1rem 0;flex-wrap:wrap}
+.func-in{display:flex;flex-direction:column;gap:6px}
+.func-box{background:linear-gradient(135deg,#2C3E50,#3498db);color:#fff;border-radius:12px;padding:1rem 1.4rem;text-align:center;min-width:110px;position:relative}
+.func-box-title{font-size:11px;font-weight:700;letter-spacing:.08em;opacity:.7;text-transform:uppercase;margin-bottom:.3rem}
+.func-box-name{font-size:16px;font-weight:700}
+.func-out{display:flex;flex-direction:column;gap:6px}
+.func-arrow{font-size:24px;color:var(--gray4)}
+.func-chip{padding:6px 12px;border-radius:7px;font-size:13px;font-weight:600}
+
+/* COND FLOW */
+.cond-flow{margin:1rem 0}
+.cond-node{display:inline-flex;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;margin:4px 0}
+.cond-branch{display:flex;gap:16px;margin-left:20px;margin-top:8px;flex-wrap:wrap}
+.cond-side{flex:1;min-width:130px}
+.cond-side-label{font-size:11px;color:var(--gray4);font-weight:700;margin-bottom:4px}
+
+/* QUIZ */
+.quiz-q{font-size:15px;font-weight:700;margin-bottom:.85rem;line-height:1.55;white-space:pre-line}
+.quiz-opts{display:flex;flex-direction:column;gap:7px}
+.quiz-opt{padding:10px 15px;border-radius:9px;border:1.5px solid var(--gray6);font-size:13px;cursor:pointer;background:#fff;color:var(--gray);text-align:left;transition:.15s;font-family:inherit;font-weight:600}
+.quiz-opt:hover:not(:disabled){border-color:var(--teal);background:var(--teal-light)}
+.quiz-opt.correct{background:var(--teal-light);border-color:var(--teal);color:var(--teal-dark)}
+.quiz-opt.wrong{background:#FCEBEB;border-color:#E24B4A;color:#501313}
+.quiz-msg{margin-top:.75rem;font-size:13px;padding:.6rem .9rem;border-radius:7px;font-weight:600}
+.quiz-msg.ok{background:var(--teal-light);color:var(--teal-dark)}
+.quiz-msg.ng{background:#FCEBEB;color:#501313}
+.progress-bar{height:5px;background:var(--gray6);border-radius:3px;margin-bottom:.5rem;overflow:hidden}
+.progress-fill{height:100%;background:var(--teal);border-radius:3px;transition:.4s}
+
+/* OUTPUT TERM */
+.term{background:#1E1E1E;border-radius:8px;padding:.75rem 1rem;font-family:monospace;font-size:13px;color:#9FE1CB;margin-top:.5rem;min-height:40px;line-height:1.8}
+.term-line{display:block;animation:fadeIn .2s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;border:1px solid}
+
+/* NEXT STEP */
+.resource-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.resource-card{background:#fff;border:1px solid var(--gray6);border-radius:12px;padding:1rem;text-align:center;transition:.2s}
+.resource-card:hover{border-color:var(--teal);box-shadow:0 2px 8px rgba(29,158,117,.1)}
+.resource-card a{display:block;color:var(--teal-dark);font-size:13px;font-weight:700;margin:.35rem 0;text-decoration:none}
+.resource-card a:hover{text-decoration:underline}
+.resource-card p{font-size:11px;color:var(--gray3)}
+
+/* SCORE HUD */
+.hud{position:fixed;top:12px;right:12px;background:#fff;border:1px solid var(--gray6);border-radius:10px;padding:7px 12px;font-size:12px;font-weight:700;color:var(--gray);box-shadow:0 2px 8px rgba(0,0,0,.08);z-index:100;display:flex;align-items:center;gap:5px;transition:.3s;white-space:nowrap;max-width:calc(100vw - 24px)}
+.hud-star{font-size:14px;flex-shrink:0}
+.hud.bump{transform:scale(1.1);background:var(--amber-light)}
+
+@media(max-width:480px){.hero{padding:2.5rem 1rem 1.5rem}.func-machine{flex-direction:column}.func-arrow{transform:rotate(90deg)}}
+</style>
+</head>
+<body>
+
+<div class="hud" id="hud"><span class="hud-star"><svg width="14" height="14" viewBox="0 0 24 24" fill="#BA7517" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span> <span id="hud-score">0</span> ポイント</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="robot" aria-hidden="true"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><rect x="3" y="8" width="18" height="12" rx="3"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/><circle cx="9" cy="14" r="1.5" fill="currentColor"/><circle cx="15" cy="14" r="1.5" fill="currentColor"/><path d="M9 18h6"/></svg></div>
+  <div class="hero-badge">久保田の技術部屋</div>
+  <h1>コンピュータへの<br>命令の出し方を学ぼう</h1>
+  <p>7つのCHAPTERでプログラミングの仕組みをつかもう！</p>
+  <div class="progress-nav">
+    <a class="nav-pill" href="#ch1">1. 順次実行</a>
+    <a class="nav-pill" href="#ch2">2. 変数</a>
+    <a class="nav-pill" href="#ch3">3. 条件分岐</a>
+    <a class="nav-pill" href="#ch4">4. 繰り返し</a>
+    <a class="nav-pill" href="#ch5">5. 関数</a>
+    <a class="nav-pill" href="#ch6">6. バグ探し</a>
+    <a class="nav-pill" href="#ch7">7. クイズ</a>
+    <a class="nav-pill" href="#ch8">8. 次のステップ</a>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="container">
+
+<!-- ===== CHAPTER 1: 順次実行 ===== -->
+<div class="section" id="ch1">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>&nbsp;Chapter 1</div>
+  <h2>プログラムって何？ 〜順次実行〜</h2>
+
+  <div class="card">
+    <div class="card-title">命令を上から順番に実行する</div>
+    <div class="card-desc">プログラムは「やること」を順番に書いた指示書です。コンピューターは上から下へ、一行ずつ正確に実行します。</div>
+    <div class="flow">
+      <div class="b b-g">① 起きる</div><div class="arr">→</div>
+      <div class="b b-g">② 歯を磨く</div><div class="arr">→</div>
+      <div class="b b-g">③ 服を着る</div><div class="arr">→</div>
+      <div class="b b-g">④ 学校へ行く</div>
+    </div>
+    <div class="note">コンピューターはこの順番を絶対に守ります。③を飛ばして④はできません。これを<strong>順次実行</strong>といいます。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><line x1="6" y1="12" x2="10" y2="12"/><line x1="8" y1="10" x2="8" y2="14"/><circle cx="16" cy="11" r="1" fill="currentColor"/><circle cx="18" cy="13" r="1" fill="currentColor"/><rect x="2" y="7" width="20" height="14" rx="5"/></svg>&nbsp;ステップ実行を体験しよう</div>
+    <div class="card-desc">「次へ」を押すと、プログラムが一行ずつ実行される様子が見えます。</div>
+    <div class="code" id="step-code">
+      <span id="hl-0" style="display:block;padding:1px 4px;border-radius:4px">name = <span class="str">"さくら"</span></span>
+      <span id="hl-1" style="display:block;padding:1px 4px;border-radius:4px">age = <span class="num">14</span></span>
+      <span id="hl-2" style="display:block;padding:1px 4px;border-radius:4px"><span class="fn">print</span>(<span class="str">"こんにちは、"</span> + name)</span>
+      <span id="hl-3" style="display:block;padding:1px 4px;border-radius:4px"><span class="fn">print</span>(<span class="str">"あなたは"</span> + age + <span class="str">"歳です"</span>)</span>
+    </div>
+    <div class="trace" id="step-trace">
+      <div class="trace-step" id="ts0"><div class="trace-num">1</div><div><div class="trace-text">変数 <code>name</code> に "さくら" を入れる</div></div></div>
+      <div class="trace-step" id="ts1"><div class="trace-num">2</div><div><div class="trace-text">変数 <code>age</code> に 14 を入れる</div></div></div>
+      <div class="trace-step" id="ts2"><div class="trace-num">3</div><div><div class="trace-text">"こんにちは、さくら" を画面に表示</div><div class="trace-out">→ こんにちは、さくら</div></div></div>
+      <div class="trace-step" id="ts3"><div class="trace-num">4</div><div><div class="trace-text">"あなたは14歳です" を画面に表示</div><div class="trace-out">→ あなたは14歳です</div></div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap">
+      <button class="btn" onclick="stepNext()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> 次へ</button>
+      <button class="btn btn-outline" onclick="stepReset()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg> リセット</button>
+    </div>
+    <div class="term" id="step-term" style="margin-top:.75rem"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 2: 変数 ===== -->
+<div class="section" id="ch2">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>&nbsp;Chapter 2</div>
+  <h2>変数 〜データを入れる箱〜</h2>
+
+  <div class="card">
+    <div class="card-title">変数 ＝ 名前のついた「箱」</div>
+    <div class="card-desc">変数とはデータを保存する「箱」です。箱に名前をつけて、数字・文字・リストなどを入れられます。後から中身を変えることもできます。</div>
+    <div class="var-viz" id="var-viz-boxes">
+      <div class="var-box" id="vb-name">
+        <div class="var-box-label">name</div>
+        <div class="var-box-val" id="vb-name-v">（空）</div>
+      </div>
+      <div class="var-assign">＝</div>
+      <div class="var-box" id="vb-score">
+        <div class="var-box-label">score</div>
+        <div class="var-box-val" id="vb-score-v">（空）</div>
+      </div>
+      <div class="var-assign">＝</div>
+      <div class="var-box" id="vb-msg">
+        <div class="var-box-label">message</div>
+        <div class="var-box-val" id="vb-msg-v">（空）</div>
+      </div>
+    </div>
+    <div class="demo">
+      <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;変数に値を入れよう</div>
+      <div class="sl-row">
+        <label>名前を選ぶ</label>
+        <select id="var-name-sel" onchange="updateVars()" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--gray5);font-size:13px;font-family:inherit">
+          <option>さくら</option><option>たろう</option><option>はな</option><option>けんじ</option>
+        </select>
+      </div>
+      <div class="sl-row">
+        <label>スコア</label>
+        <input type="range" min="0" max="100" value="72" id="var-score-sl" oninput="updateVars()">
+        <span class="sl-val" id="var-score-v2">72</span>
+      </div>
+      <div class="rlabel">実行結果（print の出力）</div>
+      <div class="rbox" id="var-result">さくら さん、スコアは 72 点です！</div>
+    </div>
+    <div class="note">変数は<strong>何度でも上書き</strong>できます。score = 72 のあとに score = 95 と書くと、箱の中身が 95 に変わります。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>&nbsp;穴埋めチャレンジ：変数を定義しよう</div>
+    <div class="card-desc">下の選択肢をクリックして、空欄（<span style="color:#FFD700;font-family:monospace;background:#3C3C3C;padding:1px 6px;border-radius:3px">?</span>）を埋めよう！</div>
+    <div class="fill-code">
+<span class="cm"># 変数に値を代入する</span>
+<br>animal = <span class="blank" id="b1-0">&nbsp;?&nbsp;</span>
+<br>legs = <span class="blank" id="b1-1">&nbsp;?&nbsp;</span>
+<br><span class="kw">print</span>(animal + <span class="str">"は"</span> + legs + <span class="str">"本足"</span>)
+    </div>
+    <div class="options-row" id="fill1-opts">
+      <span class="opt-chip" data-fill="fill1" data-slot="0" data-val='"ねこ"'><span class="str">"ねこ"</span></span>
+      <span class="opt-chip" data-fill="fill1" data-slot="0" data-val="100">100</span>
+      <span class="opt-chip" data-fill="fill1" data-slot="1" data-val="4">4</span>
+      <span class="opt-chip" data-fill="fill1" data-slot="1" data-val='"4"'><span class="str">"4"</span></span>
+      <span class="opt-chip" data-fill="fill1" data-slot="0" data-val="True">True</span>
+    </div>
+    <div id="fill1-msg"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 3: 条件分岐 ===== -->
+<div class="section" id="ch3">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/></svg>&nbsp;Chapter 3</div>
+  <h2>条件分岐 〜「もし〜なら」で分かれ道〜</h2>
+
+  <div class="card">
+    <div class="card-title">if 文 ＝ 条件によって処理を変える</div>
+    <div class="card-desc">「もし〜なら A、そうでなければ B」という判断ができます。条件が「正しい（True）」か「違う（False）」かで道が分かれます。</div>
+    <div class="cond-flow">
+      <div class="cond-node b-p">条件：score ≥ 80</div>
+      <div class="cond-branch">
+        <div class="cond-side">
+          <div class="cond-side-label">[○] True（正しい）</div>
+          <div class="b b-g">「合格！」と表示</div>
+        </div>
+        <div class="cond-side">
+          <div class="cond-side-label">[x] False（違う）</div>
+          <div class="b b-o">「不合格…」と表示</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="demo">
+      <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;条件を自分で設定しよう</div>
+      <div class="sl-row">
+        <label>点数</label>
+        <input type="range" min="0" max="100" value="65" id="cond-sl" oninput="updateCond()">
+        <span class="sl-val" id="cond-v">65</span>
+      </div>
+      <div class="sl-row">
+        <label>合格ライン</label>
+        <input type="range" min="40" max="90" value="70" id="cond-line" oninput="updateCond()">
+        <span class="sl-val" id="cond-line-v">70</span>
+      </div>
+      <div id="cond-vis" style="margin:.75rem 0">
+        <div style="height:28px;background:var(--gray6);border-radius:6px;overflow:hidden;position:relative">
+          <div id="cond-bar" style="height:100%;background:var(--coral-border);border-radius:6px;transition:.4s;width:65%"></div>
+          <div id="cond-marker" style="position:absolute;top:0;height:100%;width:2px;background:var(--teal-dark);left:70%"></div>
+        </div>
+      </div>
+      <div class="rlabel">判定結果</div>
+      <div class="rbox" id="cond-result">[もう少し] 不合格… 頑張ろう！</div>
+    </div>
+    <div class="note"><strong>elif</strong>（else if）を使うと「もし A なら…、もし B なら…、それ以外なら…」と3つ以上に分岐できます。</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>&nbsp;天気アプリシミュレーション</div>
+    <div class="card-desc">天気と気温を変えて、プログラムがどんな提案をするか試してみよう！</div>
+    <div class="demo">
+      <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;条件を変えてみよう</div>
+      <div class="sl-row">
+        <label>天気</label>
+        <select id="weather-sel" onchange="updateWeather()" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--gray5);font-size:13px;font-family:inherit">
+          <option value="sunny">晴れ</option>
+          <option value="cloudy">曇り</option>
+          <option value="rainy">雨</option>
+          <option value="snowy">雪</option>
+        </select>
+      </div>
+      <div class="sl-row">
+        <label>気温 (℃)</label>
+        <input type="range" min="-5" max="40" value="22" id="temp-sl" oninput="updateWeather()">
+        <span class="sl-val" id="temp-v">22</span>
+      </div>
+      <div class="rlabel">プログラムの提案</div>
+      <div class="rbox" id="weather-result" style="font-size:15px">[晴れ] 気持ちいい！外で遊ぼう！</div>
+      <div class="code" style="margin-top:.75rem;font-size:12px" id="weather-code">
+<span class="kw">if</span> weather == <span class="str">"sunny"</span> <span class="kw">and</span> temp &gt; 10:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"外で遊ぼう！"</span>)
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>&nbsp;穴埋めチャレンジ：if 文を完成させよう</div>
+    <div class="card-desc">正しい選択肢を選んでコードを完成させよう。</div>
+    <div class="fill-code" id="fill2">
+<span class="cm"># 100円以上あればジュースを買う</span>
+<br>money = <span class="num">150</span>
+<br><span class="kw">if</span> money <span class="blank" id="b2-0">&nbsp;?&nbsp;</span> <span class="num">100</span>:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"ジュースを買えます！"</span>)
+<br><span class="blank" id="b2-1">&nbsp;?&nbsp;</span>:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"お金が足りない…"</span>)
+    </div>
+    <div class="options-row" id="fill2-opts">
+      <span class="opt-chip" data-fill="fill2" data-slot="0" data-val=">=">>= </span>
+      <span class="opt-chip" data-fill="fill2" data-slot="0" data-val="<="><= </span>
+      <span class="opt-chip" data-fill="fill2" data-slot="1" data-val="else"><span class="kw">else</span></span>
+      <span class="opt-chip" data-fill="fill2" data-slot="1" data-val="elif"><span class="kw">elif</span></span>
+      <span class="opt-chip" data-fill="fill2" data-slot="0" data-val="==">==</span>
+    </div>
+    <div id="fill2-msg"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 4: 繰り返し ===== -->
+<div class="section" id="ch4">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>&nbsp;Chapter 4</div>
+  <h2>繰り返し 〜同じ処理を何度でも〜</h2>
+
+  <div class="card">
+    <div class="card-title">for ループと while ループ</div>
+    <div class="card-desc">同じ処理を繰り返す仕組みです。「何回」か決まっているなら for、「条件が続く限り」なら while を使います。</div>
+    <div class="tabs">
+      <button class="tab active" onclick="showTab2('for-panel',this)">for ループ</button>
+      <button class="tab" onclick="showTab2('while-panel',this)">while ループ</button>
+    </div>
+    <div id="for-panel" class="panel active">
+      <div class="code">
+<span class="kw">for</span> i <span class="kw">in</span> range(<span class="num" id="for-n-code">5</span>):
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"* "</span> + i)
+      </div>
+      <div class="demo">
+        <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;繰り返し回数を変えよう</div>
+        <div class="sl-row">
+          <label>繰り返し回数</label>
+          <input type="range" min="1" max="12" value="5" id="loop-sl" oninput="updateLoopCount(this.value)">
+          <span class="sl-val" id="loop-n">5</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:.4rem">
+          <button class="btn" onclick="runLoop()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> 実行！</button>
+          <button class="btn btn-outline" onclick="resetLoop()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg> リセット</button>
+        </div>
+        <div class="loop-viz" id="loop-viz"></div>
+        <div class="term" id="loop-term"></div>
+      </div>
+    </div>
+    <div id="while-panel" class="panel">
+      <div class="code">
+hp = <span class="num">10</span>
+<br><span class="kw">while</span> hp &gt; 0:
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"HP: "</span> + hp)
+<br>&nbsp;&nbsp;&nbsp;&nbsp;hp = hp - <span class="num" id="while-dmg-code">3</span>
+<br><span class="fn">print</span>(<span class="str">"ゲームオーバー"</span>)
+      </div>
+      <div class="demo">
+        <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;ダメージ量を変えよう（RPGのHP）</div>
+        <div class="sl-row">
+          <label>1回のダメージ</label>
+          <input type="range" min="1" max="9" value="3" id="while-sl" oninput="updateWhile(this.value)">
+          <span class="sl-val" id="while-dmg">3</span>
+        </div>
+        <button class="btn" onclick="runWhile()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg> 実行！</button>
+        <div class="term" id="while-term" style="margin-top:.5rem"></div>
+      </div>
+      <div class="note">while ループは<strong>条件が False になるまで永遠に続きます</strong>。条件が絶対に False にならないと「無限ループ」になるので注意！</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>&nbsp;穴埋めチャレンジ：ループを完成させよう</div>
+    <div class="card-desc">1〜5の数字を順番に表示するコードを完成させよう。</div>
+    <div class="fill-code" id="fill3">
+<span class="cm"># 1から5まで表示する</span>
+<br><span class="kw">for</span> i <span class="kw">in</span> <span class="blank" id="b3-0">&nbsp;?&nbsp;</span>(<span class="num">1</span>, <span class="blank" id="b3-1">&nbsp;?&nbsp;</span>):
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(i)
+    </div>
+    <div class="options-row" id="fill3-opts">
+      <span class="opt-chip" data-fill="fill3" data-slot="0" data-val="range"><span class="fn">range</span></span>
+      <span class="opt-chip" data-fill="fill3" data-slot="0" data-val="print"><span class="fn">print</span></span>
+      <span class="opt-chip" data-fill="fill3" data-slot="1" data-val="6"><span class="num">6</span></span>
+      <span class="opt-chip" data-fill="fill3" data-slot="1" data-val="5"><span class="num">5</span></span>
+      <span class="opt-chip" data-fill="fill3" data-slot="1" data-val="10"><span class="num">10</span></span>
+    </div>
+    <div id="fill3-msg"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 5: 関数 ===== -->
+<div class="section" id="ch5">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>&nbsp;Chapter 5</div>
+  <h2>関数 〜処理をまとめて再利用〜</h2>
+
+  <div class="card">
+    <div class="card-title">関数 ＝ 「レシピ」のようなもの</div>
+    <div class="card-desc">関数とは、よく使う処理を「ひとかたまり」にして名前をつけたものです。一度作れば何度でも呼び出せます。</div>
+    <div class="func-machine">
+      <div class="func-in">
+        <div class="b b-y">引数（入力）</div>
+        <div style="font-size:12px;color:var(--gray3);text-align:center">name = "たろう"</div>
+      </div>
+      <div class="func-arrow">→</div>
+      <div class="func-box">
+        <div class="func-box-title">Function</div>
+        <div class="func-box-name">greet()</div>
+      </div>
+      <div class="func-arrow">→</div>
+      <div class="func-out">
+        <div class="b b-g">戻り値（出力）</div>
+        <div style="font-size:12px;color:var(--gray3);text-align:center">"こんにちは、たろう！"</div>
+      </div>
+    </div>
+    <div class="code">
+<span class="cm"># 関数を定義する</span>
+<br><span class="kw">def</span> <span class="fn">greet</span>(name):
+<br>&nbsp;&nbsp;&nbsp;&nbsp;message = <span class="str">"こんにちは、"</span> + name + <span class="str">"！"</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> message
+<br>
+<br><span class="kw">def</span> <span class="fn">judge</span>(score):
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> score &gt;= <span class="num">90</span>: <span class="kw">return</span> <span class="str">"S"</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">elif</span> score &gt;= <span class="num">80</span>: <span class="kw">return</span> <span class="str">"A"</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">elif</span> score &gt;= <span class="num">70</span>: <span class="kw">return</span> <span class="str">"B"</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">elif</span> score &gt;= <span class="num">60</span>: <span class="kw">return</span> <span class="str">"C"</span>
+<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">else</span>: <span class="kw">return</span> <span class="str">"D"</span>
+<br>
+<br><span class="cm"># 関数を呼び出す</span>
+<br><span class="fn">print</span>(<span class="fn">greet</span>(<span class="str">"たろう"</span>))
+<br><span class="fn">print</span>(<span class="fn">greet</span>(<span class="str">"はな"</span>))
+    </div>
+    <div class="demo">
+      <div class="demo-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M9 3h6v7l3 9H6l3-9V3z"/><line x1="6" y1="6" x2="18" y2="6"/></svg>&nbsp;関数に渡す値を変えよう</div>
+      <div class="sl-row">
+        <label>名前</label>
+        <select id="fn-name" onchange="updateFn()" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid var(--gray5);font-size:13px;font-family:inherit">
+          <option>たろう</option><option>はな</option><option>さくら</option><option>けんじ</option><option>ゆい</option>
+        </select>
+      </div>
+      <div class="sl-row">
+        <label>スコア</label>
+        <input type="range" min="0" max="100" value="85" id="fn-score" oninput="updateFn()">
+        <span class="sl-val" id="fn-score-v">85</span>
+      </div>
+      <div class="rlabel">greet() + judge() の実行結果</div>
+      <div class="term" id="fn-result"></div>
+    </div>
+    <div class="note">関数を使うと同じコードを何度も書かなくて済みます。これを<strong>DRY原則</strong>（Don't Repeat Yourself）といいます。</div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 6: バグ探し ===== -->
+<div class="section" id="ch6">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M8 2l1.5 1.5M14.5 3.5L16 2M9 9C8 8.4 7 8 5 8M15 9c1-.6 2-1 4-1M5 15c-.8.5-2 .5-3 1.5M19 15c.8.5 2 .5 3 1.5M5 19c-.8.5-1.8 1-3 1M19 19c.8.5 1.8 1 3 1M9 9a3 3 0 0 0-3 3v5a5 5 0 0 0 10 0v-5a3 3 0 0 0-3-3z"/></svg>&nbsp;Chapter 6</div>
+  <h2>バグ探し 〜間違いを見つけよう！〜</h2>
+
+  <div class="card">
+    <div class="card-title">バグとは？</div>
+    <div class="card-desc">プログラムの間違い（エラーや意図しない動作）を「バグ」といいます。バグを見つけて直すことを「デバッグ」といいます。</div>
+    <div class="note">バグがある行を<strong>クリック</strong>して選んでみよう！ヒント：コードをよく読んで、おかしい部分を探してね。</div>
+  </div>
+
+  <div id="bug-quiz-area"></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ===== CHAPTER 7: 総合クイズ ===== -->
+<div class="section" id="ch7">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M6 2h12v8a6 6 0 0 1-12 0V2z"/><path d="M6 5H2v2a4 4 0 0 0 4 4"/><path d="M18 5h4v2a4 4 0 0 1-4 4"/><path d="M9 17v2H7v2h10v-2h-2v-2"/><line x1="9" y1="17" x2="15" y2="17"/></svg>&nbsp;Chapter 7</div>
+  <h2>総合クイズ 〜全部まとめて確認！〜</h2>
+  <div class="progress-bar"><div class="progress-fill" id="quiz-progress" style="width:0%"></div></div>
+  <p style="font-size:12px;color:var(--gray4);margin-bottom:1rem" id="quiz-status">問題 1 / 5</p>
+  <div id="quiz-area"></div>
+</div>
+
+
+<div class="divider"></div>
+
+<div class="section" id="ch8">
+  <div class="section-label"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>&nbsp;次のステップへ</div>
+  <h2>次のステップへ進もう！</h2>
+  <p style="font-size:14px;color:var(--gray3);margin-bottom:1.25rem">プログラミングの基礎が身についたら、次はWebページを作る言語「HTML」を学ぼう！</p>
+  <a href="https://shin-11111111.github.io/shin_gijyutu/HTML_guidance.html" target="_blank" rel="noopener" style="text-decoration:none;display:block">
+    <div class="card" style="display:flex;align-items:center;gap:1.25rem;padding:1.25rem 1.5rem;border-color:var(--teal-mid);transition:.2s" onmouseover="this.style.borderColor='var(--teal)';this.style.boxShadow='0 2px 12px rgba(29,158,117,.15)'" onmouseout="this.style.borderColor='var(--teal-mid)';this.style.boxShadow=''">
+      <div style="width:48px;height:48px;border-radius:10px;background:var(--teal-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;font-weight:700;color:var(--teal-dark);margin-bottom:.2rem">HTMLってなんだろう</div>
+        <div style="font-size:13px;color:var(--gray3)">Webページを作るための言語「HTML」の基礎を学ぼう</div>
+        <div style="font-size:11px;color:var(--gray4);margin-top:.3rem;word-break:break-all">HTMLマスター編</div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888780" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </div>
+  </a>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ===== SCORE =====
+var totalScore = 0;
+function addScore(pts){
+  totalScore += pts;
+  var h = document.getElementById('hud');
+  document.getElementById('hud-score').textContent = totalScore;
+  h.classList.add('bump');
+  setTimeout(function(){ h.classList.remove('bump'); }, 400);
+}
+
+// ===== CHAPTER 1: STEP EXEC =====
+var stepIdx = -1;
+var stepOutputs = ['こんにちは、さくら', 'あなたは14歳です'];
+var stepOutputIdx = 0;
+function stepNext(){
+  if(stepIdx >= 3) return;
+  if(stepIdx >= 0){
+    document.getElementById('hl-'+stepIdx).style.background='';
+    document.getElementById('ts'+stepIdx).classList.remove('active');
+    document.getElementById('ts'+stepIdx).classList.add('done');
+  }
+  stepIdx++;
+  if(stepIdx > 3) return;
+  document.getElementById('hl-'+stepIdx).style.background='rgba(29,158,117,.18)';
+  document.getElementById('ts'+stepIdx).classList.add('active');
+  if(stepIdx >= 2){
+    var term = document.getElementById('step-term');
+    var sp = document.createElement('span');
+    sp.className='term-line';
+    sp.textContent = '> ' + stepOutputs[stepIdx-2];
+    term.appendChild(sp);
+  }
+  addScore(1);
+}
+function stepReset(){
+  stepIdx = -1;
+  for(var i=0;i<4;i++){
+    document.getElementById('hl-'+i).style.background='';
+    var ts = document.getElementById('ts'+i);
+    ts.classList.remove('active','done');
+  }
+  document.getElementById('step-term').innerHTML='';
+}
+
+// ===== CHAPTER 2: VARS =====
+function updateVars(){
+  var name = document.getElementById('var-name-sel').value;
+  var score = document.getElementById('var-score-sl').value;
+  document.getElementById('var-score-v2').textContent = score;
+  ['vb-name','vb-score','vb-msg'].forEach(function(id){
+    var el = document.getElementById(id);
+    el.classList.add('filled');
+  });
+  document.getElementById('vb-name-v').textContent = '"'+name+'"';
+  document.getElementById('vb-score-v').textContent = score;
+  var msg = name+'さん、スコアは'+score+'点です！';
+  document.getElementById('vb-msg-v').textContent = '"'+msg+'"';
+  document.getElementById('var-result').textContent = msg;
+}
+updateVars();
+
+// ===== FILL-IN =====
+var fillState = {
+  fill1: { answers: [null, null], correct: ['"ねこ"', '4'],  blanks: ['b1-0','b1-1'] },
+  fill2: { answers: [null, null], correct: ['>=',    'else'], blanks: ['b2-0','b2-1'] },
+  fill3: { answers: [null, null], correct: ['range', '6'],   blanks: ['b3-0','b3-1'] }
+};
+
+document.addEventListener('click', function(e) {
+  var chip = e.target.closest('.opt-chip');
+  if (!chip) return;
+  var group = chip.dataset.fill;
+  var slot  = parseInt(chip.dataset.slot);
+  var val   = chip.dataset.val;
+  if (!group || isNaN(slot) || val === undefined) return;
+
+  var state = fillState[group];
+  if (state.answers[slot] === state.correct[slot]) return; // already correct
+
+  var blankEl = document.getElementById(state.blanks[slot]);
+  var isCorrect = (val === state.correct[slot]);
+  state.answers[slot] = val;
+  blankEl.textContent = val;
+  blankEl.className = 'blank ' + (isCorrect ? 'correct' : 'wrong');
+
+  if (isCorrect) {
+    chip.classList.add('used');
+    addScore(4);
+    checkFillComplete(group);
+  } else {
+    setTimeout(function() {
+      blankEl.innerHTML = '&nbsp;?&nbsp;';
+      blankEl.className = 'blank';
+      state.answers[slot] = null;
+    }, 700);
+  }
+});
+
+function checkFillComplete(group) {
+  var state = fillState[group];
+  var allOk = state.answers.every(function(a, i) { return a === state.correct[i]; });
+  if (allOk) {
+    var msgEl = document.getElementById(group + '-msg');
+    msgEl.className = 'quiz-msg ok';
+    msgEl.innerHTML = '<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#085041\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle;flex-shrink:0\"><polyline points=\"20 6 9 17 4 12\"/></svg> 正解！コードが完成したよ！';
+    addScore(2);
+  }
+}
+
+// ===== CHAPTER 3: COND =====
+function updateCond(){
+  var score = parseInt(document.getElementById('cond-sl').value);
+  var line = parseInt(document.getElementById('cond-line').value);
+  document.getElementById('cond-v').textContent = score;
+  document.getElementById('cond-line-v').textContent = line;
+  document.getElementById('cond-bar').style.width = score+'%';
+  document.getElementById('cond-bar').style.background = score >= line ? '#1D9E75' : '#D85A30';
+  document.getElementById('cond-marker').style.left = line+'%';
+  var r = document.getElementById('cond-result');
+  if(score >= line+20){r.textContent='[合格] すごい！余裕の合格です！';r.style.color='#085041';}
+  else if(score >= line){r.textContent='[合格] 合格！よく頑張りました！';r.style.color='#085041';}
+  else if(score >= line-15){r.textContent='[不合格] あと'+(line-score)+'点で合格！';r.style.color='#633806';}
+  else{r.textContent='[不合格] 一緒に復習しよう！';r.style.color='#993C1D';}
+}
+updateCond();
+
+function updateWeather(){
+  var w = document.getElementById('weather-sel').value;
+  var t = parseInt(document.getElementById('temp-sl').value);
+  document.getElementById('temp-v').textContent = t;
+  var res='', code='';
+  if(w==='sunny' && t>=25){res='[晴/猛暑] 熱中症に気をつけて水分補給！';code='if weather=="sunny" and temp>=25:\n    print("水分補給を忘れずに！")';}
+  else if(w==='sunny' && t>=10){res='[晴れ] 気持ちいい！外で遊ぼう！';code='if weather=="sunny" and temp>=10:\n    print("外で遊ぼう！")';}
+  else if(w==='sunny'){res='[晴/寒] コートを着てね。';code='if weather=="sunny" and temp<10:\n    print("コートを着てね！")';}
+  else if(w==='rainy' && t<5){res='[雨/寒] 傘と防寒具を持とう！';code='if weather=="rainy" and temp<5:\n    print("傘と防寒具！")';}
+  else if(w==='rainy'){res='[雨] 傘を忘れずに！';code='if weather=="rainy":\n    print("傘を持っていこう！")';}
+  else if(w==='snowy'){res='[雪] 道が凍るかも。早めに家を出よう。';code='if weather=="snowy":\n    print("滑りやすいので注意！")';}
+  else{res='[曇り] 念のため折りたたみ傘を持とう。';code='if weather=="cloudy":\n    print("折りたたみ傘を持とう")';}
+  document.getElementById('weather-result').textContent = res;
+  document.getElementById('weather-code').textContent = '';
+  var lines = code.split('\n');
+  lines.forEach(function(l,i){
+    var sp = document.createElement('span');
+    sp.style.display='block';
+    sp.innerHTML = l.replace(/if|and|or/g,'<span class="kw">$&</span>').replace(/"[^"]*"/g,'<span class="str">$&</span>').replace(/\d+/g,'<span class="num">$&</span>').replace(/print/g,'<span class="fn">print</span>');
+    document.getElementById('weather-code').appendChild(sp);
+  });
+}
+updateWeather();
+
+// ===== CHAPTER 4: LOOP =====
+var loopCount=5, loopTimer=null;
+function updateLoopCount(v){
+  loopCount=parseInt(v);
+  document.getElementById('loop-n').textContent=v;
+  document.getElementById('for-n-code').textContent=v;
+  renderLoopItems(-1);
+}
+function renderLoopItems(active){
+  var viz=document.getElementById('loop-viz');
+  viz.innerHTML='';
+  for(var i=0;i<loopCount;i++){
+    var d=document.createElement('div');
+    d.className='li'+(i<active?' done':i===active?' active':'');
+    d.innerHTML='<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#1D9E75\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle\"><circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2a3 3 0 0 0 0 6M12 16a3 3 0 0 0 0 6M2 12a3 3 0 0 0 6 0M16 12a3 3 0 0 0 6 0\"/></svg>';
+    viz.appendChild(d);
+  }
+}
+function runLoop(){
+  if(loopTimer)clearInterval(loopTimer);
+  var i=0, term=document.getElementById('loop-term');
+  term.innerHTML='';
+  renderLoopItems(-1);
+  loopTimer=setInterval(function(){
+    renderLoopItems(i);
+    var sp=document.createElement('span');
+    sp.className='term-line';
+    sp.textContent='> * '+(i+1)+' 回目';
+    term.appendChild(sp);
+    i++;
+    if(i>=loopCount){clearInterval(loopTimer);loopTimer=null;renderLoopItems(loopCount);addScore(2);}
+  },350);
+}
+function resetLoop(){ if(loopTimer){clearInterval(loopTimer);loopTimer=null;} renderLoopItems(-1); document.getElementById('loop-term').innerHTML=''; }
+renderLoopItems(-1);
+
+function updateWhile(v){
+  document.getElementById('while-dmg').textContent=v;
+  document.getElementById('while-dmg-code').textContent=v;
+}
+function runWhile(){
+  var dmg=parseInt(document.getElementById('while-sl').value);
+  var hp=10, term=document.getElementById('while-term');
+  term.innerHTML='';
+  var steps=[];
+  while(hp>0){
+    steps.push('HP: '+hp);
+    hp-=dmg;
+  }
+  steps.push('ゲームオーバー');
+  var i=0;
+  var t=setInterval(function(){
+    if(i>=steps.length){clearInterval(t);addScore(1);return;}
+    var sp=document.createElement('span');
+    sp.className='term-line';
+    sp.textContent='> '+steps[i];
+    term.appendChild(sp);
+    i++;
+  },300);
+}
+
+function showTab2(id, el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById(id).classList.add('active');
+}
+
+// ===== CHAPTER 5: FUNCTION =====
+function updateFn(){
+  var name = document.getElementById('fn-name').value;
+  var score = parseInt(document.getElementById('fn-score').value);
+  document.getElementById('fn-score-v').textContent = score;
+  var judge = score>=90?'S':'A'.repeat(0)+(score>=80?'A':score>=70?'B':score>=60?'C':'D');
+  if(score>=90)judge='S';else if(score>=80)judge='A';else if(score>=70)judge='B';else if(score>=60)judge='C';else judge='D';
+  var term = document.getElementById('fn-result');
+  term.innerHTML='';
+  var lines=[
+    '> greet("'+name+'") を実行',
+    '  → こんにちは、'+name+'！',
+    '> judge('+score+') を実行',
+    '  → スコア '+score+' 点、ランク '+judge+'！'
+  ];
+  lines.forEach(function(l){
+    var sp=document.createElement('span');
+    sp.className='term-line';
+    sp.textContent=l;
+    term.appendChild(sp);
+  });
+}
+updateFn();
+
+// ===== CHAPTER 6: BUG HUNT =====
+var bugQuizzes=[
+  {
+    title:'バグ問題 1：正しくないコードの行はどれ？',
+    desc:'「1から5まで表示する」プログラムにバグがあります。',
+    lines:[
+      {text:'for i in range(1, 6):', bug:false, display:'<span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">1</span>, <span class="num">6</span>):'},
+      {text:'    pint(i)', bug:true, display:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="err">pint</span>(i)'},
+      {text:'    # 1から5を表示', bug:false, display:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># 1から5を表示</span>'},
+    ],
+    hint:'print のスペルをよく見てみよう…',
+    explain:'「pint」は間違い！正しくは「print」です。タイポ（打ち間違い）はよくあるバグです。'
+  },
+  {
+    title:'バグ問題 2：無限ループになるのはなぜ？',
+    desc:'このwhile文は終わりません。どの行がおかしい？',
+    lines:[
+      {text:'count = 0', bug:false, display:'count = <span class="num">0</span>'},
+      {text:'while count < 5:', bug:false, display:'<span class="kw">while</span> count &lt; <span class="num">5</span>:'},
+      {text:'    print(count)', bug:false, display:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(count)'},
+      {text:'    count = count - 1', bug:true, display:'&nbsp;&nbsp;&nbsp;&nbsp;count = count <span class="err">- 1</span>'},
+    ],
+    hint:'count の値は増えている？減っている？',
+    explain:'count を -1 すると count はどんどん小さくなり、count < 5 が永遠に True になります。正しくは count + 1 です！'
+  },
+  {
+    title:'バグ問題 3：条件が逆になっている',
+    desc:'「18歳以上なら入場できる」プログラムがおかしい。',
+    lines:[
+      {text:'age = 20', bug:false, display:'age = <span class="num">20</span>'},
+      {text:'if age < 18:', bug:true, display:'<span class="kw">if</span> age <span class="err">&lt;</span> <span class="num">18</span>:'},
+      {text:'    print("入場できます")', bug:false, display:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"入場できます"</span>)'},
+      {text:'else:', bug:false, display:'<span class="kw">else</span>:'},
+      {text:'    print("入場できません")', bug:false, display:'&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">print</span>(<span class="str">"入場できません"</span>)'},
+    ],
+    hint:'20歳の人は入場できる？できない？条件式をよく見て！',
+    explain:'「age < 18」は18歳未満の時に True になります。18歳以上を許可したいなら「age >= 18」が正しい！'
+  }
+];
+var bugIdx=0;
+function renderBugQuiz(){
+  if(bugIdx>=bugQuizzes.length){
+    document.getElementById('bug-quiz-area').innerHTML=
+      '<div class="card" style="text-align:center;padding:2rem">'+
+        '<div style="margin-bottom:.5rem"><svg width=\"40\" height=\"40\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle;flex-shrink:0;\"><path d=\"M5.8 11.3L2 22l10.7-3.79\"/><path d=\"M4 3h.01M22 8h.01M15 2h.01M22 20h.01\"/><path d=\"m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10\"/><path d=\"m22 13-.82-.33c-.86-.34-1.82.2-1.98 1.11C19.09 14.7 18.48 15.22 17.77 15.22H17\"/><path d=\"m11 2 .33.82c.34.86-.2 1.82-1.11 1.98C9.52 4.9 9 5.52 9 6.23V7\"/><path d=\"M11 13c1.93 1.93 2.83 4.17 2 5-.83.83-3.07-.07-5-2-1.93-1.93-2.83-4.17-2-5 .83-.83 3.07.07 5 2z\"/></svg></div>'+
+        '<p style="font-size:16px;font-weight:700;color:var(--teal-dark);margin-bottom:1rem">全問クリア！デバッグ名人！</p>'+
+        '<button class="btn btn-outline" onclick="resetBugQuiz()">'+
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>'+
+          ' リセット'+
+        '</button>'+
+      '</div>';
+    return;
+  }
+  var q=bugQuizzes[bugIdx];
+  var progress=(bugIdx+1)+' / '+bugQuizzes.length;
+  var html=
+    '<div class="card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem">'+
+        '<div class="card-title" style="margin-bottom:0">'+q.title+'</div>'+
+        '<span style="font-size:12px;color:var(--gray4);font-weight:600">'+progress+'</span>'+
+      '</div>'+
+      '<div class="card-desc">'+q.desc+'</div>'+
+      '<div class="buggy-code">';
+  q.lines.forEach(function(l,i){
+    html+='<div class="code-line" id="bug-line-'+i+'" onclick="selectBugLine('+i+')">';
+    html+='<span class="line-num">'+(i+1)+'</span>';
+    html+='<span class="line-text">'+l.display+'</span></div>';
+  });
+  html+='</div>';
+  html+='<p style="font-size:12px;color:var(--gray4);margin-bottom:.5rem"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle;flex-shrink:0;\"><path d=\"M9 18h6M10 22h4M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17H8v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z\"/></svg>&nbsp;ヒント：'+q.hint+'</p>';
+  html+='<div id="bug-msg"></div>';
+  html+='<div id="bug-btn-row" style="display:flex;gap:8px;margin-top:.75rem;flex-wrap:wrap"></div>';
+  html+='</div>';
+  document.getElementById('bug-quiz-area').innerHTML=html;
+  renderBugButtons(false);
+}
+function renderBugButtons(solved){
+  var row=document.getElementById('bug-btn-row');
+  if(!row)return;
+  var nextLabel=bugIdx+1<bugQuizzes.length?'次の問題へ':'結果を見る';
+  row.innerHTML=
+    '<button class="btn btn-outline" onclick="resetBugQuiz()">'+
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>'+
+      ' リセット'+
+    '</button>'+
+    (solved
+      ? '<button class="btn" onclick="bugNextQuestion()">'+
+          nextLabel+
+          ' <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>'+
+        '</button>'
+      : '');
+}
+function selectBugLine(idx){
+  var q=bugQuizzes[bugIdx];
+  document.querySelectorAll('.code-line').forEach(function(el){el.classList.remove('selected','wrong-sel');});
+  var el=document.getElementById('bug-line-'+idx);
+  if(q.lines[idx].bug){
+    el.classList.add('selected');
+    document.querySelectorAll('.code-line').forEach(function(l){l.style.pointerEvents='none';});
+    document.getElementById('bug-msg').innerHTML='<div class="quiz-msg ok"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#085041\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle;flex-shrink:0\"><polyline points=\"20 6 9 17 4 12\"/></svg> 正解！'+q.explain+'</div>';
+    addScore(5);
+    renderBugButtons(true);
+  } else {
+    el.classList.add('wrong-sel');
+    document.getElementById('bug-msg').innerHTML='<div class="quiz-msg ng"><svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#E24B4A\" stroke-width=\"2.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" style=\"display:inline-block;vertical-align:middle;flex-shrink:0\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg> ここじゃない！もう一度よく見てみよう。</div>';
+    setTimeout(function(){
+      el.classList.remove('wrong-sel');
+      document.getElementById('bug-msg').innerHTML='';
+    },900);
+  }
+}
+function bugNextQuestion(){
+  bugIdx++;
+  renderBugQuiz();
+}
+function resetBugQuiz(){
+  bugIdx=0;
+  renderBugQuiz();
+}
+renderBugQuiz();
+
+// ===== CHAPTER 7: QUIZ =====
+var quizzes=[
+  {
+    q:'Q1. 変数とは何でしょう？',
+    chapter:'Chapter 2：変数',
+    opts:['コンピューターの部品','データを入れる「箱」のようなもの','プログラムの種類','条件を判断する仕組み'],
+    ans:1,
+    exp:'変数とは、データを保存しておく「名前のついた箱」です。たとえば <code>name = "たろう"</code> と書くと、「name」という箱に「たろう」という文字が入ります。後から中身を変えることもでき、同じ名前で何度でも使い回せます。',
+    code:'name = "たろう"   # 文字を入れる\nage  = 14         # 数字を入れる\nprint(name)       # → たろう'
+  },
+  {
+    q:'Q2. 「もし〜なら A、そうでなければ B」のような処理を何という？',
+    chapter:'Chapter 3：条件分岐',
+    opts:['繰り返し（ループ）','変数','条件分岐（if文）','関数'],
+    ans:2,
+    exp:'条件によって処理を分ける仕組みを「条件分岐」といいます。Pythonでは <code>if</code>〜<code>else</code> で書きます。条件が「True（正しい）」なら if 側、「False（違う）」なら else 側が実行されます。',
+    code:'score = 85\nif score >= 80:\n    print("合格！")  # Trueの場合\nelse:\n    print("不合格") # Falseの場合'
+  },
+  {
+    q:'Q3. for i in range(1, 6) は何回繰り返す？',
+    chapter:'Chapter 4：繰り返し',
+    opts:['5回','6回','4回','無限回'],
+    ans:0,
+    exp:'<code>range(1, 6)</code> は「1以上6未満」の数、つまり 1, 2, 3, 4, 5 の5つを順番に生成します。<strong>終わりの数字（6）は含まれない</strong>点が重要なポイントです。<code>range(0, 5)</code> なら 0, 1, 2, 3, 4 で5回になります。',
+    code:'for i in range(1, 6):\n    print(i)\n# → 1, 2, 3, 4, 5 と5回表示'
+  },
+  {
+    q:'Q4. よく使う処理をまとめて名前をつけたものを何という？',
+    chapter:'Chapter 5：関数',
+    opts:['変数','コメント','関数（def）','インデント'],
+    ans:2,
+    exp:'よく使う処理を一つにまとめて名前をつけたものを「関数」といいます。Pythonでは <code>def 関数名():</code> で定義します。一度作れば何度でも呼び出せるので、同じコードを繰り返し書かなくて済みます。これを <strong>DRY原則</strong>（Don\'t Repeat Yourself）といいます。',
+    code:'def greet(name):      # 関数を定義\n    print("こんにちは、" + name)\n\ngreet("たろう")  # 関数を呼び出す\ngreet("はな")    # 何度でも使える'
+  },
+  {
+    q:'Q5. プログラムの間違いを探して直すことを何という？',
+    chapter:'Chapter 6：バグ探し',
+    opts:['コーディング','デバッグ','コンパイル','インデント'],
+    ans:1,
+    exp:'プログラムの間違いを「バグ」、バグを見つけて直す作業を「デバッグ」といいます。よくあるバグの種類には、<strong>スペルミス</strong>（print を pint と書くなど）、<strong>条件式の間違い</strong>（&gt;= を &lt;= と書くなど）、<strong>無限ループ</strong>（終了条件がないループ）などがあります。',
+    code:'# バグあり（スペルミス）\npint("こんにちは")  # エラー！\n\n# 修正後\nprint("こんにちは")  # 正しい'
+  }
+];
+var qIdx=0, qCorrect=0;
+var SVG_CHECK='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#085041" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg>';
+var SVG_CROSS='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:4px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+var SVG_BOOK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-right:4px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>';
+var SVG_NEXT='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;margin-left:4px"><polyline points="9 18 15 12 9 6"/></svg>';
+var SVG_TROPHY48='<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><path d="M6 2h12v8a6 6 0 0 1-12 0V2z"/><path d="M6 5H2v2a4 4 0 0 0 4 4"/><path d="M18 5h4v2a4 4 0 0 1-4 4"/><path d="M9 17v2H7v2h10v-2h-2v-2"/><line x1="9" y1="17" x2="15" y2="17"/></svg>';
+var SVG_STAR48='<svg width="48" height="48" viewBox="0 0 24 24" fill="#BA7517" aria-hidden="true" style="display:inline-block;vertical-align:middle;flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
+
+function renderQuiz(){
+  if(qIdx>=quizzes.length){
+    var allPerfect=(qCorrect===quizzes.length);
+    document.getElementById('quiz-area').innerHTML=
+      '<div class="card" style="text-align:center;padding:2rem 1.5rem">'+
+        '<div style="margin-bottom:.75rem">'+(allPerfect?SVG_TROPHY48:SVG_STAR48)+'</div>'+
+        (allPerfect
+          ?'<p style="font-size:22px;font-weight:700;color:var(--teal-dark);margin-bottom:.3rem">全問正解！</p>'+
+            '<p style="font-size:14px;color:var(--gray3);margin-bottom:1.25rem">完璧です！プログラミングの基礎はバッチリ！</p>'
+          :'<p style="font-size:20px;font-weight:700;color:var(--teal-dark);margin-bottom:.3rem">'+qCorrect+' / '+quizzes.length+' 問正解！</p>'+
+            '<p style="font-size:14px;color:var(--gray3);margin-bottom:1.25rem">間違えた問題を復習してもう一度挑戦しよう！</p>')+
+        '<p style="font-size:13px;color:var(--gray3);margin-bottom:1.25rem">合計スコア：<strong>'+totalScore+'ポイント</strong></p>'+
+        '<button class="btn" onclick="resetQuiz()">もう一度チャレンジ</button>'+
+      '</div>';
+    document.getElementById('quiz-status').textContent='完了！';
+    document.getElementById('quiz-progress').style.width='100%';
+    return;
+  }
+  var q=quizzes[qIdx];
+  var isLast=(qIdx+1===quizzes.length);
+  document.getElementById('quiz-status').textContent='問題 '+(qIdx+1)+' / '+quizzes.length;
+  document.getElementById('quiz-progress').style.width=(qIdx/quizzes.length*100)+'%';
+  var html=
+    '<div class="card">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">'+
+        '<span style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.08em">問題 '+(qIdx+1)+' / '+quizzes.length+'</span>'+
+        (q.chapter?'<span style="font-size:11px;color:var(--gray4);background:var(--gray7);padding:2px 8px;border-radius:10px;border:1px solid var(--gray6)">'+q.chapter+'</span>':'')+
+      '</div>'+
+      '<div class="quiz-q">'+q.q+'</div>'+
+      '<div class="quiz-opts" id="quiz-opts-inner">';
+  q.opts.forEach(function(o,i){html+='<button class="quiz-opt" onclick="answerQuiz('+i+')">'+o+'</button>';});
+  html+='</div>'+
+      '<div id="quiz-feedback"></div>'+
+      '<div id="quiz-next-row" style="display:none;margin-top:1rem">'+
+        '<button class="btn" onclick="quizNext()">'+(isLast?'結果を見る':'次の問題へ')+SVG_NEXT+'</button>'+
+      '</div>'+
+    '</div>';
+  document.getElementById('quiz-area').innerHTML=html;
+}
+
+function answerQuiz(i){
+  var q=quizzes[qIdx], correct=(i===q.ans);
+  // 選択肢を全てロック・色付け
+  document.querySelectorAll('.quiz-opt').forEach(function(b,idx){
+    b.disabled=true;
+    if(idx===q.ans) b.classList.add('correct');
+    else if(idx===i&&!correct) b.classList.add('wrong');
+  });
+  if(correct){ addScore(10); qCorrect++; }
+  // 解説ブロックを表示
+  var fb=document.getElementById('quiz-feedback');
+  fb.innerHTML=
+    '<div style="margin-top:.85rem">'+
+      '<div class="quiz-msg '+(correct?'ok':'ng')+'" style="font-size:14px;padding:.7rem 1rem;margin-bottom:.75rem">'+
+        (correct?SVG_CHECK+'<strong>正解！</strong>':SVG_CROSS+'<strong>不正解…</strong>')+
+      '</div>'+
+      '<div style="background:var(--gray7);border:1px solid var(--gray6);border-radius:10px;padding:.9rem 1rem">'+
+        '<div style="font-size:11px;font-weight:700;color:var(--gray4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">'+SVG_BOOK+'解説</div>'+
+        '<div style="font-size:14px;color:var(--gray2);line-height:1.7">'+q.exp+'</div>'+
+        (q.code?'<div style="font-family:monospace;font-size:12px;background:#1E1E1E;color:#C0DD97;padding:.6rem .8rem;border-radius:6px;margin-top:.6rem;line-height:1.8">'+q.code+'</div>':'')+
+      '</div>'+
+    '</div>';
+  document.getElementById('quiz-next-row').style.display='block';
+}
+
+function quizNext(){ qIdx++; renderQuiz(); }
+function resetQuiz(){ qIdx=0; qCorrect=0; renderQuiz(); }
+renderQuiz();
+</script>
+</body>
+</html>
