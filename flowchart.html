@@ -482,6 +482,9 @@
                 }
                 return { x: thisShape.x, y: thisShape.y + halfH };
             } else {
+                if (thisShape.type === 'diamond') {
+                    return { x: thisShape.x, y: thisShape.y - halfH };
+                }
                 return { x: thisShape.x, y: thisShape.y - halfH };
             }
         }
@@ -739,7 +742,7 @@
                     document.getElementById('connectStatus').textContent = `『${shape.text}』から開始 — 空白クリックで中間点を追加、別の図形クリックで終了`;
                     selectedShapes = [];
                     draw();
-                } else if (currentDrawing.fromId === shape.id) {
+                } else if (currentDrawing.fromId === shape.id && currentDrawing.waypoints.length === 0) {
                     currentDrawing = null;
                     document.getElementById('connectStatus').textContent = '接続をキャンセルしました。再度開始図形をクリックしてください。';
                     draw();
@@ -753,10 +756,18 @@
                         const startPt = getShapeBoundaryPoint(sourceShape, currentDrawing, true);
                         const endPt = getShapeBoundaryPoint(shape, null, false);
                         const rightMargin = sourceShape.x + sourceShape.w / 2 + 40;
-                        autoWaypoints = [
-                            { x: rightMargin, y: startPt.y },
-                            { x: rightMargin, y: endPt.y }
-                        ];
+                        if (endPt.y <= startPt.y) {
+                            autoWaypoints = [
+                                { x: rightMargin, y: startPt.y },
+                                { x: rightMargin, y: endPt.y - 20 },
+                                { x: endPt.x, y: endPt.y - 20 }
+                            ];
+                        } else {
+                            autoWaypoints = [
+                                { x: rightMargin, y: startPt.y },
+                                { x: rightMargin, y: endPt.y }
+                            ];
+                        }
                     }
                     const newConn = {
                         fromId: currentDrawing.fromId,
