@@ -135,6 +135,9 @@
             <button id="flipBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-bold transition shrink-0 border border-white/10">
                 反転
             </button>
+            <button id="cameraBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-bold transition shrink-0 border border-white/10">
+                📷切替
+            </button>
         </div>
     </div>
 
@@ -154,6 +157,7 @@
         let buffer = [];
         let isRunning = true;
         let isFlipped = false;
+        let facingMode = "environment";
 
         const TARGET_FPS = 30;
         const FRAME_INTERVAL = 1000 / TARGET_FPS;
@@ -163,7 +167,7 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { 
-                        facingMode: "environment",
+                        facingMode: facingMode,
                         width: { ideal: 1280 },
                         height: { ideal: 720 }
                     }, 
@@ -281,6 +285,17 @@
             ctx.fillStyle = "#000";
             ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
         }
+
+        const cameraBtn = document.getElementById('cameraBtn');
+        cameraBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            facingMode = facingMode === "environment" ? "user" : "environment";
+            cameraBtn.textContent = facingMode === "environment" ? "📷切替" : "🤳切替";
+            const tracks = liveVideo.srcObject?.getTracks();
+            tracks?.forEach(t => t.stop());
+            clearBuffer();
+            await initCamera();
+        });
 
         flipBtn.addEventListener('click', (e) => {
             e.stopPropagation();
