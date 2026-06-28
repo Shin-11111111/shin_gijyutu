@@ -121,7 +121,7 @@
 
         <div class="controls" id="controls">
             <button id="toggleBtn" class="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center transition shrink-0 shadow-lg">
-                <span id="toggleIcon" class="text-white text-xl">⏸</span>
+                <span id="toggleIcon" class="text-white"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg></span>
             </button>
 
             <div class="flex flex-col flex-grow">
@@ -266,13 +266,13 @@
             e.stopPropagation(); 
             isRunning = !isRunning;
             if (isRunning) {
-                toggleIcon.textContent = "⏸";
+                toggleIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
                 toggleBtn.classList.replace('bg-green-600', 'bg-blue-600');
                 statusBadge.style.display = "block";
                 lastFrameTime = 0;
                 requestAnimationFrame(processFrame);
             } else {
-                toggleIcon.textContent = "▶";
+                toggleIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>';
                 toggleBtn.classList.replace('bg-blue-600', 'bg-green-600');
                 statusBadge.style.display = "none";
                 clearBuffer();
