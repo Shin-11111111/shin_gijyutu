@@ -105,13 +105,13 @@
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">保存・クリア</h2>
             <button id="loadHtmlBtn" class="btn bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" title="前回の続き"></path></svg>
-                HTMLから読み込み
+                CSVから読み込み
             </button>
             <button id="saveHtmlBtn" class="btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" title="途中までで保存"></path></svg>
-                HTMLで保存
+                CSVで保存
             </button>
-            <input type="file" id="loadHtmlInput" accept=".html" style="display:none">
+            <input type="file" id="loadHtmlInput" accept=".csv" style="display:none">
             <button id="screenshotBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                 画像として保存
@@ -217,7 +217,6 @@
             loadShapes();
             document.getElementById('showGridCheckbox').checked = canvasContainer.classList.contains('show-grid');
             updateDeleteButtonState();
-            updateUndoConnectionButton();
         };
 
         function generateId() { return 's' + Date.now() + Math.random().toString(16).slice(2); }
@@ -549,7 +548,7 @@
             if (selectedConnection) {
                 connections = connections.filter(c => c !== selectedConnection);
                 selectedConnection = null;
-                saveShapes(); draw(); updateUndoConnectionButton();
+                saveShapes(); draw();
                 return;
             }
             if (selectedShapes.length > 0) {
@@ -557,7 +556,7 @@
                 shapes = shapes.filter(s => !idsToDelete.has(s.id));
                 connections = connections.filter(c => !idsToDelete.has(c.fromId) && !idsToDelete.has(c.toId));
                 selectedShapes = []; 
-                saveShapes(); draw(); updateUndoConnectionButton();
+                saveShapes(); draw();
             }
         }
         document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelectedShape);
@@ -583,8 +582,6 @@
                 deleteBtn.title = '削除する図形を選択してください';
             }
         }
-
-        function updateUndoConnectionButton() {}
 
         function getResizeHandleAt(px, py) {
             if (selectedShapes.length !== 1) return null;
@@ -671,7 +668,7 @@
             if (e.button === 2) return; 
 
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left; const y = e.clientY - rect.top + canvasContainer.scrollTop;
+            const x = e.clientX - rect.left; const y = e.clientY - rect.top;
             lastMouseX = x; lastMouseY = y;
             initialDragX = x;
             initialDragY = y;
@@ -706,6 +703,14 @@
             if (!connectMode) {
                 if (shape) {
                     selectedConnection = null;
+                    const isModified = e.shiftKey || e.ctrlKey || e.metaKey;
+                    if (isModified) {
+                        selectedShapes = selectedShapes.includes(shape.id)
+                            ? selectedShapes.filter(id => id !== shape.id)
+                            : [...selectedShapes, shape.id];
+                        draw();
+                        return;
+                    }
                     if (!selectedShapes.includes(shape.id)) {
                         selectedShapes = [shape.id];
                         draw();
@@ -779,7 +784,7 @@
                     const exists = connections.some(c => c.fromId === newConn.fromId && c.toId === newConn.toId && JSON.stringify(c.waypoints) === JSON.stringify(newConn.waypoints));
                     if (!exists) connections.push(newConn);
                     currentDrawing = null;
-                    saveShapes(); updateUndoConnectionButton();
+                    saveShapes();
                     document.getElementById('connectStatus').textContent = '接続が完了しました。続けて開始図形をクリックできます。';
                     draw();
                 }
@@ -797,7 +802,7 @@
 
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            lastMouseX = e.clientX - rect.left; lastMouseY = e.clientY - rect.top + canvasContainer.scrollTop;
+            lastMouseX = e.clientX - rect.left; lastMouseY = e.clientY - rect.top;
             
             if (connectMode && currentDrawing) {
                 draw();
@@ -1018,16 +1023,30 @@
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedShapes.length > 0 && !editingShape) {
                 e.preventDefault();
+                const idSet = new Set(selectedShapes);
                 window._clipboard = selectedShapes.map(id => JSON.parse(JSON.stringify(shapes.find(s => s.id === id)))).filter(Boolean);
+                window._clipboardConnections = connections
+                    .filter(c => idSet.has(c.fromId) && idSet.has(c.toId))
+                    .map(c => JSON.parse(JSON.stringify(c)));
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'v' && window._clipboard && window._clipboard.length > 0 && !editingShape) {
                 e.preventDefault();
                 const offset = 30;
+                const idMap = {};
                 const newIds = [];
                 window._clipboard.forEach(orig => {
                     const newShape = { ...orig, id: generateId(), x: orig.x + offset, y: orig.y + offset };
+                    idMap[orig.id] = newShape.id;
                     shapes.push(newShape);
                     newIds.push(newShape.id);
+                });
+                (window._clipboardConnections || []).forEach(conn => {
+                    connections.push({
+                        ...conn,
+                        fromId: idMap[conn.fromId],
+                        toId: idMap[conn.toId],
+                        waypoints: (conn.waypoints || []).map(p => ({ x: p.x + offset, y: p.y + offset }))
+                    });
                 });
                 selectedShapes = newIds;
                 saveShapes(); draw();
@@ -1056,7 +1075,7 @@
             if (!window.confirm('新規作成します。現在の内容は上書きされます。よろしいですか？')) return;
             shapes = []; connections = []; selectedShapes = [];
             localStorage.removeItem('flowchartShapes'); localStorage.removeItem('flowchartConnections');
-            hideTextEditor(); draw(); updateUndoConnectionButton();
+            hideTextEditor(); draw();
             const centerX = canvas.width / 2;
             addShape('oval', '開始/終了', centerX, 80, false);
             addShape('rectangle', '処理', centerX, 180, false);
@@ -1065,7 +1084,7 @@
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             if (!window.confirm('すべての図形と接続を削除しますか？')) return;
-            shapes = []; connections = []; selectedShapes = []; localStorage.removeItem('flowchartShapes'); localStorage.removeItem('flowchartConnections'); hideTextEditor(); draw(); updateUndoConnectionButton(); 
+            shapes = []; connections = []; selectedShapes = []; localStorage.removeItem('flowchartShapes'); localStorage.removeItem('flowchartConnections'); hideTextEditor(); draw();
         });
 
         document.getElementById('screenshotBtn').addEventListener('click', () => {
@@ -1114,40 +1133,70 @@
             draw();
         });
 
+        function csvEscape(value) {
+            const str = String(value ?? '');
+            if (/[",\n]/.test(str)) return '"' + str.replace(/"/g, '""') + '"';
+            return str;
+        }
+
         document.getElementById('saveHtmlBtn').addEventListener('click', () => {
-            const data = { shapes, connections };
-            const json = JSON.stringify(data);
-            const el = document.getElementById('flowchart-data');
-            if (el) {
-                el.content.textContent = json;
-            } else {
-                const tmpl = document.createElement('template');
-                tmpl.id = 'flowchart-data';
-                tmpl.content.textContent = json;
-                document.body.appendChild(tmpl);
-            }
-            const html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-            const blob = new Blob([html], { type: 'text/html' });
+            const header = ['record_type','id','type','x','y','w','h','text','fontSize','fromId','toId','exitPoint','label','waypoints'];
+            const rows = [header.join(',')];
+            shapes.forEach(s => {
+                rows.push(['shape', s.id, s.type, s.x, s.y, s.w, s.h, csvEscape(s.text), s.fontSize ?? '', '', '', '', '', ''].join(','));
+            });
+            connections.forEach(c => {
+                rows.push(['connection', '', '', '', '', '', '', '', '', c.fromId, c.toId, c.exitPoint ?? '', c.label ?? '', csvEscape(JSON.stringify(c.waypoints || []))].join(','));
+            });
+            const csv = rows.join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = 'flowchart_' + Date.now() + '.html';
+            a.download = 'flowchart_' + Date.now() + '.csv';
             a.click();
         });
+
+        function parseCsv(text) {
+            const rows = []; let row = [], field = '', inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQuotes = false; }
+                    else field += c;
+                } else {
+                    if (c === '"') inQuotes = true;
+                    else if (c === ',') { row.push(field); field = ''; }
+                    else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+                    else if (c === '\r') { /* skip */ }
+                    else field += c;
+                }
+            }
+            if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+            return rows;
+        }
 
         document.getElementById('loadHtmlInput').addEventListener('change', (e) => {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(ev.target.result, 'text/html');
-                const dataEl = doc.getElementById('flowchart-data');
-                if (!dataEl) { alert('このHTMLにはフローチャートデータが含まれていません。'); return; }
                 try {
-                    const raw = dataEl.tagName === 'TEMPLATE' ? dataEl.content.textContent : dataEl.textContent;
-                    const data = JSON.parse(raw);
-                    shapes = data.shapes || []; connections = data.connections || [];
-                    selectedShapes = []; selectedConnection = null; saveShapes(); draw(); updateUndoConnectionButton();
-                } catch { alert('データの読み込みに失敗しました。'); }
+                    const rows = parseCsv(ev.target.result);
+                    const header = rows[0];
+                    const newShapes = [], newConnections = [];
+                    for (let i = 1; i < rows.length; i++) {
+                        const r = rows[i];
+                        if (r.length < header.length) continue;
+                        const obj = {};
+                        header.forEach((h, idx) => obj[h] = r[idx]);
+                        if (obj.record_type === 'shape') {
+                            newShapes.push({ id: obj.id, type: obj.type, x: parseFloat(obj.x), y: parseFloat(obj.y), w: parseFloat(obj.w), h: parseFloat(obj.h), text: obj.text, fontSize: obj.fontSize ? parseInt(obj.fontSize) : SHAPE_DEFAULTS.fontSize });
+                        } else if (obj.record_type === 'connection') {
+                            newConnections.push({ fromId: obj.fromId, toId: obj.toId, exitPoint: obj.exitPoint || undefined, label: obj.label || '', waypoints: obj.waypoints ? JSON.parse(obj.waypoints) : [] });
+                        }
+                    }
+                    shapes = newShapes; connections = newConnections;
+                    selectedShapes = []; selectedConnection = null; saveShapes(); draw();
+                } catch (err) { alert('データの読み込みに失敗しました。'); }
             };
             reader.readAsText(file);
             e.target.value = '';
