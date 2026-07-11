@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合チェックリスト</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-color: #4a90e2;
+            --border-color: #dddddd;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: var(--accent-color);
+            margin-bottom: 30px;
+        }
+        h2 {
+            border-left: 5px solid var(--accent-color);
+            padding-left: 10px;
+            margin-top: 30px;
+            color: #2c3e50;
+        }
+        h3 {
+            color: #7f8c8d;
+            margin-top: 20px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 5px;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: opacity 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
+            max-height: 100px;
+            opacity: 1;
+            overflow: hidden;
+        }
+        .todo-item input[type="checkbox"] {
+            margin-right: 12px;
+            margin-top: 5px;
+            transform: scale(1.2);
+            cursor: pointer;
+        }
+        /* チェックが入ったら非表示にするアニメーション用 */
+        .todo-item.fade-out {
+            opacity: 0;
+            max-height: 0;
+            margin-bottom: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+        }
+        tr {
+            transition: opacity 0.3s ease;
+        }
+        tr.fade-out {
+            opacity: 0;
+        }
+        input[type="text"], input[type="date"] {
+            width: 90%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background-color: #357abd;
+        }
+        .btn-delete {
+            background-color: #e74c3c;
+        }
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📑 総合チェックリスト</h1>
+
+    <div class="card">
+        <h2>1. テスト対策（計画から直前まで）</h2>
+        
+        <h3>【テスト2週間前〜：計画とインプット】</h3>
+        <label class="todo-item"><input type="checkbox"><span>試験範囲の確認と記録（教科書やプリントのページ数を書き出す）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>テスト期間のスケジュール作成（どの日に何をやるか決める）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>配布されたプリント・ノートの整理（紛失がないか確認）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>教科書・ノートの読み返し（重要ポイントにマーカーを引く）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>授業動画や参考書の確認（わからない部分の解消）</span></label>
+
+        <h3>【テスト1週間前〜：アウトプットと追い込み】</h3>
+        <label class="todo-item"><input type="checkbox"><span>問題集・ワーク（1周目）：解けなかった問題に印をつける</span></label>
+        <label class="todo-item"><input type="checkbox"><span>問題集・ワーク（2周目）：間違えた問題だけをもう一度解く</span></label>
+        <label class="todo-item"><input type="checkbox"><span>苦手分野の集中暗記（単語カード、アプリ、暗記シートの活用）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>過去問・学校の小テストの解き直し</span></label>
+        <label class="todo-item"><input type="checkbox"><span>友達や先生への質問（疑問点をゼロにする）</span></label>
+
+        <h3>【テスト前日・当日：最終調整】</h3>
+        <label class="todo-item"><input type="checkbox"><span>時事問題・直前プリントの確認</span></label>
+        <label class="todo-item"><input type="checkbox"><span>持ち物の最終チェック（受験票、筆記用具、時計、身分証、必要な教材）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>早めの就寝（睡眠時間をしっかり確保する）</span></label>
+    </div>
+
+    <div class="card">
+        <h2>2. 提出物（課題・タスク）</h2>
+        <table id="submissionTable">
+            <thead>
+                <tr>
+                    <th>提出物の名前</th>
+                    <th>締め切り日</th>
+                    <th>ステータス</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" value="例）〇〇レポート"></td>
+                    <td><input type="date"></td>
+                    <td><label class="todo-item"><input type="checkbox"><span>完了！</span></label></td>
+                    <td><button class="btn btn-delete" onclick="deleteRow(this)">削除</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <button class="btn" onclick="addRow()">＋ 行を追加する</button>
+
+        <h3>【提出前の最終確認】</h3>
+        <label class="todo-item"><input type="checkbox"><span>名前、番号、日付は正しく記入されているか？</span></label>
+        <label class="todo-item"><input type="checkbox"><span>乱れや汚れ、ページの抜け落ちはないか？</span></label>
+        <label class="todo-item"><input type="checkbox"><span>指定されたフォーマット（ファイル形式やホチキス留めなど）を守っているか？</span></label>
+    </div>
+
+    <div class="card">
+        <h2>3. 家のこと（環境整理・体調管理）</h2>
+        
+        <h3>【勉強に集中するための環境づくり】</h3>
+        <label class="todo-item"><input type="checkbox"><span>机の上のリセット（今勉強するもの以外はすべて片付ける）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>スマホ・誘惑物の対策（電源を切る、別室に置く、アプリにロックをかける）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>部屋の換気と温度調整（脳に酸素を送り、快適な室温にする）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>適切な照明の確保（手元が暗くなっていないか確認）</span></label>
+
+        <h3>【生活リズム・体調を整える家事】</h3>
+        <label class="todo-item"><input type="checkbox"><span>衣類の準備（翌日着る服や制服をハンガーにかけておく）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>水分・夜食の用意（カフェインの摂りすぎに注意しつつ、お茶などを常備）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>お風呂にしっかり浸かる（リラックスして疲れをとる）</span></label>
+        <label class="todo-item"><input type="checkbox"><span>デバイス類の充電（スマホ、タブレット、PC、モバイルバッテリー）</span></label>
+
+        <h3>【後回しにしないための家事タスク】</h3>
+        <label class="todo-item"><input type="checkbox"><span>脱ぎっぱなしの服の洗濯カゴ入れ</span></label>
+        <label class="todo-item"><input type="checkbox"><span>溜まったゴミの片付け・ゴミ出し準備</span></label>
+        <label class="todo-item"><input type="checkbox"><span>プリント類の仕分け（「保管」「捨てる」「提出」に分ける）</span></label>
+    </div>
+</div>
+
+<script>
+    // チェックボックスにチェックが入ったらフワッと消す処理
+    document.addEventListener('change', function(e) {
+        if (e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+            const item = e.target.closest('.todo-item');
+            if (item && e.target.checked) {
+                // クラスを追加してアニメーションを開始
+                item.classList.add('fade-out');
+                
+                // アニメーションが終わる0.3秒後に、完全に非表示、または提出物テーブルの場合は行ごと削除
+                setTimeout(() => {
+                    const row = item.closest('tr');
+                    if (row) {
+                        // 提出物テーブルの行だった場合は行ごと削除
+                        row.remove();
+                    } else {
+                        // 通常のリストの場合は非表示に
+                        item.style.display = 'none';
+                    }
+                }, 300);
+            }
+        }
+    });
+
+    // 提出物テーブルの行追加
+    function addRow() {
+        const table = document.getElementById('submissionTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+
+        newRow.innerHTML = `
+            <td><input type="text" placeholder="提出物の名前を入力"></td>
+            <td><input type="date"></td>
+            <td><label class="todo-item"><input type="checkbox"><span>完了！</span></label></td>
+            <td><button class="btn btn-delete" onclick="deleteRow(this)">削除</button></td>
+        `;
+    }
+
+    // 提出物テーブルの行削除（ボタン用）
+    function deleteRow(button) {
+        const row = button.parentNode.parentNode;
+        row.classList.add('fade-out');
+        setTimeout(() => {
+            row.parentNode.removeChild(row);
+        }, 300);
+    }
+</script>
+
+</body>
+</html><

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学5教科 100選・5問ミニ特訓タイピング</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-size: 26px;
+        }
+        p.subtitle {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 650px;
+            text-align: center;
+        }
+        .select-zone {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .select-group {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+            justify-content: center;
+        }
+        select {
+            font-size: 16px;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            width: 45%;
+            background-color: #fff;
+        }
+        button {
+            font-size: 18px;
+            padding: 12px 40px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-start {
+            background-color: #2ecc71;
+            color: white;
+            margin-top: 10px;
+        }
+        .btn-start:hover {
+            background-color: #27ae60;
+        }
+        .game-zone {
+            display: none;
+        }
+        .word-kanji {
+            font-size: 34px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 25px 0 5px 0;
+            min-height: 50px;
+        }
+        .word-romaji {
+            font-size: 24px;
+            letter-spacing: 2px;
+            color: #95a5a6;
+            margin-bottom: 25px;
+            min-height: 35px;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .typed {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .commentary {
+            background-color: #eef2f7;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #444;
+            margin-top: 25px;
+            text-align: left;
+            border-left: 5px solid #3498db;
+            min-height: 50px;
+            line-height: 1.5;
+        }
+        .score {
+            margin-top: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📝 中学5教科 100選・5問ミニ特訓タイピング</h1>
+    <p class="subtitle">総レパートリー100問以上！毎回ランダムに5問が選ばれるサクッと復習モード</p>
+    
+    <div class="container">
+        <!-- 条件選択画面 -->
+        <div id="select-screen" class="select-zone">
+            <p style="font-size: 16px; font-weight: bold; color: #34495e;">学年と教科を選択してください</p>
+            <div class="select-group">
+                <select id="grade-select">
+                    <option value="m1">中学1年生</option>
+                    <option value="m2">中学2年生</option>
+                    <option value="m3">中学3年生</option>
+                </select>
+                
+                <select id="subject-select">
+                    <option value="kokugo">国語</option>
+                    <option value="suugaku">数学</option>
+                    <option value="eigo">英語</option>
+                    <option value="rika">理科</option>
+                    <option value="shakai">社会</option>
+                </select>
+            </div>
+            <button class="btn-start" onclick="startGame()">サクッと5問スタート！</button>
+        </div>
+
+        <!-- タイピング画面 -->
+        <div id="game-screen" class="game-zone">
+            <div id="subject-title" style="font-weight: bold; color: #7f8c8d; font-size: 16px;"></div>
+            <div class="word-kanji" id="word-kanji">問題</div>
+            <div class="word-romaji" id="word-romaji"></div>
+            
+            <div class="score">残り: <span id="remain-count">5</span>問</div>
+            
+            <div class="commentary" id="commentary-box">
+                <strong>解説：</strong><span id="commentary-text">タイピングをクリアするとここに解説が出ます。</span>
+            </div>
+            
+            <button onclick="backToMenu()" style="margin-top: 25px; background-color: #95a5a6; color: white; font-size: 14px; padding: 8px 20px;">メニューに戻る</button>
+        </div>
+    </div>
+
+    <script>
+        // 総数100問超のモンスターデータ群
+        const dataset = {
+            m1: {
+                kokugo: [
+                    { kanji: "主語", romaji: "shugo", desc: "文の主成分。「何が」「だれが」にあたる部分。" },
+                    { kanji: "述語", romaji: "jutsubengo", desc: "文の主成分。「どうする」「どんなだ」「何だ」にあたる部分。" },
+                    { kanji: "指示語", romaji: "shijigo", desc: "「これ」「それ」「あれ」など、物事や方向を指し示す言葉。" },
+                    { kanji: "接続語", romaji: "setsuzokugo", desc: "文や文節の関係をつなぐ語。「だから」「しかし」など。" },
+                    { kanji: "修飾語", romaji: "shuushokugo", desc: "他の文節の内容を詳しく説明（限定）する語。" },
+                    { kanji: "自立語", romaji: "jiritsugo", desc: "それ自体で独立した意味を持ち、単独で文節を作れる単語。" },
+                    { kanji: "単義語", romaji: "tangigo", desc: "一つの単語が、一つの意味だけしか持たない言葉。" }
+                ],
+                suugaku: [
+                    { kanji: "正の数", romaji: "seinousuu", desc: "0よりも大きい数。プラス（+）の符号をつけて表す。" },
+                    { kanji: "負の数", romaji: "funousuu", desc: "0よりも小さい数。マイナス（-）の符号をつけて表す。" },
+                    { kanji: "絶対値", romaji: "zettaichi", desc: "数直線上において、原点（0）からの距離のこと。符号をとった数。" },
+                    { kanji: "比例", romaji: "hirei", desc: "xが2倍, 3倍になると、yも2倍, 3倍になる関係。式は y = ax" },
+                    { kanji: "反比例", romaji: "hanpirei", desc: "xが2倍, 3倍になると、yは1/2倍, 1/3倍になる関係。式は y = a/x" },
+                    { kanji: "素数", romaji: "soshuu", desc: "1とその数自身のほかに約数を持たない、1より大きい自然数。" },
+                    { kanji: "方程式", romaji: "houteishiki", desc: "未知の数（文字）を含み、その文字に特定の値を代入したときだけ成り立つ等式。" }
+                ],
+                eigo: [
+                    { kanji: "Welcome", romaji: "welcome", desc: "「歓迎する」を意味する。Welcome to Japan!" },
+                    { kanji: "Subject", romaji: "subject", desc: "「教科」「主題」「主語」を意味する名詞。" },
+                    { kanji: "Favorite", romaji: "favorite", desc: "「お気に入りの」「大好きな」という意味の形容詞。" },
+                    { kanji: "Dictionary", romaji: "dictionary", desc: "「辞書」を意味する名詞。複数形は dictionaries。" },
+                    { kanji: "Beautiful", romaji: "beautiful", desc: "「美しい」を意味する形容詞。" },
+                    { kanji: "Station", romaji: "station", desc: "「駅」を意味する名詞。Go to the station." },
+                    { kanji: "Tomorrow", romaji: "tomorrow", desc: "「明日（あした）」を意味する単語。" }
+                ],
+                rika: [
+                    { kanji: "顕微鏡", romaji: "kenbikyou", desc: "肉眼で見えない微小な物体を拡大して観察する装置。" },
+                    { kanji: "光合成", romaji: "kougousei", desc: "植物が光のエネルギーを使って、二酸化炭素と水からデンプンと酸素を作る働き。" },
+                    { kanji: "状態変化", romaji: "joutaihenka", desc: "物質が温度によって固体・液体・気体へと姿を変えること。質量は不変。" },
+                    { kanji: "蒸散", romaji: "jousan", desc: "植物の体内の水が、主に葉の気孔から水蒸気となって出ていく現象。" },
+                    { kanji: "沸点", romaji: "futten", desc: "液体が沸騰して気体に変わるときの温度。" },
+                    { kanji: "融点", romaji: "yuuten", desc: "固体が溶けて液体に変わるときの温度。" },
+                    { kanji: "密度", romaji: "mitsudo", desc: "物質1立方センチメートルあたりの質量（g/cm3）。" }
+                ],
+                shakai: [
+                    { kanji: "緯度", romaji: "ido", desc: "赤道を0度として、地球を南北に表す角度。北緯・南緯。" },
+                    { kanji: "経度", romaji: "keido", desc: "本初子午線を0度として、地球を東西に表す角度。東経・西経。" },
+                    { kanji: "縄文時代", romaji: "joumonjidai", desc: "縄文土器や弓矢を使い、狩猟や採集を行っていた時代。" },
+                    { kanji: "弥生時代", romaji: "yayoijidai", desc: "稲作が本格的に始まり、金属器（青銅器・鉄器）が使われた時代。" },
+                    { kanji: "聖徳太子", romaji: "shoutokutaishi", desc: "推古天皇の摂政。冠位十二階や十七条の憲法を定めた。" },
+                    { kanji: "大化の改新", romaji: "taikanokaishin", desc: "645年、中大兄皇子らが蘇我氏を倒し、天皇中心の政治を目指した改革。" },
+                    { kanji: "平城京", romaji: "heijoukyou", desc: "710年に奈良に作られた都。唐の長安をモデルにした。" }
+                ]
+            },
+            m2: {
+                kokugo: [
+                    { kanji: "付属語", romaji: "fuzokugo", desc: "それだけでは意味が通らず、常に自立語の後ろにつく語（助詞・助動詞）。" },
+                    { kanji: "品詞", romaji: "hinshi", desc: "単語を文法的な性質で分類したもの。国語では10種類ある。" },
+                    { kanji: "動詞", romaji: "doushi", desc: "活用のある自立語で、動作や存在を表す。言い切りが「ウ段」で終わる。" },
+                    { kanji: "形容詞", romaji: "keiyoushi", desc: "活用のある自立語で、性質や状態を表す。言い切りが「い」で終わる。" },
+                    { kanji: "名詞", romaji: "meishi", desc: "活用のない自立語で、主語になれる語。体言とも呼ばれる。" },
+                    { kanji: "副詞", romaji: "fukushi", desc: "活用のない自立語で、主に用言（動詞など）を修飾する語。" },
+                    { kanji: "平家物語", romaji: "heikemonogatari", desc: "源平の戦いを描いた軍記物語。「祇園精舎の鐘の声…」で有名。" }
+                ],
+                suugaku: [
+                    { kanji: "同類項", romaji: "douruikou", desc: "文字の部分がまったく同じである項。計算でまとめることができる。" },
+                    { kanji: "連立方程式", romaji: "renrituhouteishiki", desc: "2つ以上の方程式を組み合わせたもの。加減法や代入法で解く。" },
+                    { kanji: "一次関数", romaji: "ichikansuu", desc: "yがxの一次式で表される関数。式は y = ax + b。" },
+                    { kanji: "傾き", romaji: "katamuki", desc: "一次関数 y = ax + b における変化の割合（aのこと）。" },
+                    { kanji: "対頂角", romaji: "taichoukaku", desc: "2つの直線が交わってできる向かい合った角。大きさは等しい。" },
+                    { kanji: "合同", romaji: "goudou", desc: "形も大きさも全く同じで、ぴったり重ね合わせることができる2つの図形。" },
+                    { kanji: "確率", romaji: "kakuritsu", desc: "ある事柄の起こりやすさを数値で表したもの。" }
+                ],
+                eigo: [
+                    { kanji: "Yesterday", romaji: "yesterday", desc: "「昨日（きのう）」を表す過去の副詞。" },
+                    { kanji: "Experience", romaji: "experience", desc: "「経験」「体験」を意味する名詞・動詞。" },
+                    { kanji: "Interesting", romaji: "interesting", desc: "「興味深い」「おもしろい」を意味する形容詞。" },
+                    { kanji: "Remember", romaji: "remember", desc: "「思い出す」「覚えている」を意味する動詞。" },
+                    { kanji: "Hospital", romaji: "hospital", desc: "「病院」を意味する名詞。" },
+                    { kanji: "Traditional", romaji: "traditional", desc: "「伝統的な」という意味の重要形容詞。" },
+                    { kanji: "Understand", romaji: "understand", desc: "「理解する」「わかる」という意味の動詞。" }
+                ],
+                rika: [
+                    { kanji: "化学変化", romaji: "kagakuhenka", desc: "元の物質とは性質の異なる別の物質に変わる反応。" },
+                    { kanji: "細胞", romaji: "saihou", desc: "生物の体を構成する基本単位。植物には細胞壁がある。" },
+                    { kanji: "前線", romaji: "zensen", desc: "暖気と寒気がぶつかり合う境界の線。天気が急変しやすい。" },
+                    { kanji: "反射", romaji: "hansha", desc: "刺激に対して、大脳とは関係なく無意識に起こる決まった反応。" },
+                    { kanji: "中枢神経", romaji: "chuusuushinkei", desc: "判断や命令を行う神経。脳と脊髄のこと。" },
+                    { kanji: "飽和水蒸気量", romaji: "houwasuijoukibou", desc: "1立方メートルの空気中に入ることができる水蒸気の最大質量。" },
+                    { kanji: "オームの法則", romaji: "oumunohousoku", desc: "電流の強さは電圧に比例し、抵抗に反比例するという法則。" }
+                ],
+                shakai: [
+                    { kanji: "鎖国", romaji: "sakoku", desc: "江戸幕府がキリスト教禁止と貿易統制のため、外国との交際を制限した政策。" },
+                    { kanji: "近畿地方", romaji: "kinkichihou", desc: "大阪や京都を含む地方。古い歴史や伝統産業が盛ん。" },
+                    { kanji: "産業革命", romaji: "sangyoukakumei", desc: "18世紀後半に英国から始まった、工場制機械工業による社会の変化。" },
+                    { kanji: "元禄文化", romaji: "genrokubunka", desc: "上方（京都・大阪）を中心に栄えた、町人を担い手とする華やかな文化。" },
+                    { kanji: "フランス革命", romaji: "furansukakumei", desc: "1789年、市民が自由と平等を求めて絶対王政を倒した革命。" },
+                    { kanji: "明治維新", romaji: "meijiishin", desc: "江戸幕府が倒れた後、日本を近代国家にするために行われた大改革。" },
+                    { kanji: "三大都市圏", romaji: "sandaitoshiken", desc: "東京・名古屋・大阪を中心とする、人口や経済が集中した地域。" }
+                ]
+            },
+            m3: {
+                kokugo: [
+                    { kanji: "推敲", romaji: "suikou", desc: "文章を何度も練り直し、より良い表現に整えること。" },
+                    { kanji: "和語", romaji: "wago", desc: "日本固有の言葉（訓読みが多い）。「やま」「うみ」など。" },
+                    { kanji: "漢語", romaji: "kango", desc: "中国から伝わった言葉（音読みが多い）。「富士山」「海洋」など。" },
+                    { kanji: "温故知新", romaji: "onkochishin", desc: "昔のことを研究し、そこから新しい知識や見解を得ること。" },
+                    { kanji: "おくのほそ道", romaji: "okunohosomichi", desc: "松尾芭蕉が書いた、東北・北陸をめぐる高名な紀行文。" },
+                    { kanji: "類義語", romaji: "ruigigo", desc: "意味が似通っている2つ以上の言葉。例：「家」と「住宅」。" },
+                    { kanji: "対義語", romaji: "taigigo", desc: "意味が正反対になる言葉のペア。例：「拡大」と「縮小」。" }
+                ],
+                suugaku: [
+                    { kanji: "展開", romaji: "tenkai", desc: "単項式や多項式の積の形になった式を計算し、一つの多項式に表すこと。" },
+                    { kanji: "因数分解", romaji: "insuubunkai", desc: "多項式をいくつかの式の積の形に表すこと。展開の逆。" },
+                    { kanji: "平方根", romaji: "heihoukon", desc: "2乗すると a になる数。ルート（√）を使う。" },
+                    { kanji: "二次方程式", romaji: "nijihouteishiki", desc: "整理すると（xの二次式）＝ 0 の形になる方程式。解の公式もある。" },
+                    { kanji: "相似", romaji: "souji", desc: "ある図形を、形を変えずに一定の割合に拡大または縮小した関係。" },
+                    { kanji: "三平方の定理", romaji: "sanheihounoteiri", desc: "直角三角形において、斜辺の2乗は他の2辺の2乗の和に等しいという定理。" },
+                    { kanji: "二次関数", romaji: "nijikansuu", desc: "yがxの2乗に比例する関数。グラフは放物線になる。" }
+                ],
+                eigo: [
+                    { kanji: "Environment", romaji: "environment", desc: "「環境」を意味する最重要名詞。地球環境問題などで頻出。" },
+                    { kanji: "International", romaji: "international", desc: "「国際的な」を意味する形容詞。" },
+                    { kanji: "Volunteer", romaji: "volunteer", desc: "「ボランティア」「自発的に参加する人」を意味する語。" },
+                    { kanji: "Information", romaji: "information", desc: "「情報」を意味する名詞。数えられない名詞（不可算名詞）扱い。" },
+                    { kanji: "Government", romaji: "government", desc: "「政府」を意味する名詞。" },
+                    { kanji: "Population", romaji: "population", desc: "「人口」を意味する名詞。The population of Japan." },
+                    { kanji: "Communication", romaji: "communication", desc: "「伝えること」「意思疎通」を意味する名詞。" }
+                ],
+                rika: [
+                    { kanji: "イオン", romaji: "ion", desc: "原子が電気を帯びたもの。陽イオンと陰イオンがある。" },
+                    { kanji: "優性の法則", romaji: "yuuseinohousoku", desc: "対立形質を掛け合わせたとき、子に優性の形質だけが現れる法則。" },
+                    { kanji: "南中高度", romaji: "nanchuukoudo", desc: "天体が真南にきて、高度が最も高くなったときの角度。" },
+                    { kanji: "遺伝子", romaji: "idenshi", desc: "生物の形質を決めるもとになる、細胞の染色体内にある物質（DNA）。" },
+                    { kanji: "中和", romaji: "chuuwa", desc: "酸性とアルカリ性の水溶液を混ぜたとき、互いの性質を打ち消し合う反応。" },
+                    { kanji: "食物連鎖", romaji: "shokumoturensa", desc: "生物どうしの「食う・食われる」という一本の鎖のようにつながる関係。" },
+                    { kanji: "南東の季節風", romaji: "nantounokisetufuu", desc: "日本の夏に太平洋側から吹いてくる、高温湿潤な風。" }
+                ],
+                shakai: [
+                    { kanji: "三権分立", romaji: "sankenbunritu", desc: "国家権力を立法・行政・司法に分け、抑制と均衡を保つ仕組み。" },
+                    { kanji: "最高裁判所", romaji: "saikousaibansho", desc: "司法権の最高機関。「憲法の番人」と呼ばれる。" },
+                    { kanji: "冷戦", romaji: "reisen", desc: "大戦後、米（資本主義）とソ連（社会主義）の間で起きた軍事・外交の対立。" },
+                    { kanji: "日本国憲法", romaji: "nihonkokuhenpou", desc: "1946年公布。国民主権・基本的人権の尊重・平和主義が三大原則。" },
+                    { kanji: "国連", romaji: "kokuren", desc: "国際連合。世界の平和と安全を維持するために1945年に設立。" },
+                    { kanji: "経済のグローバル化", romaji: "keizainoguroobaruka", desc: "国境を越えて、商品・お金・人々が自由に行き来し、世界が一体化すること。" },
+                    { kanji: "地方自治", romaji: "chihoujichi", desc: "住民の意思に基づいて、その地域の政治を住民自身の手で行うこと。民主主義の学校。" }
+                ]
+            }
+        };
+
+        let currentSubject = [];
+        let currentWordIndex = 0;
+        let typedIndex = 0;
+        let currentRomaji = "";
+        let isWaitingNext = false;
+        const PLAY_COUNT = 5; // 1回あたりの出題数
+
+        function startGame() {
+            const grade = document.getElementById("grade-select").value;
+            const subject = document.getElementById("subject-select").value;
+            
+            // 全レパートリーを一旦シャッフルして、先頭の5問だけを抽出！
+            const allWords = [...dataset[grade][subject]];
+            currentSubject = allWords.sort(() => Math.random() - 0.5).slice(0, PLAY_COUNT);
+            
+            currentWordIndex = 0;
+            isWaitingNext = false;
+            
+            document.getElementById("select-screen").style.display = "none";
+            document.getElementById("game-screen").style.display = "block";
+            document.getElementById("commentary-text").innerText = "タイピングをクリアするとここに解説が出ます。";
+            
+            const gradeNames = {m1: "中1", m2: "中2", m3: "中3"};
+            const subjectNames = {kokugo:"国語", suugaku:"数学", eigo:"英語", rika:"理科", shakai:"社会"};
+            document.getElementById("subject-title").innerText = `【${gradeNames[grade]} / ${subjectNames[subject]}】ランダム特訓`;
+            
+            nextWord();
+        }
+
+        function nextWord() {
+            isWaitingNext = false;
+            if (currentWordIndex >= currentSubject.length) {
+                document.getElementById("word-kanji").innerText = "🎉 5問クリア！";
+                document.getElementById("word-romaji").innerText = "ナイスファイト！もう一度挑戦しよう！";
+                document.getElementById("remain-count").innerText = "0";
+                return;
+            }
+
+            typedIndex = 0;
+            const wordData = currentSubject[currentWordIndex];
+            currentRomaji = wordData.romaji;
+            
+            document.getElementById("word-kanji").innerText = wordData.kanji;
+            document.getElementById("remain-count").innerText = currentSubject.length - currentWordIndex;
+            updateRomajiDisplay();
+        }
+
+        function updateRomajiDisplay() {
+            const typedPart = `<span class="typed">${currentRomaji.substring(0, typedIndex)}</span>`;
+            const untypedPart = currentRomaji.substring(typedIndex);
+            document.getElementById("word-romaji").innerHTML = typedPart + untypedPart;
+        }
+
+        window.addEventListener("keydown", (e) => {
+            if (document.getElementById("game-screen").style.display !== "block" || currentWordIndex >= currentSubject.length || isWaitingNext) return;
+            if (e.key.length > 1) return;
+
+            const targetChar = currentRomaji[typedIndex].toLowerCase();
+            const inputChar = e.key.toLowerCase();
+
+            if (inputChar === targetChar) {
+                typedIndex++;
+                updateRomajiDisplay();
+
+                if (typedIndex === currentRomaji.length) {
+                    isWaitingNext = true;
+                    document.getElementById("commentary-text").innerText = currentSubject[currentWordIndex].desc;
+                    currentWordIndex++;
+                    setTimeout(nextWord, 1800); // 1.8秒間解説を表示
+                }
+            }
+        });
+
+        function backToMenu() {
+            document.getElementById("select-screen").style.display = "flex";
+            document.getElementById("game-screen").style.display = "none";
+        }
+    </script>
+</body>
+</html>

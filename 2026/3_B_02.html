@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>朝の出発カウントタイマー（安定版）</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 400px;
+            width: 90%;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #4a5568;
+        }
+        
+        /* 時間設定エリア */
+        .time-setting-area {
+            background-color: #edf2f7;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        .time-setting-area label {
+            font-weight: bold;
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+        .time-input {
+            font-size: 1.1rem;
+            padding: 0.3rem 0.5rem;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            font-weight: bold;
+            color: #3182ce;
+            outline: none;
+        }
+
+        /* タイマー表示 */
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin: 1.5rem 0;
+            font-variant-numeric: tabular-nums;
+        }
+        .status-safe { color: #2f855a; }
+        .status-warning { color: #dd6b20; animation: blink 1s infinite; }
+        .status-danger { color: #e53e3e; animation: blink 0.5s infinite; }
+        
+        /* メッセージ */
+        .message {
+            font-size: 1.2rem;
+            font-weight: bold;
+            min-height: 1.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* 音声有効化ボタン */
+        .audio-btn {
+            background-color: #ecc94b;
+            color: #744210;
+            border: none;
+            padding: 1rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: pulse 1.5s infinite;
+        }
+        /* 有効化したあとのボタンの見た目 */
+        .audio-btn.active {
+            background-color: #48bb78;
+            color: white;
+            cursor: default;
+            animation: none;
+            box-shadow: none;
+        }
+
+        @keyframes blink { 50% { opacity: 0.7; } }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>出発まであと...</h1>
+    
+    <div class="time-setting-area">
+        <label for="departure-time-input">目標出発時刻：</label>
+        <input type="time" id="departure-time-input" class="time-input" value="08:15" oninput="onTimeChange()" onchange="onTimeChange()">
+    </div>
+    
+    <div id="timer" class="timer-display status-safe">00:00:00</div>
+    <div id="message" class="message"></div>
+
+    <button id="audio-auth-btn" class="audio-btn" onclick="enableAudio()">🔔 タップして音を有効にする</button>
+</div>
+
+<script>
+    let audioContext = null;
+    let isAudioEnabled = false;
+
+    // アラームが鳴ったかを管理するフラグ
+    let played30min = false;
+    let played10min = false;
+    let played0min = false;
+
+    function enableAudio() {
+        if (isAudioEnabled) return;
+        
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        isAudioEnabled = true;
+        
+        const btn = document.getElementById("audio-auth-btn");
+        btn.innerText = "🔊 音声アラームがONになりました";
+        btn.className = "audio-btn active";
+        
+        playBeep(440, 0.05);
+        setTimeout(() => playBeep(523, 0.05), 80);
+    }
+
+    function getDepartureTime() {
+        return document.getElementById("departure-time-input").value;
+    }
+
+    function onTimeChange() {
+        resetAlarmFlags();
+        updateTimer();
+    }
+
+    function resetAlarmFlags() {
+        played30min = false;
+        played10min = false;
+        played0min = false;
+    }
+
+    function playBeep(frequency, duration) {
+        if (!isAudioEnabled || !audioContext) return;
+        try {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = frequency;
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function triggerAlarm(type) {
+        if (type === '30min' && !played30min) {
+            playBeep(880, 0.1);
+            setTimeout(() => playBeep(880, 0.1), 200);
+            played30min = true;
+        } else if (type === '10min' && !played10min) {
+            playBeep(1000, 0.1);
+            setTimeout(() => playBeep(1000, 0.1), 150);
+            setTimeout(() => playBeep(1000, 0.1), 300);
+            played10min = true;
+        } else if (type === '0min' && !played0min) {
+            let count = 0;
+            const interval = setInterval(() => {
+                playBeep(587, 0.15);
+                setTimeout(() => playBeep(698, 0.15), 150);
+                count++;
+                if (count >= 5) clearInterval(interval);
+            }, 400);
+            played0min = true;
+        }
+    }
+
+    function updateTimer() {
+        const now = new Date();
+        const departureTime = getDepartureTime();
+        
+        if (!departureTime) return; 
+        
+        const [targetHour, targetMinute] = departureTime.split(":").map(Number);
+        let targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), targetHour, targetMinute, 0);
+        
+        // 当日の目標時刻を過ぎている、かつ過ぎてから1分未満（＝ちょうど出発時刻になった瞬間）でない場合は翌日に設定
+        // ※これにより、出発時刻直後の「いってらっしゃい」表示を1分間維持します
+        if (now > targetDate && (now - targetDate) > 60000) {
+            targetDate.setDate(targetDate.getDate() + 1);
+        }
+
+        const diffMs = targetDate - now;
+        const totalMinutesLeft = diffMs / (1000 * 60);
+
+        const timerEl = document.getElementById("timer");
+        const msgEl = document.getElementById("message");
+
+        // 【改善点】目標時刻より先（翌日扱い）または30分以上前ならフラグをリセット
+        if (diffMs < 0 || totalMinutesLeft > 35) {
+            resetAlarmFlags();
+        }
+
+        // 表示とアラームの判定
+        if (diffMs <= 0 && diffMs > -60000) {
+            // 出発時刻から1分間以内の場合
+            timerEl.innerText = "00:00:00";
+            timerEl.className = "timer-display";
+            msgEl.innerText = "いってらっしゃい！ 👋";
+            triggerAlarm('0min');
+        } else {
+            // カウントダウン中（または翌日への待機中）
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+            const hStr = String(hours).padStart(2, '0');
+            const mStr = String(minutes).padStart(2, '0');
+            const sStr = String(seconds).padStart(2, '0');
+
+            timerEl.innerText = `${hStr}:${mStr}:${sStr}`;
+
+            if (totalMinutesLeft > 30) {
+                timerEl.className = "timer-display status-safe";
+                msgEl.innerText = "落ち着いて準備しましょう ☕";
+            } else if (totalMinutesLeft <= 30 && totalMinutesLeft > 10) {
+                timerEl.className = "timer-display status-warning";
+                msgEl.innerText = "そろそろ忘れ物がないかチェック！ 👀";
+                
+                // 【改善点】秒数の一致ではなく、30分未満になった瞬間にトリガー（1秒のズレを許容）
+                if (totalMinutesLeft <= 30) triggerAlarm('30min');
+            } else if (totalMinutesLeft <= 10 && totalMinutesLeft > 0) {
+                timerEl.className = "timer-display status-danger";
+                msgEl.innerText = "急いで！出発の時間です！ 🏃‍♂️💨";
+                
+                // 【改善点】10分未満になった瞬間にトリガー
+                if (totalMinutesLeft <= 10) triggerAlarm('10min');
+            }
+        }
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+</script>
+
+</body>
+</html>

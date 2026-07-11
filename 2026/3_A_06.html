@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ワクワク！カレンダー付きToDoリスト</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            max-width: 900px;
+            width: 100%;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            flex: 1;
+            min-width: 300px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            text-align: center;
+        }
+        .day-name {
+            font-weight: bold;
+            color: #666;
+            font-size: 0.9em;
+            padding-bottom: 5px;
+        }
+        .day {
+            padding: 10px 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 1px solid transparent;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+        }
+        .day:hover { background-color: #f0f0f0; }
+        .day.selected {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(74, 144, 226, 0.3);
+        }
+        .day.empty {
+            cursor: default;
+            background: none !important;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 4px;
+        }
+        .day.selected .dot { background-color: white; }
+
+        h2 { margin-top: 0; color: var(--primary-color); font-size: 1.4em; }
+        
+        .status-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* コンボ・記録エリア全体のスタイル */
+        .combo-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 5px;
+        }
+
+        /* 現在のコンボ表示 */
+        .combo-badge {
+            background: #ff9800;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.85em;
+            display: inline-block;
+            align-self: flex-start;
+            animation: pulse 1s infinite alternate;
+        }
+
+        /* 最高記録のバッジ */
+        .best-badge {
+            background: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.8em;
+            display: inline-block;
+            align-self: flex-start;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.03); }
+        }
+
+        .todo-input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+            transition: 0.2s;
+        }
+        input[type="text"]:focus { border-color: var(--primary-color); }
+        
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        button:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        .clear-btn { background-color: #95a5a6; font-size: 0.8em; }
+        .clear-btn:hover { background-color: #7f8c8d; }
+
+        ul { list-style: none; padding: 0; margin: 0; }
+        li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 10px;
+            border-bottom: 1px solid #edf2f7;
+        }
+        .completed span {
+            text-decoration: line-through;
+            color: #a0aec0;
+        }
+        .delete-btn {
+            background: #fee2e2;
+            color: var(--accent-color);
+            padding: 4px 8px;
+            font-size: 0.8em;
+        }
+        .delete-btn:hover { background: var(--accent-color); color: white; }
+
+        .praise-toast {
+            position: fixed;
+            bottom: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-color);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+            z-index: 1000;
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            opacity: 0;
+            font-size: 1.2em;
+            pointer-events: none;
+        }
+        .praise-toast.show {
+            bottom: 40px;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card">
+        <div class="calendar-header">
+            <button id="prev-month">◀</button>
+            <h3 id="calendar-title">2026年 --月</h3>
+            <button id="next-month">▶</button>
+        </div>
+        <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <div class="card">
+        <h2 id="todo-date-title">日付を選択してください</h2>
+        <div class="status-area">
+            <div>
+                <span id="todo-stats">残りタスク: 0件</span>
+                <div class="combo-container" id="combo-area"></div>
+            </div>
+            <button id="clear-all-btn" class="clear-btn">この日を全削除</button>
+        </div>
+        <div class="todo-input-area">
+            <input type="text" id="todo-input" placeholder="タスクを入力...">
+            <button id="add-btn">追加</button>
+        </div>
+        <ul id="todo-list"></ul>
+    </div>
+</div>
+
+<div class="praise-toast" id="praise-toast">🎉 天才！！！</div>
+
+<script>
+    (function() {
+        let currentDate = new Date(); 
+        let selectedDateStr = ""; 
+        let todoData = {};
+        
+        try {
+            todoData = JSON.parse(localStorage.getItem('calendar_todos')) || {};
+        } catch(e) {
+            todoData = {};
+        }
+        
+        // 記録の読み込み（新しく最高記録を追加）
+        let comboCount = parseInt(localStorage.getItem('todo_combo_count')) || 0;
+        let bestComboCount = parseInt(localStorage.getItem('todo_best_combo_count')) || 0;
+        let lastCompletedDate = localStorage.getItem('todo_last_completed_date') || "";
+
+        const praiseWords = [
+            "🎉 天才！手が光の速さで動いてる！",
+            "✨ えらすぎる！！全人類が君を褒めてる！",
+            "🚀 その調子！圧倒的成長スピード！",
+            "💯 完璧！タスクが悲鳴をあげて消え去った！",
+            "👑 神業！今日の君は誰も止められない！",
+            "🔥 ナイス！一歩前進、素晴らしい！"
+        ];
+
+        const calendarGrid = document.getElementById('calendar-grid');
+        const calendarTitle = document.getElementById('calendar-title');
+        const todoDateTitle = document.getElementById('todo-date-title');
+        const todoInput = document.getElementById('todo-input');
+        const todoList = document.getElementById('todo-list');
+        const todoStats = document.getElementById('todo-stats');
+        const clearAllBtn = document.getElementById('clear-all-btn');
+        const praiseToast = document.getElementById('praise-toast');
+        const comboArea = document.getElementById('combo-area');
+
+        function init() {
+            const today = new Date();
+            selectedDateStr = formatDate(today);
+            
+            checkComboValidity(today);
+            renderCalendar();
+            renderTodos();
+            updateComboDisplay();
+            
+            document.getElementById('prev-month').onclick = () => changeMonth(-1);
+            document.getElementById('next-month').onclick = () => changeMonth(1);
+            document.getElementById('add-btn').onclick = addTodo;
+            clearAllBtn.onclick = clearAllTodos;
+            todoInput.onkeypress = (e) => { if(e.key === 'Enter') addTodo(); };
+        }
+
+        function formatDate(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function checkComboValidity(today) {
+            if (lastCompletedDate) {
+                try {
+                    const lastDate = new Date(lastCompletedDate);
+                    lastDate.setHours(0,0,0,0);
+                    const todayReset = new Date(today);
+                    todayReset.setHours(0,0,0,0);
+                    
+                    const timeDiff = todayReset.getTime() - lastDate.getTime();
+                    const dayDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
+                    
+                    if (dayDiff > 1) { 
+                        comboCount = 0; // 2日以上空いたら現在のコンボはゼロに
+                        localStorage.setItem('todo_combo_count', comboCount);
+                    }
+                } catch(e) {
+                    comboCount = 0;
+                }
+            }
+        }
+
+        // 画面のコンボ・最高記録の表示を更新
+        function updateComboDisplay() {
+            if (!comboArea) return;
+            let html = "";
+            
+            // 現在のコンボがあれば表示
+            if (comboCount > 0) {
+                html += `<div class="combo-badge">🔥 ${comboCount}日連続達成中！</div>`;
+            }
+            // 最高記録があれば（1日以上なら）常に表示
+            if (bestComboCount > 0) {
+                html += `<div class="best-badge">👑 歴代最高記録: ${bestComboCount}日連続</div>`;
+            }
+            
+            comboArea.innerHTML = html;
+        }
+
+        function renderCalendar() {
+            if (!calendarGrid) return;
+            calendarGrid.innerHTML = '';
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+            if (calendarTitle) calendarTitle.innerText = `${year}年 ${month + 1}月`;
+            
+            const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
+            weekDays.forEach(day => {
+                const dayEl = document.createElement('div');
+                dayEl.classList.add('day-name');
+                dayEl.innerText = day;
+                calendarGrid.appendChild(dayEl);
+            });
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const totalDays = new Date(year, month + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                const emptyEl = document.createElement('div');
+                emptyEl.classList.add('day', 'empty');
+                calendarGrid.appendChild(emptyEl);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.classList.add('day');
+                dayEl.innerText = day;
+
+                const thisDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                if (thisDateStr === selectedDateStr) dayEl.classList.add('selected');
+
+                if (todoData[thisDateStr] && todoData[thisDateStr].length > 0) {
+                    const dot = document.createElement('div');
+                    dot.classList.add('dot');
+                    dayEl.appendChild(dot);
+                }
+
+                dayEl.onclick = () => {
+                    document.querySelectorAll('.day').forEach(el => el.classList.remove('selected'));
+                    dayEl.classList.add('selected');
+                    selectedDateStr = thisDateStr;
+                    renderTodos();
+                };
+                calendarGrid.appendChild(dayEl);
+            }
+        }
+
+        function changeMonth(diff) {
+            currentDate.setMonth(currentDate.getMonth() + diff);
+            renderCalendar();
+        }
+
+        function renderTodos() {
+            if (!todoList) return;
+            if (todoDateTitle) todoDateTitle.innerText = `${selectedDateStr} のタスク`;
+            todoList.innerHTML = '';
+            const todos = todoData[selectedDateStr] || [];
+
+            const incompleteCount = todos.filter(t => !t.completed).length;
+            if (todoStats) todoStats.innerText = `残りタスク: ${incompleteCount}件 / 総数: ${todos.length}件`;
+
+            todos.forEach((todo, index) => {
+                const li = document.createElement('li');
+                if (todo.completed) li.classList.add('completed');
+
+                li.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="checkbox" ${todo.completed ? 'checked' : ''} id="todo-chk-${index}">
+                        <span>${escapeHTML(todo.text)}</span>
+                    </div>
+                    <button class="delete-btn" id="todo-del-${index}">削除</button>
+                `;
+                todoList.appendChild(li);
+
+                document.getElementById(`todo-chk-${index}`).onchange = () => toggleTodo(index);
+                document.getElementById(`todo-del-${index}`).onclick = () => deleteTodo(index);
+            });
+        }
+
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (!text) return;
+
+            if (!todoData[selectedDateStr]) todoData[selectedDateStr] = [];
+            todoData[selectedDateStr].push({ text: text, completed: false });
+            saveData();
+            todoInput.value = '';
+            renderTodos();
+            renderCalendar();
+        }
+
+        function toggleTodo(index) {
+            if (!todoData[selectedDateStr] || !todoData[selectedDateStr][index]) return;
+            
+            const isCurrentlyCompleted = todoData[selectedDateStr][index].completed;
+            todoData[selectedDateStr][index].completed = !isCurrentlyCompleted;
+            
+            if (!isCurrentlyCompleted) {
+                triggerPraise();
+                handleCombo();
+            }
+
+            saveData();
+            renderTodos();
+        }
+
+        function triggerPraise() {
+            if (!praiseToast) return;
+            const randomWord = praiseWords[Math.floor(Math.random() * praiseWords.length)];
+            praiseToast.innerText = randomWord;
+            praiseToast.classList.add('show');
+            setTimeout(() => { praiseToast.classList.remove('show'); }, 2000);
+        }
+
+        function handleCombo() {
+            const todayStr = formatDate(new Date());
+            
+            if (lastCompletedDate && lastCompletedDate !== todayStr) {
+                try {
+                    const lastDate = new Date(lastCompletedDate);
+                    const today = new Date(todayStr);
+                    lastDate.setHours(0,0,0,0);
+                    today.setHours(0,0,0,0);
+                    const dayDiff = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 3600 * 24));
+                    
+                    if (dayDiff === 1) {
+                        comboCount++;
+                    } else if (dayDiff > 1) {
+                        comboCount = 1;
+                    }
+                } catch(e) {
+                    comboCount = 1;
+                }
+            } else if (!lastCompletedDate) {
+                comboCount = 1;
+            }
+            
+            if (lastCompletedDate !== todayStr) {
+                if(comboCount === 0) comboCount = 1;
+                lastCompletedDate = todayStr;
+                
+                // 【新機能】現在のコンボが最高記録を上回ったら更新する
+                if (comboCount > bestComboCount) {
+                    bestComboCount = comboCount;
+                    localStorage.setItem('todo_best_combo_count', bestComboCount);
+                }
+                
+                localStorage.setItem('todo_combo_count', comboCount);
+                localStorage.setItem('todo_last_completed_date', lastCompletedDate);
+                updateComboDisplay();
+            }
+        }
+
+        function deleteTodo(index) {
+            if (!todoData[selectedDateStr]) return;
+            todoData[selectedDateStr].splice(index, 1);
+            if (todoData[selectedDateStr].length === 0) delete todoData[selectedDateStr];
+            saveData();
+            renderTodos();
+            renderCalendar();
+        }
+
+        function clearAllTodos() {
+            if (todoData[selectedDateStr]) {
+                if (confirm('この日のタスクをすべて削除してもよろしいですか？')) {
+                    delete todoData[selectedDateStr];
+                    saveData();
+                    renderTodos();
+                    renderCalendar();
+                }
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('calendar_todos', JSON.stringify(todoData));
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, match => {
+                const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                return escape[match];
+            });
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>

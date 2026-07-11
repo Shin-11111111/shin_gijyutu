@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中3学習クイズ（単色ポップ版）</title>
+    <style>
+        /* 全体の背景：グラデーションを廃止し、パキッとした元気な黄色一色に！ */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: #ffde38;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* タイトル：黒背景に白文字でメリハリをアップ */
+        h1 {
+            font-size: 1.6em;
+            color: #fff;
+            background-color: #111827;
+            padding: 12px 30px;
+            border-radius: 50px;
+            box-shadow: 0 8px 0px #333;
+            text-align: center;
+            border: 4px solid #333;
+            margin-bottom: 25px;
+            letter-spacing: 1px;
+        }
+
+        .quiz-wrapper {
+            position: relative;
+            max-width: 500px;
+            width: 100%;
+            min-height: 380px;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        /* クイズカード：太い黒枠線でイラストポップ風のデザインに */
+        .quiz-card {
+            display: none;
+            background: #fff;
+            padding: 30px;
+            border-radius: 24px;
+            box-shadow: 8px 8px 0px #333;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            box-sizing: border-box;
+            border: 5px solid #333;
+        }
+
+        /* 15問分の表示切り替え */
+        #q1:checked ~ .quiz-wrapper #card1,
+        #q2:checked ~ .quiz-wrapper #card2,
+        #q3:checked ~ .quiz-wrapper #card3,
+        #q4:checked ~ .quiz-wrapper #card4,
+        #q5:checked ~ .quiz-wrapper #card5,
+        #q6:checked ~ .quiz-wrapper #card6,
+        #q7:checked ~ .quiz-wrapper #card7,
+        #q8:checked ~ .quiz-wrapper #card8,
+        #q9:checked ~ .quiz-wrapper #card9,
+        #q10:checked ~ .quiz-wrapper #card10,
+        #q11:checked ~ .quiz-wrapper #card11,
+        #q12:checked ~ .quiz-wrapper #card12,
+        #q13:checked ~ .quiz-wrapper #card13,
+        #q14:checked ~ .quiz-wrapper #card14,
+        #q15:checked ~ .quiz-wrapper #card15,
+        #q16:checked ~ .quiz-wrapper #card16 {
+            display: block;
+        }
+
+        /* 教科別の鮮やかなカード内背景 */
+        .card-math { background-color: #fff0f0; }
+        .card-english { background-color: #e6f7ff; }
+        .card-science { background-color: #f1fdf5; }
+        .card-society { background-color: #fff9e6; }
+        .card-japanese { background-color: #faf0ff; }
+        .card-goal { background-color: #fff5eb; }
+
+        /* 教科バッジ：ハッキリした単色カラーに白文字 */
+        .subject {
+            display: inline-block;
+            padding: 8px 20px;
+            color: white;
+            border-radius: 30px;
+            font-size: 0.95em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            border: 3px solid #333;
+            box-shadow: 3px 3px 0px #333;
+        }
+        .badge-math { background-color: #ff4a4a; }
+        .badge-english { background-color: #0099ff; }
+        .badge-science { background-color: #00cc66; }
+        .badge-society { background-color: #ff9900; }
+        .badge-japanese { background-color: #b34aff; }
+
+        .question {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #1a202c;
+            margin-bottom: 25px;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        /* 答えを見るアコーディオン */
+        details {
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 25px;
+            border: 3px solid #333;
+            background-color: #fff;
+            box-shadow: inset 0 4px 0px rgba(0,0,0,0.05);
+        }
+
+        summary {
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            outline: none;
+            user-select: none;
+        }
+        .card-math summary { color: #d32f2f; }
+        .card-english summary { color: #1976d2; }
+        .card-science summary { color: #388e3c; }
+        .card-society summary { color: #f57c00; }
+        .card-japanese summary { color: #7b1fa2; }
+
+        /* 正解エリア：点線で区切ってわかりやすく */
+        .answer-content {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 3px dashed #333;
+            font-weight: 900;
+            font-size: 1.3em;
+        }
+        .card-math .answer-content { color: #ff4a4a; }
+        .card-english .answer-content { color: #0099ff; }
+        .card-science .answer-content { color: #00cc66; }
+        .card-society .answer-content { color: #ff9900; }
+        .card-japanese .answer-content { color: #b34aff; }
+
+        /* 次へ進むボタン：さらに飛び出す押しゴコチ */
+        .next-label {
+            display: inline-block;
+            color: white;
+            padding: 14px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1em;
+            border: 3px solid #333;
+            box-shadow: 0 6px 0 #333;
+            transition: all 0.1s ease;
+        }
+        .next-label:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #333;
+        }
+        .card-math .next-label { background-color: #ff4a4a; }
+        .card-english .next-label { background-color: #0099ff; }
+        .card-science .next-label { background-color: #00cc66; }
+        .card-society .next-label { background-color: #ff9900; }
+        .card-japanese .next-label { background-color: #b34aff; }
+
+        /* ゴール画面 */
+        .goal-title { font-size: 1.8em; color: #ff3300; font-weight: 900; margin-bottom: 15px; }
+        .goal-emoji { font-size: 4em; margin-bottom: 15px; }
+        .btn-restart { background-color: #ff3366 !important; }
+    </style>
+</head>
+<body>
+
+<h1>🌈 中3受験対策クイズ 🌈</h1>
+
+<!-- ページコントロール用ラジオボタン -->
+<input type="radio" name="quiz-nav" id="q1" checked>
+<input type="radio" name="quiz-nav" id="q2">
+<input type="radio" name="quiz-nav" id="q3">
+<input type="radio" name="quiz-nav" id="q4">
+<input type="radio" name="quiz-nav" id="q5">
+<input type="radio" name="quiz-nav" id="q6">
+<input type="radio" name="quiz-nav" id="q7">
+<input type="radio" name="quiz-nav" id="q8">
+<input type="radio" name="quiz-nav" id="q9">
+<input type="radio" name="quiz-nav" id="q10">
+<input type="radio" name="quiz-nav" id="q11">
+<input type="radio" name="quiz-nav" id="q12">
+<input type="radio" name="quiz-nav" id="q13">
+<input type="radio" name="quiz-nav" id="q14">
+<input type="radio" name="quiz-nav" id="q15">
+<input type="radio" name="quiz-nav" id="q16">
+
+<div class="quiz-wrapper">
+
+    <!-- 問1 数学 -->
+    <div class="quiz-card card-math" id="card1">
+        <div class="subject badge-math">数学 [1/15] 📐</div>
+        <div class="question">(x + 3)(x - 2) を展開したときの、xの係数は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 1</div></details>
+        <label for="q2" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問2 数学 -->
+    <div class="quiz-card card-math" id="card2">
+        <div class="subject badge-math">数学 [2/15] 📐</div>
+        <div class="question">x² - 9 を因数分解した正しい形は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： (x + 3)(x - 3)</div></details>
+        <label for="q3" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問3 数学 -->
+    <div class="quiz-card card-math" id="card3">
+        <div class="subject badge-math">数学 [3/15] 📐</div>
+        <div class="question">√50 を a√b の形に変形しなさい。</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 5√2</div></details>
+        <label for="q4" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問4 英語 -->
+    <div class="quiz-card card-english" id="card4">
+        <div class="subject badge-english">英語 [4/15] 🔤</div>
+        <div class="question">「私はちょうど宿題を終えたところです。」<br>I ( &nbsp; ) just finished my homework. に入る単語は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： have</div></details>
+        <label for="q5" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問5 英語 -->
+    <div class="quiz-card card-english" id="card5">
+        <div class="subject badge-english">英語 [5/15] 🔤</div>
+        <div class="question">「これはトムによって作られたケーキです」<br>This is a cake ( &nbsp; ) by Tom. に入る過去分詞は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： made</div></details>
+        <label for="q6" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問6 英語 -->
+    <div class="quiz-card card-english" id="card6">
+        <div class="subject badge-english">英語 [6/15] 🔤</div>
+        <div class="question">「私には英語を話す友達がいます。」<br>I have a friend ( &nbsp; ) can speak English. に入る関係代名詞は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： who (または that)</div></details>
+        <label for="q7" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問7 理科 -->
+    <div class="quiz-card card-science" id="card7">
+        <div class="subject badge-science">理科 [7/15] 🧪</div>
+        <div class="question">塩化水素（HCl）が水に溶けて電離したとき、生じる陽イオンの化学式は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： H+</div></details>
+        <label for="q8" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問8 理科 -->
+    <div class="quiz-card card-science" id="card8">
+        <div class="subject badge-science">理科 [8/15] 🧪</div>
+        <div class="question">酸性とアルカリ性の水溶液を混ぜたとき、互いの性質を打ち消し合って水と塩ができる反応を何というか？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 中和</div></details>
+        <label for="q9" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問9 理科 -->
+    <div class="quiz-card card-science" id="card9">
+        <div class="subject badge-science">理科 [9/15] 🧪</div>
+        <div class="question">生物の成長に関わる、元の細胞と全く同じ細胞ができる分裂を何というか？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 体細胞分裂</div></details>
+        <label for="q10" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問10 社会 -->
+    <div class="quiz-card card-society" id="card10">
+        <div class="subject badge-society">社会 [10/15] 🌍</div>
+        <div class="question">1914年、サラエボ事件をきっかけに始まった世界規模の戦争は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 第一次世界大戦</div></details>
+        <label for="q11" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問11 社会 -->
+    <div class="quiz-card card-society" id="card11">
+        <div class="subject badge-society">社会 [11/15] 🌍</div>
+        <div class="question">日本国憲法の「三大原則」といえば、国民主権、基本的人権の尊重と、あと一つは何？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 平和主義</div></details>
+        <label for="q12" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問12 社会 -->
+    <div class="quiz-card card-society" id="card12">
+        <div class="subject badge-society">社会 [12/15] 🌍</div>
+        <div class="question">満18歳以上のすべての日本国民に平等に与えられている、選挙で投票できる権利を何というか？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 選挙権（参政権）</div></details>
+        <label for="q13" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問13 国語 -->
+    <div class="quiz-card card-japanese" id="card13">
+        <div class="subject badge-japanese">国語 [13/15] 📚</div>
+        <div class="question">「心や意見がぴったりと一致すること」を意味する四字熟語は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 意気投合</div></details>
+        <label for="q14" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問14 国語 -->
+    <div class="quiz-card card-japanese" id="card14">
+        <div class="subject badge-japanese">国語 [14/15] 📚</div>
+        <div class="question">古文において、「あわれなり」という言葉が持つ、最も代表的な現代語の意味は？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： しみじみと趣深い（感動を誘う）</div></details>
+        <label for="q15" class="next-label">NEXT LEVEL ＞</label>
+    </div>
+
+    <!-- 問15 国語 -->
+    <div class="quiz-card card-japanese" id="card15">
+        <div class="subject badge-japanese">国語 [15/15] 📚</div>
+        <div class="question">「どうしても思い出せない」という文の、「どうしても」の品詞は何？</div>
+        <details><summary>💥 答えを見る</summary><div class="answer-content">正解： 副詞</div></details>
+        <label for="q16" class="next-label">LAST BOSS ＞</label>
+    </div>
+
+    <!-- ゴール画面 -->
+    <div class="quiz-card card-goal" id="card16">
+        <div class="goal-emoji">👑</div>
+        <div class="goal-title">MISSION COMPLETE!!</div>
+        <p style="color: #ff3300; font-weight: 900; font-size: 1.2em;">全15問を完全攻略！</p>
+        <p style="font-size: 0.95em; color: #2d3748; line-height: 1.6; font-weight: bold;">
+            このカラフルなパワーを味方につけて、<br>志望校合格へ向けて突っ走っていこう！！🔥
+        </p>
+        <label for="q1" class="next-label btn-restart">RETRY 🔄</label>
+    </div>
+
+</div>
+
+</body>
+</html>

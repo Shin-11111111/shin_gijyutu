@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トットムジカ・天気予報アラーム</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #2d3436, #000000); /* 劇中の雰囲気に合わせてダークに */
+            color: #dfe6e9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: rgba(30, 30, 30, 0.85);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(108, 92, 231, 0.3);
+            text-align: center;
+            width: 350px;
+            border: 1px solid #6c5ce7;
+        }
+        h1 { margin-bottom: 10px; font-size: 24px; color: #a29bfe; letter-spacing: 2px; }
+        #clock { font-size: 48px; font-weight: bold; margin: 20px 0; color: #fff; text-shadow: 0 0 10px #6c5ce7; }
+        .input-group { margin: 20px 0; }
+        input[type="time"] {
+            font-size: 20px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #6c5ce7;
+            background: #2d3436;
+            color: #fff;
+        }
+        button {
+            background-color: #6c5ce7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #5b4cc4; box-shadow: 0 0 10px #6c5ce7; }
+        #weather-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2d3436;
+            border-radius: 8px;
+            display: none;
+            border: 1px solid #a29bfe;
+        }
+        .weather-status { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #00cec9; }
+        /* YouTubeプレイヤーを隠す設定（ただし、API動作のために1x1pxで存在させる） */
+        #youtube-player {
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            width: 1px;
+            height: 1px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>TOT MUSICA ALARM</h1>
+    <!-- 現在時刻表示 -->
+    <div id="clock">00:00:00</div>
+
+    <!-- アラーム設定 -->
+    <div class="input-group">
+        <input type="time" id="alarm-time">
+        <br>
+        <button id="set-btn" onclick="setAlarm()">アラームを設定</button>
+        <button id="stop-btn" onclick="stopAlarm()" style="display:none; background-color: #d63031;">トットムジカを停止</button>
+    </div>
+
+    <!-- 天気予報表示エリア -->
+    <div id="weather-info">
+        <div id="weather-title" style="font-weight: bold; color: #a29bfe; margin-bottom: 5px;">⏰ 本日の天気 ⏰</div>
+        <div id="weather-text" class="weather-status">データを読み込み中...</div>
+        <div id="temp-text"></div>
+    </div>
+</div>
+
+<!-- YouTube隠しプレイヤー -->
+<div id="youtube-player"></div>
+
+<!-- YouTube IFrame Player API の読み込み -->
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+    let player = null;
+    let isAlarmTriggered = false;
+
+    // YouTube APIの準備ができたら呼ばれる関数
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('youtube-player', {
+            height: '1',
+            width: '1',
+            videoId: 'V9_ZpqfqHFI', // Ado「トットムジカ」公式MVのID
+            events: {
+                'onReady': onPlayerReady
+            }
+        });
+    }
+
+    function onPlayerReady(event) {
+        console.log("YouTube Player Ready");
+    }
+
+    // 現在時刻を1秒ごとに更新
+    function updateClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        const secs = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock').innerText = `${hrs}:${mins}:${secs}`;
+        
+        // アラームのチェック
+        const currentHourMin = `${hrs}:${mins}`;
+        const targetTime = document.getElementById('alarm-time').value;
+        
+        if (currentHourMin === targetTime && secs === "00" && !isAlarmTriggered) {
+            triggerAlarm();
+        }
+    }
+    setInterval(updateClock, 1000);
+
+    // アラーム設定
+    function setAlarm() {
+        const time = document.getElementById('alarm-time').value;
+        if (!time) {
+            alert('時間を設定してください！');
+            return;
+        }
+        isAlarmTriggered = false; // フラグリセット
+        alert(`トットムジカ・アラームを ${time} に設定しました。\n※このタブを開いたまま、画面のどこかを1回クリックしておいてください。`);
+    }
+
+    // アラーム作動時の処理
+    function triggerAlarm() {
+        isAlarmTriggered = true;
+        
+        // YouTube動画を再生
+        if (player && typeof player.playVideo === 'function') {
+            player.seekTo(0); // 曲の最初から
+            player.playVideo();
+        }
+
+        fetchWeather();
+        document.getElementById('stop-btn').style.display = 'inline-block';
+        document.getElementById('set-btn').style.display = 'none';
+    }
+
+    // アラーム停止
+    function stopAlarm() {
+        if (player && typeof player.pauseVideo === 'function') {
+            player.pauseVideo();
+        }
+        document.getElementById('stop-btn').style.display = 'none';
+        document.getElementById('set-btn').style.display = 'inline-block';
+    }
+
+    // 天気予報APIの呼び出し（東京）
+    function fetchWeather() {
+        const weatherInfo = document.getElementById('weather-info');
+        weatherInfo.style.display = 'block';
+
+        const url = "https://api.open-meteo.com/v1/forecast?latitude=35.6785&longitude=139.6823&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FTokyo&forecast_days=1";
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const weatherCode = data.daily.weathercode[0];
+                const maxTemp = data.daily.temperature_2m_max[0];
+                const minTemp = data.daily.temperature_2m_min[0];
+                
+                let weatherTxt = "不明";
+                if (weatherCode === 0) weatherTxt = "☀️ 快晴";
+                else if (weatherCode <= 3) weatherTxt = "⛅ 晴れ時々曇り";
+                else if (weatherCode <= 48) weatherTxt = "🌫️ 霧";
+                else if (weatherCode <= 67) weatherTxt = "🌧️ 雨";
+                else if (weatherCode <= 77) weatherTxt = "❄️ 雪";
+                else if (weatherCode <= 82) weatherTxt = "🌦️ にわか雨";
+                else weatherTxt = "⛈️ 雷雨";
+
+                document.getElementById('weather-text').innerText = weatherTxt;
+                document.getElementById('temp-text').innerText = `最高：${maxTemp}°C / 最低：${minTemp}°C`;
+            })
+            .catch(error => {
+                document.getElementById('weather-text').innerText = "天気データの取得に失敗しました";
+                console.error(error);
+            });
+    }
+</script>
+
+</body>
+</html>
