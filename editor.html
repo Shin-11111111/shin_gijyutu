@@ -134,8 +134,18 @@
 
     <main id="main-container">
         <div id="editor-side" style="width: 50%;">
-            <div class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider flex justify-between">
+            <div class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider flex justify-between items-center flex-wrap gap-y-1">
                 <span>Editor</span>
+                <div class="flex flex-wrap gap-1 normal-case">
+                    <button id="undoBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="元に戻す (Ctrl+Z)">元に戻す</button>
+                    <button id="redoBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="やり直す (Ctrl+Shift+Z)">やり直す</button>
+                    <button id="findBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="検索 (Ctrl+F)">検索</button>
+                    <button id="replaceBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="置換 (Ctrl+H)">置換</button>
+                    <button id="gotoLineBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="行へ移動 (Ctrl+G)">行へ移動</button>
+                    <button id="copyBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="エディタの内容をコピー">コピー</button>
+                    <button id="selectAllBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="全選択">全選択</button>
+                    <button id="pasteBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="クリップボードから貼り付け">貼り付け</button>
+                </div>
             </div>
             <div id="editor-container"></div>
         </div>
@@ -143,10 +153,20 @@
         <div id="resizer" title="ドラッグして幅を調整"></div>
 
         <div id="preview-side">
-            <div id="preview-label" class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-300 text-right">Result</div>
+            <div id="preview-label" class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-300 flex justify-between items-center">
+                <button id="toggleConsoleBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium normal-case transition-colors" title="コンソール表示を切り替え">コンソール</button>
+                <span>Result</span>
+            </div>
             <div class="preview-container flex-1 overflow-auto bg-white p-4" id="result-display">
                 <iframe id="preview" class="w-full h-full border-none"></iframe>
                 <pre id="text-result" class="hidden whitespace-pre-wrap font-mono text-sm"></pre>
+            </div>
+            <div id="consolePanel" class="hidden flex flex-col border-t border-gray-300 bg-gray-900" style="height: 160px;">
+                <div class="flex justify-between items-center px-3 py-1 bg-gray-800 text-gray-200 text-xs font-semibold uppercase tracking-wider">
+                    <span>Console</span>
+                    <button id="clearConsoleBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-2 py-0.5 rounded text-xs normal-case transition-colors">クリア</button>
+                </div>
+                <div id="consoleLog" class="flex-1 overflow-auto px-3 py-2 font-mono text-xs text-gray-100"></div>
             </div>
         </div>
     </main>
@@ -188,6 +208,11 @@
         const cancelModalBtn = document.getElementById('cancelModalBtn');
         const confirmModalBtn = document.getElementById('confirmModalBtn');
 
+        const consolePanel = document.getElementById('consolePanel');
+        const consoleLog = document.getElementById('consoleLog');
+        const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
+        const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+
         let editor;
         let isOnlyPreview = false;
         let isOnlyEditor = false;
@@ -200,7 +225,11 @@
         const STORAGE_KEY_CODE = 'web_editor_last_code';
         const STORAGE_KEY_LANG = 'web_editor_last_lang';
         const STORAGE_KEY_FONTSIZE = 'web_editor_font_size';
+        const STORAGE_KEY_HISTORY = 'web_editor_undo_history';
         let fontSize = parseInt(localStorage.getItem(STORAGE_KEY_FONTSIZE)) || 14;
+        let undoStack = [];
+        let redoStack = [];
+        let isApplyingHistory = false;
 
         const samples = {
             html: '',
@@ -216,21 +245,58 @@
             if (lang === 'html') {
                 preview.classList.remove('hidden');
                 textResult.classList.add('hidden');
+                consoleLog.innerHTML = '';
                 const doc = preview.contentDocument || preview.contentWindow.document;
+                const consoleShim = `
+<script>
+(function() {
+    const post = (level, args) => {
+        try {
+            window.parent.postMessage({ __editorConsole: true, level: level, args: args.map(function(a) {
+                try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+                catch (e) { return String(a); }
+            }) }, '*');
+        } catch (e) {}
+    };
+    ['log', 'info', 'warn', 'error'].forEach(function(level) {
+        const original = console[level];
+        console[level] = function() {
+            post(level, Array.prototype.slice.call(arguments));
+            original.apply(console, arguments);
+        };
+    });
+    window.addEventListener('error', function(e) {
+        post('error', [e.message + ' (' + e.filename + ':' + e.lineno + ')']);
+    });
+    window.addEventListener('load', function() {
+        document.querySelectorAll('a').forEach(function(l) { l.setAttribute('target', '_blank'); });
+    });
+})();
+<\/script>`;
                 doc.open();
-                doc.write(code);
+                doc.write(consoleShim + code);
                 doc.close();
-                if (doc.body) {
-                    const script = doc.createElement('script');
-                    script.textContent = `document.querySelectorAll('a').forEach(l => l.setAttribute('target', '_blank'));`;
-                    doc.body.appendChild(script);
-                }
             } else {
                 preview.classList.add('hidden');
                 textResult.classList.remove('hidden');
                 textResult.textContent = code;
             }
         }
+
+        function appendConsoleLog(level, args) {
+            const line = document.createElement('div');
+            const colorClass = level === 'error' ? 'text-red-400' : level === 'warn' ? 'text-yellow-400' : level === 'info' ? 'text-blue-300' : 'text-gray-100';
+            line.className = 'whitespace-pre-wrap break-words border-b border-gray-800 py-0.5 ' + colorClass;
+            line.textContent = '[' + level + '] ' + args.join(' ');
+            consoleLog.appendChild(line);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.__editorConsole) {
+                appendConsoleLog(e.data.level, e.data.args);
+            }
+        });
 
         function saveToLocalStorage() {
             if (!editor) return;
@@ -245,6 +311,71 @@
             const savedFilename = localStorage.getItem(STORAGE_KEY_FILENAME);
             return { code: savedCode, lang: savedLang, filename: savedFilename };
         }
+
+        function loadHistoryFromStorage() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY_HISTORY);
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                undoStack = Array.isArray(parsed.undoStack) ? parsed.undoStack : [];
+                redoStack = Array.isArray(parsed.redoStack) ? parsed.redoStack : [];
+            } catch (err) {
+                undoStack = [];
+                redoStack = [];
+            }
+        }
+
+        function saveHistoryToStorage() {
+            const MAX_HISTORY = 100;
+            if (undoStack.length > MAX_HISTORY) undoStack = undoStack.slice(undoStack.length - MAX_HISTORY);
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify({ undoStack, redoStack }));
+        }
+
+        function pushHistory(value) {
+            if (isApplyingHistory) return;
+            if (undoStack.length && undoStack[undoStack.length - 1] === value) return;
+            undoStack.push(value);
+            redoStack = [];
+            saveHistoryToStorage();
+        }
+
+        function doUndo() {
+            if (!editor || undoStack.length < 2) return;
+            isApplyingHistory = true;
+            const current = undoStack.pop();
+            redoStack.push(current);
+            const prev = undoStack[undoStack.length - 1];
+            editor.setValue(prev);
+            saveHistoryToStorage();
+            saveToLocalStorage();
+            isApplyingHistory = false;
+        }
+
+        function doRedo() {
+            if (!editor || redoStack.length === 0) return;
+            isApplyingHistory = true;
+            const next = redoStack.pop();
+            undoStack.push(next);
+            editor.setValue(next);
+            saveHistoryToStorage();
+            saveToLocalStorage();
+            isApplyingHistory = false;
+        }
+
+        window.addEventListener('keydown', (e) => {
+            const ctrlOrCmd = e.ctrlKey || e.metaKey;
+            if (!ctrlOrCmd) return;
+            if (e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                downloadBtn.click();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (editor) {
+                    clearTimeout(debounceTimer);
+                    updateOutput(editor.getValue(), languageSelect.value);
+                }
+            }
+        });
 
         document.getElementById('clearBtn').addEventListener('click', () => {
             if (!editor) return;
@@ -400,12 +531,22 @@
                 padding: { top: 10 }
             });
 
+            loadHistoryFromStorage();
+            if (undoStack.length === 0 || undoStack[undoStack.length - 1] !== initialCode) {
+                undoStack.push(initialCode);
+                saveHistoryToStorage();
+            }
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => doUndo());
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => doRedo());
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () => doRedo());
+
             editor.onDidChangeModelContent(() => {
                 const code = editor.getValue();
                 const lang = languageSelect.value;
                 clearTimeout(debounceTimer);
                 debounceTimer = setTimeout(() => {
                     updateOutput(code, lang);
+                    pushHistory(code);
                 }, 400);
                 saveToLocalStorage();
             });
@@ -458,6 +599,75 @@
             editor.updateOptions({ fontSize });
             document.getElementById('fontSizeLabel').textContent = fontSize;
             localStorage.setItem(STORAGE_KEY_FONTSIZE, fontSize);
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', async () => {
+            if (!editor) return;
+            try {
+                await navigator.clipboard.writeText(editor.getValue());
+            } catch (err) {
+                alert('コピーに失敗しました。ブラウザの権限設定をご確認ください。');
+            }
+        });
+
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            editor.setSelection(editor.getModel().getFullModelRange());
+        });
+
+        document.getElementById('pasteBtn').addEventListener('click', async () => {
+            if (!editor) return;
+            try {
+                const text = await navigator.clipboard.readText();
+                editor.executeEdits('paste-button', [{
+                    range: editor.getSelection(),
+                    text: text,
+                    forceMoveMarkers: true
+                }]);
+                editor.focus();
+            } catch (err) {
+                alert('クリップボードの読み取りに失敗しました。ブラウザの権限設定をご確認ください。');
+            }
+        });
+
+        document.getElementById('undoBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            doUndo();
+        });
+
+        document.getElementById('redoBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            doRedo();
+        });
+
+        document.getElementById('findBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            editor.getAction('actions.find').run();
+        });
+
+        document.getElementById('replaceBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            editor.getAction('editor.action.startFindReplaceAction').run();
+        });
+
+        document.getElementById('gotoLineBtn').addEventListener('click', () => {
+            if (!editor) return;
+            editor.focus();
+            editor.getAction('editor.action.gotoLine').run();
+        });
+
+        toggleConsoleBtn.addEventListener('click', () => {
+            consolePanel.classList.toggle('hidden');
+            if (editor) editor.layout();
+        });
+
+        clearConsoleBtn.addEventListener('click', () => {
+            consoleLog.innerHTML = '';
         });
     </script>
 </body>
