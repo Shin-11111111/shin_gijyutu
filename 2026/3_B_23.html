@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スキマ時間 × タスクマッチング</title>
+    <style>
+        /* 柔らかいソフトトーンのカラー定義 */
+        :root {
+            --primary-color: #6b8e7d; /* 落ち着いたミント・セージグリーン */
+            --primary-hover: #557263;
+            --accent-color: #e8a7a1;  /* アクセントになる淡いサクラピンク */
+            --background-color: #f7f6f3; /* 温かみのある生成り・アイボリー */
+            --card-background: #ffffff;
+            --text-color: #4a4a4a;    /* 真っ黒を避けた優しい炭色 */
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            letter-spacing: 0.03em; /* 少し文字間隔を広げてゆったり感を */
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-background);
+            padding: 35px 30px;
+            border-radius: 20px; /* 角をさらに丸く */
+            box-shadow: 0 10px 25px -5px rgba(107, 142, 125, 0.1); /* シャドウも柔らかく */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.6rem;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px dashed #e2e8f0; /* 線を破線にして柔らかい印象に */
+        }
+
+        .section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 0.95rem;
+            color: #616161;
+        }
+
+        /* 時間選択のボタン群 */
+        .time-options {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .time-btn {
+            background-color: #fff;
+            border: 1.5px solid var(--border-color);
+            padding: 12px 5px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #718096;
+            transition: all 0.25s ease;
+            font-size: 0.95rem;
+        }
+
+        .time-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            background-color: #f0f4f1;
+        }
+
+        .time-btn.active {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 10px rgba(107, 142, 125, 0.2);
+        }
+
+        /* マッチング結果表示エリア */
+        .result-area {
+            background-color: #fcfbfa; /* ほんのり温かみのある白 */
+            border-radius: 14px;
+            padding: 25px 20px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #e2e8f0;
+            margin-top: 20px;
+        }
+
+        .task-suggestion {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: var(--primary-hover);
+            text-align: center;
+            animation: fadeIn 0.3s ease-in-out;
+            line-height: 1.5;
+        }
+
+        .task-meta {
+            font-size: 0.85rem;
+            color: #8e9ca6;
+            margin-top: 8px;
+        }
+
+        /* タスク追加フォーム */
+        .add-form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .add-form input[type="text"] {
+            flex: 1;
+            min-width: 150px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background-color: #fafafa;
+            color: var(--text-color);
+        }
+        
+        .add-form input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: #fff;
+        }
+
+        .add-form select {
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background-color: white;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        button.action-btn {
+            background-color: var(--accent-color); /* ボタンは優しいピンクに */
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+
+        button.action-btn:hover {
+            background-color: #df948d;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>⏱️ スキマ時間 × タスクマッチ</h1>
+
+    <div class="section">
+        <label>今のスキマ時間はどのくらい？</label>
+        <div class="time-options">
+            <button class="time-btn" onclick="matchTask(5)">5分</button>
+            <button class="time-btn" onclick="matchTask(15)">15分</button>
+            <button class="time-btn" onclick="matchTask(30)">30分</button>
+            <button class="time-btn" onclick="matchTask(60)">60分</button>
+        </div>
+
+        <div class="result-area" id="resultArea">
+            <div style="color: #a0aec0; font-size: 0.9rem;">上の時間ボタンを押すと、最適なタスクを提案します</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <label>📥 自分のタスクを追加する</label>
+        <div class="add-form">
+            <input type="text" id="newTaskName" placeholder="例: デスクの上の片付け、メール返信など" required>
+            <select id="newTaskTime">
+                <option value="5">5分</option>
+                <option value="15">15分</option>
+                <option value="30">30分</option>
+                <option value="60">60分</option>
+            </select>
+            <button class="action-btn" onclick="addNewTask()">追加</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 初期タスクデータ
+    let taskList = [
+        { name: "深呼吸をしてストレッチする", time: 5 },
+        { name: "目の前のゴミを捨てる・机を拭く", time: 5 },
+        { name: "メールの未読をチェックする", time: 5 },
+        { name: "カレンダーの予定を確認する", time: 5 },
+        { name: "ニュースのヘッドラインを流し読み", time: 5 },
+        
+        { name: "不要なメール・メルマガを削除する", time: 15 },
+        { name: "気になっていた記事を1本読む", time: 15 },
+        { name: "返信が必要なメールを1通送る", time: 15 },
+        { name: "ちょっとした洗い物や片付けをする", time: 15 },
+        
+        { name: "仕事や勉強のタスクをリストアップ・整理する", time: 30 },
+        { name: "デスク周りや本棚の本格的な整理", time: 30 },
+        { name: "読みかけの本を数ページ読み進める", time: 30 },
+        { name: "簡単な事務作業（経費精算など）を終わらせる", time: 30 },
+        
+        { name: "ドキュメントや資料の構成案を作る", time: 60 },
+        { name: "がっつり読書や勉強の1章を進める", time: 60 },
+        { name: "部屋の掃除機がけと水回り掃除", time: 60 },
+        { name: "気になっていた動画教材やセミナーを1本見る", time: 60 }
+    ];
+
+    function matchTask(minutes) {
+        const buttons = document.querySelectorAll('.time-btn');
+        buttons.forEach(btn => {
+            if (parseInt(btn.innerText) === minutes) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        const availableTasks = taskList.filter(task => task.time <= minutes);
+        const resultArea = document.getElementById('resultArea');
+
+        if (availableTasks.length === 0) {
+            resultArea.innerHTML = `<div class="task-suggestion" style="color:#e53e3e;">マッチするタスクがありません</div>`;
+            return;
+        }
+
+        const randomIndex = Math.floor(Math.random() * availableTasks.length);
+        const selectedTask = availableTasks[randomIndex];
+
+        resultArea.innerHTML = `
+            <div class="task-suggestion">🌿 ${selectedTask.name}</div>
+            <div class="task-meta">（所要時間目安: 約${selectedTask.time}分 / ${minutes}分以内のタスクから選出）</div>
+        `;
+    }
+
+    function addNewTask() {
+        const nameInput = document.getElementById('newTaskName');
+        const timeSelect = document.getElementById('newTaskTime');
+        
+        const taskName = nameInput.value.trim();
+        const taskTime = parseInt(timeSelect.value);
+
+        if (taskName === "") {
+            alert("タスク名を入力してください！");
+            return;
+        }
+
+        taskList.push({ name: taskName, time: taskTime });
+        nameInput.value = "";
+        alert(`「${taskName} (${taskTime}分)」をマッチング候補に追加しました！`);
+    }
+</script>
+
+</body>
+</html>

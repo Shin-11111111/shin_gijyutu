@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漢検二級 模擬クイズ（読み・意味 10問ランダム）</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 22px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e67e22;
+            padding-bottom: 10px;
+        }
+        .progress {
+            text-align: right;
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        .question-box {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            background-color: #fdf2e9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid #e67e22;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .btn-option {
+            background-color: #ffffff;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+        .btn-option:hover:not(:disabled) {
+            background-color: #fdf6f0;
+            border-color: #e67e22;
+        }
+        .btn-option:disabled {
+            cursor: not-allowed;
+        }
+        .correct {
+            background-color: #2ecc71 !important;
+            color: white;
+            border-color: #2ecc71 !important;
+        }
+        .incorrect {
+            background-color: #e74c3c !important;
+            color: white;
+            border-color: #e74c3c !important;
+        }
+        .result-panel {
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+        .result-feedback {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .btn-next, .btn-restart {
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+        }
+        .btn-next:hover, .btn-restart:hover {
+            background-color: #d35400;
+        }
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>漢検二級 模擬クイズ（読み・意味・語彙）</h1>
+    
+    <!-- クイズ画面 -->
+    <div id="quiz-screen">
+        <div class="progress" id="progress">第 1 問 / 10 問</div>
+        <div class="question-box" id="question">問題がここに表示されます。</div>
+        <div class="options" id="options-container">
+            <!-- ボタンがJSで生成されます -->
+        </div>
+        <div class="result-panel" id="next-panel">
+            <div class="result-feedback" id="feedback">正解！</div>
+            <button class="btn-next" onclick="nextQuestion()">次の問題へ</button>
+        </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen" style="display: none; text-align: center;">
+        <h2>結果発表</h2>
+        <div class="score-display" id="score-text">10問中 0問正解！</div>
+        <p id="evaluation-text"></p>
+        <button class="btn-restart" onclick="startQuiz()">もう一度挑戦する</button>
+    </div>
+</div>
+
+<script>
+// 漢字の書き取り・漢字選択問題を完全に排除した100問（読み・意味・対義語・類義語）
+const quizData = [
+    { q: "「隠蔽」の読み方は？", a: ["いんぺい", "おんぺい", "いんへい", "かくぺい"], c: 0 },
+    { q: "「恣意」の読み方は？", a: ["しい", "じい", "しし", "じし"], c: 0 },
+    { q: "「軋轢」の読み方は？", a: ["あつれき", "さつれき", "きつれき", "てつれき"], c: 0 },
+    { q: "「破天荒」の正しい意味は？", a: ["豪快で荒っぽいこと", "前人未到の境地を開くこと", "天が荒れること", "計画が破綻すること"], c: 1 },
+    { q: "「進捗」の読み方は？", a: ["しんちょく", "しんぽ", "しんじゅう", "しんほ"], c: 0 },
+    { q: "「寡黙」の対義語は？", a: ["雄弁", "多弁", "能弁", "饒舌"], c: 1 },
+    { q: "「琴線」に触れるの読み方は？", a: ["きんせん", "ことせん", "ごんせん", "しんせん"], c: 0 },
+    { q: "「完璧」の類義語（欠点がないこと）は？", a: ["全美", "微細", "精緻", "至高"], c: 0 },
+    { q: "「招聘」の読み方は？", a: ["しょうへい", "しょうしょう", "せつへい", "はんぺい"], c: 0 },
+    { q: "「暫定」の読み方は？", a: ["ざんてい", "ぜんてい", "ざんじ", "せんてい"], c: 0 },
+    { q: "「出納」の読み方は？", a: ["すいとう", "しゅつのう", "しゅつにゅう", "すいのう"], c: 0 },
+    { q: "「擁護」の読み方は？", a: ["ようご", "おうご", "ゆうご", "ようく"], c: 0 },
+    { q: "「懇切」の読み方は？", a: ["こんせつ", "がんせつ", "けんせつ", "ねんせつ"], c: 0 },
+    { q: "「相殺」の読み方は？", a: ["そうさい", "そうさつ", "あいさつ", "しょうさい"], c: 0 },
+    { q: "「補填」の読み方は？", a: ["ほてん", "ほしん", "ほちん", "ほじゅう"], c: 0 },
+    { q: "「巧遅は拙速にしかず」の「拙速」の読み方は？", a: ["せっそく", "てっそく", "ずつそく", "ちえそく"], c: 0 },
+    { q: "「慶弔」の読み方は？", a: ["けいちょう", "けいう", "きょうちょう", "けいじょう"], c: 0 },
+    { q: "「更迭」の読み方は？", a: ["こうてつ", "こうそつ", "こうてい", "へんてつ"], c: 0 },
+    { q: "「横柄」の読み方は？", a: ["おうへい", "よこがら", "おうがら", "よこへい"], c: 0 },
+    { q: "「乖離」の読み方は？", a: ["かいり", "じょうり", "かいち", "はいり"], c: 0 },
+    { q: "「脆弱」の読み方は？", a: ["ぜいじゃく", "きょうじゃく", "すいじゃく", "せいじゃく"], c: 0 },
+    { q: "「変貌」の読み方は？", a: ["へんぼう", "へんがお", "へんそう", "へんむ"], c: 0 },
+    { q: "「拘泥」の読み方は？", a: ["こうでい", "こうど", "くてい", "こうどろ"], c: 0 },
+    { q: "「迅速」の対義語は？", a: ["遅緩", "停滞", "悠長", "緩慢"], c: 3 },
+    { q: "「義務」の対義語は？", a: ["権利", "特権", "自由", "免除"], c: 0 },
+    { q: "「過剰」の対義語は？", a: ["過少", "不足", "過度", "欠乏"], c: 1 },
+    { q: "「賛成」の類義語は？", a: ["同意", "妥協", "承諾", "肯定"], c: 0 },
+    { q: "「破綻」の読み方は？", a: ["はたん", "はじょう", "はてん", "へんたん"], c: 0 },
+    { q: "「凡例」の読み方は？", a: ["はんれい", "ぼんれい", "なみれい", "ぼんれつ"], c: 0 },
+    { q: "「辣腕」の読み方は？", a: ["らつわん", "しんわん", "らいわん", "せつわん"], c: 0 },
+    { q: "「理不尽」の類義語は？", a: ["不条理", "不合理", "不都合", "無分別"], c: 0 },
+    { q: "「露骨」の読み方は？", a: ["ろこつ", "ろっこつ", "るこつ", "ろうこつ"], c: 0 },
+    { q: "「安堵」の読み方は？", a: ["あんど", "あんと", "あんば", "やすど"], c: 0 },
+    { q: "「一掃」の読み方は？", a: ["いっそう", "ひとはらい", "いちそう", "いっしょく"], c: 0 },
+    { q: "「割愛」の正しい意味は？", a: ["惜しいが省略すること", "不要なので捨てること", "愛を失うこと", "他人に譲ること"], c: 0 },
+    { q: "「懇願」の読み方は？", a: ["こんがん", "けんがん", "ねんがん", "がんがん"], c: 0 },
+    { q: "「隔靴掻痒」の読み方は？", a: ["かっかそうよう", "かくかそうよう", "かっかしゃよう", "けづめそうよう"], c: 0 },
+    { q: "「我田引水」の正しい意味は？", a: ["自分の都合の良いようにすること", "田んぼに水を引くこと", "強引に勧誘すること", "自然を破壊すること"], c: 0 },
+    { q: "「言語道断」の読み方は？", a: ["ごんごどうだん", "げんごどうだん", "ごんどうだん", "げんどうだん"], c: 0 },
+    { q: "「順風満帆」の「満帆」の読み方は？", a: ["まんぱん", "みちほ", "まんぽう", "じゅんぱん"], c: 0 },
+    { q: "「南船北馬」の読み方は？", a: ["なんせんほくば", "なんぶねきたうま", "みなみふねきたうま", "なんせんぼくば"], c: 0 },
+    { q: "「馬耳東風」の類義語となることわざは？", a: ["馬の耳に念仏", "犬に論語", "猫に小判", "豚に真珠"], c: 0 },
+    { q: "「不即不離」の読み方は？", a: ["ふそくふり", "ふそくぷり", "ふしょくふり", "ぷそくぷり"], c: 0 },
+    { q: "「畏怖」の読み方は？", a: ["いふ", "いほ", "おじふ", "いぶ"], c: 0 },
+    { q: "「因循」の読み方は？", a: ["いんじゅん", "いんじゅ", "いんしゅ", "いんじょ"], c: 0 },
+    { q: "「回帰」の読み方は？", a: ["かいき", "えき", "かいご", "えきき"], c: 0 },
+    { q: "「回顧」の読み方は？", a: ["かいこ", "えこ", "かいご", "えこじ"], c: 0 },
+    { q: "「概括」の読み方は？", a: ["がいかつ", "おおかつ", "たいかつ", "がいけつ"], c: 0 },
+    { q: "「確執」の読み方は？", a: ["かくしつ", "かくしゅう", "たしかつ", "かくしゅ"], c: 0 },
+    { q: "「各種」の類義語は？", a: ["諸種", "個別", "多種", "特殊"], c: 0 },
+    { q: "「葛藤」の読み方は？", a: ["かっとう", "かつふじ", "かづらとう", "らっとう"], c: 0 },
+    { q: "「甘受」の読み方は？", a: ["かんじゅ", "あまうけ", "かんしょう", "あまじゅ"], c: 0 },
+    { q: "「肝要」の読み方は？", a: ["かんよう", "きもよう", "かんかなめ", "きもかなめ"], c: 0 },
+    { q: "「幾多」の読み方は？", a: ["いくた", "きか", "いくおお", "きおおい"], c: 0 },
+    { q: "「忌避」の読み方は？", a: ["きひ", "いみひ", "きへい", "いみへい"], c: 0 },
+    { q: "「享受」の読み方は？", a: ["きょうじゅ", "きょううけ", "こうじゅ", "ゆうじゅ"], c: 0 },
+    { q: "「供出」の読み方は？", a: ["きょうしゅつ", "ともだし", "ともしゅつ", "くしゅつ"], c: 0 },
+    { q: "「郷愁」の読み方は？", a: ["きょうしゅう", "さとあわれ", "ごうしゅう", "きょうしゅ"], c: 0 },
+    { q: "「巧妙」の対義語は？", a: ["拙劣", "粗悪", "幼稚", "単純"], c: 0 },
+    { q: "「克己」の読み方は？", a: ["こっき", "こくこ", "かつき", "こくき"], c: 0 },
+    { q: "「骨子」の読み方は？", a: ["こっし", "ほねご", "こつし", "ほねし"], c: 0 },
+    { q: "「固有」の類義語は？", a: ["特有", "普遍", "共通", "一体"], c: 0 },
+    { q: "「錯誤」の読み方は？", a: ["さくご", "さくあやまり", "しゃくご", "さくわ"], c: 0 },
+    { q: "「刷新」の読み方は？", a: ["さっしん", "さつあらた", "刷あらた", "そくしん"], c: 0 },
+    { q: "「斜面」の対義語は？", a: ["水平", "垂直", "平面", "直線"], c: 0 },
+    { q: "「収攬」の読み方は？", a: ["しゅうらん", "しゅうみ", "おさめらん", "しゅうけん"], c: 0 },
+    { q: "「重複」の正しい読み方は？（慣用読みを除く本来の読み）", a: ["ちょうふく", "じゅうふく", "かさねはら", "じゅうばく"], c: 0 },
+    { q: "「成就」の読み方は？", a: ["じょうじゅ", "せいじゅ", "じょうしゅう", "なりなり"], c: 0 },
+    { q: "「真摯」の読み方は？", a: ["しんし", "まことし", "しんげき", "まことあつ"], c: 0 },
+    { q: "「衰退」の対義語は？", a: ["隆盛", "発展", "拡大", "新生"], c: 0 },
+    { q: "「推奨」の読み方は？", a: ["すいしょう", "すいせん", "おしすすめる", "すいじょう"], c: 0 },
+    { q: "「趨勢」の読み方は？", a: ["すうせい", "すうぜい", "うせい", "しゅせい"], c: 0 },
+    { q: "「是正」の読み方は？", a: ["ぜせい", "これただ", "ぜしょう", "しせい"], c: 0 },
+    { q: "「全貌」の読み方は？", a: ["ぜんぼう", "ぜんかお", "ぜんそう", "ぜんむ"], c: 0 },
+    { q: "「阻害」の読み方は？", a: ["そがい", "はばがい", "そげき", "しょがい"], c: 0 },
+    { q: "「対峙」の読み方は？", a: ["たいじ", "たいち", "むかいじ", "たいじじ"], c: 0 },
+    { q: "「淘汰」の読み方は？", a: ["とうた", "とうたい", "たいた", "あらいた"], c: 0 },
+    { q: "「等閑」の読み方は？", a: ["とうかん", "とうらん", "ひとしひま", "などかん"], c: 0 },
+    { q: "「統治」の類義語は？", a: ["支配", "運営", "自立", "介入"], c: 0 },
+    { q: "「内諾」の読み方は？", a: ["ないだく", "うちだく", "ないじゃく", "うちうけた"], c: 0 },
+    { q: "「捏造」の読み方は？", a: ["ねつぞう", "でつぞう", "こつぞう", "ねらいづくり"], c: 0 },
+    { q: "「媒介」の読み方は？", a: ["ばいかい", "なかすけ", "ばいけい", "まいかい"], c: 0 },
+    { q: "「破壊」の対義語は？", a: ["建設", "創造", "修復", "維持"], c: 0 },
+    { q: "「暴露」の読み方は？", a: ["ばくろ", "ばくつゆ", "ほうろ", "はつろ"], c: 0 },
+    { q: "「範疇」の読み方は？", a: ["はんちゅう", "はんじゅ", "かたわく", "はんちょ"], c: 0 },
+    { q: "「比較」の類義語は？", a: ["対比", "同一", "分別", "均衡"], c: 0 },
+    { q: "「必携」の読み方は？", a: ["ひっけい", "かならずたずさえ", "ひつがい", "ひっけ"], c: 0 },
+    { q: "「普遍」の対義語は？", a: ["特殊", "限定", "個別", "異常"], c: 0 },
+    { q: "「侮蔑」の読み方は？", a: ["ぶべつ", "あなどべつ", "ぶまつ", "まべつ"], c: 0 },
+    { q: "「憤慨」の読み方は？", a: ["ふんがい", "いきどおり", "ふんき", "はんがい"], c: 0 },
+    { q: "「並弊」の読み方は？", a: ["へいへい", "へいび", "ならびへい", "へいしん"], c: 0 },
+    { q: "「変革」の類義語は？", a: ["変和", "改革", "更迭", "修繕"], c: 1 },
+    { q: "「慢性」の対義語は？", a: ["急性", "一時", "早期", "劇烈"], c: 0 },
+    { q: "「明瞭」の対義語は？", a: ["模倣", "曖昧", "暗黒", "混濁"], c: 1 },
+    { q: "「野卑」の読み方は？", a: ["やひ", "のび", "やべ", "のいや"], c: 0 },
+    { q: "「融通」の読み方は？", a: ["ゆうずう", "ゆうつう", "とけとおり", "ゆうみち"], c: 0 },
+    { q: "「落胆」の読み方は？", a: ["らくたん", "おちきも", "らくだん", "おちたん"], c: 0 },
+    { q: "「濫用」の読み方は？", a: ["らんよう", "みだりよう", "はんよう", "らんもち"], c: 0 },
+    { q: "「凌駕」の読み方は？", a: ["りょうが", "しのぎ", "りょうか", "りくが"], c: 0 },
+    { q: "「流布」の読み方は？", a: ["るふ", "りゅうふ", "ながれぬの", "りゅうほ"], c: 0 }
+];
+
+let selectedQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+
+// クイズの初期化・開始
+function startQuiz() {
+    // 100問からランダムに10問を抽出
+    const shuffled = [...quizData].sort(() => 0.5 - Math.random());
+    selectedQuestions = shuffled.slice(0, 10);
+    
+    currentQuestionIndex = 0;
+    score = 0;
+    
+    document.getElementById("result-screen").style.display = "none";
+    document.getElementById("quiz-screen").style.display = "block";
+    
+    showQuestion();
+}
+
+// 問題を表示
+function showQuestion() {
+    document.getElementById("next-panel").style.display = "none";
+    
+    const currentQuestion = selectedQuestions[currentQuestionIndex];
+    
+    // 進捗表示
+    document.getElementById("progress").innerText = `第 ${currentQuestionIndex + 1} 問 / 10 問`;
+    // 問題文表示
+    document.getElementById("question").innerText = currentQuestion.q;
+    
+    // 選択肢ボタン生成
+    const optionsContainer = document.getElementById("options-container");
+    optionsContainer.innerHTML = "";
+    
+    currentQuestion.a.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.className = "btn-option";
+        button.innerText = option;
+        button.onclick = () => checkAnswer(index);
+        optionsContainer.appendChild(button);
+    });
+}
+
+// 答え合わせ
+function checkAnswer(selectedIndex) {
+    const currentQuestion = selectedQuestions[currentQuestionIndex];
+    const buttons = document.getElementsByClassName("btn-option");
+    
+    // すべてのボタンを無効化
+    for (let button of buttons) {
+        button.disabled = true;
+    }
+    
+    if (selectedIndex === currentQuestion.c) {
+        // 正解
+        buttons[selectedIndex].classList.add("correct");
+        document.getElementById("feedback").innerText = "⭕️ 正解！";
+        document.getElementById("feedback").style.color = "#2ecc71";
+        score++;
+    } else {
+        // 不正解
+        buttons[selectedIndex].classList.add("incorrect");
+        buttons[currentQuestion.c].classList.add("correct"); // 正解をハイライト
+        document.getElementById("feedback").innerText = `❌ 不正解... （正解：${currentQuestion.a[currentQuestion.c]}）`;
+        document.getElementById("feedback").style.color = "#e74c3c";
+    }
+    
+    document.getElementById("next-panel").style.display = "block";
+}
+
+// 次の問題へ（または結果表示）
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < 10) {
+        showQuestion();
+    } else {
+        showResult();
+    }
+}
+
+// 結果画面の表示
+function showResult() {
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+    
+    document.getElementById("score-text").innerText = `10問中 ${score} 問正解！`;
+    
+    let evaluation = "";
+    if (score === 10) {
+        evaluation = "完璧です！漢検二級の読み・語彙マスターですね！";
+    } else if (score >= 8) {
+        evaluation = "素晴らしい合格圏内です！その調子！";
+    } else if (score >= 5) {
+        evaluation = "あと一歩！間違えた読み方や意味をしっかり復習しましょう。";
+    } else {
+        evaluation = "苦手な語彙があるようです。繰り返し挑戦して覚えましょう！";
+    }
+    document.getElementById("evaluation-text").innerText = evaluation;
+}
+
+// ページ読み込み時にクイズを開始
+window.onload = startQuiz;
+</script>
+
+</body>
+</html>

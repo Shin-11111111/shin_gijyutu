@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>編集できるアンケート</title>
+
+<style>
+body{
+    font-family:sans-serif;
+    background:#f2f2f2;
+    padding:30px;
+}
+.container{
+    max-width:700px;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.question{
+    margin:18px 0;
+}
+.editable{
+    display:inline-block;
+    min-width:300px;
+    padding:5px;
+    border:1px dashed transparent;
+    outline: none;
+}
+/* 編集モード中のスタイル */
+.container.is-editing .editable {
+    border:1px dashed #007bff;
+    background:#eef6ff;
+}
+button{
+    padding:10px 18px;
+    margin:10px 5px;
+    cursor: pointer;
+}
+/* 結果表示エリアのスタイル */
+#result-container {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-left: 5px solid #007bff;
+    display: none;
+}
+.result-item {
+    margin: 8px 0;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed #ddd;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container" id="app">
+
+<h2>10問アンケート</h2>
+
+<button id="editBtn" onclick="toggleEdit()">編集モードを開始</button>
+<button onclick="saveQuestions()">質問を保存</button>
+
+<form id="survey" onsubmit="return false;"></form>
+
+<button onclick="submitSurvey()">回答を送信</button>
+
+<div id="result-container">
+    <h3 id="result-total"></h3>
+    <div id="result-detail"></div>
+</div>
+
+</div>
+
+<script>
+let editing = false;
+
+const defaultQuestions = [
+    "質問1を入力してください", "質問2を入力してください", "質問3を入力してください",
+    "質問4を入力してください", "質問5を入力してください", "質問6を入力してください",
+    "質問7を入力してください", "質問8を入力してください", "質問9を入力してください",
+    "質問10を入力してください"
+];
+
+// 初期データの読み込み（パースエラー対策付き）
+let questions = defaultQuestions;
+try {
+    const saved = localStorage.getItem("questions");
+    if (saved) {
+        questions = JSON.parse(saved);
+    }
+} catch (e) {
+    console.error("LocalStorageのデータが破損しています。初期データを使用します。", e);
+}
+
+// 画面の初期描画
+function initDraw() {
+    const form = document.getElementById("survey");
+    if (!form) return;
+    form.innerHTML = "";
+
+    questions.forEach((q, index) => {
+        const div = document.createElement("div");
+        div.className = "question";
+        div.innerHTML = `
+            <b>${index + 1}.</b>
+            <span class="editable" id="q${index}"></span>
+            <br><br>
+            <select id="a${index}">
+                <option value="">選択</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+            </select>
+        `;
+        // textContentを使うことでHTMLタグのインジェクションを安全に防ぐ
+        div.querySelector(".editable").textContent = q;
+        form.appendChild(div);
+    });
+}
+
+// 状態反映の共通化
+function updateEditDOM() {
+    const container = document.getElementById("app");
+    const editBtn = document.getElementById("editBtn");
+    if (!container || !editBtn) return;
+    
+    if (editing) {
+        container.classList.add("is-editing");
+        editBtn.textContent = "編集モードを終了";
+    } else {
+        container.classList.remove("is-editing");
+        editBtn.textContent = "編集モードを開始";
+    }
+
+    questions.forEach((_, index) => {
+        const el = document.getElementById("q" + index);
+        if (el) el.contentEditable = editing;
+    });
+}
+
+// 編集モードの切り替え
+function toggleEdit() {
+    editing = !editing;
+    updateEditDOM();
+}
+
+// 質問の保存
+function saveQuestions() {
+    let hasError = false;
+    
+    // 編集されたテキストを取得して検証
+    const nextQuestions = questions.map((_, i) => {
+        const el = document.getElementById("q" + i);
+        const text = el ? el.innerText.trim() : "";
+        
+        // バリデーション：空文字チェック
+        if (text === "") {
+            hasError = true;
+        }
+        return text;
+    });
+
+    if (hasError) {
+        alert("空の質問文があります。すべての質問を入力してください。");
+        return;
+    }
+
+    questions = nextQuestions;
+    localStorage.setItem("questions", JSON.stringify(questions));
+
+    // 明示的に編集モードを終了
+    editing = false; 
+    updateEditDOM();
+
+    // 描画の完了を待ってアラートを出す
+    setTimeout(() => {
+        alert("質問を保存しました");
+    }, 50);
+}
+
+// 回答の送信と結果表示
+function submitSurvey() {
+    // 編集モード中なら強制終了させる
+    if (editing) {
+        editing = false;
+        updateEditDOM();
+    }
+
+    let total = 0;
+    let detailHTML = "";
+
+    for (let i = 0; i < questions.length; i++) {
+        const selectEl = document.getElementById("a" + i);
+        const qElement = document.getElementById("q" + i);
+        
+        // 要素が存在しない場合の安全装置（防御的プログラミング）
+        const value = selectEl ? selectEl.value : "";
+        const questionText = qElement ? qElement.textContent : `質問 ${i + 1}`;
+
+        if (value === "") {
+            alert(`質問 ${i + 1} が未回答です`);
+            return;
+        }
+
+        const score = Number(value);
+        total += score;
+
+        detailHTML += `
+            <div class="result-item">
+                <b>Q${i + 1}. ${escapeHtml(questionText)}</b> <br>
+                <span>回答: <strong>${score} 点</strong></span>
+            </div>
+        `;
+    }
+
+    // 結果の反映
+    document.getElementById("result-total").innerHTML = "合計点：" + total + "点";
+    document.getElementById("result-detail").innerHTML = detailHTML;
+    
+    const resultContainer = document.getElementById("result-container");
+    if (resultContainer) {
+        resultContainer.style.display = "block";
+        // スムーズスクロールを確実に動作させるためのタイマー処理
+        setTimeout(() => {
+            resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 50);
+    }
+}
+
+// 簡易的なHTMLエスケープ関数
+function escapeHtml(str) {
+    if (!str) return "";
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
+// 初期化実行
+initDraw();
+</script>
+
+</body>
+</html>

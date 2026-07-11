@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポモドーロ・ハンター・ネオ【カスタム＆10連・天井完全版】</title>
+    <style>
+        :root {
+            --neon-blue: #00f2fe;
+            --neon-pink: #ff007f;
+            --neon-green: #39ff14;
+            --nen-gold: #ffd700;
+            --bg-dark: #0d0d1a;
+            --panel-dark: #151535;
+            --aura-color: rgba(255, 215, 0, 0.4); 
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Georgia', 'Times New Roman', 'Hiragino Mincho ProN', serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: var(--panel-dark);
+            padding: 20px;
+            border-radius: 20px;
+            border: 2px solid var(--nen-gold);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.2);
+        }
+        h1 { font-size: 1.5rem; color: #fff; text-shadow: 0 0 12px var(--nen-gold); margin-bottom: 5px; letter-spacing: 3px; }
+        .status-bar { display: flex; flex-direction: column; gap: 5px; margin-bottom: 15px; font-size: 0.8rem; color: #00f2fe; font-weight: bold; text-align: left; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #222255; }
+        .status-row { display: flex; justify-content: space-between; }
+        
+        .game-stage {
+            height: 140px;
+            background: #03030f;
+            border: 1px solid var(--neon-blue);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: inset 0 0 20px rgba(0, 242, 254, 0.2);
+            cursor: pointer;
+        }
+        .tower { position: absolute; bottom: 10px; left: 20px; font-size: 3rem; z-index: 2; filter: drop-shadow(0 0 8px var(--neon-blue)); }
+        
+        .current-char { 
+            position: absolute; 
+            bottom: 15px; 
+            left: 90px; 
+            font-size: 2.6rem; 
+            z-index: 3; 
+            padding: 5px 10px;
+            border-radius: 50%;
+            background: var(--aura-color);
+            box-shadow: 0 0 20px var(--aura-color);
+            transition: transform 0.1s ease;
+        }
+
+        .attacking { animation: nenDash 0.15s ease-in-out; }
+        @keyframes nenDash {
+            0% { transform: translateX(0) scale(1); }
+            50% { transform: translateX(35px) scale(1.25); filter: brightness(1.3); }
+            100% { transform: translateX(0) scale(1); }
+        }
+
+        .enemy { 
+            position: absolute; 
+            bottom: 20px; 
+            font-size: 2.2rem; 
+            filter: drop-shadow(0 0 8px var(--neon-pink)); 
+            z-index: 4;
+            pointer-events: none;
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+        }
+
+        .hp-container { margin-bottom: 15px; text-align: left; }
+        .hp-label { font-size: 0.75rem; color: var(--nen-gold); margin-bottom: 4px; letter-spacing: 2px; }
+        .hp-bar { height: 10px; background: #221122; border-radius: 5px; overflow: hidden; border: 1px solid var(--nen-gold); }
+        .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #b8860b, var(--nen-gold)); transition: width 0.2s; box-shadow: 0 0 10px var(--nen-gold); }
+        
+        .timer-display { font-size: 3.5rem; font-weight: bold; color: #fff; text-shadow: 0 0 15px var(--neon-blue); margin: 5px 0 10px 0; font-family: 'Courier New', monospace; }
+        
+        .section-box {
+            background: #09091e;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: left;
+            border: 1px solid #222255;
+        }
+        .box-title { font-size: 0.8rem; font-weight: bold; color: var(--nen-gold); margin-bottom: 10px; letter-spacing: 2px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .quest-item {
+            background: var(--panel-dark);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 3px solid var(--nen-gold);
+        }
+        .quest-item.completed { border-left-color: var(--neon-green); opacity: 0.5; }
+        
+        button {
+            background: transparent;
+            border: 2px solid var(--nen-gold);
+            color: #fff;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            transition: all 0.3s;
+            width: 100%;
+        }
+        button:hover { background: var(--nen-gold); color: #000; box-shadow: 0 0 20px var(--nen-gold); }
+        
+        .mini-btn { background: transparent; border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 4px 10px; font-size: 0.75rem; border-radius: 6px; width: auto; box-shadow: none; }
+        .mini-btn:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
+        
+        button.giveup { border-color: var(--neon-pink); color: var(--neon-pink); box-shadow: 0 0 10px rgba(255, 0, 127, 0.4); margin-top: 10px; }
+        button.giveup:hover { background: var(--neon-pink); color: #000; box-shadow: 0 0 20px var(--neon-pink); }
+        
+        .gacha-group { display: flex; gap: 8px; margin-bottom: 8px; }
+        button.gacha-btn { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px rgba(57, 255, 20, 0.3); font-size: 0.8rem; padding: 10px; width: 100%; transition: all 0.2s; white-space: nowrap; }
+        button.gacha-btn.type2 { border-color: var(--neon-blue); color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 242, 254, 0.3); }
+        button.gacha-btn:hover { color: #000; background: var(--neon-green); box-shadow: 0 0 20px var(--neon-green); }
+        button.gacha-btn.type2:hover { color: #000; background: var(--neon-blue); box-shadow: 0 0 20px var(--neon-blue); }
+
+        .item-pool { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+        .pool-icon {
+            background: #03030f;
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            border: 1px solid #222255;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .pool-icon.selected { border-color: var(--nen-gold); box-shadow: 0 0 12px var(--nen-gold); background: #1a1a05; }
+        .pool-icon:hover::after {
+            content: attr(data-name);
+            position: absolute; bottom: -28px; left: 50%; transform: translateX(-50%);
+            background: #000; font-size: 0.5rem; padding: 2px 6px; border-radius: 4px; white-space: nowrap; z-index: 10; border: 1px solid var(--nen-gold); color: #fff;
+        }
+        
+        .battle-tip { font-size: 0.75rem; color: var(--neon-blue); margin-top: 5px; display: none; text-shadow: 0 0 5px var(--neon-blue); }
+
+        .exchange-list { display: flex; flex-direction: column; gap: 6px; }
+        .exchange-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; font-size: 0.75rem; border: 1px dashed #333366; }
+        .exchange-item span { font-weight: bold; }
+
+        .time-select { width: 100%; padding: 8px; background: #03030f; color: #fff; border: 1px solid var(--neon-blue); border-radius: 6px; font-family: monospace; cursor: pointer; }
+        .time-select:disabled { opacity: 0.5; cursor: not-allowed; border-color: #333; }
+
+        .stats-table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.8rem; }
+        .stats-table th, .stats-table td { padding: 8px; border: 1px solid #222255; text-align: center; }
+        .stats-table th { background: rgba(0, 242, 254, 0.1); color: var(--neon-blue); font-weight: bold; }
+        .stats-table td { background: rgba(255, 255, 255, 0.02); color: #fff; font-family: monospace; }
+        .stats-table tr:hover td { background: rgba(255, 215, 0, 0.05); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>NEN HUNTER TIMER</h1>
+    <div class="status-bar">
+        <div class="status-row">
+            <span id="player-lvl">ハンター階級: LV.1</span>
+            <span id="player-exp">念の熟練度: 0/100</span>
+        </div>
+        <div class="status-row">
+            <span id="player-gold" style="color: #ffd700;">💰 0 ジェニー</span>
+            <span id="player-pt" style="color: #ff007f;">🎫 契書: 0枚</span>
+        </div>
+    </div>
+
+    <div class="section-box" style="margin-bottom: 15px; padding: 10px;">
+        <div class="box-title" style="margin-bottom: 6px;"><span>⏱️ 集中時間（修行期間）の設定</span></div>
+        <select id="timer-setting-select" class="time-select">
+            <option value="15">【テスト用】15秒</option>
+            <option value="300">5分 （ちょっと一息）</option>
+            <option value="900">15分（ショート集中）</option>
+            <option value="1500" selected>25分（通常ポモドーロ）</option>
+            <option value="2700">45分（しっかり作業）</option>
+            <option value="3600">60分（限界突破）</option>
+        </select>
+    </div>
+
+    <div class="game-stage" id="stage">
+        <div class="tower" id="tower">🥋</div>
+        <div class="current-char" id="current-char">🥷</div>
+    </div>
+    <div class="battle-tip" id="battle-tip">【戦闘中】スペースキー、またはフィールドタップでオーラ攻撃！</div>
+
+    <div class="hp-container">
+        <div class="hp-label">AURA CAPACITY (潜在オーラ量)</div>
+        <div class="hp-bar"><div class="hp-fill" id="hp-fill"></div></div>
+    </div>
+
+    <div class="timer-display" id="timer">25:00</div>
+    
+    <button id="start-btn">「錬」を発動（勉強開始）</button>
+    <button id="giveup-btn" class="giveup" style="display:none;">「絶」状態へ（スマホの誘惑に屈する）</button>
+
+    <!-- 修練実績セクション -->
+    <div class="section-box">
+        <div class="box-title">
+            <span>📊 ハンター修練実績（学習記録）</span>
+            <span style="font-size:0.7rem; color:var(--neon-pink); cursor:pointer;" id="stats-reset-btn">[記録リセット]</span>
+        </div>
+        <table class="stats-table">
+            <thead>
+                <tr>
+                    <th>今日</th>
+                    <th>今週</th>
+                    <th>今月</th>
+                    <th>総修行時間</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td id="stats-today">0分</td>
+                    <td id="stats-week">0分</td>
+                    <td id="stats-month">0分</td>
+                    <td id="stats-total">0分</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-box">
+        <div class="box-title">
+            <span>⚔️ デイリー任務 <span id="quest-bonus-indicator" style="color:var(--neon-green); font-size:0.65rem;"></span></span>
+            <span style="font-size:0.7rem; color:var(--neon-blue); cursor:pointer;" id="quest-reset-btn">[任務更新]</span>
+        </div>
+        <div id="quest-container"></div>
+    </div>
+
+    <div class="section-box">
+        <div class="box-title"><span>🔮 念能力＆ハンターガチャ</span></div>
+        <div class="gacha-group">
+            <button class="gacha-btn" id="gacha-nen-btn">単発念ガチャ (100J)</button>
+            <button class="gacha-btn" id="gacha-nen-10-btn">10連念ガチャ (900J)</button>
+        </div>
+        <div class="gacha-group">
+            <button class="gacha-btn type2" id="gacha-char-btn">単発キャラガチャ (150J)</button>
+            <button class="gacha-btn type2" id="gacha-char-10-btn">10連キャラガチャ (1350J)</button>
+        </div>
+    </div>
+
+    <div class="section-box">
+        <div class="box-title"><span>🏛️ ハンター協会・契約交換所（天井）</span></div>
+        <div class="exchange-list" id="exchange-container"></div>
+    </div>
+
+    <div class="section-box">
+        <div class="box-title"><span>👥 解放済みハンター（キャラ絵文字）</span></div>
+        <div class="item-pool" id="character-pool"></div>
+    </div>
+
+    <div class="section-box">
+        <div class="box-title"><span>✨ 習得済み念能力（オーラ背景）</span></div>
+        <div class="item-pool" id="nen-pool"></div>
+    </div>
+</div>
+
+<script>
+    console.log("Script loading start...");
+
+    let currentStudyTime = 1500; 
+    let timeLeft = 1500; 
+    let timer = null;
+    let isPlaying = false;
+    let hp = 100;
+    let enemySpawnInterval = null;
+    let enemyMoveInterval = null;
+    let activeEnemies = []; 
+
+    const NEN_DICTIONARY = {
+        "強化系": { name: "【強化系】金剛不壊・オーラ黄", color: "rgba(255, 215, 0, 0.4)" },
+        "変化系": { name: "【変化系】落雷電気・オーラ青", color: "rgba(0, 242, 254, 0.4)" },
+        "具現化系": { name: "【具現化系】束縛鎖・オーラ紫", color: "rgba(128, 0, 128, 0.4)" },
+        "放出系": { name: "【放出系】念弾ブラスト・オーラ緑", color: "rgba(57, 255, 20, 0.4)" },
+        "操作系": { name: "【操作系】洗脳マシーン・オーラ橙", color: "rgba(255, 165, 0, 0.4)" },
+        "特質系": { name: "【特質系】緋の絶対時間・オーラ赤", color: "rgba(255, 0, 127, 0.4)" }
+    };
+
+    const CHAR_DICTIONARY = {
+        "🥷": "受験生のゴン (初期キャラ。まっすぐ机に向かう)",
+        "⚡": "キルア (冷静沈着に睡魔をシャットアウト)",
+        "⛓️": "クラピカ (スマホを触らない制約と誓約を遵守)",
+        "👓": "レオリオ (高いモチベーションで医学を志す)",
+        "🃏": "ヒソカ (勉強のクイズの強敵を求めて彷徨う)",
+        "👑": "メルエム (圧倒的知能であらゆる知識を即座に領駕)",
+        "🐈": "ピトー (玩具修理者で脳細胞を活性化させる)",
+        "👴": "ネテロ会長 (感謝の正拳突き並みに高速タイピング)"
+    };
+
+    const ENEMY_EMOJIS = ["👹", "📱", "😴", "🎮", "💬", "🛌"];
+
+    const ALL_QUESTS = [
+        { text: "08:15前に机に向かい「発」を発動せよ", exp: 30, gold: 40 },
+        { text: "本日の作業中、居眠り(絶)を完全に断て", exp: 20, gold: 30 },
+        { text: "未提出課題を「制約と誓約」により完遂せよ", exp: 40, gold: 60 },
+        { text: "戦術議論にて1回以上発言し、存在感を示せ", exp: 20, gold: 20 },
+        { text: "魔導端末(スマホ)をカバン最深部に封印せよ", exp: 30, gold: 50 }
+    ];
+
+    const SAVE_KEY_VER = 'hn_v7_'; 
+
+    let lv = parseInt(localStorage.getItem(SAVE_KEY_VER + 'lv')) || 1;
+    let exp = parseInt(localStorage.getItem(SAVE_KEY_VER + 'exp')) || 0;
+    let gold = localStorage.getItem(SAVE_KEY_VER + 'gold') !== null ? parseInt(localStorage.getItem(SAVE_KEY_VER + 'gold')) : 3000; 
+    let gachaPt = parseInt(localStorage.getItem(SAVE_KEY_VER + 'gachapt')) || 0; 
+    
+    let myCharacters = ["🥷"];
+    try {
+        let savedChars = localStorage.getItem(SAVE_KEY_VER + 'chars');
+        if (savedChars) {
+            let parsed = JSON.parse(savedChars);
+            if (Array.isArray(parsed) && parsed.length > 0) myCharacters = parsed;
+        }
+    } catch(e) {}
+
+    let activeChar = localStorage.getItem(SAVE_KEY_VER + 'active_char') || "🥷";
+    if (!myCharacters.includes(activeChar)) activeChar = myCharacters[0];
+    
+    let myNenTypes = ["強化系"];
+    try {
+        let savedNen = localStorage.getItem(SAVE_KEY_VER + 'nentypes');
+        if (savedNen) {
+            let parsed = JSON.parse(savedNen);
+            if (Array.isArray(parsed) && parsed.length > 0) myNenTypes = parsed;
+        }
+    } catch(e) {}
+
+    let activeNen = localStorage.getItem(SAVE_KEY_VER + 'active_nen') || "強化系";
+    if (!myNenTypes.includes(activeNen)) activeNen = myNenTypes[0];
+    
+    let currentQuests = [];
+    try {
+        let savedQuests = localStorage.getItem(SAVE_KEY_VER + 'quests');
+        if (savedQuests) currentQuests = JSON.parse(savedQuests) || [];
+    } catch(e) {}
+
+    let studyLogs = [];
+    try {
+        let savedLogs = localStorage.getItem(SAVE_KEY_VER + 'study_logs');
+        if (savedLogs) studyLogs = JSON.parse(savedLogs) || [];
+    } catch(e) {}
+
+    if (currentQuests.length === 0) {
+        generateDailyQuests(false);
+    }
+
+    function initApp() {
+        console.log("Initializing application...");
+        try {
+            const timerSelect = document.getElementById('timer-setting-select');
+            if (timerSelect) {
+                currentStudyTime = parseInt(timerSelect.value);
+                timeLeft = currentStudyTime;
+                
+                timerSelect.addEventListener('change', (e) => {
+                    if (isPlaying) return; 
+                    currentStudyTime = parseInt(e.target.value);
+                    timeLeft = currentStudyTime;
+                    formatTimer();
+                });
+            }
+
+            updateStatus();
+            renderQuests();
+            renderExchangePlace();
+            renderCharacterPool();
+            renderNenPool();
+            updateStatsTable(); // 安全に修正された集計テーブル描画
+
+            document.getElementById('start-btn').onclick = startDefense;
+            document.getElementById('giveup-btn').onclick = () => gameOver(false);
+            document.getElementById('stage').onclick = (e) => playerAttack(e);
+            document.getElementById('quest-reset-btn').onclick = () => generateDailyQuests(true);
+            document.getElementById('stats-reset-btn').onclick = resetStudyLogs;
+            
+            document.getElementById('gacha-nen-btn').onclick = () => drawNenGacha(1);
+            document.getElementById('gacha-nen-10-btn').onclick = () => drawNenGacha(10);
+            document.getElementById('gacha-char-btn').onclick = () => drawCharGacha(1);
+            document.getElementById('gacha-char-10-btn').onclick = () => drawCharGacha(10);
+            
+            window.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && isPlaying) {
+                    e.preventDefault();
+                    playerAttack();
+                }
+            });
+
+            console.log("Initialization complete successfully.");
+        } catch (err) {
+            console.error("Initialization error:", err);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initApp);
+    } else {
+        initApp();
+    }
+
+    function saveAllData() {
+        localStorage.setItem(SAVE_KEY_VER + 'lv', lv);
+        localStorage.setItem(SAVE_KEY_VER + 'exp', exp);
+        localStorage.setItem(SAVE_KEY_VER + 'gold', gold);
+        localStorage.setItem(SAVE_KEY_VER + 'gachapt', gachaPt);
+        localStorage.setItem(SAVE_KEY_VER + 'chars', JSON.stringify(myCharacters));
+        localStorage.setItem(SAVE_KEY_VER + 'active_char', activeChar);
+        localStorage.setItem(SAVE_KEY_VER + 'nentypes', JSON.stringify(myNenTypes));
+        localStorage.setItem(SAVE_KEY_VER + 'active_nen', activeNen);
+        localStorage.setItem(SAVE_KEY_VER + 'quests', JSON.stringify(currentQuests));
+        localStorage.setItem(SAVE_KEY_VER + 'study_logs', JSON.stringify(studyLogs));
+    }
+
+    function updateStatus() {
+        document.getElementById('player-lvl').innerText = `ハンター階級: LV.${lv}`;
+        document.getElementById('player-exp').innerText = `念の熟練度: ${exp}/100`;
+        document.getElementById('player-gold').innerText = `💰 ${gold} ジェニー`;
+        document.getElementById('player-pt').innerText = `🎫 契書: ${gachaPt}枚`;
+        document.getElementById('current-char').innerText = activeChar;
+        const auraColor = NEN_DICTIONARY[activeNen] ? NEN_DICTIONARY[activeNen].color : "rgba(255,215,0,0.4)";
+        document.documentElement.style.setProperty('--aura-color', auraColor);
+        
+        formatTimer();
+    }
+
+    function formatTimer() {
+        let mins = Math.floor(timeLeft / 60);
+        let secs = timeLeft % 60;
+        document.getElementById('timer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // --- 【修正済】デバッグ済み学習実績集計システム ---
+    function addStudyLog(seconds) {
+        const now = new Date();
+        studyLogs.push({
+            timestamp: now.getTime(),
+            duration: seconds
+        });
+        saveAllData();
+        updateStatsTable();
+    }
+
+    function updateStatsTable() {
+        const now = new Date();
+        
+        // エラーのない安全な日時計算
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        
+        const currentDay = now.getDay(); 
+        const distanceToMonday = currentDay === 0 ? 6 : currentDay - 1;
+        const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - distanceToMonday).getTime();
+        
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+        let todaySec = 0, weekSec = 0, monthSec = 0, totalSec = 0;
+
+        studyLogs.forEach(log => {
+            if (log && typeof log.duration === 'number') {
+                totalSec += log.duration;
+                if (log.timestamp >= startOfToday) todaySec += log.duration;
+                if (log.timestamp >= startOfWeek) weekSec += log.duration;
+                if (log.timestamp >= startOfMonth) monthSec += log.duration;
+            }
+        });
+
+        const formatSec = (sec) => {
+            const mins = Math.floor(sec / 60);
+            if (mins >= 60) {
+                return `${Math.floor(mins / 60)}時間${mins % 60}分`;
+            }
+            return `${mins}分`;
+        };
+
+        document.getElementById('stats-today').innerText = formatSec(todaySec);
+        document.getElementById('stats-week').innerText = formatSec(weekSec);
+        document.getElementById('stats-month').innerText = formatSec(monthSec);
+        document.getElementById('stats-total').innerText = formatSec(totalSec);
+    }
+
+    function resetStudyLogs() {
+        if (isPlaying) return;
+        if (confirm("これまでのすべての修練実績（学習データ）を削除しますか？\n(レベルや所持金、キャラクターは消えません)")) {
+            studyLogs = [];
+            saveAllData();
+            updateStatsTable();
+        }
+    }
+    // -------------------------------------------------
+
+    function generateDailyQuests(forceReset) {
+        if (isPlaying && forceReset) return;
+        let shuffled = [...ALL_QUESTS].sort(() => 0.5 - Math.random());
+        currentQuests = shuffled.slice(0, 3).map(q => ({ ...q, completed: false }));
+        saveAllData();
+        if (forceReset) {
+            renderQuests();
+            updateStatus();
+        }
+    }
+
+    function renderQuests() {
+        const container = document.getElementById('quest-container');
+        if(!container) return;
+        container.innerHTML = "";
+        
+        let allDone = currentQuests.length > 0 && currentQuests.every(q => q.completed);
+        const indicator = document.getElementById('quest-bonus-indicator');
+        if(allDone) {
+            indicator.innerText = "【全任務達成ボーナス獲得済！】";
+        } else {
+            indicator.innerText = "";
+        }
+
+        currentQuests.forEach((quest, index) => {
+            const div = document.createElement('div');
+            div.className = `quest-item ${quest.completed ? 'completed' : ''}`;
+            
+            let actionBtn = document.createElement('button');
+            if(quest.completed) {
+                div.innerHTML = `<span>${quest.text}</span><span style="color:var(--neon-green); font-weight:bold;">[CLEAR]</span>`;
+            } else {
+                actionBtn.className = 'mini-btn';
+                actionBtn.innerText = `+${quest.gold}J`;
+                actionBtn.onclick = () => completeQuest(index);
+                div.innerHTML = `<span>${quest.text}</span>`;
+                div.appendChild(actionBtn);
+            }
+            container.appendChild(div);
+        });
+    }
+
+    function completeQuest(index) {
+        if (currentQuests[index].completed) return;
+        
+        let alreadyCompletedCount = currentQuests.filter(q => q.completed).length;
+
+        currentQuests[index].completed = true;
+        gold += currentQuests[index].gold;
+        gainExp(currentQuests[index].exp);
+        
+        if (alreadyCompletedCount === 2) {
+            gold += 200; 
+            alert("🎉 【任務全達成ボーナス！】\nハンター公認デイリー任務をすべてクリアしたため、追加で 💰 200ジェニー を獲得しました！");
+        }
+
+        saveAllData();
+        updateStatus();
+        renderQuests();
+    }
+
+    function gainExp(amount) {
+        exp += amount;
+        while (exp >= 100) {
+            exp -= 100;
+            lv++;
+            alert(`【階級昇格】ハンターライセンスのランクが LV.${lv} にアップ！`);
+        }
+        saveAllData();
+    }
+
+    function drawNenGacha(times) {
+        if (isPlaying) return;
+        const cost = times === 10 ? 900 : 100; 
+        if (gold < cost) return alert(`ジェニーが不足しています (${cost}J必要)`);
+
+        const allTypes = Object.keys(NEN_DICTIONARY);
+        let results = [];
+
+        for (let i = 0; i < times; i++) {
+            const lockedTypes = allTypes.filter(t => !myNenTypes.includes(t));
+            let selectedType;
+            
+            if (lockedTypes.length > 0 && Math.random() < 0.4) {
+                selectedType = lockedTypes[Math.floor(Math.random() * lockedTypes.length)];
+                myNenTypes.push(selectedType);
+                activeNen = selectedType;
+                results.push(`✨新習得✨ ${selectedType}`);
+            } else {
+                selectedType = allTypes[Math.floor(Math.random() * allTypes.length)];
+                results.push(`【修得済】${selectedType} (オーラ精製)`);
+            }
+        }
+
+        gold -= cost;
+        gachaPt += times; 
+        
+        saveAllData();
+        updateStatus();
+        renderNenPool();
+        renderExchangePlace();
+
+        alert(`🔮 念ガチャ結果 (${times}回)\n\n${results.join('\n')}\n\n🎫 ガチャチケット(契書)を ${times} 枚獲得しました！`);
+    }
+
+    function drawCharGacha(times) {
+        if (isPlaying) return;
+        const cost = times === 10 ? 1350 : 150; 
+        if (gold < cost) return alert(`ジェニーが不足しています (${cost}J必要)`);
+
+        const allChars = Object.keys(CHAR_DICTIONARY);
+        let results = [];
+
+        for (let i = 0; i < times; i++) {
+            const lockedChars = allChars.filter(c => !myCharacters.includes(c));
+            let selectedChar;
+
+            if (lockedChars.length > 0 && Math.random() < 0.3) {
+                selectedChar = lockedChars[Math.floor(Math.random() * lockedChars.length)];
+                myCharacters.push(selectedChar);
+                activeChar = selectedChar;
+                results.push(`🎉新参戦🎉 【${selectedChar}】`);
+            } else {
+                selectedChar = allChars[Math.floor(Math.random() * allChars.length)];
+                results.push(`【重複】 ${selectedChar} (ハンターの魂)`);
+            }
+        }
+
+        gold -= cost;
+        gachaPt += times; 
+        
+        saveAllData();
+        updateStatus();
+        renderCharacterPool();
+        renderExchangePlace();
+
+        alert(`👥 キャラガチャ結果 (${times}回)\n\n${results.join('\n')}\n\n🎫 ガチャチケット(契書)を ${times} 枚獲得しました！`);
+    }
+
+    function renderExchangePlace() {
+        const container = document.getElementById('exchange-container');
+        if (!container) return;
+        container.innerHTML = "";
+
+        const allChars = Object.keys(CHAR_DICTIONARY);
+        const lockedChars = allChars.filter(c => !myCharacters.includes(c));
+
+        if (lockedChars.length === 0) {
+            container.innerHTML = "<div class='exchange-item'>全てのハンターと契約を締結済みです。</div>";
+            return;
+        }
+
+        lockedChars.forEach(char => {
+            const div = document.createElement('div');
+            div.className = 'exchange-item';
+            div.innerHTML = `<span>${char} ${CHAR_DICTIONARY[char].split(' ')[0]}</span>`;
+            
+            const btn = document.createElement('button');
+            btn.className = 'mini-btn';
+            btn.innerText = '契書30枚と交換';
+            btn.onclick = () => exchangeCharacter(char);
+            
+            div.appendChild(btn);
+            container.appendChild(div);
+        });
+    }
+
+    function exchangeCharacter(char) {
+        if (gachaPt < 30) return alert("🎫 ガチャチケット(契書)が不足しています（30枚必要）");
+        if (myCharacters.includes(char)) return alert("既に契約済みのハンターです");
+
+        gachaPt -= 30;
+        myCharacters.push(char);
+        activeChar = char;
+
+        saveAllData();
+        updateStatus();
+        renderCharacterPool();
+        renderExchangePlace();
+        alert(`🏛️ ハンター協会を通じて【${char}】と正式契約を結びました！`);
+    }
+
+    function renderCharacterPool() {
+        const pool = document.getElementById('character-pool');
+        if (!pool) return;
+        pool.innerHTML = "";
+
+        Object.keys(CHAR_DICTIONARY).forEach(char => {
+            if (!myCharacters.includes(char)) return;
+            const div = document.createElement('div');
+            div.className = `pool-icon ${activeChar === char ? 'selected' : ''}`;
+            div.innerText = char;
+            div.setAttribute('data-name', CHAR_DICTIONARY[char]);
+            div.onclick = () => {
+                if (isPlaying) return;
+                activeChar = char;
+                saveAllData();
+                updateStatus();
+                renderCharacterPool();
+            };
+            pool.appendChild(div);
+        });
+    }
+
+    function renderNenPool() {
+        const pool = document.getElementById('nen-pool');
+        if (!pool) return;
+        pool.innerHTML = "";
+
+        Object.keys(NEN_DICTIONARY).forEach(type => {
+            if (!myNenTypes.includes(type)) return;
+            const div = document.createElement('div');
+            div.className = `pool-icon ${activeNen === type ? 'selected' : ''}`;
+            div.innerText = type[0]; 
+            div.setAttribute('data-name', NEN_DICTIONARY[type].name);
+            div.onclick = () => {
+                if (isPlaying) return;
+                activeNen = type;
+                saveAllData();
+                updateStatus();
+                renderNenPool();
+            };
+            pool.appendChild(div);
+        });
+    }
+
+    function startDefense() {
+        if (isPlaying) return;
+        
+        isPlaying = true;
+        hp = 100;
+        activeEnemies = [];
+        document.getElementById('hp-fill').style.width = '100%';
+        document.getElementById('timer-setting-select').disabled = true;
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('giveup-btn').style.display = 'block';
+        document.getElementById('battle-tip').style.display = 'block';
+
+        timer = setInterval(() => {
+            timeLeft--;
+            formatTimer();
+            if (timeLeft <= 0) {
+                gameOver(true);
+            }
+        }, 1000);
+
+        enemySpawnInterval = setInterval(() => {
+            spawnEnemy();
+        }, 3000);
+
+        enemyMoveInterval = setInterval(() => {
+            moveEnemies();
+        }, 100);
+    }
+
+    function spawnEnemy() {
+        const stage = document.getElementById('stage');
+        if (!stage) return;
+        const enemyEl = document.createElement('div');
+        enemyEl.className = 'enemy';
+        enemyEl.innerText = ENEMY_EMOJIS[Math.floor(Math.random() * ENEMY_EMOJIS.length)];
+        enemyEl.style.right = '-40px'; 
+        stage.appendChild(enemyEl);
+
+        activeEnemies.push({
+            element: enemyEl,
+            pos: -40
+        });
+    }
+
+    function moveEnemies() {
+        const stageEl = document.getElementById('stage');
+        if (!stageEl) return;
+        const stageWidth = stageEl.clientWidth;
+        const playerLine = stageWidth - 130; 
+
+        for (let i = activeEnemies.length - 1; i >= 0; i--) {
+            let enemy = activeEnemies[i];
+            enemy.pos += 4; 
+            enemy.element.style.right = enemy.pos + 'px';
+
+            if (enemy.pos >= playerLine) {
+                hp -= 15;
+                if (hp < 0) hp = 0;
+                document.getElementById('hp-fill').style.width = `${hp}%`;
+                
+                enemy.element.remove();
+                activeEnemies.splice(i, 1);
+
+                if (hp <= 0) {
+                    gameOver(false);
+                }
+            }
+        }
+    }
+
+    function playerAttack(e) {
+        if (!isPlaying) return;
+
+        const charEl = document.getElementById('current-char');
+        if (charEl) {
+            charEl.classList.remove('attacking');
+            void charEl.offsetWidth; 
+            charEl.classList.add('attacking');
+        }
+
+        if (activeEnemies.length > 0) {
+            let targetIndex = 0;
+            let maxPos = -999;
+            
+            activeEnemies.forEach((enemy, idx) => {
+                if (enemy.pos > maxPos) {
+                    maxPos = enemy.pos;
+                    targetIndex = idx;
+                }
+            });
+
+            let target = activeEnemies[targetIndex];
+            target.element.style.transform = 'scale(0) translateY(-50px)';
+            target.element.style.opacity = '0';
+            
+            setTimeout(() => {
+                target.element.remove();
+            }, 150);
+
+            activeEnemies.splice(targetIndex, 1);
+            
+            gold += 2;
+            updateStatus();
+        }
+    }
+
+    function gameOver(isWin) {
+        isPlaying = false;
+        clearInterval(timer);
+        clearInterval(enemySpawnInterval);
+        clearInterval(enemyMoveInterval);
+
+        activeEnemies.forEach(e => e.element.remove());
+        activeEnemies = [];
+
+        document.getElementById('timer-setting-select').disabled = false;
+        document.getElementById('start-btn').style.display = 'block';
+        document.getElementById('giveup-btn').style.display = 'none';
+        document.getElementById('battle-tip').style.display = 'none';
+
+        if (isWin) {
+            let rewardGold = Math.floor(currentStudyTime * 0.1); 
+            let rewardExp = Math.floor(currentStudyTime * 0.04);
+            gold += rewardGold;
+            
+            addStudyLog(currentStudyTime);
+            
+            alert(`🎉【修行達成！】\n見事に集中時間を守り抜いた！\n\n獲得：💰 ${rewardGold}ジェニー / ✨ 念の熟練度 +${rewardExp}\n※修練実績（学習記録）にデータが加算されました！`);
+            gainExp(rewardExp);
+        } else {
+            alert(`💀【絶（ゲームオーバー）】\nスマホの誘惑、あるいは睡魔に負けて念が途切れました。修行を再開しましょう！`);
+        }
+
+        timeLeft = currentStudyTime;
+        saveAllData();
+        updateStatus();
+    }
+</script>
+</body>
+</html>

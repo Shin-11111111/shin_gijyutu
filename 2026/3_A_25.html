@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>宿題・提出物カウントダウン</title>
+    <style>
+        /* 全体のデザイン調整（シンプルで少し可愛い学生向けのデザイン） */
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #3a86ff;
+            margin-bottom: 20px;
+        }
+
+        /* 入力フォームのスタイル */
+        .form-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"], input[type="datetime-local"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        input[type="text"]:focus, input[type="datetime-local"]:focus {
+            border-color: #3a86ff;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3a86ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background-color: #2563eb;
+        }
+
+        /* タスクリストのスタイル */
+        .task-list {
+            width: 100%;
+            max-width: 500px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .task-item {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+            position: relative;
+            border-left: 8px solid #3a86ff;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* 期限が24時間以内になったら赤くする */
+        .task-item.danger {
+            border-left-color: #ff006e;
+            background-color: #fff0f5;
+        }
+
+        .task-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            padding-right: 40px;
+        }
+
+        .task-countdown {
+            font-size: 1rem;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .task-item.danger .task-countdown {
+            color: #ff006e;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            width: auto;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #cc0000;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⏳ 提出物カウントダウン</h1>
+
+    <div class="form-container">
+        <div class="form-group">
+            <label for="taskName">宿題・提出物の名前</label>
+            <input type="text" id="taskName" placeholder="例：数学のプリント、英語のレポート">
+        </div>
+        <div class="form-group">
+            <label for="taskDeadline">締め切り日時</label>
+            <input type="datetime-local" id="taskDeadline">
+        </div>
+        <button onclick="addTask()">登録する</button>
+    </div>
+
+    <ul id="taskList" class="task-list"></ul>
+
+    <script>
+        // データの初期化（保存されたデータを読み込む、なければ空っぽ）
+        let tasks = JSON.parse(localStorage.getItem('homework_tasks')) || [];
+
+        // ページを開いたときにリストを表示し、1秒ごとにカウントダウンを更新する
+        window.onload = function() {
+            renderTasks();
+            setInterval(renderTasks, 1000);
+        };
+
+        // 宿題を追加する関数
+        function addTask() {
+            const nameInput = document.getElementById('taskName');
+            const deadlineInput = document.getElementById('taskDeadline');
+
+            if (!nameInput.value || !deadlineInput.value) {
+                alert('名前と締め切りをどちらも入力してください！');
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                name: nameInput.value,
+                deadline: deadlineInput.value
+            };
+
+            tasks.push(newTask);
+            saveAndRender();
+
+            // 入力欄を空にする
+            nameInput.value = '';
+            deadlineInput.value = '';
+        }
+
+        // 宿題を削除する関数
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveAndRender();
+        }
+
+        // データをLocalStorageに保存して画面を再描画する
+        function saveAndRender() {
+            localStorage.setItem('homework_tasks', JSON.stringify(tasks));
+            renderTasks();
+        }
+
+        // 画面に宿題リストを表示するメイン処理
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            taskList.innerHTML = '';
+
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<p style="text-align:center; color:#888;">登録されている提出物はありません。平和です！</p>';
+                return;
+            }
+
+            // 締め切りが近い順に並び替え
+            tasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+            const now = new Date().getTime();
+
+            tasks.forEach(task => {
+                const deadlineTime = new Date(task.deadline).getTime();
+                const diff = deadlineTime - now;
+
+                let countdownText = "";
+                let isDanger = false;
+
+                if (diff <= 0) {
+                    countdownText = "⚠️ 締め切り時間を過ぎています！";
+                    isDanger = true;
+                } else {
+                    // 残り時間を日・時間・分・秒に変換
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+                    countdownText = `あと ${days}日 ${hours}時間 ${minutes}分 ${seconds}秒`;
+
+                    // 残り24時間（1日）未満になったらピンチ（dangerクラスを付与）
+                    if (diff < 1000 * 60 * 60 * 24) {
+                        isDanger = true;
+                    }
+                }
+
+                // HTMLの組み立て
+                const li = document.createElement('li');
+                li.className = `task-item ${isDanger ? 'danger' : ''}`;
+                li.innerHTML = `
+                    <div class="task-title">${escapeHTML(task.name)}</div>
+                    <div class="task-countdown">${countdownText}</div>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})">完了 / 削除</button>
+                `;
+                taskList.appendChild(li);
+            });
+        }
+
+        // セキュリティ対策（変な文字が入ってもバグらせないための関数）
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+    </script>
+</body>
+</html>

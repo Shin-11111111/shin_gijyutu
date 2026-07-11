@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テスト成績・推移記録チェッカー</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" onerror="alert('グラフライブラリの読み込みに失敗しました。ネット接続を確認してください。')"></script>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 650px;
+        }
+        h1 {
+            font-size: 24px;
+            color: #333;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .config-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .config-row label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #495057;
+        }
+        select, input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .test-name-input {
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f8f9fa;
+            color: #495057;
+            font-size: 14px;
+        }
+        .subject-name {
+            font-weight: bold;
+            color: #333;
+            text-align: left;
+            width: 40%;
+        }
+        .hidden {
+            display: none !important;
+        }
+        input[type="number"] {
+            width: 85%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        .calc-btn {
+            flex: 2;
+            padding: 14px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .calc-btn:hover {
+            background-color: #218838;
+        }
+        .clear-btn {
+            flex: 1;
+            padding: 14px;
+            background-color: #dc3545;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .clear-btn:hover {
+            background-color: #c82333;
+        }
+        .result-box {
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            position: relative;
+            margin: 20px auto 10px auto;
+            height: 320px;
+            width: 100%;
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .result-title {
+            font-size: 16px;
+            color: #495057;
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+        .history-list {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 13px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #dee2e6;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .history-item {
+            padding: 4px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>成績推移グラフチェッカー</h1>
+    
+    <div class="config-row">
+        <div>
+            <label for="mode-select">モード：</label>
+            <select id="mode-select" onchange="switchMode()">
+                <option value="9">9教科</option>
+                <option value="5">5教科</option>
+                <option value="3">3教科</option>
+            </select>
+        </div>
+        <input type="text" id="test-name" class="test-name-input" placeholder="例：1学期期末、学年末テストなど">
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="text-align: left;">教科</th>
+                <th>点数 (0〜100)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="subject-name">国語</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr>
+                <td class="subject-name">数学</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr>
+                <td class="subject-name">英語</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-5 sub-9">
+                <td class="subject-name">理科</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-5 sub-9">
+                <td class="subject-name">社会</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-9">
+                <td class="subject-name">音楽</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-9">
+                <td class="subject-name">美術</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-9">
+                <td class="subject-name">保健体育</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+            <tr class="sub-9">
+                <td class="subject-name">技術家庭</td>
+                <td><input type="number" class="score-input" min="0" max="100" placeholder="0"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="btn-group">
+        <button class="calc-btn" onclick="addRecord()">成績を記録して計算</button>
+        <button class="clear-btn" onclick="clearAll()">全データ消去</button>
+    </div>
+
+    <div class="result-box">
+        <div class="result-title" id="total-score">合計点: -- 点 / 平均点: -- 点</div>
+        <div class="chart-container">
+            <canvas id="trendChart"></canvas>
+        </div>
+        <div class="history-list" id="history-list">
+            <div style="color: #888; text-align: center;">まだ記録がありません</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 厳格モードでエラーを見つけやすくする
+    "use strict";
+
+    let historyData = [];
+    let chart = null;
+
+    function switchMode() {
+        try {
+            const mode = document.getElementById('mode-select').value;
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                if (mode === '9') {
+                    row.classList.remove('hidden');
+                } else if (mode === '5') {
+                    if (row.classList.contains('sub-5') || (!row.classList.contains('sub-5') && !row.classList.contains('sub-9'))) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                        const input = row.querySelector('input');
+                        if(input) input.value = '';
+                    }
+                } else if (mode === '3') {
+                    if (!row.classList.contains('sub-5') && !row.classList.contains('sub-9')) {
+                        row.classList.remove('hidden');
+                    } else {
+                        row.classList.add('hidden');
+                        const input = row.querySelector('input');
+                        if(input) input.value = '';
+                    }
+                }
+            });
+            clearAll();
+        } catch (e) {
+            console.error("switchModeのエラー:", e);
+        }
+    }
+
+    function addRecord() {
+        try {
+            const mode = document.getElementById('mode-select').value;
+            const testNameInput = document.getElementById('test-name');
+            let testName = testNameInput.value.trim();
+            
+            if (!testName) {
+                testName = `第${historyData.length + 1}回`;
+            }
+
+            const inputs = document.querySelectorAll('.score-input');
+            let total = 0;
+            let count = 0;
+            let valid = true;
+
+            inputs.forEach(input => {
+                const tr = input.closest('tr');
+                // 非表示の教科はスキップ
+                if (tr && tr.classList.contains('hidden')) return;
+
+                const val = parseInt(input.value);
+                // 0〜100以外の数値、または空欄チェック
+                if (isNaN(val) || val < 0 || val > 100) {
+                    valid = false;
+                    return;
+                }
+                total += val;
+                count++;
+            });
+
+            if (!valid || count === 0) {
+                alert('【入力エラー】表示されているすべての教科に、0〜100の正しい点数を入力してください（空欄はダメです）。');
+                return;
+            }
+
+            const average = (total / count).toFixed(1);
+
+            historyData.push({
+                name: testName,
+                total: total,
+                average: average
+            });
+
+            document.getElementById('total-score').innerText = `合計点: ${total} 点 / 平均点: ${average} 点`;
+            testNameInput.value = '';
+            inputs.forEach(input => input.value = '');
+
+            updateHistoryList();
+            updateChart();
+        } catch (e) {
+            console.error("addRecordのエラー:", e);
+            alert("エラーが発生しました。開発者ツール(Console)を確認してください。");
+        }
+    }
+
+    function updateHistoryList() {
+        const listContainer = document.getElementById('history-list');
+        if (!listContainer) return;
+
+        if (historyData.length === 0) {
+            listContainer.innerHTML = '<div style="color: #888; text-align: center;">まだ記録がありません</div>';
+            return;
+        }
+
+        listContainer.innerHTML = historyData.map(item => `
+            <div class="history-item">
+                <strong>${item.name}</strong> - 合計: ${item.total}点 (平均: ${item.average}点)
+            </div>
+        `).join('');
+    }
+
+    function updateChart() {
+        try {
+            // Chart.js が正常に読み込まれているかチェック
+            if (typeof Chart === 'undefined') {
+                console.warn("Chart.js が読み込まれていないためグラフ表示をスキップします。");
+                return;
+            }
+
+            const labels = historyData.map(item => item.name);
+            const data = historyData.map(item => item.total);
+            const mode = document.getElementById('mode-select').value;
+            
+            let maxScore = 900;
+            if (mode === '5') maxScore = 500;
+            if (mode === '3') maxScore = 300;
+
+            const canvas = document.getElementById('trendChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (chart) {
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = data;
+                chart.options.scales.y.max = maxScore;
+                chart.update();
+            } else {
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: '合計点数の推移',
+                            data: data,
+                            borderColor: '#28a745',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#28a745',
+                            pointRadius: 5,
+                            tension: 0.2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: maxScore,
+                                title: {
+                                    display: true,
+                                    text: '合計点'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        } catch (e) {
+            console.error("updateChartのエラー:", e);
+        }
+    }
+
+    function clearAll() {
+        historyData = [];
+        const totalScoreEl = document.getElementById('total-score');
+        if (totalScoreEl) totalScoreEl.innerText = `合計点: -- 点 / 平均点: -- 点`;
+        
+        const testNameEl = document.getElementById('test-name');
+        if (testNameEl) testNameEl.value = '';
+        
+        document.querySelectorAll('.score-input').forEach(input => input.value = '');
+        
+        updateHistoryList();
+        
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+        updateChart();
+    }
+
+    window.onload = function() {
+        updateChart();
+    };
+</script>
+
+</body>
+</html>

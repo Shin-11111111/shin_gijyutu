@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ルーティーンクエスト -フルオート配給・超豪運経済版-</title>
+    <style>
+        /* サイバーネオン・ゲームデザイン */
+        body { 
+            background-color: #0d0e15; 
+            color: #ffffff; 
+            font-family: sans-serif; 
+            padding: 20px; text-align: center; 
+            overflow-x: hidden;
+            position: relative;
+        }
+        .container { max-width: 450px; margin: 0 auto; background-color: #12131c; border: 3px solid #00f0ff; border-radius: 12px; padding: 20px; box-shadow: 0 0 15px rgba(0, 240, 255, 0.3); position: relative; z-index: 2; }
+        
+        h1 { color: #fff; text-shadow: 0 0 5px #fff, 0 0 10px #00f0ff, 0 0 20px #00f0ff; font-size: 28px; margin-top: 0; }
+        h2 { font-size: 15px; color: #ff007f; border-bottom: 1px solid #ff007f; padding-bottom: 5px; text-align: left; display: flex; justify-content: space-between; align-items: center; margin-top: 25px; }
+        
+        .status-window { background-color: #1a1c28; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: left; transition: all 0.3s; position: relative; }
+        .name-row { display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .name-display { color: #00f0ff; text-decoration: underline; cursor: pointer; }
+        .title-display { font-size: 12px; color: #ffcc00; margin-top: 5px; font-weight: bold; transition: all 0.5s; cursor: pointer; text-decoration: dashed underline; }
+        .title-display:hover { color: #fff; text-shadow: 0 0 8px #ffcc00; }
+        
+        .economy-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 13px; }
+        .gold-display { color: #ffd700; font-weight: bold; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+        .buff-display { color: #00ff66; font-weight: bold; font-size: 11px; }
+
+        .exp-bar-bg { background-color: #0a0b10; height: 12px; border-radius: 6px; overflow: hidden; margin-top: 10px; border: 1px solid #3d415c; }
+        .bar { background-color: #00f0ff; height: 100%; width: 0%; box-shadow: 0 0 8px #00f0ff; transition: width 0.3s; }
+        
+        button { background-color: #ff007f; color: white; border: none; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 6px; cursor: pointer; }
+        button:disabled { background-color: #444 !important; color: #888 !important; cursor: not-allowed !important; box-shadow: none !important; }
+        .wipe-btn { background-color: #5c1128; color: #ff80b3; font-size: 12px; padding: 4px 8px; }
+        .complete-btn { background-color: #00f0ff; color: #0d0e15; padding: 8px 12px; font-size: 14px; transition: transform 0.1s; font-weight: bold; }
+        .complete-btn:active { transform: scale(0.9); }
+        
+        .shop-window { background-color: #111625; border: 1px solid #ff007f; border-radius: 8px; padding: 12px; margin-top: 20px; text-align: left; box-shadow: 0 0 10px rgba(255, 0, 127, 0.2); }
+        .shop-title { font-size: 13px; color: #ff007f; font-weight: bold; margin-bottom: 8px; display: flex; justify-content: space-between; }
+        .shop-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; background: #171d33; padding: 6px 10px; margin-bottom: 5px; border-radius: 4px; }
+        .shop-btn { background-color: #ffd700; color: #000; font-size: 11px; padding: 3px 8px; white-space: nowrap; }
+
+        ul { list-style: none; padding: 0; margin: 0; text-align: left; }
+        li { background-color: #152233; border-left: 4px solid #00f0ff; padding: 12px; margin-bottom: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; animation: slideIn 0.3s ease-out; }
+        
+        .quest-left { display: flex; align-items: center; gap: 10px; }
+        .difficulty-badge { font-size: 10px; font-weight: bold; padding: 3px 6px; border-radius: 4px; text-transform: uppercase; white-space: nowrap; }
+        .badge-easy { background-color: #00ff66; color: #000; box-shadow: 0 0 5px #00ff66; }
+        .badge-normal { background-color: #00f0ff; color: #000; box-shadow: 0 0 5px #00f0ff; }
+        .badge-hard { background-color: #ff007f; color: #fff; box-shadow: 0 0 5px #ff007f; }
+        .badge-boss { background-color: #ffcc00; color: #000; box-shadow: 0 0 10px #ffd700; animation: pulse 1s infinite alternate; }
+        .quest-boss { background-color: #291524 !important; border-left: 4px solid #ffd700 !important; border: 1px solid #ff007f; }
+        .quest-text { font-size: 14px; }
+        .reward-hint { font-size: 10px; color: #8c92b3; margin-left: 5px; }
+
+        .log-window { background-color: #0a0b10; border: 1px dashed #3d415c; padding: 10px; font-size: 12px; color: #8c92b3; height: 100px; overflow-y: auto; text-align: left; margin-top: 20px; border-radius: 6px; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.05); } }
+
+        /* 🎉 レベルアップエフェクト */
+        .fanfare-overlay {
+            position: fixed; top: 40px; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: linear-gradient(135deg, rgba(255, 0, 127, 0.95), rgba(0, 240, 255, 0.95));
+            color: #ffffff; font-size: 22px; font-weight: bold; padding: 15px 25px; border-radius: 50px;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.6), inset 0 0 15px rgba(255,255,255,0.5);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 10px #fff; white-space: nowrap; z-index: 9999; pointer-events: none; opacity: 0;
+        }
+        .play-fanfare { animation: fanfareAnim 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes fanfareAnim {
+            0% { transform: translate(-50%, -50%) scale(0.3) rotate(-5deg); opacity: 0; }
+            15% { transform: translate(-50%, -50%) scale(1.05) rotate(2deg); opacity: 1; }
+            20% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+            100% { transform: translate(-50%, -90%) scale(0.7); opacity: 0; }
+        }
+
+        /* 🃏 闇のトランプゲーム用スクリーンオーバーレイ */
+        .card-game-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(10, 11, 16, 0.92); z-index: 10005; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .card-game-title { font-size: 20px; color: #ffd700; font-weight: bold; margin-bottom: 25px; text-shadow: 0 0 10px #ffd700; }
+        .card-container { display: flex; gap: 20px; perspective: 1000px; }
+        .gamble-card { width: 90px; height: 140px; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; }
+        .gamble-card:hover { transform: translateY(-10px); box-shadow: 0 0 15px #00f0ff; }
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 8px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 14px; box-sizing: border-box; }
+        .card-back { background: linear-gradient(135deg, #1f1330 0%, #111625 100%); border: 2px solid #ff007f; color: #ff007f; text-shadow: 0 0 5px #ff007f; font-size: 24px; }
+        .card-front { transform: rotateY(180deg); }
+        .card-win { background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%); border: 2px solid #fff; color: #000; box-shadow: 0 0 20px #ffd700; }
+        .card-lose { background-color: #222; border: 2px solid #555; color: #555; }
+        .gamble-card.flipped { transform: rotateY(180deg); pointer-events: none; }
+
+        /* 🔮 称号ガチャマシーン用オーバーレイ */
+        .gacha-screen {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(9, 10, 15, 0.96); z-index: 10010; justify-content: center; align-items: center; flex-direction: column;
+        }
+        .gacha-machine {
+            width: 220px; height: 320px; background-color: #171a26; border: 4px solid #ff007f; border-radius: 20px;
+            position: relative; box-shadow: 0 0 25px rgba(255, 0, 127, 0.5); display: flex; flex-direction: column; align-items: center;
+        }
+        .gacha-dome {
+            width: 180px; height: 140px; background-color: rgba(0, 240, 255, 0.1); border: 2px solid #00f0ff;
+            border-radius: 14px; margin-top: 15px; position: relative; overflow: hidden; display: flex; flex-wrap: wrap; padding: 8px; gap: 4px; justify-content: center; align-content: flex-end;
+        }
+        .mini-capsule {
+            width: 24px; height: 24px; border-radius: 50%; border: 1px solid #fff;
+            background: linear-gradient(to bottom, #ff007f 50%, #00f0ff 50%); opacity: 0.8;
+        }
+        .rumble-balls .mini-capsule { animation: ballShake 0.1s infinite alternate; }
+        @keyframes ballShake {
+            0% { transform: translate(2px, 2px) rotate(5deg); }
+            100% { transform: translate(-2px, -1px) rotate(-5deg); }
+        }
+        .gacha-handle {
+            width: 70px; height: 70px; background-color: #0d0e15; border: 4px solid #ffd700; border-radius: 50%;
+            margin-top: 25px; cursor: pointer; position: relative; display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 0 15px #ffd700;
+        }
+        .gacha-handle::before { content: ""; width: 50px; height: 14px; background-color: #ffd700; position: absolute; border-radius: 4px; }
+        .rotate-handle { animation: spinHandle 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        @keyframes spinHandle { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* 👑 【新設計】画面のど真ん中にドカンと出現する巨大カプセル */
+        .huge-capsule-container {
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            animation: capsulePopIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; cursor: pointer;
+        }
+        @keyframes capsulePopIn {
+            0% { transform: scale(0.2) rotate(0deg); opacity: 0; }
+            100% { transform: scale(1) rotate(15deg); opacity: 1; }
+        }
+        .huge-capsule {
+            width: 140px; height: 140px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff007f 50%, #00f0ff 50%); border: 5px solid #fff;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.8), inset 0 0 20px rgba(255,255,255,0.6);
+            display: flex; justify-content: center; align-items: center; font-size: 60px;
+            transition: transform 0.1s;
+        }
+        .huge-capsule-container:hover .huge-capsule { transform: scale(1.08); box-shadow: 0 0 50px #ff007f; }
+        
+        /* タップして割れた瞬間の演出 */
+        .pop-huge-capsule { animation: hugeCapsulePopAnim 0.2s ease-out forwards; }
+        @keyframes hugeCapsulePopAnim { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(2.2); opacity: 0; } }
+
+        /* ガチャ結果発表テキスト */
+        .gacha-result-window {
+            display: none; position: absolute; top: 35%; width: 290px; background: linear-gradient(135deg, #12131c 0%, #291524 100%);
+            border: 3px solid #00f0ff; border-radius: 12px; padding: 25px; box-shadow: 0 0 5px #fff, 0 0 30px #00f0ff; text-align: center;
+            z-index: 10020; animation: resultShow 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes resultShow { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .lv-up-flash { animation: flashNeon 0.6s ease-out; }
+        @keyframes flashNeon { 0% { background-color: #ff007f; box-shadow: 0 0 30px #ff007f; } 50% { background-color: #00f0ff; box-shadow: 0 0 30px #00f0ff; } 100% { background-color: #1a1c28; box-shadow: 0 0px transparent; } }
+        .boss-flash { animation: alertFlash 0.5s ease-out 2; }
+        @keyframes alertFlash { 0% { background-color: #0d0e15; } 50% { background-color: #4a0018; } 100% { background-color: #0d0e15; } }
+        .title-glitch { animation: glitchEffect 0.4s ease-in-out 2; }
+        @keyframes glitchEffect { 0% { text-shadow: 2px 0 #ff007f, -2px 0 #00f0ff; color: #fff; } 50% { text-shadow: -2px 0 #ff007f, 2px 0 #00f0ff; } 100% { text-shadow: none; } }
+    </style>
+</head>
+<body>
+
+<div id="fanfare" class="fanfare-overlay">🎉 LV UP!! ぱんぱかぱーん！ 🎉</div>
+
+<div id="card-game" class="card-game-screen">
+    <div class="card-game-title">🎰 闇のカード選択 (確率 1/3) 🎰</div>
+    <div class="card-container">
+        <div class="gamble-card" onclick="chooseCard(this, 0)">
+            <div class="card-face card-back">😈</div>
+            <div class="card-face card-front" id="front-0">???</div>
+        </div>
+        <div class="gamble-card" onclick="chooseCard(this, 1)">
+            <div class="card-face card-back">😈</div>
+            <div class="card-face card-front" id="front-1">???</div>
+        </div>
+        <div class="gamble-card" onclick="chooseCard(this, 2)">
+            <div class="card-face card-back">😈</div>
+            <div class="card-face card-front" id="front-2">???</div>
+        </div>
+    </div>
+    <div id="card-result-text" style="margin-top: 30px; font-weight: bold; font-size: 18px; min-height: 27px;">カードを選んでください...</div>
+</div>
+
+<div id="gacha-screen" class="gacha-screen">
+    <div class="card-game-title" id="gacha-guide-text" style="margin-bottom: 20px;">🕹️ 中央の取っ手をクリックして回せ！</div>
+    
+    <div class="gacha-machine" id="gacha-machine-body">
+        <div class="gacha-dome" id="gacha-dome">
+            <div class="mini-capsule"></div><div class="mini-capsule"></div><div class="mini-capsule"></div>
+            <div class="mini-capsule"></div><div class="mini-capsule"></div><div class="mini-capsule"></div>
+            <div class="mini-capsule"></div><div class="mini-capsule"></div><div class="mini-capsule"></div>
+            <div class="mini-capsule"></div><div class="mini-capsule"></div><div class="mini-capsule"></div>
+        </div>
+        <div class="gacha-handle" id="gacha-handle" onclick="spinGachaHandle()"></div>
+    </div>
+
+    <div class="huge-capsule-container" id="huge-capsule-container" onclick="popHugeCapsule()">
+        <div class="huge-capsule">🔮</div>
+        <div style="color: #00f0ff; font-weight: bold; font-size: 16px; margin-top: 20px; text-shadow: 0 0 10px #00f0ff;">✨ カプセルをタップして割れ！ ✨</div>
+    </div>
+
+    <div class="gacha-result-window" id="gacha-result-window">
+        <div style="color: #ffd700; font-size: 13px; font-weight: bold; margin-bottom: 8px;">✨ NEW TITLE GET!! ✨</div>
+        <div id="gacha-title-text" style="font-size: 18px; color: #fff; text-shadow: 0 0 12px #00f0ff; font-weight: bold; margin-bottom: 12px;">👑 称号</div>
+        <div id="gacha-dup-text" style="font-size: 11px; color: #ff0055; font-weight: bold;"></div>
+    </div>
+</div>
+
+<div class="container">
+    <h1>ROUTINE QUEST</h1>
+
+    <div id="status-win" class="status-window">
+        <div class="name-row">
+            <div>👤 勇者: <span id="p-name" class="name-display" onclick="changeNameFunc()">あなた</span></div>
+            <button type="button" id="btn-change-name" onclick="changeNameFunc()">名を変える</button>
+        </div>
+        <div id="p-title" class="title-display" onclick="openTitleMenu()" title="クリックして称号を変更">👑 称号: 始まりの迷い人</div>
+        
+        <div class="economy-row">
+            <div class="gold-display">💰 所持金: <span id="p-gold">0</span> G</div>
+            <div id="p-buff" class="buff-display"></div>
+        </div>
+
+        <div style="text-align: right; color: #ff007f; font-weight: bold; font-size: 18px; margin-top: 5px;" id="p-lv">LV: 1</div>
+        <div style="font-size: 11px; color:#8c92b3; margin-top:5px;">EXP: <span id="p-exp">0</span> / <span id="p-next-exp">100</span></div>
+        <div class="exp-bar-bg"><div id="p-bar" class="bar"></div></div>
+    </div>
+
+    <h2>
+        <span>🎯 自動配給中のクエスト</span>
+        <button type="button" id="btn-wipe" class="wipe-btn" onclick="wipeFunc()">💥 クエスト全滅</button>
+    </h2>
+    <ul id="q-list"></ul>
+
+    <div class="shop-window">
+        <div class="shop-title"><span>🏪 闇ギルドの出張ショップ</span><span style="color:#ffd700; font-size:11px;">※使い切り</span></div>
+        <div class="shop-item">
+            <span>🧪 経験値ポーション (次クリア時、獲得EXP2倍)</span>
+            <button type="button" class="shop-btn" id="btn-item-pot" onclick="buyItem('potion', 120)">120G</button>
+        </div>
+        <div class="shop-item">
+            <span>🚨 ボス通信機 (強敵BOSSを上書き召喚)</span>
+            <button type="button" class="shop-btn" id="btn-item-radar" onclick="buyItem('radar', 300)">300G</button>
+        </div>
+        <div class="shop-item">
+            <span>🎰 闇のダイス (トランプ選択で1/3を引き当てろ！)</span>
+            <button type="button" class="shop-btn" id="btn-item-dice" onclick="buyItem('dice', 500)">500G</button>
+        </div>
+        <div class="shop-item" style="border-top: 1px dashed #ff007f; padding-top: 10px; margin-top: 8px;">
+            <span>✨ 称号ルーレット (限定ガチャマシーンを回す！)</span>
+            <button type="button" class="shop-btn" id="btn-item-title-gacha" onclick="buyItem('title_gacha', 200)" style="background-color: #00f0ff;">200G</button>
+        </div>
+    </div>
+
+    <div id="l-window" class="log-window">
+        ＞ システム起動完了。クエストはすべて自動配給されます。<br>＞ 👑 称号をクリックすると、所持称号一覧から自由に変更できます。
+    </div>
+</div>
+
+<script>
+    let lv = 1; let exp = 0; let gold = 0; let count = 0;
+    let currentTitle = "始まりの迷い人";
+    let unlockedTitles = ["始まりの迷い人"]; 
+    let isLevelUpLock = false; 
+
+    function getTitleByLevel(level) {
+        if (level >= 50) return "創世 of ルーティーンゴッド";
+        if (level >= 40) return "終焉の絶対片付け神";
+        if (level >= 30) return "超克のルーティーンマスター";
+        if (level >= 25) return "神速のタスクブレイカー";
+        if (level >= 20) return "不眠不休の鉄人";
+        if (level >= 15) return "輝くパーフェクト超人";
+        if (level >= 10) return "日常を統べる伝説の勇者";
+        if (level >= 5)  return "家事マイスター";
+        if (level >= 3)  return "テキパキ仕事人";
+        if (level >= 2)  return "見習い戦士";
+        return "始まりの迷い人";
+    }
+
+    const rouletteTitles = [
+        "🎰 豪運の一発千金ギャンブラー",
+        "😈 闇ギルドの裏ボス",
+        "💀 漆黒の社畜サイボーグ",
+        "🐈 自宅警備隊の最高司令官",
+        "👽 宇宙規模のズボラ異星人"
+    ];
+    
+    let normalClearCount = 0; const BOSS_TRIGGER_COUNT = 8;
+    let hasExpPotion = false; let canChooseCard = false;
+    
+    let isGachaSpinning = false; 
+    let pendingGachaTitle = ""; 
+
+    function getNextExp(currentLv) { return 100 + (currentLv - 1) * 20; }
+
+    const poolEasy = ["コップ1杯の水を飲んで回復する", "背筋を伸ばして深呼吸を3回する", "1分間だけ目を閉じて脳を休憩させる", "肩をぐるぐる回してストレッチする"];
+    const poolNormal = ["机の上のゴミを1個討伐する", "使った身の回りの物を元の場所に戻す", "手洗いうがいをして健康状態を維持する", "スマホかPCの画面を拭いてピカピカにする"];
+    const poolHard = ["財布の中のいらないレシートを処分する", "部屋の窓を少し開けて換気を行う", "メールかメッセージの未読を1件処理する"];
+    const poolBoss = ["部屋の床をクイックルワイパー（掃除機）で全面討伐する", "机の上を完全に整理整頓してピカピカにする", "溜まった洗い物（または洗濯物）をすべて片付ける", "15分間、スマホを置いて全集中の結界を張る"];
+
+    function changeNameFunc() {
+        if (isLevelUpLock) return;
+        const current = document.getElementById("p-name").innerText;
+        const result = prompt("新しい名前を入力してください:", current);
+        if (result && result.trim() !== "") {
+            document.getElementById("p-name").innerText = result.trim();
+            addLog("プレイヤー名を「" + result.trim() + "」に変更した。");
+        }
+    }
+
+    function spawnQuest(type) {
+        let text = ""; let expReward = 0; let goldReward = 0; let badgeClass = ""; let typeName = ""; let isBoss = false;
+        if (type === "boss") {
+            const currentQuests = document.querySelectorAll("#q-list li");
+            let bossExists = false;
+            currentQuests.forEach(q => { if (q.getAttribute("data-type") === "boss") bossExists = true; });
+            if (bossExists) type = "easy";
+        }
+        if (type === "easy") { text = poolEasy[Math.floor(Math.random() * poolEasy.length)]; expReward = 15; goldReward = 10; badgeClass = "badge-easy"; typeName = "EASY"; }
+        else if (type === "normal") { text = poolNormal[Math.floor(Math.random() * poolNormal.length)]; expReward = 30; goldReward = 25; badgeClass = "badge-normal"; typeName = "NORMAL"; }
+        else if (type === "hard") { text = poolHard[Math.floor(Math.random() * poolHard.length)]; expReward = 50; goldReward = 45; badgeClass = "badge-hard"; typeName = "HARD"; }
+        else if (type === "boss") { text = poolBoss[Math.floor(Math.random() * poolBoss.length)]; expReward = 150; goldReward = 120; badgeClass = "badge-boss"; typeName = "🚨 BOSS"; isBoss = true; }
+
+        count++; const id = "q-num-" + count; const li = document.createElement("li"); li.id = id; li.setAttribute("data-type", type);
+        if (isBoss) li.className = "quest-boss"; 
+        li.innerHTML = `
+            <div class="quest-left"><span class="difficulty-badge ${badgeClass}">${typeName}</span><span class="quest-text">✨ ${text} <span class="reward-hint">(+${expReward}EXP / +${goldReward}G)</span></span></div>
+            <button type='button' class='complete-btn' onclick='completeFunc("${id}", "${text.replace(/'/g, "\\'")}", "${type}")'>討伐</button>
+        `;
+        document.getElementById("q-list").appendChild(li);
+        if (isBoss) { triggerBossAlert(); addLog(`⚠️ ALERT!! カウンターMAXにより強敵 [${typeName}]「${text}」が立ちはだかった！`); }
+        else { addLog(`新クエスト [${typeName}]「${text}」が自動配給された！`); }
+        updateDisplay(); 
+    }
+
+    function completeFunc(elementId, taskName, type) {
+        if (isLevelUpLock) return; 
+        const item = document.getElementById(elementId); if (item) item.remove();
+        let baseExp = 15; let baseGold = 10;
+        if (type === "normal") { baseExp = 30; baseGold = 25; }
+        if (type === "hard") { baseExp = 50; baseGold = 45; }
+        if (type === "boss") { baseExp = 150; baseGold = 120; }
+        const isCritical = Math.random() < ((type === "boss") ? 0.30 : 0.15);
+        let getExp = isCritical ? baseExp * 2 : baseExp; let getGold = baseGold;
+        if (hasExpPotion) { getExp *= 2; hasExpPotion = false; addLog("🧪 ポーションの効果発動！獲得EXPがさらに2倍になった！"); }
+        exp += getExp; gold += getGold; 
+        if (isCritical) addLog(`⚡ クリティカル！！「${taskName}」を完全討伐！EXP2倍の【 ${getExp}EXP 】と【 ${getGold}G 】を獲得！`);
+        else addLog(`「${taskName}」をクリア！ 【 ${getExp}EXP 】 / 【 ${getGold}G 】を獲得！`);
+        let nextSpawnType = type; 
+        if (type === "boss") { normalClearCount = 0; nextSpawnType = "easy"; addLog(`🛡️ ボス討伐完了。エリアの安全が確保され、カウンターがリセットされた。`); }
+        else { normalClearCount++; let nokori = BOSS_TRIGGER_COUNT - normalClearCount; if (nokori > 0) addLog(`📊 ボス襲来まで あと ${nokori} 回の通常討伐が必要。`); }
+        checkLevelUp(); updateDisplay();
+        setTimeout(() => { if (type !== "boss" && normalClearCount >= BOSS_TRIGGER_COUNT) spawnQuest("boss"); else spawnQuest(nextSpawnType); }, 300);
+    }
+
+    function checkLevelUp() {
+        let targetExp = getNextExp(lv);
+        while (exp >= targetExp) { exp -= targetExp; lv++; addLog(`🎉 レベルアップ！ LV: ${lv} になった！`); triggerLvUpEffects(); updateTitle(); targetExp = getNextExp(lv); }
+    }
+
+    function updateTitle() {
+        let nextTitle = getTitleByLevel(lv);
+        if (!unlockedTitles.includes(nextTitle)) unlockedTitles.push(nextTitle);
+        if (nextTitle !== currentTitle) {
+            currentTitle = nextTitle;
+            setTimeout(() => {
+                const titleDisplay = document.getElementById("p-title"); titleDisplay.classList.remove("title-glitch"); void titleDisplay.offsetWidth; titleDisplay.classList.add("title-glitch");
+                titleDisplay.innerText = "👑 称号: " + nextTitle; addLog("🚨 称号が【 " + nextTitle + " 】に覚醒した！！");
+            }, 500);
+        }
+    }
+
+    function openTitleMenu() {
+        if (isLevelUpLock) return;
+        let menuText = "【所持称号一覧】変更したい番号を入力してください：\n\n";
+        for (let i = 0; i < unlockedTitles.length; i++) {
+            let marker = (unlockedTitles[i] === currentTitle) ? " 🌟(装備中)" : "";
+            menuText += `${i + 1}: ${unlockedTitles[i]}${marker}\n`;
+        }
+        let choice = prompt(menuText);
+        if (choice !== null) {
+            choice = choice.replace(/[０-９]/g, function(s) { return String.fromCharCode(s.charCodeAt(0) - 0xFEE0); }).trim();
+            const index = parseInt(choice) - 1;
+            if (!isNaN(index) && index >= 0 && index < unlockedTitles.length) {
+                currentTitle = unlockedTitles[index]; document.getElementById("p-title").innerText = "👑 称号: " + currentTitle; addLog(`👑 称号を【 ${currentTitle} 】に変更した！`);
+            } else alert("不当な数字または正しくない番号です。");
+        }
+    }
+
+    function buyItem(itemType, cost) {
+        if (isLevelUpLock) return;
+        if (gold < cost) { alert("ゴールドが足りません！"); return; }
+        gold -= cost;
+        
+        if (itemType === 'potion') { hasExpPotion = true; addLog(`🧪 「経験値ポーション」を購入！次回の討伐EXPが2倍になる。`); }
+        else if (itemType === 'radar') {
+            addLog(`🚨 「ボス通信機」を購入！カウンターをリセットしボスを強制召喚！`);
+            normalClearCount = 0; const qList = document.getElementById("q-list"); if (qList.children.length > 0) qList.children[0].remove();
+            setTimeout(() => { spawnQuest("boss"); }, 500);
+        } else if (itemType === 'dice') {
+            addLog(`🎰 「闇のダイス」を購入。運命の3枚のカードが配られた……。`); openCardGame();
+        } else if (itemType === 'title_gacha') {
+            addLog(`🎰 称号ルーレットを購入。ネオンガチャマシーンの前に案内された。`);
+            openGachaMachine();
+        }
+        updateDisplay();
+    }
+
+    /* 🃏 トランプ演出 */
+    function openCardGame() {
+        canChooseCard = true; document.getElementById("card-result-text").innerHTML = "どれか1枚をタップしてめくってください..."; document.getElementById("card-result-text").style.color = "#fff";
+        const cards = document.querySelectorAll(".gamble-card");
+        cards.forEach((card, i) => { card.classList.remove("flipped"); const front = document.getElementById("front-" + i); front.className = "card-face card-front"; front.innerText = "???"; });
+        document.getElementById("card-game").style.display = "flex";
+    }
+    function chooseCard(clickedCard, index) {
+        if (!canChooseCard) return; canChooseCard = false;
+        const isWin = Math.random() < 1 / 3;
+        const front0 = document.getElementById("front-0"); const front1 = document.getElementById("front-1"); const front2 = document.getElementById("front-2");
+        front0.innerText = "💥 BLANK"; front0.className = "card-face card-front card-lose";
+        front1.innerText = "💥 BLANK"; front1.className = "card-face card-front card-lose";
+        front2.innerText = "💥 BLANK"; front2.className = "card-face card-front card-lose";
+        const selectedFront = document.getElementById("front-" + index);
+        if (isWin) {
+            gold += 1500; selectedFront.innerText = "🃏 JOKER"; selectedFront.className = "card-face card-front card-win";
+            document.getElementById("card-result-text").innerText = "🎉 大・勝・利 ！！！ 1500G 獲得！"; document.getElementById("card-result-text").style.color = "#ffd700";
+            addLog(`🎰 カードゲーム結果:【大・勝・利】を引き当てた！ 1500G 獲得！`);
+        } else {
+            selectedFront.innerText = "💥 BLANK"; selectedFront.className = "card-face card-front card-lose";
+            document.getElementById("card-result-text").innerText = "💀 残念はずれ！ 闇に飲まれた。"; document.getElementById("card-result-text").style.color = "#ff0055";
+            addLog(`🎰 カードゲーム結果:【ハズレ】！ゴールドは無に帰した。`);
+            let otherIndex = (index + 1) % 3; const otherFront = document.getElementById("front-" + otherIndex); otherFront.innerText = "🃏 JOKER"; otherFront.className = "card-face card-front card-win";
+        }
+        document.querySelectorAll(".gamble-card").forEach(card => card.classList.add("flipped")); updateDisplay();
+        setTimeout(() => { document.getElementById("card-game").style.display = "none"; }, 1800);
+    }
+
+    /* 🔮 称号ガチャ演出（新・確実方式） */
+    function openGachaMachine() {
+        isGachaSpinning = false;
+        pendingGachaTitle = rouletteTitles[Math.floor(Math.random() * rouletteTitles.length)]; 
+
+        document.getElementById("gacha-guide-text").innerText = "中央の取っ手をクリックして回せ！";
+        document.getElementById("gacha-handle").classList.remove("rotate-handle");
+        document.getElementById("gacha-dome").classList.remove("rumble-balls");
+        
+        // 最初の表示を「マシーンあり」「巨大カプセルなし」「結果なし」にセット
+        document.getElementById("gacha-machine-body").style.display = "flex";
+        document.getElementById("huge-capsule-container").style.display = "none";
+        document.getElementById("huge-capsule-container").classList.remove("pop-huge-capsule");
+        document.getElementById("gacha-result-window").style.display = "none";
+        
+        document.getElementById("gacha-screen").style.display = "flex";
+    }
+
+    function spinGachaHandle() {
+        if (isGachaSpinning) return;
+        isGachaSpinning = true;
+
+        document.getElementById("gacha-guide-text").innerText = "ゴトゴトゴト……";
+        document.getElementById("gacha-handle").classList.add("rotate-handle");
+        document.getElementById("gacha-dome").classList.add("rumble-balls");
+
+        // 0.7秒回した後、マシーンを「どかして」巨大カプセルだけにする！
+        setTimeout(() => {
+            document.getElementById("gacha-machine-body").style.display = "none"; // マシーン消去
+            document.getElementById("gacha-guide-text").innerText = "🎁 カプセルが飛び出した！";
+            
+            document.getElementById("huge-capsule-container").style.display = "flex"; // 巨大カプセル出現
+        }, 700);
+    }
+
+    function popHugeCapsule() {
+        const container = document.getElementById("huge-capsule-container");
+        if (container.classList.contains("pop-huge-capsule")) return; // 連打防止
+        
+        container.classList.add("pop-huge-capsule"); // 巨大カプセル縮小消滅アニメ
+
+        setTimeout(() => {
+            const titleText = document.getElementById("gacha-title-text");
+            const dupText = document.getElementById("gacha-dup-text");
+            
+            titleText.innerText = "👑 " + pendingGachaTitle;
+
+            if (unlockedTitles.includes(pendingGachaTitle)) {
+                dupText.innerText = "❌（所持済みのための重複）";
+                addLog(`🎰 ガチャ結果: 【 ${pendingGachaTitle} 】が被ってしまった！`);
+            } else {
+                dupText.innerText = "✨ NEW SHOUGOU ✨";
+                unlockedTitles.push(pendingGachaTitle);
+                currentTitle = pendingGachaTitle; 
+                document.getElementById("p-title").innerText = "👑 称号: " + currentTitle;
+                
+                const titleDisplay = document.getElementById("p-title");
+                titleDisplay.classList.remove("title-glitch"); void titleDisplay.offsetWidth; titleDisplay.classList.add("title-glitch");
+                addLog(`🎉 ガチャ結果: 新称号【 ${pendingGachaTitle} 】を獲得、装備した！`);
+            }
+
+            // 結果を真ん中に出現させる
+            document.getElementById("gacha-result-window").style.display = "block";
+            updateDisplay();
+
+            // 2.5秒後に自動で閉じる
+            setTimeout(() => {
+                document.getElementById("gacha-screen").style.display = "none";
+            }, 2500);
+
+        }, 200);
+    }
+
+    function updateDisplay() {
+        let nextTarget = getNextExp(lv);
+        document.getElementById("p-lv").innerText = "LV: " + lv; document.getElementById("p-exp").innerText = exp; document.getElementById("p-next-exp").innerText = nextTarget; document.getElementById("p-gold").innerText = gold;
+        document.getElementById("p-buff").innerText = hasExpPotion ? "✨ バフ活性中: 次回EXP2倍" : "";
+        document.getElementById("p-bar").style.width = ((exp / nextTarget) * 100) + "%";
+        const allButtons = document.querySelectorAll("button, .complete-btn");
+        if (isLevelUpLock) { allButtons.forEach(btn => btn.disabled = true); } 
+        else {
+            document.getElementById("btn-change-name").disabled = false; document.getElementById("btn-wipe").disabled = false;
+            document.querySelectorAll(".complete-btn").forEach(btn => btn.disabled = false);
+            document.getElementById("btn-item-pot").disabled = (gold < 120) || hasExpPotion;
+            document.getElementById("btn-item-radar").disabled = (gold < 300);
+            document.getElementById("btn-item-dice").disabled = (gold < 500);
+            document.getElementById("btn-item-title-gacha").disabled = (gold < 200);
+        }
+    }
+
+    function triggerLvUpEffects() {
+        isLevelUpLock = true; updateDisplay();
+        const win = document.getElementById("status-win"); win.classList.remove("lv-up-flash"); void win.offsetWidth; win.classList.add("lv-up-flash");
+        const fanfare = document.getElementById("fanfare"); fanfare.classList.remove("play-fanfare"); void fanfare.offsetWidth; fanfare.classList.add("play-fanfare");
+        setTimeout(() => { isLevelUpLock = false; updateDisplay(); }, 1200);
+    }
+    function triggerBossAlert() { document.body.classList.remove("boss-flash"); void document.body.offsetWidth; document.body.classList.add("boss-flash"); }
+    function wipeFunc() {
+        if (isLevelUpLock) return;
+        if (confirm("すべてのクエストを消去して新しく配給し直しますか？")) {
+            document.getElementById("q-list").innerHTML = ""; addLog("💥 クエストを全滅させた！");
+            setTimeout(() => { spawnQuest("easy"); }, 200); setTimeout(() => { spawnQuest("normal"); }, 400); setTimeout(() => { spawnQuest("hard"); }, 600);
+        }
+    }
+    function addLog(msg) { const win = document.getElementById("l-window"); win.innerHTML += "<br>＞ " + msg; win.scrollTop = win.scrollHeight; }
+    function initGame() { updateDisplay(); spawnQuest("easy"); spawnQuest("normal"); spawnQuest("hard"); }
+    let initialized = false; function safeInit() { if (!initialized) { initialized = true; initGame(); } }
+    if (document.readyState === "complete" || document.readyState === "interactive") safeInit(); else document.addEventListener("DOMContentLoaded", safeInit);
+</script>
+
+</body>
+</html>

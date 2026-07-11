@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2週間テスト対策学習計画表 - CYBER STATUS</title>
+    <style>
+        :root {
+            --bg-color: #0a0f1d;
+            --card-bg: #141b2d;
+            --text-color: #e2e8f0;
+            --primary-color: #00f2fe;
+            --success-color: #00e676;
+            --warning-color: #ffb300;
+            --danger-color: #ff1744;
+            --border-color: #232d4b;
+        }
+        
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            background-color: var(--bg-color); 
+            margin: 0; 
+            padding: 20px; 
+            color: var(--text-color);
+            transition: background 0.3s ease;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { color: var(--primary-color); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 5px; font-size: 1.8rem; text-shadow: 0 0 10px rgba(0,242,254,0.3); }
+        header p { color: #8a99ad; font-size: 14px; }
+        
+        /* 📊 【新機能】一瞬で見れる2週間進捗サマリーボード */
+        .summary-board { 
+            background: #0f172a; 
+            border: 1px solid var(--border-color); 
+            border-radius: 12px; 
+            padding: 15px; 
+            margin-bottom: 25px; 
+            box-shadow: inset 0 0 15px rgba(0,242,254,0.05);
+        }
+        .summary-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); 
+            gap: 10px; 
+            margin-top: 10px;
+        }
+        .summary-cell { 
+            background: var(--card-bg); 
+            border-left: 3px solid #475569; 
+            padding: 8px; 
+            border-radius: 4px; 
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .summary-cell:hover {
+            border-left-color: var(--primary-color);
+            background: #1e2942;
+        }
+        .summary-cell.completed { border-left-color: var(--success-color); }
+        .summary-cell.progressing { border-left-color: var(--warning-color); }
+        .summary-cell.emergency-alert { border-left-color: var(--danger-color); background: rgba(255, 23, 68, 0.1); }
+        .summary-cell-title { font-weight: bold; color: #94a3b8; margin-bottom: 3px; display: flex; justify-content: space-between;}
+        
+        /* ⚠️ 通知バナー */
+        .alert-banner { background-color: rgba(230, 57, 70, 0.2); color: #ff6b6b; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-weight: bold; border: 1px solid var(--danger-color); display: none; text-align: center; }
+        
+        /* 📅 カレンダー選択ナビ */
+        .calendar-nav { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 25px; }
+        .day-btn { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-color); padding: 10px 5px; border-radius: 8px; cursor: pointer; text-align: center; font-size: 13px; font-weight: bold; transition: 0.2s; }
+        .day-btn:hover { background: #1e2942; border-color: var(--primary-color); }
+        .day-btn.active { background: var(--primary-color); color: #000; border-color: var(--primary-color); font-weight: 900; box-shadow: 0 0 15px rgba(0,242,254,0.4); }
+        .day-btn.progressing { border-bottom: 4px solid var(--warning-color); }
+        .day-btn.completed { border-bottom: 4px solid var(--success-color); }
+
+        .main-layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .card { background: var(--card-bg); padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border: 1px solid var(--border-color); position: relative; overflow: hidden; }
+        h2 { color: var(--primary-color); margin-top: 0; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; font-size: 1.25rem; letter-spacing: 1px; }
+        
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #94a3b8; font-size: 14px; text-transform: uppercase; }
+        input[type="text"], textarea, input[type="number"] { background: #0f172a; color: #fff; width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 6px; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
+        input:focus, textarea:focus { border-color: var(--primary-color); outline: none; box-shadow: 0 0 8px rgba(0,242,254,0.2); }
+        
+        .flex-group { display: flex; gap: 15px; flex-wrap: wrap; }
+        .flex-group div { flex: 1; min-width: 120px; }
+        
+        /* 📋 提出物テーブルのデザイン */
+        .submission-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; text-align: left; }
+        .submission-table th, .submission-table td { padding: 10px; border: 1px solid var(--border-color); }
+        .submission-table th { background-color: #0f172a; color: var(--primary-color); }
+        .submission-table td { background-color: rgba(255,255,255,0.01); }
+        .add-sub-btn { background: #1e2942; color: var(--primary-color); border: 1px solid var(--primary-color); padding: 11px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .add-sub-btn:hover { background: var(--primary-color); color: #000; }
+        .delete-btn { background: none; border: none; color: var(--danger-color); cursor: pointer; font-weight: bold; }
+        .delete-btn:hover { text-shadow: 0 0 5px var(--danger-color); }
+
+        /* 📸 写真アップロード */
+        .photo-upload { border: 2px dashed #334155; padding: 20px; text-align: center; border-radius: 6px; background: #0f172a; cursor: pointer; transition: 0.2s; color: #94a3b8; }
+        .photo-upload:hover { background: #1e293b; border-color: var(--primary-color); color: #fff; }
+        .preview-img { max-width: 100%; max-height: 200px; margin-top: 10px; border-radius: 6px; display: none; }
+        
+        /* 📝 振り返りリスト */
+        .list-input { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .num-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+        .good .num-badge { background-color: rgba(0, 230, 118, 0.2); color: var(--success-color); border: 1px solid var(--success-color); }
+        .bad .num-badge { background-color: rgba(255, 23, 68, 0.2); color: var(--danger-color); border: 1px solid var(--danger-color); }
+        
+        /* 🔗 YouTubeクイック検索 */
+        .yt-link-box { background: #1e1b1b; border: 1px solid #ff0000; border-radius: 6px; padding: 12px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .yt-btn { background: #ff0000; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; font-weight: bold; font-size: 13px; transition: 0.2s; text-align: center; }
+        .yt-btn:hover { background: #cc0000; box-shadow: 0 0 10px rgba(255,0,0,0.5); }
+
+        /* 🚨 超緊急アラート用（2週間前未達成用） */
+        .emergency-mode {
+            background: #2d0810 !important;
+            border: 2px solid var(--danger-color) !important;
+            animation: pulse-border 1.5s infinite;
+        }
+        .emergency-mode h2 {
+            color: var(--danger-color) !important;
+            text-shadow: 0 0 10px rgba(255,23,68,0.5);
+        }
+        .emergency-tag {
+            background: var(--danger-color);
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 10px;
+            animation: blink 1s infinite;
+        }
+        
+        button.save-btn { background: linear-gradient(135deg, var(--primary-color), #3b82f6); color: #000; border: none; padding: 15px; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; text-transform: uppercase; letter-spacing: 1px; transition: 0.2s; }
+        button.save-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,242,254,0.4); }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 4px 20px rgba(255,23,68,0.3); }
+            50% { box-shadow: 0 4px 30px rgba(255,23,68,0.7); }
+            100% { box-shadow: 0 4px 20px rgba(255,23,68,0.3); }
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>⚡ PROTOCOL: TEST PREPARATION</h1>
+        <p>日付をクリックしてデータをロード / タイムラインを管理せよ</p>
+    </header>
+
+    <!-- 📊 【新設】一瞬で見れる2週間進捗サマリーボード -->
+    <div class="summary-board">
+        <label style="color: var(--primary-color); margin-bottom: 0;">📊 2週間全ステータス一括プレビュー（一瞬で把握エリア）</label>
+        <div class="summary-grid" id="summary-grid-board">
+            <!-- JavaScriptにより14日分のリアルタイムミニ状況がここに自動生成されます -->
+        </div>
+    </div>
+
+    <div id="alert-message" class="alert-banner"></div>
+
+    <label style="margin-bottom: 8px;">📅 TIMELINE SELECTOR（テスト2週間前〜前日）</label>
+    <div class="calendar-nav" id="calendar-nav"></div>
+
+    <!-- 🔗 YouTubeクイック検索システム -->
+    <div class="yt-link-box">
+        <div>
+            <span style="color: #ff4d4d; font-weight: bold;">📺 ONLINE STUDY LINK</span><br>
+            <span style="font-size: 12px; color: #aaa;">わからない箇所は、すぐYouTubeの解説動画で対策せよ</span>
+        </div>
+        <a href="https://www.youtube.com/results?search_query=%E3%83%85%E3%82%B9%E3%83%88%E5%AF%BE%E7%AD%96" id="yt-search-btn" target="_blank" class="yt-btn">YouTubeで調べる</a>
+    </div>
+
+    <div class="main-layout">
+        <div class="card" id="main-record-card">
+            <div id="emergency-banner-area"></div>
+            <h2 id="current-day-title">⏳ あと14日目の記録</h2>
+            
+            <div class="form-group">
+                <label>① 今日の学習計画</label>
+                <input type="text" id="input-plan" placeholder="例: 数学問題集 P.30〜32を解く">
+            </div>
+
+            <!-- 📝 提出物記入セクション -->
+            <div class="form-group" style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+                <label style="color: var(--primary-color);">📋 今日の提出物タスク管理マトリクス</label>
+                <div class="flex-group" style="align-items: flex-end; margin-bottom: 10px;">
+                    <div style="flex: 2;">
+                        <input type="text" id="sub-name" placeholder="提出物名（例: 数学ワーク）">
+                    </div>
+                    <div>
+                        <input type="number" id="sub-done" min="0" placeholder="やったページ">
+                    </div>
+                    <div>
+                        <input type="number" id="sub-total" min="0" placeholder="総ページ数">
+                    </div>
+                    <div style="flex: 0; min-width: auto;">
+                        <button type="button" class="add-sub-btn" onclick="addSubmissionRow()">追加</button>
+                    </div>
+                </div>
+
+                <table class="submission-table">
+                    <thead>
+                        <tr>
+                            <th>提出物名</th>
+                            <th>進捗（ページ）</th>
+                            <th>ステータス</th>
+                            <th style="width: 50px;">削除</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submission-list-body">
+                        <!-- ここに動的に追加されます -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-group">
+                <label>② 今日の実績と進捗</label>
+                <div class="flex-group">
+                    <div style="flex: 2; min-width: 200px;">
+                        <input type="text" id="input-actual" placeholder="例: P.31まで完了。応用問題が難しかった">
+                    </div>
+                    <div>
+                        <input type="number" id="input-time" min="0" placeholder="勉強時間（分）">
+                    </div>
+                    <div>
+                        <input type="number" id="input-progress" min="0" max="100" oninput="checkEmergencyState()" placeholder="達成度（％）">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>やったことの証明（ノートの写真など）</label>
+                <div class="photo-upload" onclick="document.getElementById('file-input').click()">
+                    📷 タップして写真を添付
+                    <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="previewImage(this)">
+                    <img id="img-preview" class="preview-img" src="" alt="プレビュー">
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label style="color: var(--success-color);">✨ 今日覚えたこと・理解できたこと（3つ）</label>
+                <div class="list-input good"><div class="num-badge">1</div><input type="text" id="good-1" placeholder="覚えたこと1"></div>
+                <div class="list-input good"><div class="num-badge">2</div><input type="text" id="good-2" placeholder="覚えたこと2"></div>
+                <div class="list-input good"><div class="num-badge">3</div><input type="text" id="good-3" placeholder="覚えたこと3"></div>
+            </div>
+
+            <div class="form-group">
+                <label style="color: var(--danger-color);">⚠️ 今日できなかったこと・次への課題（3つ）</label>
+                <div class="list-input bad"><div class="num-badge">1</div><input type="text" id="bad-1" placeholder="課題1"></div>
+                <div class="list-input bad"><div class="num-badge">2</div><input type="text" id="bad-2" placeholder="課題2"></div>
+                <div class="list-input bad"><div class="num-badge">3</div><input type="text" id="bad-3" placeholder="課題3"></div>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>③ 明日の学習計画（振り返りを踏まえて）</label>
+                <input type="text" id="input-tomorrow" placeholder="例: 今日残した問題の解き直しと、英語の単語暗記">
+            </div>
+
+            <button class="save-btn" onclick="saveCurrentDayData()">本日の記録を保存する</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 14日分のデータを保持する配列
+    let learningData = Array.from({length: 14}, (_, i) => ({
+        day: i + 1,
+        plan: "", actual: "", time: "", progress: "", tomorrow: "",
+        submissions: [], 
+        goods: ["", "", ""], bads: ["", "", ""],
+        imgData: ""
+    }));
+
+    let currentDay = 1; // 現在選択中の「日」（1〜14）
+
+    window.onload = function() {
+        const savedData = localStorage.getItem('cyberTestPrepTableData');
+        if (savedData) {
+            learningData = JSON.parse(savedData);
+        }
+        initCalendar();
+        renderSummaryBoard(); // サマリーボードを初期描画
+        switchDay(1);
+    };
+
+    // カレンダーの生成
+    function initCalendar() {
+        const nav = document.getElementById('calendar-nav');
+        nav.innerHTML = '';
+
+        learningData.forEach(data => {
+            const btn = document.createElement('button');
+            btn.className = 'day-btn';
+            btn.id = `day-btn-${data.day}`;
+            
+            const daysLeft = 15 - data.day;
+            btn.innerHTML = `あと<br><span style="font-size:16px;">${daysLeft}</span>日`;
+            btn.onclick = () => switchDay(data.day);
+            
+            updateButtonClass(btn, data.progress);
+            nav.appendChild(btn);
+        });
+    }
+
+    function updateButtonClass(btn, progress) {
+        btn.classList.remove('progressing', 'completed');
+        if (progress !== "" && progress !== null) {
+            const p = parseInt(progress, 10);
+            if (p >= 100) {
+                btn.classList.add('completed');
+            } else if (p > 0) {
+                btn.classList.add('progressing');
+            }
+        }
+    }
+
+    // 📊 一瞬で見れるサマリーボードの動的更新
+    function renderSummaryBoard() {
+        const board = document.getElementById('summary-grid-board');
+        board.innerHTML = '';
+
+        learningData.forEach(data => {
+            const cell = document.createElement('div');
+            cell.className = 'summary-cell';
+            
+            const daysLeft = 15 - data.day;
+            
+            // 進捗ステータス判定
+            const p = data.progress !== "" ? parseInt(data.progress, 10) : 0;
+            const subs = data.submissions || [];
+            const hasUnfinishedSub = subs.some(sub => sub.done < sub.total);
+            const isTwoWeeksLeft = (data.day >= 1 && data.day <= 4); 
+
+            if (p >= 100 && !hasUnfinishedSub && subs.length > 0) {
+                cell.classList.add('completed');
+            } else if (p > 0 || subs.length > 0) {
+                cell.classList.add('progressing');
+            }
+
+            // 🚨 2週間前なのに終わってない場合はサマリーでも赤く警告
+            if (isTwoWeeksLeft && (p < 100 || hasUnfinishedSub || subs.length === 0)) {
+                cell.classList.add('emergency-alert');
+            }
+
+            // 提出物の件数カウント
+            const totalSubsCount = subs.length;
+            const completedSubsCount = subs.filter(sub => sub.done >= sub.total).length;
+
+            cell.innerHTML = `
+                <div class="summary-cell-title">
+                    <span>あと${daysLeft}日</span>
+                    <span style="color:${isTwoWeeksLeft ? 'var(--danger-color)' : '#64748b'}; font-size:9px;">${isTwoWeeksLeft ? '⚠️' : ''}</span>
+                </div>
+                <div style="color: #fff; font-weight: bold;">達成度: ${p}%</div>
+                <div style="color: #8a99ad; font-size:10px; margin-top:2px;">提出物: ${completedSubsCount}/${totalSubsCount}</div>
+            `;
+            
+            // クリックしたら該当の日にダイレクトにジャンプできる親切設計
+            cell.onclick = () => switchDay(data.day);
+            board.appendChild(cell);
+        });
+    }
+
+    // 日付の切り替え
+    function switchDay(dayNum) {
+        saveToMemory(currentDay);
+        
+        const prevBtn = document.getElementById(`day-btn-${currentDay}`);
+        if (prevBtn) updateButtonClass(prevBtn, learningData[currentDay - 1].progress);
+
+        currentDay = dayNum;
+
+        document.querySelectorAll('.day-btn').forEach(btn => btn.classList.remove('active'));
+        const activeBtn = document.getElementById(`day-btn-${dayNum}`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        const daysLeft = 15 - dayNum;
+        document.getElementById('current-day-title').innerText = `⏳ あと${daysLeft}日目の記録`;
+
+        const data = learningData[dayNum - 1];
+        document.getElementById('input-plan').value = data.plan || "";
+        document.getElementById('input-actual').value = data.actual || "";
+        document.getElementById('input-time').value = data.time || "";
+        document.getElementById('input-progress').value = data.progress || "";
+        document.getElementById('input-tomorrow').value = data.tomorrow || "";
+        
+        renderSubmissionTable();
+
+        for (let i = 0; i < 3; i++) {
+            document.getElementById(`good-${i+1}`).value = data.goods[i] || "";
+            document.getElementById(`bad-${i+1}`).value = data.bads[i] || "";
+        }
+
+        const imgPreview = document.getElementById('img-preview');
+        if (data.imgData) {
+            imgPreview.src = data.imgData;
+            imgPreview.style.display = 'block';
+        } else {
+            imgPreview.src = '';
+            imgPreview.style.display = 'none';
+        }
+
+        updateYouTubeLink(data.plan);
+        checkEmergencyState();
+        showAlert("", false);
+    }
+
+    // メモリへの一時退避
+    function saveToMemory(dayNum) {
+        const idx = dayNum - 1;
+        learningData[idx].plan = document.getElementById('input-plan').value;
+        learningData[idx].actual = document.getElementById('input-actual').value;
+        learningData[idx].time = document.getElementById('input-time').value;
+        learningData[idx].progress = document.getElementById('input-progress').value;
+        learningData[idx].tomorrow = document.getElementById('input-tomorrow').value;
+
+        for (let i = 0; i < 3; i++) {
+            learningData[idx].goods[i] = document.getElementById(`good-${i+1}`).value;
+            learningData[idx].bads[i] = document.getElementById(`bad-${i+1}`).value;
+        }
+    }
+
+    // 📋 提出物を配列に追加
+    function addSubmissionRow() {
+        const nameInput = document.getElementById('sub-name');
+        const doneInput = document.getElementById('sub-done');
+        const totalInput = document.getElementById('sub-total');
+
+        const name = nameInput.value.trim();
+        const done = parseInt(doneInput.value, 10);
+        const total = parseInt(totalInput.value, 10);
+
+        if (!name || isNaN(done) || isNaN(total)) {
+            alert("提出物名、やったページ、総ページ数を正しく入力してください。");
+            return;
+        }
+
+        learningData[currentDay - 1].submissions.push({ name, done, total });
+
+        nameInput.value = "";
+        doneInput.value = "";
+        totalInput.value = "";
+
+        renderSubmissionTable();
+        checkEmergencyState();
+        renderSummaryBoard(); // 追加のタイミングで上部サマリーも更新
+    }
+
+    // 📋 提出物行の削除
+    function deleteSubmissionRow(index) {
+        learningData[currentDay - 1].submissions.splice(index, 1);
+        renderSubmissionTable();
+        checkEmergencyState();
+        renderSummaryBoard(); // 削除のタイミングで上部サマリーも更新
+    }
+
+    // 📋 提出物テーブルの描画
+    function renderSubmissionTable() {
+        const tbody = document.getElementById('submission-list-body');
+        tbody.innerHTML = "";
+
+        const subs = learningData[currentDay - 1].submissions || [];
+
+        if (subs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#64748b;">提出物は未登録です</td></tr>`;
+            return;
+        }
+
+        subs.forEach((sub, index) => {
+            const isCompleted = sub.done >= sub.total;
+            const statusText = isCompleted ? `<span style="color:var(--success-color); font-weight:bold;">COMPLETE</span>` : `<span style="color:var(--warning-color);">PROCESSING</span>`;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${sub.name}</strong></td>
+                <td>${sub.done} / ${sub.total} (ページ)</td>
+                <td>${statusText}</td>
+                <td style="text-align:center;"><button type="button" class="delete-btn" onclick="deleteSubmissionRow(${index})">✕</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 🚨 緊急ステート
+    function checkEmergencyState() {
+        const card = document.getElementById('main-record-card');
+        const bannerArea = document.getElementById('emergency-banner-area');
+        
+        const isTwoWeeksLeft = (currentDay >= 1 && currentDay <= 4); 
+        const currentProgress = document.getElementById('input-progress').value;
+        
+        const subs = learningData[currentDay - 1].submissions || [];
+        const hasUnfinishedSub = subs.some(sub => sub.done < sub.total);
+        const isProgressNotFinished = (currentProgress === "" || parseInt(currentProgress, 10) < 100);
+
+        if (isTwoWeeksLeft && (isProgressNotFinished || hasUnfinishedSub || subs.length === 0)) {
+            card.classList.add('emergency-mode');
+            bannerArea.innerHTML = `<div class="emergency-tag">⚠️ EMERGENCY PROTOCOL ACTIVE : 2週間前警告。提出物テーブルまたは全体の計画が未完了です。急げ！</div>`;
+        } else {
+            card.classList.remove('emergency-mode');
+            bannerArea.innerHTML = '';
+        }
+    }
+
+    // YouTube検索リンク更新
+    function updateYouTubeLink(planText) {
+        const baseQuery = "テスト対策";
+        const query = planText ? encodeURIComponent(planText + " 基礎") : encodeURIComponent(baseQuery);
+        document.getElementById('yt-search-btn').href = `https://www.youtube.com/results?search_query=${query}`;
+    }
+
+    // 画像プレビュー
+    function previewImage(input) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imgPreview = document.getElementById('img-preview');
+                imgPreview.src = e.target.result;
+                imgPreview.style.display = 'block';
+                learningData[currentDay - 1].imgData = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // データ保存
+    function saveCurrentDayData() {
+        saveToMemory(currentDay);
+        const data = learningData[currentDay - 1];
+
+        if (!data.plan) {
+            showAlert("⚠️ [ERROR] 今日の学習計画を入力してください！", true);
+            return;
+        }
+
+        localStorage.setItem('cyberTestPrepTableData', JSON.stringify(learningData));
+
+        const btn = document.getElementById(`day-btn-${currentDay}`);
+        if (btn) updateButtonClass(btn, data.progress);
+
+        checkEmergencyState();
+        renderSummaryBoard(); // 保存完了時に上部サマリーボードも一括更新
+        showAlert("🎉 [SUCCESS] ミッションデータがテーブル情報とともに正常にセーブされました。", false);
+    }
+
+    function showAlert(message, isError) {
+        const alertBanner = document.getElementById('alert-message');
+        if (!message) {
+            alertBanner.style.display = 'none';
+            return;
+        }
+        alertBanner.innerText = message;
+        alertBanner.style.display = 'block';
+        
+        if (isError) {
+            alertBanner.style.backgroundColor = 'rgba(255,23,68,0.2)';
+            alertBanner.style.color = '#ff4d4d';
+            alertBanner.style.borderColor = 'var(--danger-color)';
+        } else {
+            alertBanner.style.backgroundColor = 'rgba(0,230,118,0.2)';
+            alertBanner.style.color = 'var(--success-color)';
+            alertBanner.style.borderColor = 'var(--success-color)';
+        }
+    }
+</script>
+
+</body>
+</html>

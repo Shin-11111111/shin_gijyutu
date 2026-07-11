@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイ・カスタム授業予定表</title>
+    <style>
+        /* 全体のデザイン（CSS） */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f7f9fc;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 1.5rem 1rem;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.6rem;
+        }
+        main {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        /* 曜日を切り替えるボタン */
+        .tab-container {
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .tab-btn {
+            background-color: #ddd;
+            border: none;
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            flex: 1;
+            min-width: 45px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background-color: #3498db;
+            color: white;
+        }
+        /* 予定表のカード */
+        .timetable-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            display: none;
+            margin-bottom: 2rem;
+        }
+        .timetable-card.active {
+            display: block;
+        }
+        .timetable-card h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        /* 時間割の表・入力欄スタイル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            width: 25%;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+        /* 画面上で文字を打ち換えるための入力欄 */
+        .subject-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        .subject-input:focus {
+            border-color: #3498db;
+            outline: none;
+            background-color: #f0f8ff;
+        }
+        /* 休みの日用のメッセージ */
+        .holiday-message {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: #27ae60;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        /* 保存案内メッセージ */
+        .info-box {
+            background-color: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 1.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #2c3e50;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #95a5a6;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📅 マイ・カスタム授業予定表</h1>
+    </header>
+
+    <main>
+        <div class="info-box">
+            💡 <strong>使い方:</strong> 各教科の欄をタップすると、好きな教科に書き換えられます。変更すると自動で保存されます！
+        </div>
+
+        <!-- 曜日切り替えタブ -->
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="switchDay('mon')">月</button>
+            <button class="tab-btn" onclick="switchDay('tue')">火</button>
+            <button class="tab-btn" onclick="switchDay('wed')">水</button>
+            <button class="tab-btn" onclick="switchDay('thu')">木</button>
+            <button class="tab-btn" onclick="switchDay('fri')">金</button>
+            <button class="tab-btn" onclick="switchDay('sat')">土</button>
+            <button class="tab-btn" onclick="switchDay('sun')">日</button>
+        </div>
+
+        <!-- 各曜日の表示エリア（中身はJavaScriptが自動で作ります） -->
+        <div id="mon" class="timetable-card active"><h2>月曜日の時間割</h2><table id="table-mon"></table></div>
+        <div id="tue" class="timetable-card"><h2>火曜日の時間割</h2><table id="table-tue"></table></div>
+        <div id="wed" class="timetable-card"><h2>水曜日の時間割（5時間）</h2><table id="table-wed"></table></div>
+        <div id="thu" class="timetable-card"><h2>木曜日の時間割</h2><table id="table-thu"></table></div>
+        <div id="fri" class="timetable-card"><h2>金曜日の時間割</h2><table id="table-fri"></table></div>
+        
+        <!-- 土日（休み） -->
+        <div id="sat" class="timetable-card"><h2>土曜日</h2><div class="holiday-message">🎉 お休みです！部活や習い事を頑張ろう！</div></div>
+        <div id="sun" class="timetable-card"><h2>日曜日</h2><div class="holiday-message">🍀 お休みです！しっかり休んで来週に備えよう！</div></div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 中学校 技術・情報 宿題提出用予定表</p>
+    </footer>
+
+    <script>
+        // 初期の時間割データ（データがない場合に最初に表示されるもの）
+        const defaultSubjects = {
+            mon: ["国語", "数学", "英語", "理科", "社会", "体育"],
+            tue: ["数学", "英語", "美術", "美術", "国語", "理科"],
+            wed: ["英語", "国語", "理科", "音楽", "技術"], // 5時間
+            thu: ["社会", "数学", "英語", "国語", "体育", "総合"],
+            fri: ["理科", "社会", "家庭", "家庭", "数学", "道徳"]
+        };
+
+        // ブラウザの保存場所（LocalStorage）からデータを読み込む
+        let mySubjects = JSON.parse(localStorage.getItem('myTimetableData')) || defaultSubjects;
+
+        // 画面上に入力欄（input）を作って時間割を表示するプログラム
+        function createTimetable() {
+            const days = ['mon', 'tue', 'wed', 'thu', 'fri'];
+            days.forEach(day => {
+                const table = document.getElementById(`table-${day}`);
+                let htmlContent = "";
+                
+                mySubjects[day].forEach((subject, index) => {
+                    htmlContent += `
+                        <tr>
+                            <th>${index + 1}時間目</th>
+                            <td>
+                                <input type="text" class="subject-input" value="${subject}" onchange="saveSubject('${day}', ${index}, this.value)">
+                            </td>
+                        </tr>`;
+                });
+                
+                table.innerHTML = htmlContent;
+            });
+        }
+
+        // 入力された文字をリアルタイムで保存するプログラム
+        function saveSubject(day, index, newValue) {
+            // データを上書き
+            mySubjects[day][index] = newValue;
+            // ブラウザに保存
+            localStorage.setItem('myTimetableData', JSON.stringify(mySubjects));
+        }
+
+        // タブを切り替えるプログラム
+        function switchDay(dayId) {
+            document.querySelectorAll('.timetable-card').forEach(card => card.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(dayId).classList.add('active');
+            
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if(btn.getAttribute('onclick').includes(dayId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // ページを開いた時の最初の処理
+        window.addEventListener('DOMContentLoaded', () => {
+            createTimetable(); // 入力欄付きの表を作成
+            
+            // 今日の曜日を判定して表示
+            const dayIndex = new Date().getDay(); 
+            const dayMap = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+            switchDay(dayMap[dayIndex]);
+        });
+    </script>
+
+</body>
+</html>

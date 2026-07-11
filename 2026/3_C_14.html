@@ -1,0 +1,285 @@
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>パスワード付き 3連メモ帳</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* ロック画面のスタイル */
+        #lock-screen {
+            text-align: center;
+            padding: 4px;
+        }
+        .lock-icon {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+        /* メモエリアのスタイル */
+        .memo-box {
+            margin-bottom: 25px;
+            border-bottom: 2px dashed #eee;
+            padding-bottom: 20px;
+        }
+        .memo-box:last-child {
+            border-bottom: none;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #34495e;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+        }
+        .counter {
+            text-align: right;
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        /* ボタンのスタイル */
+        .btn-group {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary { background-color: #3498db; color: white; }
+        .btn-primary:hover { background-color: #2980b9; }
+        .btn-danger { background-color: #e74c3c; color: white; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-success { background-color: #2ecc71; color: white; }
+        .btn-success:hover { background-color: #27ae60; }
+        input[type="password"], input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 60%;
+            max-width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .error-msg {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .hide { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🔒 パスワード付き 3連メモ帳</h1>
+
+    <!-- 1. ロック画面 (デフォルトは非表示、隠した時に表示) -->
+    <div id="lock-screen" class="hide">
+        <div class="lock-icon">🔒</div>
+        <p>メモは安全にロックされています。</p>
+        <input type="password" id="input-pass" placeholder="パスワードを入力"><br>
+        <button class="btn-success" onclick="unlockMemos()">ロック解除</button>
+        <div id="lock-message" class="error-msg"></div>
+    </div>
+
+    <!-- 2. メモ編集画面 -->
+    <div id="memo-screen">
+        <!-- メモ 1 -->
+        <div class="memo-box">
+            <label for="memo1">📝 メモ 1</label>
+            <textarea id="memo1" maxlength="10000" placeholder="1万字まで入力できます..." oninput="updateCounter(1)"></textarea>
+            <div class="counter"><span id="count1">0</span> / 10,000 文字</div>
+        </div>
+
+        <!-- メモ 2 -->
+        <div class="memo-box">
+            <label for="memo2">📝 メモ 2</label>
+            <textarea id="memo2" maxlength="10000" placeholder="1万字まで入力できます..." oninput="updateCounter(2)"></textarea>
+            <div class="counter"><span id="count2">0</span> / 10,000 文字</div>
+        </div>
+
+        <!-- メモ 3 -->
+        <div class="memo-box">
+            <label for="memo3">📝 メモ 3</label>
+            <textarea id="memo3" maxlength="10000" placeholder="1万字まで入力できます..." oninput="updateCounter(3)"></textarea>
+            <div class="counter"><span id="count3">0</span> / 10,000 文字</div>
+        </div>
+
+        <!-- 操作ボタン -->
+        <div class="btn-group">
+            <button class="btn-primary" onclick="lockMemos()">保存して隠す</button>
+            <button class="btn-danger" onclick="clearAll()">内容を全消去</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 状態管理変数
+    let savedPassword = ""; // 設定されたパスワード
+    let missCount = 0;      // パスワードを間違えた回数
+    let isPermanentLocked = false; // 永久ロックフラグ
+
+    // ページ読み込み時にブラウザの保存データ(LocalStorage)から復元
+    window.onload = function() {
+        if(localStorage.getItem("memo1")) document.getElementById("memo1").value = localStorage.getItem("memo1");
+        if(localStorage.getItem("memo2")) document.getElementById("memo2").value = localStorage.getItem("memo2");
+        if(localStorage.getItem("memo3")) document.getElementById("memo3").value = localStorage.getItem("memo3");
+        
+        if(localStorage.getItem("savedPassword")) savedPassword = localStorage.getItem("savedPassword");
+        if(localStorage.getItem("missCount")) missCount = parseInt(localStorage.getItem("missCount"));
+        if(localStorage.getItem("isPermanentLocked")) isPermanentLocked = localStorage.getItem("isPermanentLocked") === "true";
+
+        // 文字数カウントの初期同期
+        for(let i=1; i<=3; i++) { updateCounter(i); }
+
+        // パスワードがすでに設定されている、または永久ロック中の場合は最初からロック画面を表示
+        if (savedPassword !== "" || isPermanentLocked) {
+            showLockScreen();
+        }
+    };
+
+    // 文字数カウンターの更新関数
+    function updateCounter(num) {
+        const text = document.getElementById("memo" + num).value;
+        document.getElementById("count" + num).innerText = text.length.toLocaleString();
+    }
+
+    // メモを保存してロックをかける関数
+    function lockMemos() {
+        // メモの内容をブラウザに保存
+        localStorage.setItem("memo1", document.getElementById("memo1").value);
+        localStorage.setItem("memo2", document.getElementById("memo2").value);
+        localStorage.setItem("memo3", document.getElementById("memo3").value);
+
+        // パスワードの新規設定（初回または初期化後のみ）
+        if (!savedPassword) {
+            let pass = prompt("新しい共通パスワードを設定してください：\n（※忘れないようにご注意ください）");
+            if (pass === null) return; // キャンセルされたら処理中断
+            if (pass.trim() === "") {
+                alert("空のパスワードは設定できません。");
+                return;
+            }
+            savedPassword = pass;
+            localStorage.setItem("savedPassword", savedPassword);
+        }
+
+        // 画面の切り替え
+        showLockScreen();
+        alert("メモを保存し、ロックをかけました。");
+    }
+
+    // ロック画面を表示する処理
+    function showLockScreen() {
+        document.getElementById("memo-screen").classList.add("hide");
+        document.getElementById("lock-screen").classList.remove("hide");
+        document.getElementById("input-pass").value = "";
+        
+        if (isPermanentLocked) {
+            document.getElementById("lock-message").innerText = "❌ パスワードを3回間違えたため、永久にロックされました。";
+        } else {
+            document.getElementById("lock-message").innerText = "";
+        }
+    }
+
+    // ロックを解除する関数
+    function unlockMemos() {
+        const inputPass = document.getElementById("input-pass").value;
+        const msgElement = document.getElementById("lock-message");
+
+        // 隠しコマンド「Ctakopai」の判定（最優先）
+        if (inputPass === "Ctakopai") {
+            savedPassword = "";
+            missCount = 0;
+            isPermanentLocked = false;
+            localStorage.removeItem("savedPassword");
+            localStorage.setItem("missCount", 0);
+            localStorage.setItem("isPermanentLocked", "false");
+            
+            document.getElementById("lock-screen").classList.add("hide");
+            document.getElementById("memo-screen").classList.remove("hide");
+            alert("隠しコマンドが承認されました。パスワードを初期化しました。新しく保存する際に再設定してください。");
+            return;
+        }
+
+        // 永久ロック中の場合
+        if (isPermanentLocked) {
+            msgElement.innerText = "❌ 永久ロック状態です。解除できません。";
+            return;
+        }
+
+        // 通常のパスワード判定
+        if (inputPass === savedPassword) {
+            // 解除成功
+            missCount = 0;
+            localStorage.setItem("missCount", 0);
+            document.getElementById("lock-screen").classList.add("hide");
+            document.getElementById("memo-screen").classList.remove("hide");
+        } else {
+            // 解除失敗
+            missCount++;
+            localStorage.setItem("missCount", missCount);
+
+            if (missCount >= 3) {
+                isPermanentLocked = true;
+                localStorage.setItem("isPermanentLocked", "true");
+                msgElement.innerText = "❌ パスワードを3回間違えたため、永久にロックされました。";
+            } else {
+                msgElement.innerText = `❌ パスワードが違います（残り ${3 - missCount} 回）`;
+            }
+        }
+    }
+
+    // 全消去関数
+    function clearAll() {
+        if (confirm("本当にすべてのメモ内容、パスワード、ロック状態を完全に消去しますか？")) {
+            localStorage.clear();
+            document.getElementById("memo1").value = "";
+            document.getElementById("memo2").value = "";
+            document.getElementById("memo3").value = "";
+            savedPassword = "";
+            missCount = 0;
+            isPermanentLocked = false;
+            
+            for(let i=1; i<=3; i++) { updateCounter(i); }
+            
+            document.getElementById("lock-screen").classList.add("hide");
+            document.getElementById("memo-screen").classList.remove("hide");
+            alert("すべて消去され、初期状態に戻りました。");
+        }
+    }
+</script>
+
+</body>
+</html>

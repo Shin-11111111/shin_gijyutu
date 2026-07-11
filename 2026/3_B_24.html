@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【ランダム版】高校受験 英単語一問一答</title>
+    <style>
+        body { font-family: sans-serif; background-color: #eef2f7; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .quiz-container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 90%; max-width: 400px; text-align: center; }
+        .badge { background-color: #ff9f43; color: white; padding: 4px 10px; font-size: 12px; border-radius: 20px; font-weight: bold; display: inline-block; margin-bottom: 10px; }
+        .word { font-size: 32px; font-weight: bold; color: #333; margin: 15px 0; }
+        .meaning { font-size: 24px; color: #ff4757; font-weight: bold; margin-bottom: 30px; min-height: 36px; }
+        button { background-color: #1e90ff; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; width: 100%; margin-bottom: 10px; font-weight: bold; transition: 0.2s; }
+        button:hover { background-color: #0077e6; }
+        .action-btns { display: flex; gap: 10px; }
+        .btn-correct { background-color: #2ed573; }
+        .btn-correct:hover { background-color: #26af5f; }
+        .btn-wrong { background-color: #ff4757; }
+        .btn-wrong:hover { background-color: #d63031; }
+        .progress { font-size: 14px; color: #777; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="quiz-box">
+        <span class="badge">シャッフル出題中</span>
+        <div class="progress"><span id="current-num">1</span> / <span id="total-num">10</span></div>
+        <div class="word" id="english-word">loading...</div>
+        <div class="meaning" id="japanese-meaning">&nbsp;</div>
+        
+        <button id="btn-show" onclick="showAnswer()">答えを見る</button>
+        
+        <div id="judge-btns" class="action-btns" style="display: none;">
+            <button class="btn-correct" onclick="nextQuestion(true)">◯ 覚えた</button>
+            <button class="btn-wrong" onclick="nextQuestion(false)">× 苦手</button>
+        </div>
+    </div>
+
+    <div id="result-box" style="display: none;">
+        <h2>結果発表</h2>
+        <p style="font-size: 20px;">あなたのスコア: <span id="score" style="font-weight:bold; color:#1e90ff;">0</span> / <span class="total-count">10</span></p>
+        <button onclick="startQuiz()">もう一度挑戦する（順不同）</button>
+    </div>
+</div>
+
+<script>
+    // 高校受験によく出る英単語リスト
+    const originalWords = [
+        { eng: "government", jpn: "政府、政治" },
+        { eng: "environment", jpn: "環境" },
+        { eng: "traditional", jpn: "伝統的な" },
+        { eng: "international", jpn: "国際的な" },
+        { eng: "experience", jpn: "経験、体験" },
+        { eng: "heavy", jpn: "重い" },
+        { eng: "fragile", jpn: "壊れやすい、脆い" },
+        { eng: "local", jpn: "地元の、地域の" },
+        { eng: "scientific", jpn: "科学的な" },
+        { eng: "unique", jpn: "独特の、ユニークな" }
+    ];
+
+    let shuffledWords = [];
+    let currentIndex = 0;
+    let score = 0;
+
+    // クイズの開始・初期化（ここで毎回シャッフルする）
+    function startQuiz() {
+        // 元のデータを壊さないようにコピーしてシャッフル
+        shuffledWords = [...originalWords];
+        
+        // フィッシャー・イェーツのシャッフルアルゴリズム
+        for (let i = shuffledWords.length - 1; i > 0; i--) {
+            const r = Math.floor(Math.random() * (i + 1));
+            const tmp = shuffledWords[i];
+            shuffledWords[i] = shuffledWords[r];
+            shuffledWords[r] = tmp;
+        }
+
+        currentIndex = 0;
+        score = 0;
+
+        // 表示の更新
+        document.getElementById('total-num').textContent = shuffledWords.length;
+        document.querySelectorAll('.total-count').forEach(el => el.textContent = shuffledWords.length);
+        document.getElementById('quiz-box').style.display = "block";
+        document.getElementById('result-box').style.display = "none";
+        
+        loadWord();
+    }
+
+    // 単語を画面に表示
+    function loadWord() {
+        document.getElementById('current-num').textContent = currentIndex + 1;
+        document.getElementById('english-word').textContent = shuffledWords[currentIndex].eng;
+        document.getElementById('japanese-meaning').innerHTML = "&nbsp;"; // 空白を維持
+        document.getElementById('btn-show').style.display = "block";
+        document.getElementById('judge-btns').style.display = "none";
+    }
+
+    // 答えを表示
+    function showAnswer() {
+        document.getElementById('japanese-meaning').textContent = shuffledWords[currentIndex].jpn;
+        document.getElementById('btn-show').style.display = "none";
+        document.getElementById('judge-btns').style.display = "flex";
+    }
+
+    // 次の問題へ
+    function nextQuestion(isCorrect) {
+        if (isCorrect) score++;
+        
+        currentIndex++;
+        if (currentIndex < shuffledWords.length) {
+            loadWord();
+        } else {
+            // 全問終了時
+            document.getElementById('quiz-box').style.display = "none";
+            document.getElementById('result-box').style.display = "block";
+            document.getElementById('score').textContent = score;
+        }
+    }
+
+    // ページを読み込んだときに自動でスタート
+    window.onload = startQuiz;
+</script>
+
+</body>
+</html>

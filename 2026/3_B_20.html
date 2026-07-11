@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学生向け 漢字問題集</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f3f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+        .question-box {
+            font-size: 22px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            line-height: 1.6;
+            color: #333;
+        }
+        .underline {
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            color: #e74c3c;
+            padding: 0 3px;
+        }
+        .hint {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid #bdc3c7;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        button {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 85%;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1.5;
+        }
+        .correct { color: #2ecc71; font-size: 24px; }
+        .incorrect { color: #e74c3c; font-size: 24px; }
+        .score {
+            margin-top: 25px;
+            font-size: 14px;
+            color: #95a5a6;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>中学生の漢字マスタークイズ</h1>
+    <div class="subtitle">読み問題・書き取り問題（全10問）</div>
+    
+    <div id="game-zone">
+        <div class="question-box" id="question">問題がここに表示されます</div>
+        <div class="hint" id="hint"></div>
+        <input type="text" id="answer-input" placeholder="答えを入力してください" autocomplete="off">
+        <br>
+        <button id="submit-btn" onclick="checkAnswer()">回答する</button>
+        <div class="result" id="result"></div>
+    </div>
+    <div class="score" id="score">第 1 問 / 全 10 問</div>
+</div>
+
+<script>
+    // 中学生レベルの問題データ（読み5問、書き5問）
+    const questions = [
+        // 読み問題
+        { text: "意見が<span class='underline'>対立</span>する。", type: "yomi", hint: "下線部の「読み方」をひらがなで答えてね", answer: "たいりつ" },
+        { text: "絵画の展覧会を<span class='underline'>催す</span>。", type: "yomi", hint: "下線部の「読み方」をひらがなで答えてね", answer: "もよおす" },
+        { text: "物事を<span class='underline'>客観</span>的に見る。", type: "yomi", hint: "下線部の「読み方」をひらがなで答えてね", answer: "きゃっかん" },
+        { text: "事態を<span class='underline'>深刻</span>に受け止める。", type: "yomi", hint: "下線部の「読み方」をひらがなで答えてね", answer: "しんこく" },
+        { text: "部屋の空気を<span class='underline'>循環</span>させる。", type: "yomi", hint: "下線部の「読み方」をひらがなで答えてね", answer: "じゅんかん" },
+        // 書き取り問題
+        { text: "本を読んで<span class='underline'>かんそう</span>を文に書く。", type: "kaki", hint: "下線部のカタカナを「漢字」で答えてね", answer: "感想" },
+        { text: "実験の<span class='underline'>けっか</span>を報告する。", type: "kaki", hint: "下線部のカタカナを「漢字」で答えてね", answer: "結果" },
+        { text: "相手に不快な思いをさせ、<span class='underline'>こうかい</span>した。", type: "kaki", hint: "下線部のカタカナを「漢字」で答えてね", answer: "後悔" },
+        { text: "規則を<span class='underline'>じゅんしゅ</span>する。", type: "kaki", hint: "下線部のカタカナを「漢字」で答えてね", answer: "遵守" },
+        { text: "問題を解決するために<span class='underline'>むじゅん</span>をなくす。", type: "kaki", hint: "下線部のカタカナを「漢字」で答えてね", answer: "矛盾" }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+
+    const questionEl = document.getElementById("question");
+    const hintEl = document.getElementById("hint");
+    const inputEl = document.getElementById("answer-input");
+    const resultEl = document.getElementById("result");
+    const btnEl = document.getElementById("submit-btn");
+    const scoreEl = document.getElementById("score");
+
+    function showQuestion() {
+        if (currentIdx < questions.length) {
+            const q = questions[currentIdx];
+            questionEl.innerHTML = q.text;
+            hintEl.textContent = q.hint;
+            inputEl.value = "";
+            resultEl.innerHTML = "";
+            
+            if (q.type === "yomi") {
+                inputEl.placeholder = "ひらがなで入力";
+            } else {
+                inputEl.placeholder = "漢字で入力";
+            }
+
+            btnEl.textContent = "回答する";
+            btnEl.setAttribute("onclick", "checkAnswer()");
+            btnEl.style.backgroundColor = "#2ecc71";
+            scoreEl.textContent = `第 ${currentIdx + 1} 問 / 全 ${questions.length} 問`;
+            inputEl.disabled = false;
+            inputEl.focus();
+        } else {
+            showFinalResult();
+        }
+    }
+
+    function checkAnswer() {
+        const userAnswer = inputEl.value.trim();
+        const correctAnswer = questions[currentIdx].answer;
+
+        if (userAnswer === "") {
+            alert("答えを入力してください。");
+            return;
+        }
+
+        inputEl.disabled = true;
+
+        if (userAnswer === correctAnswer) {
+            resultEl.innerHTML = "<div class='correct'>〇 正解！</div>";
+            score++;
+        } else {
+            resultEl.innerHTML = `<div class='incorrect'>× 不正解...</div>正しい答えは 「<strong>${correctAnswer}</strong>」 です。`;
+        }
+
+        currentIdx++;
+        btnEl.textContent = "次の問題へ";
+        btnEl.setAttribute("onclick", "showQuestion()");
+        btnEl.style.backgroundColor = "#3498db";
+    }
+
+    function showFinalResult() {
+        questionEl.innerHTML = "お疲れ様でした！";
+        hintEl.textContent = "";
+        inputEl.style.display = "none";
+        
+        let comment = "";
+        if (score === questions.length) {
+            comment = "素晴らしい！完璧です！";
+        } else if (score >= 7) {
+            comment = "お見事！高得点です。";
+        } else {
+            comment = "もう少し！復習してみよう。";
+        }
+
+        resultEl.innerHTML = `あなたのスコア: <strong>${questions.length}問中 ${score}問正解</strong><br><br>${comment}`;
+        btnEl.textContent = "もう一度挑戦する";
+        btnEl.setAttribute("onclick", "resetGame()");
+        btnEl.style.backgroundColor = "#9b59b6";
+        scoreEl.textContent = "";
+    }
+
+    function resetGame() {
+        currentIdx = 0;
+        score = 0;
+        inputEl.style.display = "inline-block";
+        showQuestion();
+    }
+
+    inputEl.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            if (inputEl.disabled) {
+                showQuestion();
+            } else {
+                checkAnswer();
+            }
+        }
+    });
+
+    // クイズ開始
+    showQuestion();
+</script>
+
+</body>
+</html>

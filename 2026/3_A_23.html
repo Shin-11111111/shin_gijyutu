@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SchoolHub - 学校生活ダッシュボード</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+        /* グリッドレイアウト */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        @media (min-width: 600px) {
+            .grid { grid-template-columns: 1fr 1fr; }
+            .full-width { grid-column: span 2; }
+        }
+        /* カード共通スタイル */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-sizing: border-box;
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+            padding-left: 10px;
+        }
+        /* 1. 時間割ナビのスタイル */
+        .navi-box {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            text-align: center;
+        }
+        .navi-box .card-title { border-left: 4px solid #fff; }
+        .big-text { font-size: 24px; font-weight: bold; margin: 10px 0; }
+        .sub-text { font-size: 16px; opacity: 0.9; }
+
+        /* 2. ToDoスタイル */
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9fafb;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        .todo-input-area { display: flex; gap: 8px; margin-bottom: 15px; }
+        input[type="text"], textarea {
+            width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; box-sizing: border-box;
+        }
+        button {
+            background: var(--accent); color: white; border: none; padding: 10px 15px;
+            border-radius: 8px; cursor: pointer; font-weight: bold; white-space: nowrap;
+        }
+        button:hover { background: var(--accent-hover); }
+        .delete-btn { background: #ef4444; padding: 5px 10px; font-size: 12px; }
+        .delete-btn:hover { background: #dc2626; }
+
+        /* 3. 黒板風メモ */
+        textarea { height: 120px; resize: none; font-family: inherit; }
+
+        /* 4. 言い訳ジェネレーター */
+        .excuse-text {
+            background: #fffbeb; border: 1px solid #fef3c7; color: #b45309;
+            padding: 12px; border-radius: 8px; min-height: 50px; margin-top: 10px; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏫 SchoolHub</h1>
+        
+        <div class="grid">
+            <!-- 1. 時間割自動ナビ (大画面時フルサイズ) -->
+            <div class="card navi-box full-width">
+                <div class="card-title">現在の授業ナビ</div>
+                <div id="naviTime" class="sub-text">判定中...</div>
+                <div id="naviSubject" class="big-text">データを読み込み中</div>
+                <div id="naviRoom" class="sub-text">--</div>
+            </div>
+
+            <!-- 2. 提出物・宿題マネージャー -->
+            <div class="card">
+                <div class="card-title">宿題・提出物リマインダー</div>
+                <div class="todo-input-area">
+                    <input type="text" id="todoInput" placeholder="例: 数学ワーク P.24 (明日)">
+                    <button onclick="addTodo()">追加</button>
+                </div>
+                <div id="todoList"></div>
+            </div>
+
+            <!-- 3. 急な連絡メモ -->
+            <div class="card">
+                <div class="card-title">連絡黒板（自由メモ）</div>
+                <textarea id="memoArea" placeholder="「明日は移動着登校」「ハサミ持参」など自由にメモ..." oninput="saveMemo()"></textarea>
+            </div>
+
+            <!-- 4. おまけ：宿題忘れた言い訳メーカー -->
+            <div class="card full-width">
+                <div class="card-title">緊急事態用：宿題の言い訳メーカー</div>
+                <button onclick="generateExcuse()" style="background:#10b981;">言い訳を生成する</button>
+                <div id="excuseResult" class="excuse-text">ボタンを押すと、それっぽい言い訳が生成されます。</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ★学校の時間割データをここにセット！ (サンプルとして中学生の標準的な時間をいれてあります)
+        // 曜日: 1=月, 2=火, 3=水, 4=木, 5=金
+        const timeTable = {
+            1: [ // 月曜日
+                { start: "08:45", end: "09:35", subject: "1時間目：国語", room: "場所: 自分の教室",持ち物: "教科書、ノート" },
+                { start: "09:45", end: "10:35", subject: "2時間目：数学", room: "場所: 自分の教室",持ち物: "コンパス" },
+                { start: "10:45", end: "11:35", subject: "3時間目：理科", room: "場所: 第1理科室 🏃‍♂️移動",持ち物: "実験ノート、筆記用具" },
+                { start: "11:45", end: "12:35", subject: "4時間目：体育", room: "場所: 体育館 🏃‍♂️移動",持ち物: "体操服、水筒" },
+                { start: "13:45", end: "14:35", subject: "5時間目：英語", room: "場所: 自分の教室",持ち物: "ワーク" },
+                { start: "14:45", end: "15:35", subject: "6時間目：社会", room: "場所: 自分の教室",持ち物: "資料集" }
+            ],
+            2: [ // 火曜日
+                { start: "08:45", end: "09:35", subject: "1時間目：音楽", room: "場所: 音楽室 🏃‍♂️移動",持ち物: "アルトリコーダー" },
+                { start: "09:45", end: "10:35", subject: "2時間目：国語", room: "場所: 自分の教室",持ち物: "漢字練習帳" },
+                { start: "10:45", end: "11:35", subject: "3時間目：英語", room: "場所: 自分の教室",持ち物: "教科書" },
+                { start: "11:45", end: "12:35", subject: "4時間目：数学", room: "場所: 自分の教室",持ち物: "ノート" },
+                { start: "13:45", end: "14:35", subject: "5時間目：美術", room: "場所: 美術室 🏃‍♂️移動",持ち物: "スケッチブック" },
+                { start: "14:45", end: "15:35", subject: "6時間目：学活", room: "場所: 自分の教室",持ち物: "特になし" }
+            ],
+            // 3, 4, 5（水木金）も同様に増やせます。データがない日は「現在の時間割はありません」になります。
+        };
+
+        // --- 1. 時間割ナビのロジック ---
+        function updateNavi() {
+            const now = new Date();
+            const day = now.getDay(); // 0=日, 1=月...
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const currentTimeStr = `${hours}:${minutes}`;
+
+            document.getElementById('naviTime').innerText = `現在時刻: ${currentTimeStr}`;
+
+            if (day === 0 || day === 6 || !timeTable[day]) {
+                document.getElementById('naviSubject').innerText = "休日のため授業はありません 😴";
+                document.getElementById('naviRoom').innerText = "ゆっくり休みましょう。";
+                return;
+            }
+
+            const todayClasses = timeTable[day];
+            let currentClass = null;
+
+            for (let i = 0; i < todayClasses.length; i++) {
+                // 授業中、または前の授業が終わってから次の授業が始まるまでの休み時間
+                if (currentTimeStr <= todayClasses[i].end) {
+                    currentClass = todayClasses[i];
+                    break;
+                }
+            }
+
+            if (currentClass) {
+                if (currentTimeStr >= currentClass.start) {
+                    document.getElementById('naviSubject').innerText = `【授業中】${currentClass.subject}`;
+                } else {
+                    document.getElementById('naviSubject').innerText = `【次の一手】${currentClass.subject}`;
+                }
+                document.getElementById('naviRoom').innerText = `${currentClass.room} / 🎒持ち物: ${currentClass.持ち物}`;
+            } else {
+                document.getElementById('naviSubject').innerText = "今日の授業はすべて終了しました！✨";
+                document.getElementById('naviRoom').innerText = "放課後です。気をつけて帰りましょう！";
+            }
+        }
+
+        // --- 2. ToDoリストのロジック（LocalStorage保存） ---
+        let todos = JSON.parse(localStorage.getItem('school_todos')) || [];
+
+        function renderTodos() {
+            const listEl = document.getElementById('todoList');
+            listEl.innerHTML = '';
+            if(todos.length === 0) listEl.innerHTML = '<p style="color:#868e96;font-size:14px;">提出物は今のところありません！👍</p>';
+            todos.forEach((todo, index) => {
+                listEl.innerHTML += `
+                    <div class="todo-item">
+                        <span>📝 ${todo}</span>
+                        <button class="delete-btn" onclick="deleteTodo(${index})">完了</button>
+                    </div>
+                `;
+            });
+        }
+        function addTodo() {
+            const input = document.getElementById('todoInput');
+            if(!input.value.trim()) return;
+            todos.push(input.value.trim());
+            localStorage.setItem('school_todos', JSON.stringify(todos));
+            input.value = '';
+            renderTodos();
+        }
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            localStorage.setItem('school_todos', JSON.stringify(todos));
+            renderTodos();
+        }
+
+        // --- 3. 自由メモのロジック（LocalStorage保存） ---
+        function saveMemo() {
+            const text = document.getElementById('memoArea').value;
+            localStorage.setItem('school_memo', text);
+        }
+
+        // --- 4. 言い訳ジェネレーター ---
+        const excuses = [
+            "宿題のノートから突如未知の電磁波が検出され、家族の安全のために塩水につけて封印せざるを得ませんでした。",
+            "昨日、世界線を移動してしまったようで、前の世界線においてきたノートがこちらの世界線にまだ実体化していないようです。",
+            "家を出る直前に、飼い猫がノートの上で「ここを動かぬ」という強い意志を示したため、猫の尊厳を守るために置いてきました。",
+            "大変申し訳ありません。完璧に仕上げたのですが、あまりの出来栄えの美しさに泥棒に盗まれてしまった可能性があります。",
+            "ノートを開いて集中していたところ、突然ページの間から激しい睡魔の妖精が現れ、気がついたら今朝のAM7:30でした。"
+        ];
+        function generateExcuse() {
+            const random = excuses[Math.floor(Math.random() * excuses.length)];
+            document.getElementById('excuseResult').innerText = random;
+        }
+
+        // 初期起動
+        window.onload = function() {
+            renderTodos();
+            document.getElementById('memoArea').value = localStorage.getItem('school_memo') || '';
+            updateNavi();
+            setInterval(updateNavi, 30000); // 30秒ごとに時間割表示を更新
+        }
+    </script>
+</body>
+</html>

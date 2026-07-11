@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>中学歴史 フラッシュカード100 究極版</title>
+    <style>
+        body { background-color: #f7fafc; font-family: sans-serif; text-align: center; padding: 20px; margin: 0; user-select: none; }
+        .box { max-width: 550px; margin: 20px auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); position: relative; }
+        h1 { color: #2d3748; font-size: 18px; margin: 0 0 15px 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .info { font-size: 13px; color: #4a5568; margin-bottom: 15px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .card { background: #f7fafc; padding: 45px 20px; border-radius: 10px; font-size: 20px; font-weight: bold; min-height: 120px; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px solid #cbd5e0; margin-bottom: 15px; line-height: 1.5; position: relative; transition: all 0.2s; }
+        .card.ans-mode { font-size: 28px; color: #e53e3e !important; }
+        .star-btn { position: absolute; top: 10px; right: 10px; font-size: 24px; cursor: pointer; color: #cbd5e0; background: none; border: none; padding: 0; width: auto; }
+        .star-btn.active { color: #ecc94b; }
+        .hint { color: #2b6cb0; font-size: 13px; background: #ebf8ff; padding: 8px; border-radius: 6px; display: block; margin-bottom: 20px; text-align: left; min-height: 20px; }
+        .btn-set { display: flex; gap: 12px; margin-bottom: 10px; }
+        button { flex: 1; padding: 14px; border: none; border-radius: 8px; color: white; font-size: 15px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; }
+        button:hover { opacity: 0.9; }
+        .btn-w { background: #e53e3e; }
+        .btn-c { background: #38a169; }
+        .hide { display: none !important; }
+        .res-box { background: #edf2f7; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .kb-guide { font-size: 11px; color: #718096; margin-top: 15px; }
+        
+        /* タイムアタック用プログレスバー */
+        .timer-bar-container { width: 100%; height: 6px; background-color: #e2e8f0; border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
+        .timer-bar { width: 100%; height: 100%; background-color: #4299e1; width: 100%; transition: width 0.1s linear; }
+        
+        /* スタート画面のジャンルボタン */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .btn-menu { background: #4a5568; padding: 18px; font-size: 16px; }
+        .btn-menu-all { grid-column: span 2; background: #2b6cb0; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>中学歴史 重要暗記カード（100問）</h1>
+    
+    <!-- スタート画面 -->
+    <div id="start-zone">
+        <p style="font-size: 15px; color: #4a5568;">出題する時代を選択してください：</p>
+        <div class="menu-grid">
+            <button class="btn-menu btn-menu-all" onclick="selectEra('all')">[1] 🌍 全時代からランダム出題 (100問)</button>
+            <button class="btn-menu" onclick="selectEra('古代')">[2] 🏺 古代 (旧石器〜奈良)</button>
+            <button class="btn-menu" onclick="selectEra('中世')">[3] 🌸 中世 (平安〜室町)</button>
+            <button class="btn-menu" onclick="selectEra('近世')">[4] 🏯 近世 (安土桃山〜江戸)</button>
+            <button class="btn-menu" onclick="selectEra('近代')">[5] 🚂 近代 (明治〜日露戦争)</button>
+        </div>
+        <div class="kb-guide" style="margin-top: 25px;">⌨️ [1]〜[5] の数字キーを押して開始できます</div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-zone" class="hide">
+        <div class="info">
+            <span>進行度: <span id="num">1</span> / <span id="total-count">100</span></span>
+            <span id="era-badge" style="background:#e2e8f0; padding:2px 8px; border-radius:20px; font-size:11px;"></span>
+            <span>覚えた数: <span id="ok-count" style="color:#38a169;">0</span></span>
+        </div>
+        
+        <div class="timer-bar-container">
+            <div id="timer-bar" class="timer-bar"></div>
+        </div>
+
+        <div class="card" id="card" onclick="flip()">
+            <button id="star-btn" class="star-btn" onclick="toggleStar(event)">★</button>
+            <span id="card-text">読み込み中...</span>
+        </div>
+        
+        <div class="hint" id="hint"></div>
+        
+        <div class="btn-set">
+            <button class="btn-w" onclick="next(false)">まだ覚えてない (←)</button>
+            <button class="btn-c" onclick="next(true)">覚えた！ (→)</button>
+        </div>
+        <div class="kb-guide">⌨️ [Space/Enter] めくる | [←] まだ覚えてない | [→] 覚えた | [↑] ★苦手マーク</div>
+    </div>
+    
+    <!-- 結果画面 -->
+    <div id="result-zone" class="hide">
+        <h2 id="result-title">🎉 学習完了！</h2>
+        <div class="res-box">
+            <p style="font-size: 16px; margin: 5px 0;">あなたの結果</p>
+            <p style="font-size: 36px; color: #2b6cb0; font-weight: bold; margin: 10px 0;"><span id="score">0</span> / <span id="res-total">100</span>問</p>
+            <p id="retry-info" style="font-size: 14px; color: #4a5568; margin: 5px 0;"></p>
+        </div>
+        <button id="action-btn" style="background: #3182ce; width: 100%; margin-bottom: 10px;" onclick="handleRetry()">次へ進む (Enter)</button>
+        <button style="background: #718096; width: 100%;" onclick="backToMenu()">時代選択に戻る</button>
+    </div>
+</div>
+
+<script>
+    // 100問のマスターデータ
+    const rawData = [
+        { q: "打製石器を使い、狩りや採集を行っていた、日本最古の時代は？", a: "旧石器時代", h: "岩宿遺跡などが代表的です。", tag: "古代" },
+        { q: "縄文時代の人々が食べ物の残りかすなどを捨てた、当時のゴミ捨て場は？", a: "貝塚（かいづか）", h: "モースが発見した大森貝塚が有名。", tag: "古代" },
+        { q: "縄文時代に魔よけや豊かな実りを祈るために作られた、素焼きの人形は？", a: "土偶（どぐう）", h: "様々な形があり、主に女性をかたどっています。", tag: "古代" },
+        { q: "紀元前4世紀頃から始まり、稲作や金属器が伝わった時代は？", a: "弥生時代", h: "薄手で硬い弥生土器が使われました。", tag: "古代" },
+        { q: "弥生時代の代表的な遺跡で、佐賀県にある大規模な環濠集落の遺跡は？", a: "吉野ヶ里遺跡", h: "物見やぐらや二重の堀が特徴です。", tag: "古代" },
+        { q: "弥生時代の遺跡で、静岡県にある水田跡や高床倉庫跡が見つかった遺跡は？", a: "登呂遺跡", h: "多くの木製農具も一緒に出土しました。", tag: "古代" },
+        { q: "1世紀に漢の皇帝から金印を授かった、九州にあった日本の国は？", a: "奴国（なこく）", h: "福岡県の志賀島で「漢委奴国王」の金印が発見。", tag: "古代" },
+        { q: "3世紀に邪馬台国を治め、魏から「親魏倭王」の称号を得た女王は？", a: "卑弥呼（ひみこ）", h: "占い（鬼道）を使って国をまとめました。", tag: "古代" },
+        { q: "3世紀後半から大和地方を中心に作られた、豪族や王の巨大なお墓は？", a: "古墳", h: "前方後円墳などの形が有名です。", tag: "古代" },
+        { q: "古墳の周囲や頂上に並べられた、人や馬の形をした素焼きの焼き物は？", a: "埴輪（はにわ）", h: "土偶と間違えないように注意しましょう。", tag: "古代" },
+        { q: "5世紀頃、大陸から日本に移住し、漢字や仏教、技術を伝えた人々は？", a: "渡来人（とらいじん）", h: "日本の国づくりや文化に大きく貢献しました。", tag: "古代" },
+        { q: "推古天皇の摂政となり、叔母を助けて天皇中心の政治改革を行った人物は？", a: "聖徳太子（厩戸王）", h: "法隆寺を建てたことでも有名です。", tag: "古代" },
+        { q: "聖徳太子が定めた、家柄にとらわれず能力のある人材を登用する制度は？", a: "冠位十二階", h: "冠の色で位（グラデーション）を表しました。", tag: "古代" },
+        { q: "聖徳太子が定めた、役人の心得や仏教・天皇を敬うことを示した法は？", a: "十七条の憲法", h: "「和をもって貴しとなす」の一節が有名。", tag: "古代" },
+        { q: "聖徳太子が中国の制度や文化を学ぶために派遣した使節は？", a: "遣隋使（けんずいし）", h: "小野妹子らが隋の皇帝に国書を渡しました。", tag: "古代" },
+        { q: "日本で最初の、仏教文化を中心とする華やかな文化は？", a: "飛鳥文化", h: "法隆寺の釈迦三尊像などが代表例です。", tag: "古代" },
+        { q: "中大兄皇子と中臣鎌足が蘇我氏を倒し、645年に始まった政治改革は？", a: "大化の改新", h: "天皇中心の中央集権国家を目指しました。", tag: "古代" },
+        { q: "大化の改新で示された、土地と人民を国家（天皇）のものとする原則は？", a: "公地公民", h: "豪族が私有することを禁止しました。", tag: "古代" },
+        { q: "天智天皇の死後、跡継ぎをめぐって起こった古代最大の内乱は？", a: "暗申の乱（じんしんのらん）", h: "大海人皇子が勝利し、天武天皇となりました。", tag: "古代" },
+        { q: "701年に唐の法律にならって制定された、古代日本の支配体制の基準は？", a: "大宝律令", h: "「律」は刑法、「令」は行政法のことです。", tag: "古代" },
+        { q: "710年、元明天皇のときに奈良に造られた、唐の都にならった都は？", a: "平城京", h: "「なんと（710）見事な平城京」", tag: "古代" },
+        { q: "奈良時代に、中国の進んだ制度や文化を吸収するために送られた使節は？", a: "遣唐使（けんとうし）", h: "鑑真や阿倍仲麻呂らが関係しています。", tag: "古代" },
+        { q: "奈良時代、地方の農民に割り当てられ、死後に国に返す土地の制度は？", a: "班田収授の法", h: "戸籍に基づいて6歳以上の男女に支給されました。", tag: "古代" },
+        { q: "奈良時代の農民の負担で、収穫の約3%の米を納める税は？", a: "租（そ）", h: "自分の地方の国衙（役所）に納めました。", tag: "古代" },
+        { q: "奈良時代の農民の負担で、都での労働の代わりに布などを納める税は？", a: "庸（よう）", h: "調（各地の特産物）と一緒に都へ運びました。", tag: "古代" },
+        { q: "743年、新しく開墾した土地の永久私有を認めた法律は？", a: "墾田永年私財法", h: "これにより公地公民の原則が崩れ始めました。", tag: "古代" },
+        { q: "墾田永年私財法などにより、貴族や寺社が広げた私有地を何というか？", a: "荘園（しょうえん）", h: "のちに武士が管理に介入してきます。", tag: "古代" },
+        { q: "東大寺に大仏を造らせ、国ごとに国分寺を建てさせた天皇は？", a: "聖武天皇", h: "仏教の力で国家の不安を鎮めようとしました。", tag: "古代" },
+        { q: "聖武天皇の遺品などが収められている、正倉院の代表的な建築様式は？", a: "校倉造（あぜくらづくり）", h: "木材を組み合わせて湿気防ぐ工夫があります。", tag: "古代" },
+        { q: "日本最古の和歌集で、防人や農民の歌まで幅広く収められているものは？", a: "万葉集", h: "大伴家持らが編集したとされています。", tag: "古代" },
+        { q: "794年、桓武天皇が京都に遷した、その後千年以上続く都の名前は？", a: "平安京", h: "「鳴くよ（794）ウグイス平安京」", tag: "中世" },
+        { q: "平安初期、東北の蝦夷を征討するために坂上田村麻呂が任命された職は？", a: "征夷大将軍", h: "のちに武家政権のトップを指す言葉になります。", tag: "中世" },
+        { q: "894年、菅原道真の提言によって停止され、そのまま廃止されたものは？", a: "遣唐使の廃止", h: "「白紙（894）に戻そう遣唐使」", tag: "中世" },
+        { q: "藤原氏が娘を天皇の后にし、摂政や関白として実権を握った政治体制は？", a: "摂関政治", h: "藤原道長・頼通の親子の時代が全盛期です。", tag: "中世" },
+        { q: "日本の風土や生活に合わせた、平安時代の中期以降に発達した貴族文化は？", a: "国風文化", h: "かな文字の発達により、文学が大きく進歩しました。", tag: "中世" },
+        { q: "紫式部によって書かれた、宮廷を舞台にした世界最古の長編小説は？", a: "源氏物語", h: "光源氏が主人公の華やかな物語です。", tag: "中世" },
+        { q: "清少納言によって書かれた、宮廷生活の美意識を綴った随筆は？", a: "枕草子", h: "「春はあけぼの」の書き出しで有名です。", tag: "中世" },
+        { q: "白河上皇が始めた、天皇が位を退いて上皇となった後も行った政治は？", a: "院政", h: "摂関家を抑えて独自の権力を振るいました。", tag: "中世" },
+        { q: "1167年、武士として初めて太政大臣になり、日宋貿易を進めた人物は？", a: "平清盛", h: "平氏の全盛期を築き上げました。", tag: "中世" },
+        { q: "1185年、平氏が滅亡した山口県の壇ノ浦の戦いで、平氏を破った源氏の武将は？", a: "源義経（よしつね）", h: "源頼朝の弟です。", tag: "中世" },
+        { q: "源頼朝が全国に設置した、各国の軍事や御家人の統率を担当する職は？", a: "守護", h: "主に有力な御家人が任命されました。", tag: "中世" },
+        { q: "源頼朝が全国の荘園などに設置した、年貢の徴収や土地管理を行う職は？", a: "地頭", h: "武士が現地を支配する足がかりとなりました。", tag: "中世" },
+        { q: "1192年、源頼朝が征夷大将軍に任じられて開いた初の武家政権は？", a: "鎌倉幕府", h: "御恩と奉公という主従関係で成り立ちました。", tag: "中世" },
+        { q: "頼朝の死後、北条氏が就任して幕府の実権を握った、将軍を補佐する最高職は？", a: "執権（しっけん）", h: "北条時政や泰時などが有名です。", tag: "中世" },
+        { q: "1221年、後鳥羽上皇が幕府を倒そうとして兵を挙げ、幕府軍に敗れた戦いは？", a: "承久の乱（じょうきゅうのらん）", h: "これにより幕府の支配が西日本にも及びました。", tag: "中世" },
+        { q: "承久の乱の後、幕府が朝廷の監視や西国の支配のために京都に置いた機関は？", a: "六波羅探題（ろくはらたんだい）", h: "京都の警備も担当しました。", tag: "中世" },
+        { q: "1232年、3代執権の北条泰時が定めた、武士社会の最初の法律は？", a: "御成敗式目（貞永式目）", h: "裁判の基準を明確にし、分かりやすくしました。", tag: "中世" },
+        { q: "13世紀後半、フビライ・ハン率いる元軍が2度にわたり九州を襲撃した出来事は？", a: "元寇（げんこう）", h: "文永の役・弘安の役。集団戦法やてつはうに苦しみました。", tag: "中世" },
+        { q: "元寇で困窮した御家人を救うため、幕府が出した借金帳消し令は？", a: "徳政令（とくせいれい）", h: "永仁の徳政令が有名ですが、社会は混乱しました。", tag: "中世" },
+        { q: "鎌倉幕府を滅ぼし、天皇中心の政治に戻そうとして「建武の新政」を行った天皇は？", a: "後醍醐天皇", h: "足利尊氏らの協力を得て幕府を倒しました。", tag: "中世" },
+        { q: "足利尊氏が京都に開き、3代将軍義満の時に全盛期を迎えた武家政権は？", a: "室町幕府", h: "京都の室町に「花の御所」が建てられました。", tag: "中世" },
+        { q: "京都の北朝と吉野の南朝に分かれて約60年間、対立し続けた時代は？", a: "南北朝時代", h: "足利義満がこれを一つにまとめました。", tag: "中世" },
+        { q: "室町幕府において、地方の支配を強め、やがて領主（大名）化していった守護は？", a: "守護大名", h: "一国の領主としての性格を強めました。", tag: "中世" },
+        { q: "足利義満が明（中国）と行った、正式な貿易船に証明書を用いた貿易は？", a: "勘合貿易（日明貿易）", h: "倭寇（海賊）と区別するために札（勘合）を使いました。", tag: "中世" },
+        { q: "足利義満が京都の北山に建てた、金箔が貼られた代表的な建物は？", a: "金閣", h: "北山文化の代表例。寝殿造と禅宗様が混ざっています。", tag: "中世" },
+        { q: "足利義政が京都の東山に建てた、書院造を取り入れた簡素な建物は？", a: "銀閣", h: "東山文化の代表例。現在の和室の原型です。", tag: "中世" },
+        { q: "1467年、将軍の跡継ぎ問題などから始まり、11年間京都を戦場とした乱は？", a: "応仁の乱", h: "「人の世（1467）むなしい応仁の乱」", tag: "中世" },
+        { q: "応仁の乱の後、実力のある下の者が上の者を倒して実権を握る社会風潮は？", a: "下剋上（げこくじょう）", h: "戦国時代の幕開けを象徴する言葉です。", tag: "中世" },
+        { q: "戦国大名が、自分の領内を独自に支配し、領民を統制するために定めた法律は？", a: "分国法", h: "大名独自の法律で、喧嘩両成敗などが含まれます。", tag: "中世" },
+        { q: "1543年、種子島に漂着したポルトガル人によって日本に伝えられた武器は？", a: "鉄砲（火縄銃）", h: "その後の戦術や城の造りを大きく変えました。", tag: "近世" },
+        { q: "1549年、鹿児島に来日し、日本に初めてキリスト教を伝えた宣教師は？", a: "フランシスコ・ザビエル", h: "「以後よく（1549）広まるキリスト教」", tag: "近世" },
+        { q: "1560年、織田信長が今川義元を奇襲して破り、名を挙げた愛知県の戦いは？", a: "桶狭間の戦い", h: "少ない兵力で大軍を破りました。", tag: "近世" },
+        { q: "1575年、織田信長が大量の鉄砲隊を用いて武田の騎馬隊を破った戦いは？", a: "長篠の戦い", h: "馬防柵と鉄砲の工夫された戦術が有名です。", tag: "近世" },
+        { q: "織田信長が商業を盛んにするために、関所を廃止し商人の特権を認めなかった政策は？", a: "楽市・楽座", h: "誰でも自由に商売ができるようにしました。", tag: "近世" },
+        { q: "1582年、天下統一を目前にした織田信長が、家臣の明智光秀に裏切られて自害した事件は？", a: "本能寺の変", h: "「敵は本能寺にあり」", tag: "近世" },
+        { q: "信長の跡を継ぎ、1590年に天下統一を成し遂げた人物は？", a: "豊臣秀吉", h: "大阪城を拠点に全国を支配しました。", tag: "近世" },
+        { q: "豊臣秀吉が全国の田畑の面積や収穫量を調査し、枡の大きさを統一した政策は？", a: "太閤検地", h: "全国の収穫量を「石高」で表しました。", tag: "近世" },
+        { q: "豊臣秀吉が農民から武器を取り上げ、一揆を防いで農耕に専念させた政策は？", a: "刀狩", h: "これにより武士と農民の区別が明確になりました。", tag: "近世" },
+        { q: "太閤検地や刀狩によって、武士と農民の身分がはっきりと区別されたことを何というか？", a: "兵農分離", h: "身分が固定化されるきっかけとなりました。", tag: "近世" },
+        { q: "1600年、徳川家康率いる東軍が石田三成らの西軍を破った「天下分け目の戦い」は？", a: "関ヶ原の戦い", h: "岐阜県で行われた戦いです。", tag: "近世" },
+        { q: "1603年、徳川家康が征夷大将軍に任じられて江戸に開いた幕府は？", a: "江戸幕府", h: "その後約260年間、安定した時代が続きました。", tag: "近世" },
+        { q: "江戸幕府が各大名に1年おきに江戸と領地を行き来させ、妻子を江戸に住まわせた制度は？", a: "参勤交代", h: "3代将軍徳川家光が義務づけました。", tag: "近世" },
+        { q: "江戸幕府が定めた、大名を統制し、無断での城の修理や婚姻を禁止した法律は？", a: "武家諸法度", h: "違反した大名は領地を没収されることもありました。", tag: "近世" },
+        { q: "江戸幕府がキリスト教を開止し、日本人の海外渡航や外国船の来航を制限した政策は？", a: "鎖国", h: "長崎の出島のみで一部の国と取引しました。", tag: "近世" },
+        { q: "鎖国下で、日本が唯一ヨーロッパの中で貿易を許した国と、その場所は？", a: "オランダ・出島", h: "中国（清）とも長崎で貿易を行っていました。", tag: "近世" },
+        { q: "江戸幕府がキリスト教徒を見つけるために、キリストやマリアの像を踏ませた儀式は？", a: "絵踏（えふみ）", h: "踏ませた金属や木の板のことは「踏み絵」と呼びます。", tag: "近世" },
+        { q: "江戸幕府が農民を統制し、年貢の納入や犯罪防止に連帯責任を負わせた制度は？", a: "五人組", h: "近隣の5軒を1組としました。", tag: "近世" },
+        { q: "5代将軍徳川綱吉が出した、極端な生き物愛護を強制して庶民を苦しめた法令は？", a: "生類憐みの令", h: "特に犬が保護されたため「犬公方」と呼ばれました。", tag: "近世" },
+        { q: "8代将軍徳川吉宗が行った、上げ米の制や目安箱の設置などの幕政改革は？", a: "享保の改革", h: "米の増産を勧めたため「米公方」と呼ばれました。", tag: "近世" },
+        { q: "老中田沼意次が進めた、商人の組合（株仲間）を公認して税を徴収する商業重視の政治は？", a: "田沼の政治", h: "効率よくお金を集めましたが、賄賂が横行しました。", tag: "近世" },
+        { q: "老中松平定信が行った、天明の飢饉の後の寛政の改革において、武士に奨励した学問は？", a: "朱子学", h: "これ以外の学問を幕府の学校で教えるのを禁じました。", tag: "近世" },
+        { q: "1837年、飢饉に苦しむ人々を救うため、大坂で元幕府の役人が起こした武装反乱は？", a: "大塩平八郎の乱", h: "身内であるはずの役人が起こしたため幕府に衝撃を与えました。", tag: "近世" },
+        { q: "老中水野忠邦が行った天保の改革において、物価引き下げのために解散を命じた組合は？", a: "株仲間", h: "効果がなく、改革は短期間で失敗しました。", tag: "近世" },
+        { q: "1853年、浦賀に4隻の黒船で来航し、日本に開国を求めたアメリカの司令官は？", a: "ペリー", h: "蒸気船の圧倒的な力を見せつけました。", tag: "近代" },
+        { q: "1854年、ペリーと幕府の間で結ばれ、下田・箱館の2港を開港した条約は？", a: "日米和親条約", h: "これにより日本の鎖国体制が終わりました。", tag: "近代" },
+        { q: "1858年、大老の井伊直弼が天皇の許可を得ずに結んだ、日本に不利な不平等条約は？", a: "日米修好通商条約", h: "貿易を本格的に始めるための条約です。", tag: "近代" },
+        { q: "日米修好通商条約において、日本になかった不平等な権利は？", a: "領事裁判権（治外法権）", h: "外国人が日本で罪を犯しても日本の法律で裁けません。", tag: "近代" },
+        { q: "日米修好通商条約において、日本に認められなかった権利は？", a: "関税自主権の欠如", h: "輸入品にかける税金を日本が自由に決められません。", tag: "近代" },
+        { q: "1866年、坂本龍馬らの仲介で、薩摩藩と長州藩が結んだ倒幕のための同盟は？", a: "薩長同盟", h: "西郷隆盛と木戸孝允らが手を結びました。", tag: "近代" },
+        { q: "1867年、15代将軍徳川慶喜が、政権を朝廷に返上して幕府を終わらせた出来事は？", a: "大政奉還", h: "江戸幕府が実質的に滅亡しました。", tag: "近代" },
+        { q: "1868年、新政府軍と旧幕府軍との間で始まった、近代日本最大の内戦は？", a: "戊辰戦争", h: "翌年に北海道の五稜郭で終結しました。", tag: "近代" },
+        { q: "1871年、新政府が藩を廃止して全国を政府が直轄する県に改めた大改革は？", a: "廃藩置県", h: "中央集権国家を確立するための政策です。", tag: "近代" },
+        { q: "1872年、満6歳以上の男女すべてに小学校教育を受けさせることを義務づけた法令は？", a: "学制", h: "近代化のために教育を重視しました。", tag: "近代" },
+        { q: "1873年、満20歳以上の男子に、身分に関わらず兵役を義務づけた法令は？", a: "徴兵令", h: "国民皆兵の軍隊を作るのが目的です。", tag: "近代" },
+        { q: "1873年、土地の所有者に地券を交付し、基準（地価）の3%を現金で納めさせた税制改革は？", a: "地祖改正", h: "政府の毎年の収入を安定させました。", tag: "近代" },
+        { q: "明治政府が進めた、欧米に負けない近代的な国力と軍隊をつくるためのスローガンは？", a: "富国強兵", h: "殖産興業などの政策が進められました。", tag: "近代" },
+        { q: "1872年、群馬県に建てられた、フランスの技術を取り入れた官営の模範シルク工場は？", a: "富岡製糸場", h: "世界遺産にも登録されている日本の近代化の象徴です。", tag: "近代" },
+        { q: "板垣退助らが民撰議院設立建白書を提出して始まった、議会の開設を求める政治運動は？", a: "自由民権運動", h: "国会を開くことや憲法を作ることを要求しました。", tag: "近代" },
+        { q: "1889年2月11日に発布された、天皇が主権を持つ、アジア初の近代的な憲法は？", a: "大日本帝国憲法", h: "ドイツ（プロイセン）の憲法を参考に作られました。", tag: "近代" },
+        { q: "1894年、朝鮮での甲午農民戦争をきっかけに始まった、日本と清の戦争は？", a: "日清戦争", h: "日本の近代軍隊が初めて挑んだ大国との戦争です。", tag: "近代" },
+        { q: "1911年、外相の小村寿太郎が不平等条約の改正で最後に回復させた権利は？", a: "関税自主権", h: "ちなみに1894年には陸奥宗光が領事裁判権を撤廃しています。", tag: "近代" },
+        { q: "1904年に勃発した、満洲や朝鮮半島の支配権をめぐる日本とロシアの戦争は？", a: "日露戦争", h: "増税などで国民の生活は非常に苦しくなりました。", tag: "近代" },
+        { q: "日露戦争の講和条約であるポーツマス条約の不満から、東京で起きた暴動事件は？", a: "日比谷焼き打ち事件", h: "賠償金が取れなかったことに対する国民の怒りが爆発しました。", tag: "近代" }
+    ];
+
+    let data = [];       
+    let wrongData = [];  
+    let starredQuestions = []; 
+    let idx = 0;
+    let score = 0;
+    let mode = 0;        
+    let roundType = "normal"; 
+    let isFinished = false; 
+
+    // タイマー変数
+    let timerInterval = null;
+    let timeLeft = 100; 
+    const LIMIT_SECONDS = 5; 
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // ジャンル（時代）選択
+    function selectEra(era) {
+        if (era === 'all') {
+            data = shuffle([...rawData]);
+        } else {
+            data = shuffle(rawData.filter(item => item.tag === era));
+        }
+        document.getElementById("start-zone").classList.add("hide");
+        document.getElementById("game-zone").classList.remove("hide");
+        
+        wrongData = [];
+        idx = 0;
+        score = 0;
+        mode = 0;
+        roundType = "normal";
+        isFinished = false;
+        
+        document.getElementById("ok-count").innerText = score;
+        show();
+    }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        if (mode !== 0) {
+            document.getElementById("timer-bar").style.width = "0%";
+            return; 
+        }
+        timeLeft = 100;
+        document.getElementById("timer-bar").style.width = "100%";
+        
+        const step = 100 / (LIMIT_SECONDS * 10); 
+        timerInterval = setInterval(() => {
+            timeLeft -= step;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                clearInterval(timerInterval);
+                timeOutFlip(); 
+            }
+            document.getElementById("timer-bar").style.width = timeLeft + "%";
+        }, 100);
+    }
+
+    function timeOutFlip() {
+        mode = 1;
+        show();
+    }
+
+    function show() {
+        clearInterval(timerInterval);
+
+        if(idx >= data.length) {
+            isFinished = true;
+            document.getElementById("game-zone").classList.add("hide");
+            document.getElementById("result-zone").classList.remove("hide");
+            document.getElementById("score").innerText = score;
+            document.getElementById("res-total").innerText = data.length;
+            
+            const actionBtn = document.getElementById("action-btn");
+            const retryInfo = document.getElementById("retry-info");
+            const resTitle = document.getElementById("result-title");
+
+            if (roundType === "normal" && wrongData.length > 0) {
+                resTitle.innerText = "📝 1周目チェック完了！";
+                retryInfo.innerText = "まだ覚えていない問題が " + wrongData.length + " 問あります。";
+                actionBtn.innerText = "未暗記の " + wrongData.length + " 問に挑戦する (Enter)";
+            } else if (starredQuestions.length > 0 && roundType !== "starred") {
+                resTitle.innerText = "🎉 ラウンド完了！";
+                retryInfo.innerText = "★をつけた苦手問題が現在 " + starredQuestions.length + " 問あります。";
+                actionBtn.innerText = "★マークの苦手問題を特訓する (Enter)";
+                roundType = "ready-for-star";
+            } else {
+                resTitle.innerText = "🎉 全学習完了！";
+                retryInfo.innerText = "お疲れ様でした！繰り返し挑戦して記憶を定着させましょう。";
+                actionBtn.innerText = "もう一度最初から挑戦する (Enter)";
+                roundType = "normal";
+            }
+            return;
+        }
+
+        document.getElementById("total-count").innerText = data.length;
+        document.getElementById("num").innerText = idx + 1;
+        document.getElementById("era-badge").innerText = data[idx].tag;
+
+        const starBtn = document.getElementById("star-btn");
+        if (starredQuestions.includes(data[idx])) {
+            starBtn.classList.add("active");
+        } else {
+            starBtn.classList.remove("active");
+        }
+
+        const card = document.getElementById("card");
+        const cardText = document.getElementById("card-text");
+
+        if(mode === 0) {
+            card.classList.remove("ans-mode");
+            cardText.innerText = data[idx].q;
+            card.style.background = "#f7fafc";
+            card.style.borderColor = "#cbd5e0";
+            card.style.color = "#2d3748";
+            document.getElementById("hint").innerText = "💡 ヒント: " + data[idx].h;
+            startTimer();
+        } else {
+            card.classList.add("ans-mode");
+            cardText.innerText = data[idx].a;
+            card.style.background = "#fff5f5"; 
+            card.style.borderColor = "#e53e3e";
+            document.getElementById("timer-bar").style.width = "0%";
+            document.getElementById("hint").innerText = "💚 【正解表示中】覚えたか選んでください。";
+        }
+    }
+
+    function flip() {
+        if (isFinished) return;
+        mode = mode === 0 ? 1 : 0;
+        show();
+    }
+
+    function toggleStar(event) {
+        if (event) event.stopPropagation(); 
+        if (isFinished || data.length === 0) return;
+        
+        const currentQ = data[idx];
+        const starBtn = document.getElementById("star-btn");
+        
+        if (starredQuestions.includes(currentQ)) {
+            starredQuestions = starredQuestions.filter(q => q !== currentQ);
+            starBtn.classList.remove("active");
+        } else {
+            starredQuestions.push(currentQ);
+            starBtn.classList.add("active");
+        }
+    }
+
+    function next(ok) {
+        if (isFinished) return;
+        if(ok) {
+            score++;
+            document.getElementById("ok-count").innerText = score;
+        } else {
+            wrongData.push(data[idx]);
+        }
+        idx++;
+        mode = 0;
+        show();
+    }
+
+    function handleRetry() {
+        if (roundType === "normal" && wrongData.length > 0) {
+            data = shuffle([...wrongData]); 
+            wrongData = [];
+            idx = 0;
+            score = 0;
+            mode = 0;
+            roundType = "review";
+            isFinished = false;
+            document.getElementById("ok-count").innerText = score;
+            document.getElementById("game-zone").classList.remove("hide");
+            document.getElementById("result-zone").classList.add("hide");
+            show();
+        } else if (roundType === "ready-for-star" && starredQuestions.length > 0) {
+            data = shuffle([...starredQuestions]);
+            wrongData = [];
+            idx = 0;
+            score = 0;
+            mode = 0;
+            roundType = "starred";
+            isFinished = false;
+            document.getElementById("ok-count").innerText = score;
+            document.getElementById("game-zone").classList.remove("hide");
+            document.getElementById("result-zone").classList.add("hide");
+            show();
+        } else {
+            backToMenu();
+        }
+    }
+
+    function backToMenu() {
+        clearInterval(timerInterval);
+        document.getElementById("start-zone").classList.remove("hide");
+        document.getElementById("game-zone").classList.add("hide");
+        document.getElementById("result-zone").classList.add("hide");
+    }
+
+    // キーボード操作の制御
+    window.addEventListener("keydown", function(e) {
+        // 【重要】ボタンにフォーカスが残ったままSpaceやEnterを押したときの重複誤作動を完全にリセット
+        if (document.activeElement && typeof document.activeElement.blur === "function") {
+            document.activeElement.blur();
+        }
+
+        // 1. スタート画面が表示されている時（数字キー1〜5で時代選択）
+        const startZone = document.getElementById("start-zone");
+        if (!startZone.classList.contains("hide")) {
+            if (e.key === "1") selectEra('all');
+            else if (e.key === "2") selectEra('古代');
+            else if (e.key === "3") selectEra('中世');
+            else if (e.key === "4") selectEra('近世');
+            else if (e.key === "5") selectEra('近代');
+            return;
+        }
+
+        // 2. 結果画面が表示されている時
+        if (isFinished) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleRetry();
+            } else if (e.key === "Escape") {
+                backToMenu();
+            }
+            return;
+        }
+
+        // 3. ゲームプレイ中の操作
+        if (document.getElementById("game-zone").classList.contains("hide")) return;
+
+        if (e.key === " " || e.key === "Enter") {
+            e.preventDefault(); // 元々のブラウザのスクロールやボタンクリック挙動を阻止
+            flip();
+        } else if (e.key === "ArrowLeft") {
+            next(false);
+        } else if (e.key === "ArrowRight") {
+            next(true);
+        } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            toggleStar();
+        } else if (e.key === "Escape") {
+            backToMenu();
+        }
+    });
+</script>
+</body>
+</html>

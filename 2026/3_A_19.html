@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学校 毎日の持ち物チェックリスト</title>
+    <style>
+        /* 全体の背景と文字色 */
+        body { 
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif; 
+            line-height: 1.6; 
+            margin: 0; 
+            padding: 20px; 
+            background-color: #eef2f5; /* 薄いグレーブルー */
+            color: #333;
+        }
+        
+        /* リストを囲むカード */
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto;
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+        }
+        
+        /* メインタイトル */
+        h1 { 
+            text-align: center;
+            color: #2c3e50;
+            font-size: 1.6rem; 
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 3px dashed #3498db; /* 青い点線 */
+        }
+        
+        /* 各グループの見出し（グラデーションの背景） */
+        h2 { 
+            font-size: 1.1rem; 
+            color: white; 
+            background: linear-gradient(135deg, #3498db, #2ecc71); /* 青から緑へのグラデ */
+            margin-top: 25px; 
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+        
+        /* リストのスタイル */
+        ul { list-style: none; padding: 0; margin: 0; }
+        
+        /* 各項目（マウスを乗せると少し背景色が変わる） */
+        li { 
+            margin: 0;
+            border-bottom: 1px solid #edf2f7;
+        }
+        li:last-child { border-bottom: none; }
+        
+        /* クリックしやすくするためのラベル設定 */
+        label { 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center;
+            padding: 10px 5px;
+            transition: background 0.2s;
+        }
+        label:hover { background-color: #f7fafc; } /* ホバー時の薄いグレー */
+        
+        /* チェックボックス自体のデザイン変更 */
+        input[type="checkbox"] { 
+            margin-right: 12px; 
+            width: 18px;
+            height: 18px;
+            accent-color: #2ecc71; /* チェックを入れたときの色（ミントグリーン） */
+            cursor: pointer;
+        }
+        
+        /* チェックを入れたときの文字の演出 */
+        input[type="checkbox"]:checked + span { 
+            color: #a0aec0; 
+            text-decoration: line-through; /* 横線 */
+            font-weight: normal;
+        }
+        
+        /* 通常の文字強調 */
+        span {
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎒 中学校 持ち物チェック</h1>
+
+    <h2>📘 毎日持っていくもの</h2>
+    <ul>
+        <li><label><input type="checkbox"><span>生徒手帳</span></label></li>
+        <li><label><input type="checkbox"><span>筆箱</span></label></li>
+        <li><label><input type="checkbox"><span>教科書・ノート</span></label></li>
+</span></label></li>
+        <li><label><input type="checkbox"><span>家の鍵</span></label></li>
+        </span></label></li>
+    </ul>
+
+    <h2>🟢 身だしなみ</h2>
+    <ul>
+        <li><label><input type="checkbox"><span>ハンカチ・ポケットティッシュ</span></label></li>
+        <li><label><input type="checkbox"><span>水筒（お茶・水）</span></label></li>
+        <li><label><input type="checkbox"><span>予備のマスク</span></label></li>
+        </span></label></li>
+    </ul>
+
+    <h2>📙 曜日や日によって必要なもの</h2>
+    <ul>
+        <li><label><input type="checkbox"><span>上履き / 体育館シューズ</span></label></li>
+        <li><label><input type="checkbox"><span>体操服（ジャージ）</span></label></li>
+        </span></label></li>
+        <li><label><input type="checkbox"><span>提出物</span></label></li>
+        <li><label><input type="checkbox"><span>雨具（折りたたみ傘など）</span></label></li>
+    </ul>
+</div>
+
+</body>
+</html>

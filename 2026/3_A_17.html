@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インタラクティブ・バドミントンルール学習</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        #game-container {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        #info-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        #court-container {
+            position: relative;
+            flex: 1.2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e8f5e9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        /* バドミントンコートの簡易再現 (縦向き) */
+        #court {
+            position: relative;
+            width: 280px;
+            height: 500px;
+            background-color: #0f8a5f;
+            border: 4px solid white;
+        }
+        .line {
+            position: absolute;
+            background-color: white;
+        }
+        /* センターライン */
+        .center-line-top { width: 2px; height: 180px; top: 0; left: 139px; }
+        .center-line-bottom { width: 2px; height: 180px; bottom: 0; left: 139px; }
+        /* ネット（中央） */
+        .net { width: 100%; height: 4px; top: 248px; left: 0; background-color: #f1c40f; }
+        /* ショートサービスライン */
+        .short-service-top { width: 100%; height: 2px; top: 180px; left: 0; }
+        .short-service-bottom { width: 100%; height: 2px; bottom: 180px; left: 0; }
+        /* ダブルスリアサービスライン */
+        .doubles-rear-top { width: 100%; height: 2px; top: 30px; left: 0; }
+        .doubles-rear-bottom { width: 100%; height: 2px; bottom: 30px; left: 0; }
+        /* サイドライン（ダブルス用外側、シングルス用内側） */
+        .singles-side-left { width: 2px; height: 100%; top: 0; left: 20px; }
+        .singles-side-right { width: 2px; height: 100%; top: 0; right: 20px; }
+
+        /* クリック可能なエリア（クイズ用ターゲット） */
+        .target-area {
+            position: absolute;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            background-color: rgba(255, 235, 59, 0.4);
+            border: 2px dashed #f1c40f;
+        }
+        .target-area:hover {
+            opacity: 1;
+        }
+
+        /* スコア表示 */
+        .score-board {
+            display: flex;
+            justify-content: space-around;
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* メッセージ・ボタン */
+        .instruction {
+            font-size: 1.1rem;
+            line-height: 1.5;
+            color: #34495e;
+            min-height: 80px;
+            margin-bottom: 15px;
+        }
+        .feedback {
+            font-weight: bold;
+            font-size: 1.1rem;
+            min-height: 30px;
+            margin-bottom: 15px;
+        }
+        .correct { color: #27ae60; }
+        .incorrect { color: #e74c3c; }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* 解説ボックス */
+        #explanation {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            color: #2c3e50;
+            display: none;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🏸 バドミントン・ルール習得ゲーム</h1>
+    <p>コートの正しい場所をクリックして、クイズに答えながらルールを覚えましょう！</p>
+
+    <div id="game-container">
+        <div id="info-panel">
+            <div>
+                <div class="score-board">
+                    <div>あなた (味方): <span id="score-player">0</span></div>
+                    <div>相手: <span id="score-opponent">0</span></div>
+                </div>
+                <h3>問題 <span id="question-num">1</span> / 4</h3>
+                <div class="instruction" id="question-text">読み込み中...</div>
+                <div class="feedback" id="feedback-text"></div>
+            </div>
+            
+            <div>
+                <div id="explanation"></div>
+                <button id="next-btn" onclick="nextQuestion()" style="margin-top: 15px; width: 100%; display: none;">次の問題へ</button>
+            </div>
+        </div>
+
+        <div id="court-container">
+            <div id="court">
+                <div class="line net"></div>
+                <div class="line center-line-top"></div>
+                <div class="line center-line-bottom"></div>
+                <div class="line short-service-top"></div>
+                <div class="line short-service-bottom"></div>
+                <div class="line doubles-rear-top"></div>
+                <div class="line doubles-rear-bottom"></div>
+                <div class="line singles-side-left"></div>
+                <div class="line singles-side-right"></div>
+
+                <div class="target-area" id="area-player-right" style="bottom: 0; right: 20px; width: 118px; height: 178px;" onclick="checkAnswer('player-right')"></div>
+                <div class="target-area" id="area-player-left" style="bottom: 0; left: 20px; width: 118px; height: 178px;" onclick="checkAnswer('player-left')"></div>
+                
+                <div class="target-area" id="area-opp-left-box" style="top: 0; left: 20px; width: 118px; height: 178px;" onclick="checkAnswer('opp-left-box')"></div>
+                <div class="target-area" id="area-opp-right-box" style="top: 0; right: 20px; width: 118px; height: 178px;" onclick="checkAnswer('opp-right-box')"></div>
+                
+                <div class="target-area" id="area-doubles-back" style="top: 0; left: 0; width: 100%; height: 30px;" onclick="checkAnswer('doubles-back')"></div>
+                <div class="target-area" id="area-singles-side" style="top: 0; left: 0; width: 20px; height: 100%;" onclick="checkAnswer('singles-side')"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // クイズのデータ定義
+        const questions = [
+            {
+                num: 1,
+                text: "【シングルス】あなたのスコアは「0点（偶数）」です。あなたがサーブを打つとき、立つべき正しいエリアは左右どちらでしょう？ コートの手前側（手前が自陣）をクリックして選択してください。",
+                correctArea: "player-right",
+                explanation: "<strong>【解説: サーブの立ち位置】</strong><br>バドミントンでは、自分の得点が<strong>0または偶数の時は「右側（ライトサービスコート）」</strong>から、<strong>奇数の時は「左側（レフトサービスコート）」</strong>からサーブを打ちます。",
+                scoreSet: { player: 0, opponent: 0 }
+            },
+            {
+                num: 2,
+                text: "【シングルス】見事ポイントを取り、あなたのスコアが「1点（奇数）」になりました。次にあなたがサーブを打つとき、相手コートのどこを狙って打たなければならないでしょう？（対角線上のエリアを選んでください）",
+                correctArea: "opp-right-box", // 画面右上（相手から見た左側＝レフトコート）
+                explanation: "<strong>【解説: サーブを狙う方向】</strong><br>スコアが1点（奇数）なので、自分は左側からサーブを打ちます。サーブは必ず<strong>対角線上の相手コート</strong>に入れなければならないため、相手側の斜め向かい（画面右上）が正解です。",
+                scoreSet: { player: 1, opponent: 0 }
+            },
+            {
+                num: 3,
+                text: "【ダブルス】サーブのルールが変わります。ダブルスのサーブにおいて、「ここに入ったらアウト（長すぎる）」となる、シングルスにはない『ダブルス特有のショートなバックバウンダリーライン』のエリアはどこでしょう？（コート最奥の細長い帯をクリック）",
+                correctArea: "doubles-back",
+                explanation: "<strong>【解説: ダブルスのサーブ範囲】</strong><br>ダブルスのサーブ時のみ、コートの<strong>一番奥の細長いエリア（リアサービスラインとバックバウンダリーラインの間）は「アウト」</strong>になります。サーブが長すぎるとダメという、ダブルス独自の重要なルールです。（※ラリーが始まった後は一番奥までインになります）",
+                scoreSet: { player: 5, opponent: 4 }
+            },
+            {
+                num: 4,
+                text: "【シングルス】通常のラリー中です。相手が打ってきたシャトルが、サイドの一番外側の線と、一本内側の線の間のエリア（サイドの細長い帯）に落ちました。これはインですか？アウトですか？（そのエリアをクリックして判定してください）",
+                correctArea: "singles-side",
+                explanation: "<strong>【解説: シングルスとダブルスのコート幅】</strong><br><strong>シングルスでは、サイドの細長いエリアは終始「アウト」</strong>です（コートを狭く使います）。逆に<strong>ダブルスでは、ここも「イン」</strong>として扱われます（コートを広く使います）。",
+                scoreSet: { player: 12, opponent: 15 }
+            }
+        ];
+
+        let currentId = 0;
+        let hasAnswered = false;
+
+        function loadQuestion() {
+            hasAnswered = false;
+            const q = questions[currentId];
+            document.getElementById("question-num").innerText = q.num;
+            document.getElementById("question-text").innerText = q.text;
+            document.getElementById("score-player").innerText = q.scoreSet.player;
+            document.getElementById("score-opponent").innerText = q.scoreSet.opponent;
+            
+            // リセット
+            document.getElementById("feedback-text").innerText = "";
+            document.getElementById("feedback-text").className = "feedback";
+            document.getElementById("explanation").style.display = "none";
+            document.getElementById("next-btn").style.display = "none";
+
+            // ターゲットエリアの可視化ヒント（デバッグ・学習用に見えやすくする）
+            const areas = document.querySelectorAll('.target-area');
+            areas.forEach(a => a.style.opacity = "");
+        }
+
+        function checkAnswer(clickedArea) {
+            if (hasAnswered) return; // 回答済みなら何もしない
+            
+            const q = questions[currentId];
+            const feedback = document.getElementById("feedback-text");
+            const explanation = document.getElementById("explanation");
+            
+            if (clickedArea === q.correctArea) {
+                feedback.innerText = "⭕ 正解です！";
+                feedback.className = "feedback correct";
+            } else {
+                feedback.innerText = "❌ 違います！";
+                feedback.className = "feedback incorrect";
+            }
+
+            // 正解のエリアをハイライト
+            document.getElementById(`area-${q.correctArea}`).style.opacity = "1";
+            
+            explanation.innerHTML = q.explanation;
+            explanation.style.display = "block";
+            document.getElementById("next-btn").style.display = "block";
+            hasAnswered = true;
+        }
+
+        function nextQuestion() {
+            currentId++;
+            if (currentId < questions.length) {
+                loadQuestion();
+            } else {
+                // 全問終了
+                document.getElementById("question-text").innerHTML = "🎉 お疲れ様でした！全問終了です。バドミントンの基本コートルール、サーブ権の仕組みバッチリですね！";
+                document.getElementById("feedback-text").innerText = "";
+                document.getElementById("explanation").style.display = "none";
+                document.getElementById("next-btn").innerText = "もう一度遊ぶ";
+                document.getElementById("next-btn").onclick = function() {
+                    currentId = 0;
+                    loadQuestion();
+                    document.getElementById("next-btn").innerText = "次の問題へ";
+                    document.getElementById("next-btn").onclick = nextQuestion;
+                };
+            }
+        }
+
+        // 初期読み込み
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

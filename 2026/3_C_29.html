@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>毎日ご飯献立ガチャ</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #fcf8f2;
+            color: #4a3b32;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 2px solid #eedecc;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #d35400;
+            margin-bottom: 20px;
+        }
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+        .gacha-btn {
+            flex: 1;
+            padding: 15px 0;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .btn-jp { background-color: #2c3e50; }
+        .btn-we { background-color: #e74c3c; }
+        .btn-ch { background-color: #f1c40f; color: #333; }
+        
+        .result-box {
+            background-color: #faf6f0;
+            border: 2px dashed #d7ccc8;
+            border-radius: 15px;
+            padding: 30px 10px;
+        }
+        .result-menu {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>今日のご飯献立ガチャ</h1>
+
+    <div class="btn-group">
+        <button type="button" class="gacha-btn btn-jp" onclick="
+            var jp = ['生姜焼き定食', 'サバの塩焼き', '肉じゃが', '親子丼', '天ぷらうどん', 'お刺身定食', 'とんかつ', 'すき焼き', 'から揚げ定食', 'うな重', 'きつねうどん', '筑前煮', 'そぼろ丼', '和風ハンバーグ'];
+            document.getElementById('resultMenu').innerText = '【和食】\n' + jp[Math.floor(Math.random() * jp.length)];
+        ">和食</button>
+
+        <button type="button" class="gacha-btn btn-we" onclick="
+            var we = ['ハンバーグ', 'オムライス', 'カルボナーラ', 'ビーフシチュー', 'エビフライ', 'グラタン', 'ミートソース', 'ロールキャベツ', 'ステーキ', 'ピザ', 'ドリア', 'チキンカツカレー', 'ポトフ'];
+            document.getElementById('resultMenu').innerText = '【洋食】\n' + we[Math.floor(Math.random() * we.length)];
+        ">洋食</button>
+
+        <button type="button" class="gacha-btn btn-ch" onclick="
+            var ch = ['麻婆豆腐定食', 'パラパラ炒飯', '回鍋肉定食', '青椒肉絲', '焼き餃子定食', 'エビチリ', '坦々麺', '酢豚', 'あんかけ焼きそば', '天津飯', 'シュウマイ弁当', '拉麺（ラーメン）', '春巻き'];
+            document.getElementById('resultMenu').innerText = '【中華】\n' + ch[Math.floor(Math.random() * ch.length)];
+        ">中華</button>
+    </div>
+
+    <div class="result-box">
+        <div class="result-menu" id="resultMenu">ボタンを押してね！</div>
+    </div>
+</div>
+
+</body>
+</html>

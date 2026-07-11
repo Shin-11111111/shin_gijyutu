@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中学生のための計画お助けツール</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #4a90e2;
+            font-size: 24px;
+            margin-bottom: 25px;
+        }
+        .card {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .card h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #2d3748;
+        }
+        .countdown {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e53e3e;
+            text-align: center;
+            margin: 10px 0;
+        }
+        .todo-section input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 5px;
+        }
+        .todo-section button {
+            width: 25%;
+            padding: 10px;
+            background: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .todo-section button:hover {
+            background: #357abd;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+            margin-top: 15px;
+        }
+        li {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .delete-btn {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 3px 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📝 中学生向け・勉強サポートツール</h1>
+
+    <!-- カウントダウン機能 -->
+    <div class="card">
+        <h2>📅 次の定期テスト（または提出物の締切）</h2>
+        <input type="date" id="target-date" onchange="updateCountdown()" style="width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #cbd5e0;">
+        <div class="countdown" id="countdown-display">日付を上のカレンダーから選んでね！</div>
+    </div>
+
+    <!-- やることリスト（ToDo） -->
+    <div class="card todo-section">
+        <h2>✅ 今日終わらせる提出物・ワーク</h2>
+        <div style="display: flex; justify-content: space-between;">
+            <input type="text" id="todo-input" placeholder="例：数学ワーク P.12〜15">
+            <button onclick="addTodo()">追加</button>
+        </div>
+        <ul id="todo-list">
+            <!-- ここにタスクが追加されます -->
+        </ul>
+    </div>
+</div>
+
+<script>
+    // カウントダウンの計算
+    function updateCountdown() {
+        const targetInput = document.getElementById('target-date').value;
+        if (!targetInput) return;
+
+        const targetDate = new Date(targetInput);
+        const today = new Date();
+        
+        // 時間をリセットして日数だけで計算
+        targetDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+
+        const diffTime = targetDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        const display = document.getElementById('countdown-display');
+        if (diffDays > 0) {
+            display.innerText = `本番まで あと ${diffDays} 日！`;
+            display.style.color = "#e53e3e";
+        } else if (diffDays === 0) {
+            display.innerText = "ついに今日が本番です！";
+            display.style.color = "#38a169";
+        } else {
+            display.innerText = "予定日は過ぎています。";
+            display.style.color = "#718096";
+        }
+    }
+
+    // やることリストの追加
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        const taskText = input.value.trim();
+        if (taskText === "") return;
+
+        const ul = document.getElementById('todo-list');
+        const li = document.createElement('li');
+        
+        li.innerHTML = `
+            <span>${taskText}</span>
+            <button class="delete-btn" onclick="this.parentElement.remove()">完了</button>
+        `;
+        
+        ul.appendChild(li);
+        input.value = ""; // 入力欄を空にする
+    }
+</script>
+
+</body>
+</html>

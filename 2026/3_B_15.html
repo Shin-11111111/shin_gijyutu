@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>都立難関高校 入試国語 模擬問題（回答欄付き）</title>
+    <style>
+        body {
+            font-family: 'Hiragino Mincho ProN', 'MS Mincho', serif;
+            line-height: 1.8;
+            background-color: #fcfcf9;
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 40px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 40px;
+        }
+        h2 {
+            font-size: 18px;
+            border-left: 4px solid #333;
+            padding-left: 10px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+        .text-box {
+            background-color: #fafafa;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 25px;
+            font-size: 15px;
+            white-space: pre-wrap;
+        }
+        .question {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #eee;
+        }
+        .q-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: block;
+        }
+        .options {
+            list-style-type: none;
+            padding-left: 20px;
+            margin-bottom: 12px;
+        }
+        .options li {
+            margin-bottom: 5px;
+        }
+        
+        /* 回答欄のスタイル */
+        .input-text {
+            width: 100%;
+            max-width: 300px;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        .input-select {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-family: inherit;
+            background: #fff;
+            width: 120px;
+        }
+        .textarea-box {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        .input-area {
+            margin-top: 10px;
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 4px;
+        }
+        .input-label {
+            font-size: 14px;
+            color: #555;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        /* 解答エリアのスタイル */
+        .answer-box {
+            display: none;
+            margin-top: 40px;
+            padding: 25px;
+            background-color: #f0f7ff;
+            border: 2px solid #b3d4fc;
+            border-radius: 6px;
+        }
+        .toggle-btn {
+            display: block;
+            width: 250px;
+            margin: 40px auto 0;
+            padding: 15px;
+            background: #333;
+            color: #fff;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            font-size: 16px;
+            font-family: inherit;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .toggle-btn:hover {
+            background: #555;
+        }
+        .ans-section {
+            margin-bottom: 18px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #d0e3f8;
+        }
+        .ans-section:last-child {
+            border-bottom: none;
+        }
+        .ans-title {
+            font-weight: bold;
+            color: #004085;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>都立難関高校（自校作成レベル）国語・模擬試験</h1>
+
+    <!-- 大問1：漢字・語句 -->
+    <h2>一、次の各文のカタカナの部分を漢字に直し、下線部の漢字の読みを答えよ。</h2>
+    
+    <div class="question">
+        <span class="q-title">問1（書き） 彼の主張には論理の<span style="border-bottom: 1px solid #333;">ハタン</span>が見受けられる。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="漢字で入力">
+        </div>
+    </div>
+    
+    <div class="question">
+        <span class="q-title">問2（書き） 諸外国との文化交流を<span style="border-bottom: 1px solid #333;">カンキ</span>する。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="漢字で入力">
+        </div>
+    </div>
+    
+    <div class="question">
+        <span class="q-title">問3（書き） 事態の本質を<span style="border-bottom: 1px solid #333;">ハアク</span>することが先決だ。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="漢字で入力">
+        </div>
+    </div>
+    
+    <div class="question">
+        <span class="q-title">問4（読み） 彼の無礼な態度に思わず<span style="border-bottom: 1px solid #333;">気不味い</span>思いをした。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="ひらがなで入力">
+        </div>
+    </div>
+    
+    <div class="question">
+        <span class="q-title">問5（読み） 伝統芸能の真髄を<span style="border-bottom: 1px solid #333;">極める</span>。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="ひらがなで入力">
+        </div>
+    </div>
+
+    <!-- 大問2：文学的文章の読解 -->
+    <h2>二、次の文章を読んで、あとの問いに答えよ。</h2>
+    
+    <div class="text-box">
+     夕暮れの街を歩きながら、修治は胸の奥につかえた澱（おり）のような割り切れなさを感じていた。先ほど、友人の和也と言い争った言葉が、頭の中で何度も反芻される。
+    「お前はいつも<u>①綺麗事ばかり並べる</u>。現実ってやつを見ていないんだ」
+     和也の言葉は、鋭い刃のように修治の胸に刺さった。修治が理想とする「誰もが納得する解決策」は、和也にとっては単なる甘えや、自己満足に過ぎないというのだ。
+     街灯がぽつぽつと灯り始める。家路を急ぐ人々の波に逆らうように歩きながら、修治は自問した。自分は本当に、ただの偽善者なのだろうか。和也の言う「現実」とは、妥協し、誰かを切り捨てることなのだろうか。
+     ふと、古びた書店の軒先に目が留まった。そこには、少年時代に何度も読んだ絵本が置かれていた。不器用な主人公が、周囲に笑われながらも自分の信じる道を歩み続ける物語だ。修治はその表紙を見つめるうちに、<u>②胸の奥がじんわりと熱くなるのを感じた</u>。
+     確かに自分は未熟で、現実の厳しさを知り尽くしていないかもしれない。しかし、最初から諦めて「現実」という言葉に逃げ込むことだけはしたくない。修治は小さく息を吐き出し、力強く一歩を踏み出した。</div>
+
+    <div class="question">
+        <span class="q-title">問6（文脈理解） 傍線部①「綺麗事ばかり並べる」とありますが、和也は修治のどのような姿勢を批判していると考えられますか。最も適切なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：自分の非を認めず、言い訳ばかりを探して自己正当化しようとする姿勢。</li>
+            <li>イ：厳しい現実の課題に向き合わず、理想論や表面上の美しさだけを主張する姿勢。</li>
+            <li>ウ：他人の意見を全く聞き入れず、自分の殻に閉じこもって頑固に振る舞う姿勢。</li>
+            <li>エ：周囲の顔色を伺いながら、誰に対しても良い顔をしようとする八方美人的な姿勢。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問7（心情理解） 傍線部②「胸の奥がじんわりと熱くなるのを感じた」とありますが、この時の修治の心理として最も適切なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：和也に対する怒りが再び込み上げてきて、自分の正しさを証明したくなった。</li>
+            <li>イ：かつての純粋な気持ちを思い出し、失いかけていた自分の信念を再確認した。</li>
+            <li>ウ：絵本の主人公の悲しい結末を思い出し、自分の将来への不安が募った。</li>
+            <li>エ：自分の未熟さを絵本に見透かされたようで、恥ずかしさで一杯になった。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問8（表現の特徴） この文章における情景描写の効果について説明したものとして最も適切なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：「夕暮れの街」から「街灯が灯り始める」変化が、修治の深まる苦悩と絶望を強調している。</li>
+            <li>イ：「家路を急ぐ人々の波に逆らう」描写が、社会に馴染めない修治の孤立感を象徴している。</li>
+            <li>ウ：薄暗い夕暮れから灯りがともる情景が、迷いの中から修治が心の進路を見出す過程と重なっている。</li>
+            <li>エ：「古びた書店」の描写が、修治の考えが時代遅れであることを暗示している。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問9（記述問題・難問） 和也との衝突を経て、修治の心情はどのように変化しましたか。文章中の言葉を参考にしながら、「〜から、〜へ。」という形に繋がるよう、40字以上50字以内で説明せよ。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答（40〜50文字）】</label>
+            <textarea class="textarea-box" placeholder="ここに記述してください"></textarea>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問10（文法） 「和也と言い争った言葉が、頭の中で何度も反芻される」の「れる」と同じ意味・用法で使われているものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：先生に作文を褒められて嬉しかった。</li>
+            <li>イ：このお菓子は、多くの人々に愛されている。</li>
+            <li>ウ：故郷の山々を眺めると、昔のことが思い出される。</li>
+            <li>エ：明日、大統領が日本に来られるそうだ。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問11（語句の意味） 本文にある「反芻（はんすう）」と同じ意味で使われている文を次から選べ。</span>
+        <ul class="options">
+            <li>ア：牛が一度飲み込んだ食べ物を口の中に戻して噛み直す。</li>
+            <li>イ：過去の失敗を何度も繰り返し思い出して深く考える。</li>
+            <li>ウ：受けた恩恵に対して、それに見合うだけの恩返しをする。</li>
+            <li>エ：相手の意見に対して、真っ向から反対の意見を述べる。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問12（指示語） 「そこには、少年時代に何度も読んだ絵本が置かれていた」の「そこ」が指す内容を、本文中から5字で抜き出せ。</span>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <input type="text" class="input-text" placeholder="5文字で入力">
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問13（文章全体の理解） 本文の主題として最も適当なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：友人との衝突を避けるためには、時には自分の意見を曲げることも必要であるということ。</li>
+            <li>イ：現実の厳しさに直面したときは、過去の思い出に浸ることで現実逃避できるということ。</li>
+            <li>ウ：他人の批判に耳を傾けつつも、安易に妥協せず自分の理想や信念を持ち続ける大切さ。</li>
+            <li>エ：幼少期の読書体験が、大人の人間関係のトラブルをすべて解決してくれるということ。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問14（熟語の構成） 「未熟」という熟語の構成（組み立て）と同じものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：矛盾</li>
+            <li>イ：登山</li>
+            <li>ウ：拡大</li>
+            <li>エ：非常</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問15（品詞分解） 「小さく息を吐き出し」の「小さく」の品詞および活用形として正しいものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：形容詞・連用形</li>
+            <li>イ：副詞・活用なし</li>
+            <li>ウ：形容動詞・連用形</li>
+            <li>エ：動詞・連用形</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <!-- 大問3：古文 -->
+    <h2>三、次の古文を読んで、あとの問いに答えよ。</h2>
+    
+    <div class="text-box">
+     むかし, ある所にいと清げなる童（わらは）ありけり。
+     人、この童を見て、「いみじく賢き人になりなむ」と言ひければ、童、<u>③いと恥づかし</u>と思ひて、昼夜怠ることなく学問に励みけり。
+     のちにこの童、国の第一の学者となりて、人々に重んじられ給ひけり。</div>
+
+    <div class="question">
+        <span class="q-title">問16（歴史的仮名遣い） 「言ひければ」の現代仮名遣いの全文字の表記として正しいものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：いいければ</li>
+            <li>イ：いひければ</li>
+            <li>ウ：いいたれば</li>
+            <li>エ：ひいければ</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問17（古文単語） 下線部③「いと恥づかし」のここでの現代語訳として最も適切なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：とても恥ずかしい（きまりが悪い）</li>
+            <li>イ：たいそう立派だ（こちらが気後れするほどだ）</li>
+            <li>ウ：非常に恐ろしい</li>
+            <li>エ：なんとなく怪しい</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問18（文脈理解） 童が「昼夜怠ることなく学問に励みけり」となった直接のきっかけは何か。最も適切なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：自分が国の第一の学者になりたいという強い野望を持ったから。</li>
+            <li>イ：周囲の人から「非常に賢い人になるだろう」と評されたから。</li>
+            <li>ウ：親から厳しく学問をするように仕込まれたから。</li>
+            <li>エ：世の中の役に立つ人間になりたいと心から願ったから。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問19（助動詞） 「なりなむ」の「なむ」の意味として、最も適当なものを次から選べ。</span>
+        <ul class="options">
+            <li>ア：他者への願望（〜してほしい）</li>
+            <li>イ：強意＋推量（きっと〜するだろう）</li>
+            <li>ウ：過去の伝聞（〜したそうだ）</li>
+            <li>エ：否定の意志（〜しないつもりだ）</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <div class="question">
+        <span class="q-title">問20（内容合致） この短い話の結末において、童はどのようになりましたか。</span>
+        <ul class="options">
+            <li>ア：途中で学問を諦め、普通の大人になった。</li>
+            <li>イ：学者にはなれたが、誰からも相手にされなかった。</li>
+            <li>ウ：国で一番の学者になり、人々から敬意を払われるようになった。</li>
+            <li>エ：あまりの賢さに、国から追放されてしまった。</li>
+        </ul>
+        <div class="input-area">
+            <label class="input-label">【あなたの回答】</label>
+            <select class="input-select"><option value="">選択してください</option><option>ア</option><option>イ</option><option>ウ</option><option>エ</option></select>
+        </div>
+    </div>
+
+    <!-- 解答解説表示ボタン -->
+    <button class="toggle-btn" onclick="toggleAnswers()">解答・解説を表示</button>
+
+    <!-- 解答エリア -->
+    <div class="answer-box" id="answerBox">
+        <h2>【解答と解説】</h2>
+        
+        <div class="ans-section"><span class="ans-title">問1：</span>破綻（ハタン）</div>
+        <div class="ans-section"><span class="ans-title">問2：</span>喚起（カンキ）</div>
+        <div class="ans-section"><span class="ans-title">問3：</span>把握（ハアク）</div>
+        <div class="ans-section"><span class="ans-title">問4：</span>きまずい（気不味い）</div>
+        <div class="ans-section"><span class="ans-title">問5：</span>きわめる（極める）</div>
+        <div class="ans-section"><span class="ans-title">問6：</span><b>イ</b><br>解説：「綺麗事」とは、実質が伴わない表面だけの美しさを指します。</div>
+        <div class="ans-section"><span class="ans-title">問7：</span><b>イ</b><br>解説：昔の絵本を見て初心を思い出し、諦めない強さを取り戻す場面です。</div>
+        <div class="ans-section"><span class="ans-title">問8：</span><b>ウ</b><br>解説：薄暗い夕暮れから街灯が灯る（心の決意・光）情景が主人公の心境の変化と重なっています。</div>
+        <div class="ans-section"><span class="ans-title">問9：</span>（解答例）<br><b>和也の批判に自分の理想を偽善と悩み割り切れなさを感じる状態から、諦めずに自分の信念を貫こうとする心情へ。</b>（49字）</div>
+        <div class="ans-section"><span class="ans-title">問10：</span><b>ウ</b>（自発）<br>解説：本文の「反芻される」は頭の中で自然と浮かんでしまう「自発」の意味。ウの「思い出される」も自発です。</div>
+        <div class="ans-section"><span class="ans-title">問11：</span><b>イ</b><br>解説：文章中の「反芻」は比喩的に「繰り返し深く考える」ことです。</div>
+        <div class="ans-section"><span class="ans-title">問12：</span>古びた書店の軒先</div>
+        <div class="ans-section"><span class="ans-title">問13：</span><b>ウ</b></div>
+        <div class="ans-section"><span class="ans-title">問14：</span><b>エ</b>（下の字を打ち消す「不・未・非・無」の構造）</div>
+        <div class="ans-section"><span class="ans-title">問15：</span><b>ア</b>（形容詞「小さい」の連用形「小さく」）</div>
+        <div class="ans-section"><span class="ans-title">問16：</span><b>ア</b>（いいければ）</div>
+        <div class="ans-section"><span class="ans-title">問17：</span><b>イ</b><br>解説：古文の「恥づかし」は「（相手が立派すぎて）こちらが気後れする」から「立派だ」という意味をもちます。</div>
+        <div class="ans-section"><span class="ans-title">問18：</span><b>イ</b></div>
+        <div class="ans-section"><span class="ans-title">問19：</span><b>イ</b>（強意の助動詞「ぬ」の連用形「な」＋推量「む」で「きっと〜だろう」）</div>
+        <div class="ans-section"><span class="ans-title">問20：</span><b>ウ</b></div>
+    </div>
+</div>
+
+<script>
+    function toggleAnswers() {
+        var box = document.getElementById("answerBox");
+        if (box.style.display === "none" || box.style.display === "") {
+            box.style.display = "block";
+            window.scrollTo({ top: box.offsetTop, behavior: 'smooth' });
+        } else {
+            box.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>

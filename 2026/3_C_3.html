@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lavender Pomodoro Timer</title>
+    <style>
+        :root {
+            --bg-lavender: #f4f0fa;
+            --main-lavender: #a393eb;
+            --dark-lavender: #705ec7;
+            --light-lavender: #c2b5f6;
+            --white: #ffffff;
+            --text-dark: #4a4355;
+            --strike-red: #ff5e5e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            background-color: var(--bg-lavender);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 背景に紫の花をたくさん配置 */
+        .bg-flowers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .flower {
+            position: absolute;
+            font-size: 28px;
+            opacity: 0.35;
+            animation: float 6s ease-in-out infinite alternate;
+        }
+        /* 各花の位置バラつき */
+        .f1 { top: 10%; left: 10%; animation-delay: 0s; }
+        .f2 { top: 15%; right: 12%; animation-delay: 1s; }
+        .f3 { bottom: 15%; left: 8%; animation-delay: 2s; }
+        .f4 { bottom: 10%; right: 10%; animation-delay: 1.5s; }
+        .f5 { top: 45%; left: 5%; font-size: 20px; }
+        .f6 { top: 50%; right: 6%; font-size: 22px; }
+        .f7 { top: 5%; left: 50%; }
+        .f8 { bottom: 5%; left: 45%; }
+
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(-10px) rotate(15deg); }
+        }
+
+        /* メインコンテナ */
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--white);
+            border-radius: 30px;
+            padding: 35px 30px;
+            box-shadow: 0 12px 40px rgba(163, 147, 235, 0.2);
+            text-align: center;
+            z-index: 10;
+            border: 4px solid #fff;
+        }
+
+        h1 {
+            font-size: 1.6rem;
+            color: var(--dark-lavender);
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+        }
+
+        .sub-title {
+            font-size: 0.85rem;
+            color: var(--main-lavender);
+            margin-bottom: 25px;
+        }
+
+        /* タイマーエリア */
+        .timer-card {
+            background: #faf8ff;
+            border: 2px solid #eae4f7;
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-bottom: 30px;
+        }
+
+        #status-label {
+            font-size: 1.05rem;
+            font-weight: bold;
+            color: var(--main-lavender);
+            margin-bottom: 5px;
+        }
+
+        #timer-display {
+            font-size: 4.8rem;
+            font-weight: 700;
+            color: var(--dark-lavender);
+            margin: 5px 0 15px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ボタン群 */
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+            font-weight: bold;
+            border-radius: 50px;
+        }
+
+        .btn-start {
+            background-color: var(--main-lavender);
+            color: white;
+            padding: 12px 30px;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(163, 147, 235, 0.4);
+        }
+
+        .btn-start:hover {
+            background-color: var(--dark-lavender);
+        }
+
+        .btn-reset {
+            background-color: #f0ecfc;
+            color: var(--dark-lavender);
+            padding: 12px 22px;
+            font-size: 0.95rem;
+        }
+
+        .btn-reset:hover {
+            background-color: #e3dbf9;
+        }
+
+        /* ToDoリストエリア */
+        .todo-card {
+            text-align: left;
+        }
+
+        .todo-card h2 {
+            font-size: 1.1rem;
+            color: var(--dark-lavender);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        #todo-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #eae4f7;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            outline: none;
+            color: var(--text-dark);
+            background: #faf8ff;
+        }
+
+        #todo-input:focus {
+            border-color: var(--light-lavender);
+            background: #fff;
+        }
+
+        .btn-add {
+            background-color: var(--light-lavender);
+            color: white;
+            padding: 0 20px;
+            font-size: 0.95rem;
+        }
+
+        .btn-add:hover {
+            background-color: var(--main-lavender);
+        }
+
+        .todo-list {
+            list-style: none;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 5px;
+            border-bottom: 1px solid #f0ecfc;
+        }
+
+        .todo-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--main-lavender);
+            cursor: pointer;
+        }
+
+        .todo-text {
+            font-size: 0.95rem;
+            flex: 1;
+            word-break: break-all;
+        }
+
+        /* 【重要】チェックが入ったら赤色の取り消し線 */
+        .todo-item.completed .todo-text {
+            color: var(--strike-red);
+            text-decoration: line-through;
+            text-decoration-color: var(--strike-red);
+            text-decoration-thickness: 2px;
+            opacity: 0.7;
+        }
+
+        .todo-footer {
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn-clear {
+            background: none;
+            color: #a09aa8;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 6px;
+        }
+
+        .btn-clear:hover {
+            color: var(--strike-red);
+            background-color: #fff1f1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-flowers">
+        <div class="flower f1">🪻</div>
+        <div class="flower f2">🪻</div>
+        <div class="flower f3">🌸</div>
+        <div class="flower f4">🪻</div>
+        <div class="flower f5">🪻</div>
+        <div class="flower f6">🌸</div>
+        <div class="flower f7">🪻</div>
+        <div class="flower f8">🪻</div>
+    </div>
+
+    <div class="container">
+        <h1>Lavender Timer</h1>
+        <div class="sub-title">〜 25分集中して、5分休む 〜</div>
+
+        <div class="timer-card">
+            <div id="status-label">勉強タイム (25分)</div>
+            <div id="timer-display">25:00</div>
+            <div class="btn-container">
+                <button id="start-pause-btn" class="btn-start">スタート</button>
+                <button id="reset-btn" class="btn-reset">リセット</button>
+            </div>
+        </div>
+
+        <div class="todo-card">
+            <h2>📝 今日のやることリスト</h2>
+            <div class="input-group">
+                <input type="text" id="todo-input" placeholder="新しいたすくを入力..." maxlength="40">
+                <button id="add-todo-btn" class="btn-add">追加</button>
+            </div>
+            <ul id="todo-list" class="todo-list">
+                </ul>
+            <div class="todo-footer">
+                <button id="clear-completed-btn" class="btn-clear">完了したタスクを削除</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ポモドーロタイマーの処理 ---
+        const WORK_TIME = 25 * 60; // 25分
+        const BREAK_TIME = 5 * 60; // 5分
+
+        let timeLeft = WORK_TIME;
+        let timerId = null;
+        let isWorking = true; // true: 勉強中, false: 休憩中
+
+        const timerDisplay = document.getElementById('timer-display');
+        const statusLabel = document.getElementById('status-label');
+        const startPauseBtn = document.getElementById('start-pause-btn');
+        const resetBtn = document.getElementById('reset-btn');
+
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = 
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            if (timerId === null) {
+                // スタート処理
+                timerId = setInterval(() => {
+                    timeLeft--;
+                    updateDisplay();
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerId);
+                        timerId = null;
+                        
+                        // モード交代
+                        isWorking = !isWorking;
+                        timeLeft = isWorking ? WORK_TIME : BREAK_TIME;
+                        statusLabel.textContent = isWorking ? "勉強タイム (25分)" : "休憩タイム (5分)";
+                        
+                        alert(isWorking ? "💡 勉強タイムが始まりました！" : "☕ 休憩タイムです！ゆっくり休んでね");
+                        
+                        updateDisplay();
+                        startPauseBtn.textContent = "スタート";
+                    }
+                }, 1000);
+                startPauseBtn.textContent = "一時停止";
+            } else {
+                // 一時停止処理
+                clearInterval(timerId);
+                timerId = null;
+                startPauseBtn.textContent = "スタート";
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerId);
+            timerId = null;
+            isWorking = true;
+            timeLeft = WORK_TIME;
+            statusLabel.textContent = "勉強タイム (25分)";
+            startPauseBtn.textContent = "スタート";
+            updateDisplay();
+        }
+
+        startPauseBtn.addEventListener('click', toggleTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+
+        // --- ToDoリストの処理 ---
+        const todoInput = document.getElementById('todo-input');
+        const addTodoBtn = document.getElementById('add-todo-btn');
+        const todoList = document.getElementById('todo-list');
+        const clearCompletedBtn = document.getElementById('clear-completed-btn');
+
+        // 最初から入っているサンプルタスク
+        const defaultTasks = ['25分間 目の前の作業に集中する', '終わったら5分しっかり休む'];
+        defaultTasks.forEach(task => createTodoElement(task));
+
+        function createTodoElement(text) {
+            if (text.trim() === '') return;
+
+            const li = document.createElement('li');
+            li.className = 'todo-item';
+
+            // チェックボックス
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    li.classList.add('completed');
+                } else {
+                    li.classList.remove('completed');
+                }
+            });
+
+            // タスク本文
+            const span = document.createElement('span');
+            span.className = 'todo-text';
+            span.textContent = text;
+
+            li.appendChild(checkbox);
+            li.appendChild(span);
+            todoList.appendChild(li);
+        }
+
+        // タスク追加アクション
+        addTodoBtn.addEventListener('click', () => {
+            createTodoElement(todoInput.value);
+            todoInput.value = '';
+        });
+
+        // エンターキーでも追加できるように
+        todoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                createTodoElement(todoInput.value);
+                todoInput.value = '';
+            }
+        });
+
+        // 【重要】完了したタスクのみをすべて削除（確認メッセージ付き）
+        clearCompletedBtn.addEventListener('click', () => {
+            const completedItems = todoList.querySelectorAll('.todo-item.completed');
+            
+            if (completedItems.length === 0) {
+                alert('完了（チェック済み）のタスクがありません。');
+                return;
+            }
+
+            // 確認メッセージを表示
+            const isConfirmed = confirm('完了したタスクをすべて削除してもよろしいですか？');
+            if (isConfirmed) {
+                completedItems.forEach(item => {
+                    item.remove();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

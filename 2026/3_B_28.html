@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>毎日勉強メーター</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --bg-color: #f5f7fa;
+            --text-color: #333;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        /* 設定エリア（教科とスタンプの選択） */
+        .setup-area {
+            background-color: #f9fbfd;
+            border: 1px solid #e2edf8;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: space-around;
+        }
+
+        .setup-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .setup-group label {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #666;
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* カレンダーヘッダー */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        /* カレンダーグリッド */
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        .weekday {
+            text-align: center;
+            font-weight: bold;
+            padding: 5px 0;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .day {
+            min-height: 75px;
+            background: #fdfdfd;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .day:hover {
+            background: #f3f7fa;
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .day-number {
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* 今日の強調 */
+        .day.today {
+            border: 2px solid var(--primary-color);
+            background-color: #f4f8ff;
+        }
+
+        /* マスの中のスタンプと教科表示 */
+        .stamp-display {
+            font-size: 1.4rem;
+            text-align: center;
+            margin: 2px 0;
+        }
+
+        .subject-tag {
+            font-size: 0.7rem;
+            text-align: center;
+            background: #e2edf8;
+            color: #333;
+            border-radius: 3px;
+            padding: 1px 2px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .empty-day {
+            background: transparent;
+            border: none;
+            cursor: default;
+        }
+
+        /* 消しゴムモードの説明 */
+        .info-text {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📝 毎日勉強メーター</h1>
+    
+    <!-- 設定エリア -->
+    <div class="setup-area">
+        <div class="setup-group">
+            <label for="subjectSelect">❶ 今日勉強した教科</label>
+            <select id="subjectSelect">
+                <option value="国語">📕国語
+                <option value="数学・算数">📐数学</option>
+                <option value="英語">🔤英語</option>
+                <option value="理科">🧪理科</option>
+                <option value="社会">🗺️社会</option>
+                <option value="その他">✏️その他 </option>
+            </select>
+        </div>
+
+        <div class="setup-group">
+            <label for="stampSelect">❷ スタンプ</label>
+            <select id="stampSelect">
+                <option value="🩷">🩷 よくできた</option>
+                <option value="💖">💖 頑張った</option>
+                <option value="✨">✨ 集中できた</option>
+                <option value="🥲">🥲 あまりできなかった</option>
+                <option value="🧹">🧹 【消しゴム】記録を消す</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- カレンダーコントロール -->
+    <div class="calendar-header">
+        <button class="btn" id="prevMonth">◀ 前月</button>
+        <span id="monthDisplay"></span>
+        <button class="btn" id="nextMonth">次月 ▶</button>
+    </div>
+
+    <!-- カレンダー本体 -->
+    <div class="calendar-grid" id="calendarGrid">
+        <!-- JavaScriptで動的に生成されます -->
+    </div>
+
+    <p class="info-text">※日付をクリックすると、上で選んでいる教科とスタンプが押されます。「消しゴム」を選んでクリックすると消せます。</p>
+</div>
+
+<script>
+    const monthDisplay = document.getElementById('monthDisplay');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const prevMonthBtn = document.getElementById('prevMonth');
+    const nextMonthBtn = document.getElementById('nextMonth');
+    
+    const subjectSelect = document.getElementById('subjectSelect');
+    const stampSelect = document.getElementById('stampSelect');
+
+    let currentDate = new Date();
+    const weekdays = ['日', '月', '火', '水', '木', '金', '土'];
+
+    function renderCalendar() {
+        calendarGrid.innerHTML = '';
+        
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        monthDisplay.innerText = `${year}年 ${month + 1}月`;
+
+        // 曜日ヘッダー
+        weekdays.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.classList.add('weekday');
+            dayEl.innerText = day;
+            calendarGrid.appendChild(dayEl);
+        });
+
+        const firstDayOfMonth = new Date(year, month, 1).getDay();
+        const totalDays = new Date(year, month + 1, 0).getDate();
+
+        // 空白マス
+        for (let i = 0; i < firstDayOfMonth; i++) {
+            const emptyEl = document.createElement('div');
+            emptyEl.classList.add('empty-day');
+            calendarGrid.appendChild(emptyEl);
+        }
+
+        // 日付マス
+        const today = new Date();
+        for (let day = 1; day <= totalDays; day++) {
+            const dayEl = document.createElement('div');
+            dayEl.classList.add('day');
+            
+            // 日付の数字
+            const numEl = document.createElement('div');
+            numEl.classList.add('day-number');
+            numEl.innerText = day;
+            dayEl.appendChild(numEl);
+
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            // 今日かどうかの判定
+            if (year === today.getFullYear() && month === today.getMonth() && day === today.getDate()) {
+                dayEl.classList.add('today');
+            }
+
+            // ローカルストレージからデータを読み込んで表示
+            const savedData = localStorage.getItem(dateStr);
+            if (savedData) {
+                const data = JSON.parse(savedData); // { stamp: "💮", subject: "国語" } の形で保存
+                
+                // スタンプ表示
+                const stampEl = document.createElement('div');
+                stampEl.classList.add('stamp-display');
+                stampEl.innerText = data.stamp;
+                dayEl.appendChild(stampEl);
+
+                // 教科表示
+                const subEl = document.createElement('div');
+                subEl.classList.add('subject-tag');
+                subEl.innerText = data.subject;
+                dayEl.appendChild(subEl);
+            }
+
+            // クリック時の処理
+            dayEl.addEventListener('click', () => {
+                const selectedStamp = stampSelect.value;
+                const selectedSubject = subjectSelect.value;
+
+                if (selectedStamp === '🧹') {
+                    // 消しゴムモード
+                    localStorage.removeItem(dateStr);
+                } else {
+                    // スタンプ・教科の保存
+                    const studyRecord = {
+                        stamp: selectedStamp,
+                        subject: selectedSubject
+                    };
+                    localStorage.setItem(dateStr, JSON.stringify(studyRecord));
+                }
+                // 表示を更新
+                renderCalendar();
+            });
+
+            calendarGrid.appendChild(dayEl);
+        }
+    }
+
+    prevMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+    });
+
+    nextMonthBtn.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+    });
+
+    // 初期表示
+    renderCalendar();
+</script>
+
+</body>
+</html>

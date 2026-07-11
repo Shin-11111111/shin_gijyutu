@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学校の先生一覧</title>
+    <style>
+        /* 全体の基本デザイン */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f8fafc;
+            margin: 0;
+            padding: 20px;
+            color: #334155;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 0;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        h1 {
+            color: #1e3a8a;
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+        }
+        p.subtitle {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        /* 検索ボックスのエリア */
+        .search-container {
+            max-width: 1000px;
+            margin: 0 auto 30px auto;
+            text-align: center;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 20px;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 30px;
+            outline: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+        }
+
+        /* グリッドレイアウト */
+        .teacher-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        /* 先生一人ひとりのカード */
+        .teacher-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .teacher-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* アイコン */
+        .avatar {
+            width: 60px;
+            height: 60px;
+            background-color: #e2e8f0;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* 名前と担当 */
+        .name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin: 0 0 8px 0;
+        }
+        .info-tag {
+            display: inline-block;
+            background-color: #f1f5f9;
+            color: #475569;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin: 2px;
+        }
+        
+        /* 役職などの特別な色分け */
+        .tag-leader {
+            background-color: #fee2e2;
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        /* 検索結果が0件のときのメッセージスタイル */
+        .no-result {
+            grid-column: 1 / -1; /* 横いっぱいに広げる */
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            display: none; /* 初期状態は非表示 */
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>先生紹介 一覧 🏫</h1>
+        <p class="subtitle">私たちの学校の先生方です</p>
+    </header>
+
+    <!-- 検索バー -->
+    <div class="search-container">
+        <input type="text" id="searchBar" class="search-input" placeholder="名前やクラス、教科で検索...">
+    </div>
+
+    <div class="teacher-grid">
+        
+        <!-- 検索結果0件用のメッセージを配置 -->
+        <div id="noResult" class="no-result">
+            🔍 一致する先生が見つかりませんでした
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👨‍🏫</div>
+            <h2 class="name">脇本達也　先生</h2>
+            <span class="info-tag tag-leader">校長</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">鈴木信成 先生</h2>
+            <span class="info-tag tag-leader">副校長</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👨‍🏫</div>
+            <h2 class="name">久保田新 先生</h2>
+            <span class="info-tag">1年A組担任</span>
+            <span class="info-tag">技術</span>
+             <span class="info-tag">バドミントン部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">杉田桃花　先生</h2>
+            <span class="info-tag">1年B組担任</span>
+            <span class="info-tag">国語</span>
+             <span class="info-tag">文芸部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👨‍🏫</div>
+            <h2 class="name">星野貴弘 先生</h2>
+            <span class="info-tag">1年C組担任</span>
+            <span class="info-tag">数学</span>
+            <span class="info-tag">女子バスケットボール部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">髙木直樹　先生</h2>
+            <span class="info-tag">2年A組担任</span>
+            <span class="info-tag">理科1</span>
+              <span class="info-tag">ソフトテニス部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👨‍🏫</div>
+            <h2 class="name">北村友花 先生</h2>
+            <span class="info-tag">2年B組担任</span>
+            <span class="info-tag">数学</span>
+              <span class="info-tag">女子バレーボール部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">瀬沼優樹 先生</h2>
+            <span class="info-tag">3年A組担任</span>
+            <span class="info-tag">英語</span>
+            <span class="info-tag">男子バレー部</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">二瓶将崇 先生</h2>
+            <span class="info-tag">3年B組担任</span>
+            <span class="info-tag">社会</span>
+            <span class="info-tag">吹奏楽部顧問</span>
+        </div>
+     
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">川村淳子 先生</h2>
+            <span class="info-tag">3年C組担任</span>
+            <span class="info-tag">体育</span>
+            <span class="info-tag">学年主任</span>
+             <span class="info-tag">女子バスケットボール部</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">青木柚実　先生</h2>
+            <span class="info-tag">公民</span>
+              <span class="info-tag">吹奏楽部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">髙橋朗範　先生</h2>
+            <span class="info-tag">歴史</span>
+             <span class="info-tag">非常勤</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">坂元和彦　先生</h2>
+            <span class="info-tag">国語</span>
+            <span class="info-tag">バドミントン部顧問</span>
+        </div>
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">網野正樹　先生</h2>
+            <span class="info-tag">数学</span>
+            <span class="info-tag">バドミントン部顧問</span>
+            <span class="info-tag">1年学年主任</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">川上朋博　先生</h2>
+            <span class="info-tag">理科２</span>
+            <span class="info-tag">男女バレーボール部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">猪狩保昌　先生</h2>
+            <span class="info-tag">英語</span>
+            <span class="info-tag">ボランティア部顧問</span>
+            <span class="info-tag">2年学年主任</span>
+
+        </div>
+         
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">齋藤恭子　先生</h2>
+            <span class="info-tag">英語</span>
+            <span class="info-tag">進路指導主任</span>
+        <span class="info-tag">ソフトテニス部顧問</span>
+         </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">副島茂利　先生</h2>
+            <span class="info-tag">英語</span>
+            <span class="info-tag">非常勤</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">浜中伸良　先生</h2>
+            <span class="info-tag">音楽</span>
+            <span class="info-tag">吹奏楽部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">工藤祥太　先生</h2>
+            <span class="info-tag">体育</span>
+            <span class="info-tag">野球部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">山本亜利彩　先生</h2>
+            <span class="info-tag">体育</span>
+            <span class="info-tag">女子バレーボール部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">荒川美穂　先生</h2>
+            <span class="info-tag">家庭科</span>
+              <span class="info-tag">非常勤</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">今野美矢子　先生</h2>
+            <span class="info-tag">家庭科</span>
+              <span class="info-tag">非常勤</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">四宮修　先生</h2>
+            <span class="info-tag">美術</span>
+              <span class="info-tag">非常勤</span>
+        </div>
+        
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">栁澤大樹　先生</h2>
+            <span class="info-tag">しらはぎ</span>
+            <span class="info-tag">野球部顧問</span>
+        </div>
+
+         <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">近江大輔　先生</h2>
+            <span class="info-tag">しらはぎ</span>
+              <span class="info-tag">文芸部顧問</span>
+        </div>
+
+         <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">田中佑子　先生</h2>
+            <span class="info-tag">しらはぎ</span>
+             <span class="info-tag">非常勤</span>
+        </div>
+
+<div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">立川友哉　先生</h2>
+            <span class="info-tag">しらはぎ</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">村田直美　先生</h2>
+              <span class="info-tag">養護</span>
+            <span class="info-tag">ボランティア部顧問</span>
+        </div>
+
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">丸山尚美　先生</h2>
+            <span class="info-tag">学校図書館補助員</span>
+            <span class="info-tag">教員補助員</span>
+        </div>
+       
+        <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">山本優美　先生</h2>
+            <span class="info-tag">教員補助員</span>
+        </div>
+
+         <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">大西知子　先生</h2>
+            <span class="info-tag">教員補助員</span>
+        </div>
+
+         <div class="teacher-card">
+            <div class="avatar">👩‍🏫</div>
+            <h2 class="name">山岸健　先生</h2>
+            <span class="info-tag">教員補助員</span>
+        </div>
+    </div>
+
+    <!-- 検索処理を行うJavaScript -->
+    <script>
+        document.getElementById('searchBar').addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase();
+            const cards = document.querySelectorAll('.teacher-card');
+            const noResultMsg = document.getElementById('noResult');
+            let visibleCount = 0; // 表示されているカードの数をカウント
+
+            cards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                
+                if (text.includes(keyword)) {
+                    card.style.display = 'block';
+                    visibleCount++; // 一致したらカウントを増やす
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // カウントが0ならメッセージを表示、1以上なら非表示
+            if (visibleCount === 0) {
+                noResultMsg.style.display = 'block';
+            } else {
+                noResultMsg.style.display = 'none';
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>Hello World</title>
+</head>
+<body>
+  <h1>Hello world</h1>
+</body><!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部活・学級活動用 集金会計支援ツール</title>
+    <style>
+        :root {
+            --bg-color: #f0f5fa;
+            --card-bg: #ffffff;
+            --primary: #1a73e8; /* 先生受けの良いクリーンなGoogleブルー */
+            --primary-light: #e8f0fe;
+            --success: #1e8e3e;
+            --text-main: #202124;
+            --text-sub: #5f6368;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 25px;
+            max-width: 480px;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin: 0 0 8px 0;
+        }
+
+        .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(32,33,36,0.08);
+            box-sizing: border-box;
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+
+        /* 先生に「おっ、工夫してるな」と思わせる単位付き入力欄 */
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper input, .input-wrapper select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.05rem;
+            border: 2px solid #dadce0;
+            border-radius: 8px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-wrapper input:focus, .input-wrapper select:focus {
+            border-color: var(--primary);
+        }
+
+        .input-unit {
+            position: absolute;
+            right: 12px;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            pointer-events: none;
+        }
+
+        .input-wrapper input.has-unit {
+            padding-right: 35px;
+        }
+
+        /* 計算結果エリア */
+        .result-box {
+            background-color: var(--primary-light);
+            border: 1px solid #aecbfa;
+            padding: 16px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .result-price {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 5px 0;
+        }
+
+        .result-remains {
+            font-size: 0.8rem;
+            color: var(--success);
+            font-weight: bold;
+            margin-top: 6px;
+            background: #e6f4ea;
+            padding: 6px;
+            border-radius: 6px;
+            display: none; /* 条件に合わせてJSで表示 */
+        }
+
+        /* 先生受け用：アピールポイント解説枠 */
+        .feature-note {
+            margin-top: 25px;
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--text-sub);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+            width: 100%;
+            max-width: 480px;
+            box-sizing: border-box;
+        }
+
+        .feature-note ul {
+            margin: 5px 0 0 0;
+            padding-left: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-section">
+        <h1>📊 会計支援・スマート集金ツール</h1>
+        <div class="subtitle">部活動の買い出しやクラス活動での「小銭が足りない」「お釣りの計算が面倒」という課題をプログラムで解決します。</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="input-group">
+            <label for="total-price">1. 必要経費（合計金額）</label>
+            <div class="input-wrapper">
+                <input type="number" id="total-price" class="has-unit" placeholder="例: 2560" oninput="calculateSplit()">
+                <span class="input-unit">円</span>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="people-count">2. 支払う人数</label>
+            <div class="input-wrapper">
+                <input type="number" id="people-count" class="has-unit" placeholder="例: 3" oninput="calculateSplit()">
+                <span class="input-unit">人</span>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="round-type">3. 集金円滑化オプション（端数処理）</label>
+            <div class="input-wrapper">
+                <select id="round-type" onchange="calculateSplit()">
+                    <option value="10">10円単位で切り上げ（小銭が出にくい！）</option>
+                    <option value="100">100円単位で切り上げ（お釣りなし推奨）</option>
+                    <option value="exact">きっちり割り切る（1円単位）</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div class="result-label">💰 1人あたりの集金額</div>
+            <div class="result-price" id="result-per-person">0 円</div>
+            <div class="result-remains" id="result-remains"></div>
+        </div>
+    </div>
+
+    <div class="feature-note">
+        <strong>💡 技術的な工夫と課題解決ポイント（先生へのアピール用）</strong>
+        <ul>
+            <li><strong>リアルタイム処理:</strong> ボタンを押さなくても、数字を入力した瞬間に瞬時にJavaScriptが計算を実行します。</li>
+            <li><strong>端数切り上げロジック:</strong> 中学生の財布事情を考慮し、10円・100円単位での「切り上げ（Math.ceil）」を採用。現場での集金スピードを上げ、お釣りトラブルを防ぎます。</li>
+            <li><strong>余剰金（あまり）の自動計算:</strong> 切り上げによって余ったお金を自動算出し、会計係の次回の予算に回せるように見える化しました。</li>
+        </ul>
+    </div>
+
+    <script>
+        function calculateSplit() {
+            // 入力された値を取得
+            const totalPrice = parseInt(document.getElementById('total-price').value) || 0;
+            const peopleCount = parseInt(document.getElementById('people-count').value) || 0;
+            const roundType = document.getElementById('round-type').value;
+
+            // 結果を表示する要素を取得
+            const priceEl = document.getElementById('result-per-person');
+            const remainsEl = document.getElementById('result-remains');
+
+            // エラーチェック（未入力や0のときは計算しない）
+            if (totalPrice <= 0 || peopleCount <= 0) {
+                priceEl.textContent = "0 円";
+                remainsEl.style.display = "none";
+                return;
+            }
+
+            let perPerson = totalPrice / peopleCount;
+            let remains = 0;
+
+            // 先生ウケポイント：選択された条件に合わせて切り上げを計算
+            if (roundType === "10") {
+                // 10円単位で切り上げ
+                perPerson = Math.ceil(perPerson / 10) * 10;
+                remains = (perPerson * peopleCount) - totalPrice;
+            } else if (roundType === "100") {
+                // 100円単位で切り上げ
+                perPerson = Math.ceil(perPerson / 100) * 100;
+                remains = (perPerson * peopleCount) - totalPrice;
+            } else {
+                // 1円単位（小数点以下は四捨五入）
+                perPerson = Math.round(perPerson);
+                remains = 0;
+            }
+
+            // 3桁ごとにカンマを入れる（見やすさの工夫）
+            priceEl.textContent = `${perPerson.toLocaleString()} 円`;
+            
+            // 余りがある場合は、お釣り・余り金メッセージを表示
+            if (remains > 0) {
+                remainsEl.style.display = "block";
+                remainsEl.textContent = `💡 全員から集めると、合計で 【${remains} 円】 余ります。（部活・学級の予備費へ）`;
+            } else {
+                remainsEl.style.display = "none";
+            }
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-
+    

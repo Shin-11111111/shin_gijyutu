@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教科別 復習クイズ</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .tab-container {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #718096;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            color: #3182ce;
+            border-bottom: 3px solid #3182ce;
+        }
+        .quiz-area {
+            margin-bottom: 20px;
+        }
+        .question {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option-btn {
+            background-color: #edf2f7;
+            border: 1px solid #cbd5e0;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .option-btn:hover {
+            background-color: #e2e8f0;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+            display: none;
+        }
+        .correct {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+        .incorrect {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+        .next-btn {
+            display: block;
+            width: 100%;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #2b6cb0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>📚 教科別 復習クイズ</h1>
+    
+    <div class="tab-container">
+        <button class="tab-btn active" onclick="switchSubject('kokugo')">国語</button>
+        <button class="tab-btn" onclick="switchSubject('sansu')">算数/数学</button>
+        <button class="tab-btn" onclick="switchSubject('eigo')">英語</button>
+    </div>
+
+    <div class="quiz-area">
+        <div class="question" id="question-text">問題がここに表示されます</div>
+        <div class="options" id="options-container">
+            </div>
+    </div>
+
+    <div class="result" id="result-box"></div>
+    
+    <button class="next-btn" id="next-button" onclick="nextQuestion()">次の問題へ</button>
+</div>
+
+<script>
+    // 問題データ（ここを編集して問題を追加・変更できます）
+    const quizData = {
+        kokugo: [
+            { q: "「漱石」の読み方は？", answers: ["そうせき", "すいせき", "くちすすぎ", "かんせき"], correct: 0, ex: "夏目漱石（なつめそうせき）などで有名ですね。" },
+            { q: "「灯台もと暗し」の意味は？", answers: ["身近なことはかえって気づきにくい", "暗い場所では目が見えなくなる", "油断していると失敗する", "遠くのものはよく見える"], correct: 0, ex: "灯台のすぐ下は影になって暗いことから来ています。" }
+        ],
+        sansu: [
+            { q: "三角形の内角の和は何度？", answers: ["90度", "180度", "270度", "360度"], correct: 1, ex: "どんな三角形でも内角の和は180度になります。" },
+            { q: "100の10%はいくつ？", answers: ["1", "5", "10", "20"], correct: 2, ex: "100 × 0.1 = 10 となります。" }
+        ],
+        eigo: [
+            { q: "「リンゴ」を英語で書くと？", answers: ["Aple", "Apple", "Apel", "Appel"], correct: 1, ex: "正解は「Apple」です。pが2つ続きます。" },
+            { q: "「私は学生です」の正しい英文は？", answers: ["I are a student.", "I is a student.", "I am a student.", "I be a student."], correct: 2, ex: "主語が I のときのbe動詞は am です。" }
+        ]
+    };
+
+    let currentSubject = 'kokugo';
+    let currentQuestionIndex = 0;
+
+    // クイズの読み込み
+    function loadQuiz() {
+        const quizList = quizData[currentSubject];
+        if (currentQuestionIndex >= quizList.length) {
+            // 全問終了時
+            document.getElementById('question-text').innerText = "🎉 この教科の復習はバッチリです！";
+            document.getElementById('options-container').innerHTML = "";
+            document.getElementById('result-box').style.display = 'none';
+            document.getElementById('next-button').style.display = 'none';
+            return;
+        }
+
+        const currentQuiz = quizList[currentQuestionIndex];
+        document.getElementById('question-text').innerText = `Q${currentQuestionIndex + 1}. ${currentQuiz.q}`;
+        
+        const optionsContainer = document.getElementById('options-container');
+        optionsContainer.innerHTML = "";
+        
+        currentQuiz.answers.forEach((answer, index) => {
+            const button = document.createElement('button');
+            button.className = 'option-btn';
+            button.innerText = answer;
+            button.onclick = () => checkAnswer(index);
+            optionsContainer.appendChild(button);
+        });
+
+        document.getElementById('result-box').style.display = 'none';
+        document.getElementById('next-button').style.display = 'none';
+    }
+
+    // 正誤判定
+    function checkAnswer(selectedIndex) {
+        const currentQuiz = quizData[currentSubject][currentQuestionIndex];
+        const resultBox = document.getElementById('result-box');
+        
+        // 選択肢ボタンを無効化
+        const buttons = document.querySelectorAll('.option-btn');
+        buttons.forEach(btn => btn.disabled = true);
+
+        if (selectedIndex === currentQuiz.correct) {
+            resultBox.className = "result correct";
+            resultBox.innerText = `⭕ 正解！\n解説：${currentQuiz.ex}`;
+        } else {
+            resultBox.className = "result incorrect";
+            resultBox.innerText = `❌ 不正解...（正解：${currentQuiz.answers[currentQuiz.correct]}）\n解説：${currentQuiz.ex}`;
+        }
+        
+        resultBox.style.display = 'block';
+        document.getElementById('next-button').style.display = 'block';
+    }
+
+    // 次の問題へ
+    function nextQuestion() {
+        currentQuestionIndex++;
+        loadQuiz();
+    }
+
+    // 教科切り替え
+    function switchSubject(subject) {
+        currentSubject = subject;
+        currentQuestionIndex = 0;
+        
+        // タブの活性化スタイル切り替え
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        loadQuiz();
+    }
+
+    // 初回読み込み
+    window.onload = loadQuiz;
+</script>
+
+</body>
+</html>

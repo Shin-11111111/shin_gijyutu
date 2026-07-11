@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>疲れた心をリフレッシュ！愛犬ラムネのポジティブ写真館</title>
+    <style>
+        /* --- ここからソーダ＆カッコいいデザイン設定 (CSS) --- */
+        body {
+            background-color: #ebf6f5; /* ソーダの泡をイメージした爽やかな薄いブルー */
+            color: #2c3e50; /* 濃いネイビーで文字を引き締め */
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ヘッダー（一番上のタイトル部分） */
+        header {
+            background: linear-gradient(135deg, #00a8ff 0%, #00c4cc 100%); /* 鮮やかなソーダブルーのグラデーション */
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 5px solid #0077b6; /* 下側は濃いブルーでカッコよく */
+        }
+
+        header h1 {
+            color: #ffffff;
+            font-size: 2.4em;
+            letter-spacing: 2px;
+            margin: 0 0 10px 0;
+            text-shadow: 3px 3px 0px rgba(0, 0, 0, 0.15); /* 直線的な影でスポーティに */
+        }
+
+        header p {
+            color: #ffffff;
+            font-weight: bold;
+            margin: 0;
+            background-color: rgba(0, 0, 0, 0.2); /* 黒透明で引き締まった印象に */
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 6px; /* 角を少しシャープに */
+        }
+
+        /* メインの表示エリア */
+        main {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        /* 各セクション（かたまり）の設定 */
+        section {
+            background-color: #ffffff;
+            border-radius: 8px; /* 角丸を控えめにしてカッコよく */
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            border: 2px solid #bfe3e2; /* ソーダ色の細い枠線 */
+        }
+
+        /* 見出しの装飾 */
+        h2 {
+            color: #0077b6; /* 深いソーダブルー */
+            border-bottom: 3px solid #00a8ff; /* 直線のアンダーライン */
+            padding-bottom: 8px;
+            margin-top: 0;
+            font-size: 1.5em;
+        }
+
+        h3 {
+            color: #ffffff;
+            background-color: #0096c7; /* スッキリしたブルーの背景 */
+            padding: 10px 15px;
+            border-left: 6px solid #03045e; /* アクセントに濃いネイビー */
+            border-radius: 4px;
+            font-size: 1.1em;
+        }
+
+        /* 写真を表示するカード */
+        article {
+            background-color: #f4f9f9;
+            border: 1px solid #d1e5e5;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        /* 写真の設定 */
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            margin: 15px 0;
+        }
+
+        /* ポジティブ一言の文字 */
+        .positive-comment {
+            background-color: #e2f0d9; /* 甘すぎない爽やかなミントグリーン */
+            color: #2d5a27;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            display: inline-block;
+            border-left: 4px solid #2ed573;
+        }
+
+        /* いいね・コメントのボタン風 */
+        .sns-actions {
+            color: #00a8ff;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .sns-actions:hover {
+            text-decoration: underline;
+        }
+
+        /* 入力フォームの装飾 */
+        textarea {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px;
+            border: 2px solid #00a8ff; /* ソーダブルーの枠線 */
+            border-radius: 6px;
+            font-size: 1em;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #0056b3;
+            background-color: #ffffff;
+        }
+
+        /* 送信ボタンの装飾 */
+        button {
+            background-color: #00a8ff; /* 爽快なブルー */
+            color: white;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 6px; /* カチッとした四角に近い角丸 */
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0077b6; /* 立体的な影 */
+            transition: 0.1s;
+            letter-spacing: 1px;
+        }
+
+        /* ボタンを押したときの動き */
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        /* フッター（一番下の著作権表示） */
+        footer {
+            text-align: center;
+            padding: 25px;
+            background-color: #03045e; /* キリッと引き締まる濃紺 */
+            color: #ffffff;
+            font-size: 0.9em;
+            margin-top: 60px;
+        }
+        /* --- ここまでデザイン設定 --- */
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>RAMUNE PHOTO GALLERY</h1>
+        <p>学校生活や勉強で疲れたあなたへ。ラムネが今日の癒やしと元気をここでお届けします！</p>
+    </header>
+
+    <main>
+        <section>
+            <h2>CONCEPT</h2>
+            <p>
+                毎日の授業やテスト勉強、部活動などで「ちょっと疲れたな…」と感じていませんか？<br>
+                このサイトは、我が家の愛犬<strong>「ラムネ」</strong>の最高にかわいい瞬間をお届けし、みんなのストレスを解消して日常生活をハッピーにするための応援サイトです！
+            </p>
+        </section>
+
+        <section>
+            <h2>TODAY'S SHOTS</h2>
+            
+            <article>
+                <h3>お散歩行く？と言われた瞬間のラムネ</h3>
+                <img src="../../../../Working%20files/&#27827;&#21407;&#64017;&#12288;&#34030;&#65288;&#12459;&#12527;&#12521;&#12470;&#12461;&#12288;&#12524;&#12531;&#65289;/&#12304;&#25216;&#34899;&#31185;&#12305;&#12503;&#12525;&#12464;&#12521;&#12511;&#12531;&#12464;&#25552;&#20986;&#22580;&#25152;/dog1.jpg" alt="大喜びするラムネの写真" width="400">
+                <p class="positive-comment">TODAY'S COMMENT：期待に胸を膨らませる姿からパワーをもらおう！</p>
+                <div class="sns-actions">LIKE / COMMENT</div>
+            </article>
+
+            <article>
+                <h3>ストーブの前から動かない、お昼寝中のラムネ</h3>
+                <img src="../../../../Working%20files/&#27827;&#21407;&#64017;&#12288;&#34030;&#65288;&#12459;&#12527;&#12521;&#12470;&#12461;&#12288;&#12524;&#12531;&#65289;/&#12304;&#25216;&#34899;&#31185;&#12305;&#12503;&#12525;&#12464;&#12521;&#12511;&#12531;&#12464;&#25552;&#20986;&#22580;&#25152;/dog2.jpg" alt="お昼寝するラムネの写真" width="400">
+                <p class="positive-comment">TODAY'S COMMENT：休むときは全力で休む。これが長生きの秘訣ワン。</p>
+                <div class="sns-actions">LIKE / COMMENT</div>
+            </article>
+
+            <article>
+                <h3>【お試し】ネットで見つけた可愛いお友達</h3>
+                <img src="https://gpf.goope.jp/74044/210217144707-602ca74bbb4fd_l.jpg" alt="ネットのお友達ワンちゃんの写真" width="400">
+                <p class="positive-comment">TODAY'S COMMENT：お友達の可愛さに癒やされて、午後も元気にいこう！</p>
+                <div class="sns-actions">LIKE / COMMENT</div>
+            </article>
+        </section>
+
+        <section>
+            <h2>MESSAGE</h2>
+            <p>写真を見て癒やされたら、ぜひ応援メッセージやコメントを残していってくださいね。</p>
+            
+            <form>
+                <p>
+                    <label>
+                        <input type="checkbox" name="like"> このサイトを応援する！
+                    </label>
+                </p>
+
+                <p>
+                    <label for="comment">一言コメント：</label><br>
+                    <textarea id="comment" name="comment" rows="4" placeholder="「癒やされました！」「ラムネくんカッコよすぎる！」など"></textarea>
+                </p>
+
+                <p>
+                    <button type="button" onclick="showMessage()">送信する</button>
+                </p>
+
+                <!-- メッセージを画面上に表示するためのエリア -->
+                <div id="result-message" style="margin-top: 20px; font-weight: bold; color: #0096c7; text-align: center; font-size: 1.1em;"></div>
+
+                <!-- ボタンを押したときに動くプログラム -->
+                <script>
+                function showMessage() {
+                    // 画面上の指定した場所にメッセージを表示
+                    document.getElementById('result-message').innerText = 'Thank you! ラムネにしっかり伝えておきます。';
+                }
+                </script>
+            </form>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 愛犬ラムネのポジティブ写真館 All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

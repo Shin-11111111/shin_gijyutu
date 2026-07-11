@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動計算機</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .calc-container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            width: 320px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="number"]:focus, select:focus {
+            border-color: #4caf50;
+            outline: none;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+        }
+        .result-label {
+            font-size: 14px;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        .result-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1b5e20;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+
+<div class="calc-container">
+    <h2>自動計算機</h2>
+    
+    <div class="input-group">
+        <label for="num1">数字 1</label>
+        <input type="number" id="num1" value="0" oninput="calculate()">
+    </div>
+    
+    <div class="input-group">
+        <label for="operator">計算方法</label>
+        <select id="operator" onchange="calculate()">
+            <option value="add">足し算 (+)</option>
+            <option value="subtract">引き算 (-)</option>
+            <option value="multiply">掛け算 (×)</option>
+            <option value="divide">割り算 (÷)</option>
+        </select>
+    </div>
+    
+    <div class="input-group">
+        <label for="num2">数字 2</label>
+        <input type="number" id="num2" value="0" oninput="calculate()">
+    </div>
+    
+    <div class="result-box">
+        <div class="result-label">計算結果</div>
+        <div class="result-value" id="result">0</div>
+    </div>
+</div>
+
+<script>
+function calculate() {
+    // 入力された値を取得
+    const num1 = parseFloat(document.getElementById('num1').value) || 0;
+    const num2 = parseFloat(document.getElementById('num2').value) || 0;
+    const operator = document.getElementById('operator').value;
+    
+    let result = 0;
+    
+    // 計算方法（四則演算）の分岐
+    switch (operator) {
+        case 'add':
+            result = num1 + num2;
+            break;
+        case 'subtract':
+            result = num1 - num2;
+            break;
+        case 'multiply':
+            result = num1 * num2;
+            break;
+        case 'divide':
+            if (num2 === 0) {
+                result = 'エラー (0で割れません)';
+            } else {
+                // 小数点第4位までに制限（きれいに表示するため）
+                result = Math.round((num1 / num2) * 10000) / 10000;
+            }
+            break;
+    }
+    
+    // 画面に結果を表示
+    document.getElementById('result').innerText = result;
+}
+</script>
+
+</body>
+</html>

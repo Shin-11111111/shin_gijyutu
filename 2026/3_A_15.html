@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>二次方程式 相互変換＆問題集ツール</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body { font-family: sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; line-height: 1.6; }
+        .container { max-width: 600px; margin: 30px auto; background: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { font-size: 20px; text-align: center; color: #2c3e50; border-bottom: 2px solid #ecf0f1; padding-bottom: 10px; margin-bottom: 25px; }
+        .section { background: #fafbfc; border: 1px solid #e1e8ed; border-radius: 6px; padding: 20px; margin-bottom: 25px; }
+        h2 { font-size: 16px; margin-top: 0; color: #34495e; border-left: 4px solid #3498db; padding-left: 8px; }
+        .formula-box { margin-bottom: 15px; font-size: 16px; font-weight: 500; }
+        .input-row { display: table; width: 100%; margin-bottom: 15px; }
+        .input-cell { display: table-cell; vertical-align: middle; padding: 5px; }
+        input[type="number"], select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        input[type="number"] { width: 70px; text-align: center; }
+        select { width: 100%; max-width: 250px; margin-bottom: 10px; }
+        button { width: 100%; background-color: #3498db; color: white; border: none; padding: 10px; font-size: 15px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+        button:hover { background-color: #2980b9; }
+        button.secondary { background-color: #2ecc71; margin-top: 10px; }
+        button.secondary:hover { background-color: #27ae60; }
+        .result { margin-top: 15px; padding: 12px; background-color: #e8f4fd; border-left: 4px solid #3498db; font-size: 15px; font-weight: normal; min-height: 48px; white-space: pre-line; line-height: 1.8; }
+        .question-box { font-size: 20px; text-align: center; margin: 20px 0; font-weight: bold; color: #e67e22; background: #fef5ec; padding: 15px; border-radius: 4px; border: 1px dashed #e67e22; }
+        .math { font-family: 'Times New Roman', serif; font-style: italic; }
+        .next-btn { background-color: #e67e22; margin-top: 15px; }
+        .next-btn:hover { background-color: #d35400; }
+
+        /* 分数表示のためのスタイル */
+        .math-block { display: block; margin: 10px 0; font-size: 17px; text-align: center; font-family: 'Times New Roman', serif; font-style: italic; }
+        .frac { display: inline-block; vertical-align: middle; text-align: center; font-style: normal; margin: 0 4px; }
+        .frac > span { display: block; padding: 0 4px; }
+        .frac span.num { border-bottom: 1px solid #333; }
+        .frac span.den { }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>二次方程式 相互変換＆自動問題集</h1>
+
+    <div class="section" style="background-color: #fffdf9; border-color: #f39c12;">
+        <h2 style="color: #d35400; border-left-color: #e67e22;">【練習問題】中3レベル自動作成</h2>
+        <p style="font-size: 13px; color: #666; margin-top: 5px;">中3数学の範囲からランダムに問題を作成します。解説付き！</p>
+        
+        <select id="difficulty">
+            <option value="easy">初級（因数分解：x²の係数が1）</option>
+            <option value="normal">中級（因数分解：重解・定数なし等）</option>
+            <option value="hard">上級（因数分解：x²の係数が2以上）</option>
+            <option value="root_easy">ルート級（平方根の考え方で解く）</option>
+            <option value="root_hard">ルート級（解の公式で解く）</option>
+        </select>
+        
+        <button onclick="generateQuestion()" style="background-color: #e67e22;">問題を自動作成する</button>
+        
+        <div id="question_area" style="display:none;">
+            <div class="question-box">問題: <span id="question_text" class="math"></span></div>
+            <button onclick="toggleAnswer()" class="secondary">答えと解説を表示する</button>
+            <div class="result" id="answer_text" style="display:none; background-color: #e8f8f5; border-left-color: #2ecc71;"></div>
+            <button id="next_question_btn" onclick="generateQuestion()" class="next-btn" style="display:none;">別の問題を作る ➔</button>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>1. 因数分解形から展開する</h2>
+        <div class="formula-box">式: <span class="math">a(x - p)(x - q) = 0</span></div>
+        <div class="input-row">
+            <div class="input-cell"><label>a = </label><input type="number" id="factor_a" value="1"></div>
+            <div class="input-cell"><label>, p = </label><input type="number" id="factor_p" value="2"></div>
+            <div class="input-cell"><label>, q = </label><input type="number" id="factor_q" value="3"></div>
+        </div>
+        <button onclick="expandEquation()">展開する</button>
+        <div class="result" id="expand_result">展開後の式がここに表示されます</div>
+    </div>
+
+    <div class="section">
+        <h2>2. 展開形から因数分解する</h2>
+        <div class="formula-box">式: <span class="math">ax² + bx + c = 0</span></div>
+        <div class="input-row">
+            <div class="input-cell"><label>a = </label><input type="number" id="general_a" value="1"></div>
+            <div class="input-cell"><label>, b = </label><input type="number" id="general_b" value="-5"></div>
+            <div class="input-cell"><label>, c = </label><input type="number" id="general_c" value="6"></div>
+        </div>
+        <button onclick="factorizeEquation()">因数分解する</button>
+        <div class="result" id="factor_result">因数分解された式がここに表示されます</div>
+    </div>
+
+    <div class="section" style="border-color: #9b59b6;">
+        <h2 style="border-left-color: #9b59b6;">3. 展開形から解（x）を求める</h2>
+        <div class="formula-box">式: <span class="math">ax² + bx + c = 0</span></div>
+        <div class="input-row">
+            <div class="input-cell"><label>a = </label><input type="number" id="solve_a" value="1"></div>
+            <div class="input-cell"><label>, b = </label><input type="number" id="solve_b" value="-5"></div>
+            <div class="input-cell"><label>, c = </label><input type="number" id="solve_c" value="6"></div>
+        </div>
+        <button onclick="perfectSolve()" style="background-color: #9b59b6;">解を求める</button>
+        <div class="result" id="solve_result" style="border-left-color: #9b59b6;">計算された解がここに表示されます</div>
+    </div>
+</div>
+
+<script>
+    // ----------------------------------------
+    // 数学用共通関数
+    // ----------------------------------------
+    function getGcd(x, y) {
+        let a = Math.abs(Math.round(x));
+        let b = Math.abs(Math.round(y));
+        while (b !== 0) {
+            let r = a % b;
+            a = b;
+            b = r;
+        }
+        return a === 0 ? 1 : a;
+    }
+
+    function getGcd3(x, y, z) {
+        return getGcd(getGcd(x, y), z);
+    }
+
+    function formatGeneralForm(a, b, c) {
+        let res = "";
+        if (a === 1) res += "x²";
+        else if (a === -1) res += "-x²";
+        else res += a + "x²";
+        if (b > 0) res += (b === 1 ? " + x" : " + " + b + "x");
+        else if (b < 0) res += (b === -1 ? " - x" : " - " + Math.abs(b) + "x");
+        if (c > 0) res += " + " + c;
+        else if (c < 0) res += " - " + Math.abs(c);
+        if (a === 0 && b === 0 && c === 0) return "0 = 0";
+        return res + " = 0";
+    }
+
+    function formatFactorForm(a, p, q) {
+        let leader = (a === 1 ? "" : a === -1 ? "-" : a);
+        if (p === q) {
+            if (p === 0) return leader + "x² = 0";
+            return `${leader}(x ${p > 0 ? '-' : '+'} ${Math.abs(p)})² = 0`;
+        }
+        let pPart = p === 0 ? "x" : `(x ${p > 0 ? '-' : '+'} ${Math.abs(p)})`;
+        let qPart = q === 0 ? "x" : `(x ${q > 0 ? '-' : '+'} ${Math.abs(q)})`;
+        if (p === 0) return leader + "x" + qPart + " = 0";
+        if (q === 0) return leader + "x" + pPart + " = 0";
+        return leader + pPart + qPart + " = 0";
+    }
+
+    function commonSimplifySqrt(n) {
+        let outside = 1;
+        let inside = n;
+        if (inside <= 1) return { outside: outside, inside: inside };
+        for (let i = 2; i * i <= inside; i++) {
+            while (inside % (i * i) === 0) {
+                outside *= i;
+                inside /= (i * i);
+            }
+        }
+        return { outside: outside, inside: inside };
+    }
+
+    // ----------------------------------------
+    // 1 & 2 機能のメイン処理
+    // ----------------------------------------
+    function expandEquation() {
+        const a = parseFloat(document.getElementById('factor_a').value);
+        const p = parseFloat(document.getElementById('factor_p').value);
+        const q = parseFloat(document.getElementById('factor_q').value);
+        if (isNaN(a) || isNaN(p) || isNaN(q) || a === 0) return;
+        document.getElementById('expand_result').innerHTML = `展開形: ${formatGeneralForm(a, -a * (p + q), a * p * q)}`;
+    }
+
+    function factorizeEquation() {
+        const a = parseFloat(document.getElementById('general_a').value);
+        const

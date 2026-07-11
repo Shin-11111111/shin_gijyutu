@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人気曲ランキング</title>
+    <style>
+        /* 全体のリセットと背景設定 */
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* ランキングのコンテナ */
+        .ranking-container {
+            width: 100%;
+            max-width: 500px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            padding: 24px;
+        }
+
+        /* タイトル */
+        .ranking-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+            border-bottom: 2px solid #ff4757;
+            padding-bottom: 10px;
+        }
+
+        /* リストの設定 */
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* 各曲の行 */
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 10px;
+            border-bottom: 1px solid #edf2f7;
+            transition: background 0.2s;
+        }
+
+        .ranking-item:last-child {
+            border-bottom: none;
+        }
+
+        .ranking-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* 順位バッジ */
+        .rank-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+
+        /* 上位3位の色分け */
+        .rank-1 { background-color: #ffd700; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .rank-2 { background-color: #c0c0c0; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .rank-3 { background-color: #cd7f32; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
+        .rank-other { background-color: #e2e8f0; color: #4a5568; }
+
+        /* 曲情報 */
+        .song-info {
+            flex-grow: 1;
+        }
+
+        .song-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .artist-name {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ranking-container">
+        <div class="ranking-title">🎵 今週の人気曲ランキング</div>
+        
+        <ul class="ranking-list">
+            <li class="ranking-item">
+                <div class="rank-number rank-1">1</div>
+                <div class="song-info">
+                    <div class="song-title">ここに曲名が入ります1</div>
+                    <div class="artist-name">アーティスト名1</div>
+                </div>
+            </li>
+            
+            <li class="ranking-item">
+                <div class="rank-number rank-2">2</div>
+                <div class="song-info">
+                    <div class="song-title">ここに曲名が入ります2</div>
+                    <div class="artist-name">アーティスト名2</div>
+                </div>
+            </li>
+            
+            <li class="ranking-item">
+                <div class="rank-number rank-3">3</div>
+                <div class="song-info">
+                    <div class="song-title">ここに曲名が入ります3</div>
+                    <div class="artist-name">アーティスト名3</div>
+                </div>
+            </li>
+            
+            <li class="ranking-item">
+                <div class="rank-number rank-other">4</div>
+                <div class="song-info">
+                    <div class="song-title">ここに曲名が入ります4</div>
+                    <div class="artist-name">アーティスト名4</div>
+                </div>
+            </li>
+            
+            <li class="ranking-item">
+                <div class="rank-number rank-other">5</div>
+                <div class="song-info">
+                    <div class="song-title">ここに曲名が入ります5</div>
+                    <div class="artist-name">アーティスト名5</div>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>

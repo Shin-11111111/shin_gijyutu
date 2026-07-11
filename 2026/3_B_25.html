@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎀 毎日がたのしくなる最強ダッシュボード 🎀</title>
+    <style>
+        :root {
+            --primary: #ff4a7d; /* 濃いチェリーピンク */
+            --primary-past: #ffb6c1; /* ライトピンク */
+            --bg: #fff0f3; /* 薄いピンクの背景 */
+            --card-bg: #ffffff;
+            --text: #4a2834; /* 濃いブラウン */
+        }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            letter-spacing: 0.05em;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        h1 {
+            text-align: center;
+            grid-column: 1 / -1;
+            color: var(--primary);
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 0px #fff, 4px 4px 0px var(--primary-past);
+            margin-bottom: 10px;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(255, 74, 125, 0.1);
+            border: 2px solid #ffe3e8;
+        }
+        h2 {
+            margin-top: 0;
+            border-bottom: 3px dashed var(--primary);
+            padding-bottom: 8px;
+            font-size: 1.2rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        /* 入力フォーム・ボタン */
+        textarea, input[type="text"], input[type="date"] {
+            width: 100%;
+            padding: 12px;
+            box-sizing: border-box;
+            border: 2px solid var(--primary-past);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            color: var(--text);
+        }
+        textarea:focus, input:focus {
+            border-color: var(--primary);
+        }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 4px 0px #c42953;
+            transition: all 0.1s;
+        }
+        button:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+        /* リスト */
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        li {
+            padding: 10px;
+            background: #fff0f3;
+            margin-bottom: 8px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            border-left: 5px solid var(--primary);
+        }
+        .delete-btn {
+            background: #ff5e84;
+            box-shadow: 0 3px 0px #c42953;
+            padding: 4px 10px;
+            width: auto;
+            font-size: 0.8rem;
+            border-radius: 8px;
+        }
+        /* タイマー */
+        .countdown-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            color: var(--primary);
+            margin: 10px 0;
+            background: #fff5f7;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        /* カメラ機能（手鏡） */
+        #camera-view {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 15px;
+            background: #eee;
+            display: none;
+            transform: scaleX(-1); /* 鏡のように反転 */
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎀 お気に入りスクールダッシュボード 🎀</h1>
+
+    <!-- 1. テストカウントダウン -->
+    <div class="card">
+        <h2>⏰ テストまであと何日？</h2>
+        <input type="date" id="target-date" onchange="saveDate()">
+        <div class="countdown-display" id="countdown-text">日付を設定してね</div>
+    </div>
+
+    <!-- 2. タスク（自動保存） -->
+    <div class="card">
+        <h2>📝 やること・提出物</h2>
+        <input type="text" id="todo-input" placeholder="例：漢字ドリル P.12">
+        <button onclick="addTodo()">リストに追加 ＋</button>
+        <ul id="todo-list" style="margin-top: 15px;"></ul>
+    </div>
+
+    <!-- 3. ミニ手鏡（カメラ） -->
+    <div class="card">
+        <h2>🪞 かんたん手鏡カメラ</h2>
+        <video id="camera-view" autoplay playsinline></video>
+        <button id="camera-btn" onclick="toggleCamera()">カメラをオンにする</button>
+    </div>
+
+    <!-- 4. 自由メモ（自動保存） -->
+    <div class="card" style="grid-column: 1 / -1;">
+        <h2>✍️ 自由メモ・日記</h2>
+        <textarea id="memo-area" rows="6" placeholder="今日の出来事や、友達の誕生日、買いたい文房具などを自由にメモしてね。"></textarea>
+    </div>
+</div>
+
+<script>
+    // --- ToDo機能 ---
+    let todos = JSON.parse(localStorage.getItem('pink_todos')) || [];
+    function renderTodos() {
+        const list = document.getElementById('todo-list');
+        list.innerHTML = '';
+        todos.forEach((todo, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>🌸 ${todo}</span> <button class="delete-btn" onclick="deleteTodo(${index})">完了</button>`;
+            list.appendChild(li);
+        });
+    }
+    function addTodo() {
+        const input = document.getElementById('todo-input');
+        if(input.value.trim() !== '') {
+            todos.push(input.value.trim());
+            localStorage.setItem('pink_todos', JSON.stringify(todos));
+            input.value = '';
+            renderTodos();
+        }
+    }
+    function deleteTodo(index) {
+        todos.splice(index, 1);
+        localStorage.setItem('pink_todos', JSON.stringify(todos));
+        renderTodos();
+    }
+
+    // --- カウントダウン機能 ---
+    function saveDate() {
+        const dateVal = document.getElementById('target-date').value;
+        localStorage.setItem('pink_target_date', dateVal);
+        updateCountdown();
+    }
+    function updateCountdown() {
+        const savedDate = localStorage.getItem('pink_target_date');
+        if (!savedDate) return;
+        
+        document.getElementById('target-date').value = savedDate;
+        const target = new Date(savedDate + "T00:00:00");
+        const now = new Date();
+        
+        target.setHours(0,0,0,0);
+        now.setHours(0,0,0,0);
+        
+        const diffTime = target - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        const display = document.getElementById('countdown-text');
+        if (diffDays > 0) {
+            display.innerText = `あと ${diffDays} 日 🧸`;
+        } else if (diffDays === 0) {
+            display.innerText = `🎉 ついに今日が本番！`;
+        } else {
+            display.innerText = `終了しました 💮`;
+        }
+    }
+
+    // --- メモ機能 ---
+    const memoArea = document.getElementById('memo-area');
+    memoArea.value = localStorage.getItem('pink_memo') || '';
+    memoArea.addEventListener('input', () => {
+        localStorage.setItem('pink_memo', memoArea.value);
+    });
+
+    // --- カメラ（手鏡）機能 ---
+    let stream = null;
+    async function toggleCamera() {
+        const video = document.getElementById('camera-view');
+        const btn = document.getElementById('camera-btn');
+        
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+            video.style.display = 'none';
+            btn.innerText = 'カメラをオンにする';
+        } else {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+                video.srcObject = stream;
+                video.style.display = 'block';
+                btn.innerText = 'カメラをオフにする';
+            } catch (err) {
+                alert('カメラの起動に失敗しました。ブラウザの許可を確認してね！');
+            }
+        }
+    }
+
+    // 初期起動
+    renderTodos();
+    updateCountdown();
+</script>
+
+</body>
+</html>

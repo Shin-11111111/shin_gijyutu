@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "古文単語 官職昇進クイズ",
+  "operatingSystem": "Windows, macOS, iOS, Android",
+  "applicationCategory": "GameApplication",
+  "genre": "Educational",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "JPY"
+  },
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "5",
+    "reviewCount": "1"
+  },
+  "description": "古文単語を160語覚えられるブラウザゲームです。"
+}
+</script>
+
+    <meta charset="UTF-8">
+    <meta name="description" content="テスト対策用の古文単語ゲームです。">
+    <title>古文単語 官職昇進クイズ</title>
+    <link href="https://fonts.googleapis.com" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Sawarabi Mincho', serif; 
+            background-color: #e6dcc1; 
+            background-image: url('https://www.transparenttextures.com');
+            text-align: center; margin: 0; padding: 20px; 
+        }
+        .container { 
+            max-width: 700px; margin: auto; 
+            background: #fffaf0; 
+            padding: 30px; 
+            border: 10px double #8b4513; 
+            border-radius: 5px; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.2);
+            position: relative; min-height: 520px;
+        }
+        .hidden { display: none; }
+        h1 { color: #5d4037; border-bottom: 2px solid #8b4513; display: inline-block; padding-bottom: 5px; }
+        
+        button { 
+            cursor: pointer; padding: 12px 24px; font-family: inherit; font-size: 1rem; 
+            border: 2px solid #8b4513; background: #fdf5e6; transition: 0.2s; margin: 8px;
+            box-shadow: 2px 2px 0 #8b4513;
+        }
+        button:hover { background: #8b4513; color: white; transform: translate(-2px, -2px); box-shadow: 4px 4px 0 #5d4037; }
+
+        .exit-btn { position: absolute; top: 15px; right: 15px; font-size: 0.8rem; padding: 5px 10px; opacity: 0.8; background: #fff; }
+        
+        #timer-display { font-size: 1.2rem; color: #b22222; font-weight: bold; margin-bottom: 10px; }
+        #word-display { font-size: 3.5rem; font-weight: bold; margin: 30px 0; color: #2f4f4f; text-shadow: 1px 1px 2px #ccc; height: 100px; display: flex; align-items: center; justify-content: center;}
+        #choices { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .card { 
+            padding: 20px; border: 1px solid #8b4513; background: #fffef0; 
+            box-shadow: 3px 3px 0 #d2b48c; cursor: pointer; min-height: 60px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+
+        .rank-title { font-size: 3rem; color: #d32f2f; margin: 20px 0; font-weight: bold; text-shadow: 1px 1px 0px #000; }
+        .time-record { font-size: 1.5rem; margin-bottom: 20px; }
+        
+        #word-list-container { max-height: 350px; overflow-y: auto; text-align: left; background: #fff; border: 1px solid #8b4513; padding: 10px; }
+        .word-item { border-bottom: 1px solid #eee; padding: 8px; display: flex; justify-content: space-between; }
+        .range-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0; }
+        
+        /* 「全て」ボタン用のスタイル */
+        .all-btn { grid-column: 1 / 3; background: #fbe9e7; font-weight: bold; border-color: #d32f2f; }
+        /* 解説ページ専用スタイル（他画面への干渉防止） */
+#screen-expl {
+    text-align: left;
+}
+
+#screen-expl .expl-table-container {
+    max-height: 450px;
+    overflow-y: auto;
+    margin: 20px 0;
+    border: 2px solid #8b4513;
+    background: #fff;
+}
+
+#screen-expl table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Sawarabi Mincho', serif;
+}
+
+#screen-expl th {
+    background-color: #8b4513;
+    color: #ffffff;
+    padding: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    font-size: 0.9rem;
+}
+
+#screen-expl td {
+    border: 1px solid #d2b48c;
+    padding: 10px;
+    vertical-align: middle;
+    line-height: 1.4;
+    font-size: 0.85rem;
+}
+
+/* 偶数行の色変え */
+#screen-expl tr:nth-child(even) {
+    background-color: #fdf5e6;
+}
+
+/* 単語の強調 */
+#screen-expl .kobu-entry {
+    color: #d32f2f;
+    font-weight: bold;
+    display: block;
+}
+
+/* カテゴリラベル */
+#screen-expl .cat-label {
+    display: inline-block;
+    background: #5d4037;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: normal;
+}
+
+    </style>
+</head>
+<body>
+<!-- 1. オープニング画面（ゲーム画面の上に重なる） -->
+<div id="opening-layer">
+  <h1 class="creator-name">Created by Chaboyoshi</h1>
+</div>
+
+<!-- 2. アニメーションのスタイル（CSS） -->
+<style>
+  #opening-layer {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: #000; /* 背景色 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    /* 3秒かけて消える設定 */
+    animation: fadeOut 1s ease 2s forwards; 
+    pointer-events: none; /* 消えた後にクリックを邪魔しない */
+  }
+
+  .creator-name {
+    color: white;
+    font-family: sans-serif;
+    /* ふわっと出るアニメーション */
+    animation: fadeIn 1.5s ease forwards;
+  }
+
+  /* アニメーションの中身 */
+  @keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; visibility: hidden; }
+  }
+</style>
+
+<div id="game-container" class="container">
+    <div id="screen-menu">
+        <h1>古文単語 官職昇進戦</h1>
+        <p>～ 迅速に訳し、高位を目指せ ～</p>
+        <button class="exit-btn" id="mode-toggle-btn" onclick="toggleMode()">モード: 古文 → 現代語</button>
+        <!-- ↟「中断ボタン」見た目を使いまわすよ。 -->
+        <button style="width:80%" onclick="showScreen('screen-range')">演習を開始する</button><br>
+        <button style="width:80%" onclick="showList()">単語帳を捲る</button>
+         <button style="width:80%" onclick="showScreen('screen-expl')">ややこしい単語</button><br>
+         <p>※右上のボタンで古文単語と現代語訳をスイッチできるよ！</p>
+    </div>
+
+    <div id="screen-expl" class="hidden">
+    <h1 style="display:block; text-align:center; color: #5d4037; border-bottom: 2px solid #8b4513; margin-bottom: 20px;">古文単語 類義語比較表</h1>
+    
+    <div class="expl-table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%;">区分</th>
+                    <th style="width: 30%;">単語 / 訳</th>
+                    <th style="width: 55%;">識別のポイント</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- たくさん -->
+                <tr>
+                    <td rowspan="3" style="text-align:center;"><span class="cat-label">たくさん</span></td>
+                    <td><span class="kobu-entry">あまた</span>たくさん</td>
+                    <td>最も一般的。数や量が多い。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">ここら</span>たくさん</td>
+                    <td>「ここらへんにたくさん」と覚える。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">そこばく</span>たくさん</td>
+                    <td>「そこ（底）知れず、バクッと」たくさん。</td>
+                </tr>
+                <!-- どうしようもない -->
+                <tr>
+                    <td rowspan="7" style="text-align:center;"><span class="cat-label">どうしようもない・無意味</span></td>
+                    <td><span class="kobu-entry">あぢきなし</span>どうしようもない</td>
+                    <td>「面白くない・無益だ」。不満なニュアンス。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">ずちなし</span>どうしようもない</td>
+                    <td>「術（手段）がない」。お手上げ状態。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">いふかひなし</span>どうしようもない</td>
+                    <td>言う価値もないほど、情けない。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">いたづらなり</span>むなしい</td>
+                    <td>「徒労」。無駄に終わる。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">はかなし</span>むなしい</td>
+                    <td>「儚い」。頼りなく消えやすい。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">よしなし</span>つまらない</td>
+                    <td>「理由がない・関係ない」。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">あいなし</span>つまらない</td>
+                    <td>「おもしろくない」。不快だ。</td>
+                </tr>
+                <!-- 身分 -->
+                <tr>
+                    <td rowspan="6" style="text-align:center;"><span class="cat-label">高貴・立派</span></td>
+                    <td><span class="kobu-entry">あてなり</span>身分が高い</td>
+                    <td>「上品さ」「洗練」に注目。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">やむごとなし</span>身分が高い</td>
+                    <td>「放っておけない」ほど家柄が最高位。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">いうなり</span>上品だ</td>
+                    <td>「優雅・優美」な様子。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">うるはし</span>立派だ</td>
+                    <td>「整っている・きちんとしている」。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">はづかし</span>立派だ</td>
+                    <td>（相手が立派で）こちらが気後れする。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">らうらうじ</span>優雅だ</td>
+                    <td>「洗練された・巧みで優雅」。</td>
+                </tr>
+                <!-- 準備 -->
+                <tr>
+                    <td rowspan="3" style="text-align:center;"><span class="cat-label">準備</span></td>
+                    <td><span class="kobu-entry">いそぎ</span>準備</td>
+                    <td>急いで行う支度・催し。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">したたむ</span>準備をする</td>
+                    <td>「整える・整理する」。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">まうけ</span>準備</td>
+                    <td>あらかじめ用意しておくこと（設け）。</td>
+                </tr>
+                <!-- 気の毒 -->
+                <tr>
+                    <td rowspan="3" style="text-align:center;"><span class="cat-label">気の毒</span></td>
+                    <td><span class="kobu-entry">いとほし</span>気の毒だ</td>
+                    <td>（相手を）いたわってあげたい気持ち。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">こころぐるし</span>気の毒だ</td>
+                    <td>（相手を見て）自分の心が痛む。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">ふびんなり</span>気の毒だ</td>
+                    <td>不都合で可哀想だ。</td>
+                </tr>
+                <!-- かわいい -->
+                <tr>
+                    <td rowspan="3" style="text-align:center;"><span class="cat-label">かわいい・愛す</span></td>
+                    <td><span class="kobu-entry">うつくし</span>かわいい</td>
+                    <td>肉親的な「慈しみ・愛おしさ」。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">かなし</span>かわいい</td>
+                    <td>切ないほど愛おしい。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">めづ</span>愛する</td>
+                    <td>「賞賛する・褒める」ニュアンス。</td>
+                </tr>
+                <!-- 不安 -->
+                <tr>
+                    <td rowspan="4" style="text-align:center;"><span class="cat-label">不安・気がかり</span></td>
+                    <td><span class="kobu-entry">いぶかし</span>気がかりだ</td>
+                    <td>「実体を知りたい」好奇心が強い。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">おぼつかなし</span>気がかりだ</td>
+                    <td>「ぼんやり」してはっきりせず不安。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">こころもとなし</span>不安だ</td>
+                    <td>「じれったい」。待ち遠しくて不安。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">うしろめたし</span>心配だ</td>
+                    <td>後が心配。気がかりだ。</td>
+                </tr>
+                <!-- 早い -->
+                <tr>
+                    <td rowspan="5" style="text-align:center;"><span class="cat-label">早い・急</span></td>
+                    <td><span class="kobu-entry">とく</span>はやく</td>
+                    <td>時間的に早い。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">とし</span>はやい</td>
+                    <td>動作や時期がはやい。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">まだき</span>早くも</td>
+                    <td>時期尚早。もう（早くも）。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">とみなり</span>急だ</td>
+                    <td>「頓（とみ）」。急な様子。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">うちつけなり</span>突然だ</td>
+                    <td>出し抜け。行き当たりばったり。</td>
+                </tr>
+                <!-- 願望 -->
+                <tr>
+                    <td rowspan="3" style="text-align:center;"><span class="cat-label">願望</span></td>
+                    <td><span class="kobu-entry">ゆかし</span>〜たい</td>
+                    <td>見たい・聞きたい・知りたい。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">ばや</span>〜たい</td>
+                    <td>自分の希望を述べる。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">てしがな</span>〜たいものだ</td>
+                    <td>強い願望・理想を望む。</td>
+                </tr>
+                <tr>
+                    <td rowspan="2" style="text-align:center;"><span class="cat-label">気まぐれ、なんとなく</span></td>
+                    <td><span class="kobu-entry">すさび</span>気まぐれ</td>
+                    <td>特定の方向に心が向かうこと。気まま。</td>
+                </tr>
+                <tr>
+                    <td><span class="kobu-entry">すずろ</span>なんとなく</td>
+                    <td>これといった理由や目的がない様子（なんとなく、あてもなく）</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>※「識別のポイント」は、AIに考えさせたものです。<br>誤りや指摘がある場合は、製作者にお伝えください。</p>
+
+    <div style="text-align:center; margin-top:15px;">
+        <button onclick="showScreen('screen-menu')">品書きへ戻る</button>
+    </div>
+</div>
+
+
+
+    <div id="screen-list" class="hidden">
+        <h1>単語一覧</h1>
+        <div id="word-list-container"></div>
+        <button onclick="showScreen('screen-menu')">戻る</button>
+    </div>
+
+    <div id="screen-range" class="hidden">
+        <h1>出題範囲の選択</h1>
+        <div class="range-grid" id="range-buttons"></div>
+        <button onclick="showScreen('screen-menu')">戻る</button>
+    </div>
+
+    <div id="screen-quiz" class="hidden">
+        <button class="exit-btn" onclick="stopQuiz()">中断</button>
+        <div id="timer-display">経過時間: 0.0秒</div>
+        <div id="progress">残り: 0問</div>
+        <div id="word-display"></div>
+        <div id="choices">
+            <div class="card" onclick="checkAnswer(0)"></div>
+            <div class="card" onclick="checkAnswer(1)"></div>
+            <div class="card" onclick="checkAnswer(2)"></div>
+            <div class="card" onclick="checkAnswer(3)"></div>
+        </div>
+        <div id="result-message" style="height: 30px; margin-top: 15px;"></div>
+    </div>
+
+    <div id="screen-result" class="hidden">
+        <h1>結果報告</h1>
+        <div class="time-record">所要時間: <span id="final-time"></span>秒</div>
+        <div>あなたの階級は…</div>
+        <div id="rank-display" class="rank-title"></div>
+        <p id="rank-comment" style="font-size: 1.2rem;"></p>
+        <button onclick="showScreen('screen-range')">再び励む</button>
+        <button onclick="showScreen('screen-menu')">品書きへ戻る</button>
+    </div>
+</div>
+
+<script>
+        const allWords = [
+        {word: "あいなし", meaning: "つまらない"}, {word: "あかず", meaning: "もの足らない"}, {word: "あからさまなり", meaning: "ついちょっと"}, {word: "あさまし", meaning: "驚きあきれる"}, {word: "あそび", meaning: "詩歌管弦"}, {word: "あだなり", meaning: "むだな様子"}, {word: "あたらし", meaning: "もったいない"}, {word: "あぢきなし", meaning: "どうしようもない"}, {word: "あてなり", meaning: "身分が高い"}, {word: "あながちなり", meaning: "無闇だ"}, {word: "あはれなり", meaning: "しみじみする"}, {word: "あふ", meaning: "結婚する"}, {word: "あまた", meaning: "たくさん"}, {word: "あやし", meaning: "不思議だ"}, {word: "ありがたし", meaning: "珍しい"}, {word: "ありく", meaning: "歩き回る"}, {word: "いうなり", meaning: "上品だ"}, {word: "いかがせん", meaning: "どうしようか"}, {word: "いかで", meaning: "どうして？"}, {word: "いかめし", meaning: "盛大だ"}, {word: "いさ", meaning: "さあ、どうかな"}, {word: "いそぎ", meaning: "準備"}, {word: "いたづらなり", meaning: "むなしい"}, {word: "いとど", meaning: "いっそう"}, {word: "いとほし", meaning: "気の毒だ"}, {word: "いぶかし", meaning: "気がかりだ"}, {word: "いぶせし", meaning: "憂鬱だ"}, {word: "いますがり", meaning: "いらっしゃる"}, {word: "いみじ", meaning: "程度がはなはだしい"}, {word: "いらふ", meaning: "答える"}, {word: "うしろめたし", meaning: "心配だ"}, {word: "うたて", meaning: "ますます"}, {word: "うちつけなり", meaning: "突然だ"}, {word: "うつくし", meaning: "かわいい"}, {word: "うつつ", meaning: "現実"}, {word: "うるはし", meaning: "立派だ"}, {word: "え〜ず", meaning: "〜できない"}, {word: "おくる", meaning: "取り残される"}, {word: "おこたる", meaning: "病気が治る"}, {word: "おこなふ", meaning: "修行する"}, {word: "おどろく", meaning: "目を覚ます"}, {word: "おぼつかなし", meaning: "気がかりだ"}, {word: "おほやけ", meaning: "朝廷"}, {word: "おぼろげ", meaning: "普通だ"}, {word: "おもてをふす", meaning: "不名誉"}, {word: "おろす", meaning: "出家する"}, {word: "かこつ", meaning: "他のせいにする"}, {word: "かしこし", meaning: "恐れ多い"}, {word: "かしづく", meaning: "大切に育てる"}, {word: "かたはらいたし", meaning: "気恥ずかしい"}, {word: "かなし", meaning: "かわいい"}, {word: "からし", meaning: "つらい"}, {word: "きこゆ", meaning: "申し上げる"}, {word: "ぐす", meaning: "連れていく"}, {word: "けしからず", meaning: "不都合だ"}, {word: "けしき", meaning: "様子"}, {word: "げに", meaning: "なるほど"}, {word: "ここら", meaning: "たくさん"}, {word: "こころあり", meaning: "おもいやりがある"}, {word: "こころぐるし", meaning: "気の毒だ"}, {word: "こころざし", meaning: "愛情"}, {word: "こころづきなし", meaning: "気に食わない"}, {word: "こころづくし", meaning: "物思う"}, {word: "こころにくし", meaning: "奧ゆかしい"}, {word: "こころもとなし", meaning: "不安だ"}, {word: "ことわり", meaning: "ものの道理"}, {word: "こまやか", meaning: "詳しい"}, {word: "さうざうし", meaning: "寂しい"}, {word: "さうなし", meaning: "簡単だ"}, {word: "ざえ", meaning: "才能"}, {word: "さかし", meaning: "こざかしい"}, {word: "さすがに", meaning: "そうは言ってもやり"}, {word: "さながら", meaning: "もとのまま"}, {word: "さはれ", meaning: "どうにでもなれ"}, {word: "したたむ", meaning: "準備をする"}, {word: "しどけなし", meaning: "だらしがない"}, {word: "しる", meaning: "治める"}, {word: "しるし", meaning: "はっきりしている"}, {word: "すさび", meaning: "気まぐれ"}, {word: "すさまじ", meaning: "興覚めだ"}, {word: "すずろ", meaning: "なんとなく"}, {word: "ずちなし", meaning: "どうしようもない"}, {word: "すなはち", meaning: "すぐに"}, {word: "せうそこ", meaning: "手紙"}, {word: "そこばく", meaning: "たくさん"}, {word: "そぞろ", meaning: "むやみに"}, {word: "だに", meaning: "さえ"}, {word: "たのむ", meaning: "あてにする"}, {word: "たより", meaning: "べんり"}, {word: "ついで", meaning: "機会"}, {word: "つきづきし", meaning: "似合っている"}, {word: "つれなし", meaning: "よそよそしい"}, {word: "てしがな", meaning: "～たいものだ"}, {word: "ときめく", meaning: "寵愛される"}, {word: "とく", meaning: "はやく"}, {word: "ところせし", meaning: "窮屈だ"}, {word: "とし", meaning: "はやい"}, {word: "としごろ", meaning: "長年"}, {word: "とみなり", meaning: "急だ"}, {word: "とむ", meaning: "求める"}, {word: "な～そ", meaning: "～するな"}, {word: "ながむ", meaning: "ぼんやりとみる"}, {word: "なつかし", meaning: "心ひかれる"}, {word: "なのめ", meaning: "平凡だ"}, {word: "なべて", meaning: "すべて"}, {word: "なほ", meaning: "やはり"}, {word: "なむ", meaning: "してほしい"}, {word: "ねんごろ", meaning: "ていねい"}, {word: "ねんず", meaning: "心の中で祈る"}, {word: "ののしる", meaning: "大声で騒ぐ"}, {word: "はかなし", meaning: "むなしい"}, {word: "はかばかし", meaning: "てきばきしている"}, {word: "はつか", meaning: "ちょっと"}, {word: "はづかし", meaning: "立派だ"}, {word: "ばや", meaning: "～たい"}, {word: "ひがごと", meaning: "まちがい"}, {word: "びんなし", meaning: "不都合だ"}, {word: "ふびんなり", meaning: "気の毒だ"}, {word: "ふみ", meaning: "書物"}, {word: "ほい", meaning: "出家の願い"}, {word: "まうけ", meaning: "準備"}, {word: "まだき", meaning: "早くも"}, {word: "まめ", meaning: "まじめ"}, {word: "まゐる", meaning: "参上する"}, {word: "むげなり", meaning: "身分が低い"}, {word: "むつかし", meaning: "いやだ"}, {word: "めざまし", meaning: "気に食わない"}, {word: "めづ", meaning: "愛する"}, {word: "めでたし", meaning: "すばらしい"}, {word: "やがて", meaning: "そのまま"}, {word: "やすし", meaning: "心穏やかだ"}, {word: "やすらふ", meaning: "ためらう"}, {word: "やはら", meaning: "そっと"}, {word: "やむごとなし", meaning: "身分が高い"}, {word: "ゆかし", meaning: "～たい"}, {word: "ゆゆし", meaning: "不吉だ"}, {word: "よし", meaning: "風情"}, {word: "よしなし", meaning: "つまらない"}, {word: "よも", meaning: "まさか"}, {word: "らうらうじ", meaning: "優雅だ"}, {word: "れいの", meaning: "いつもの"}, {word: "わびし", meaning: "つらい"}, {word: "わりなし", meaning: "むちゃくちゃだ"}, {word: "をさをさ", meaning: "めったに"}, {word: "あらまほし", meaning: "理想的だ"}, {word: "いなぶ", meaning: "断る"}, {word: "いふかひなし", meaning: "どうしようもない"}, {word: "うまのはななむけ", meaning: "送別会"}, {word: "かぐる", meaning: "死ぬ"}, {word: "かたし", meaning: "難しい"}, {word: "かたみに", meaning: "お互いに"}, {word: "かる", meaning: "離れる"}, {word: "けに", meaning: "いよいよ"}, {word: "こぞ", meaning: "去年"}, {word: "さらば", meaning: "それならば"}, {word: "しのぶ", meaning: "恋い慕う"}, {word: "せち", meaning: "ひたすら"}, {word: "そこはかとなし", meaning: "特に理由はない"}, {word: "ちぎり", meaning: "約束"}, {word: "つたなし", meaning: "下手だ"}
+    ];
+
+    let currentQuizPool = [];
+    let currentQuestion = {};
+    let canClick = true;
+    let startTime;
+    let timerInterval;
+    let isAllMode = false;
+    let isReverseMode = false;
+
+    function showScreen(screenId) {
+        document.querySelectorAll('.container > div').forEach(div => div.classList.add('hidden'));
+        document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    function showList() {
+        const listContainer = document.getElementById('word-list-container');
+        listContainer.innerHTML = allWords.map((w, i) => `
+            <div class="word-item"><span>${i+1}. <strong>${w.word}</strong></span><span>${w.meaning}</span></div>
+        `).join('');
+        showScreen('screen-list');
+    }
+
+    function toggleMode() {
+        isReverseMode = !isReverseMode;
+        const btn = document.getElementById('mode-toggle-btn');
+        btn.innerText = isReverseMode ? "モード: 現代語 → 古文" : "モード: 古文 → 現代語";
+        btn.classList.toggle('reverse-active', isReverseMode);
+    }
+
+    function initRangeButtons() {
+        const container = document.getElementById('range-buttons');
+        container.innerHTML = ""; 
+        for (let i = 0; i < allWords.length; i += 10) {
+            const end = Math.min(i + 10, allWords.length);
+            const btn = document.createElement('button');
+            btn.innerText = `${i + 1} ～ ${end}`;
+            btn.onclick = () => { isAllMode = false; startQuiz(i, end); };
+            container.appendChild(btn);
+        }
+        // 「全て」ボタンを追加
+        const allBtn = document.createElement('button');
+        allBtn.innerText = "全て (160語全力挑戦)";
+        allBtn.className = "all-btn";
+        allBtn.onclick = () => { isAllMode = true; startQuiz(0, allWords.length); };
+        container.appendChild(allBtn);
+    }
+
+    function startQuiz(start, end) {
+        currentQuizPool = allWords.slice(start, end).sort(() => Math.random() - 0.5);
+        showScreen('screen-quiz');
+        startTime = Date.now();
+        timerInterval = setInterval(updateTimer, 100);
+        nextQuestion();
+    }
+
+    function updateTimer() {
+        const elapsed = (Date.now() - startTime) / 1000;
+        document.getElementById('timer-display').innerText = `経過時間: ${elapsed.toFixed(1)}秒`;
+    }
+
+    function stopQuiz() {
+        clearInterval(timerInterval);
+        showScreen('screen-menu');
+    }
+
+    function nextQuestion() {
+        if (currentQuizPool.length === 0) {
+            endQuiz();
+            return;
+        }
+        canClick = true;
+        document.getElementById('result-message').innerText = "";
+        document.getElementById('progress').innerText = `残り: ${currentQuizPool.length}問`;
+        currentQuestion = currentQuizPool.pop();
+
+        // ★出題と正解をモードで切り替え
+        const questionText = isReverseMode ? currentQuestion.meaning : currentQuestion.word;
+        const correctAnwser = isReverseMode ? currentQuestion.word : currentQuestion.meaning;
+
+        document.getElementById('word-display').innerText = questionText;
+
+        // ★選択肢の生成もモードに対応
+        let choices = [correctAnwser];
+        while (choices.length < 4) {
+            let randWord = allWords[Math.floor(Math.random() * allWords.length)];
+            // モードに応じてダミーの単語か意味を選ぶ
+            let randChoice = isReverseMode ? randWord.word : randWord.meaning;
+            if (!choices.includes(randChoice)) choices.push(randChoice);
+        }
+        choices.sort(() => Math.random() - 0.5);
+
+        const cards = document.getElementsByClassName('card');
+        for (let i = 0; i < 4; i++) {
+            cards[i].innerText = choices[i];
+            cards[i].style.background = "#fffef0";
+            // 判定用に正解を保持
+            cards[i].setAttribute('data-answer', choices[i]);
+        }
+    }
+
+
+     function checkAnswer(index) {
+        if (!canClick) return;
+        canClick = false;
+        const selected = document.getElementsByClassName('card')[index];
+        const msg = document.getElementById('result-message');
+        
+        // ★正解の比較対象をモードに合わせて変更
+        const correctAnwser = isReverseMode ? currentQuestion.word : currentQuestion.meaning;
+
+        if (selected.getAttribute('data-answer') === correctAnwser) {
+            msg.innerText = "● 正解"; msg.style.color = "green";
+            selected.style.background = "#e1f5fe";
+            setTimeout(nextQuestion, 400);
+        } else {
+            msg.innerText = `× 正解は「${correctAnwser}」`; msg.style.color = "red";
+            selected.style.background = "#ffebee";
+            currentQuizPool.unshift(currentQuestion);
+            setTimeout(nextQuestion, 1200);
+        }
+    }
+    function endQuiz() {
+        clearInterval(timerInterval);
+        const finalTime = (Date.now() - startTime) / 1000;
+        document.getElementById('final-time').innerText = finalTime.toFixed(1);
+        
+        let rank = "";
+        let comment = "";
+
+        if (isAllMode) {
+            // 160語モードの判定基準
+            if (finalTime < 240) { rank = "天皇"; comment = "日出づる処の天子なり！全160語を掌握せし現人神。"; }
+            else if (finalTime < 360) { rank = "関白"; comment = "天下の政を司る者。古文の理を極めておられます。"; }
+            else if (finalTime < 480) { rank = "蔵人"; comment = "宮中に仕える資格十分。良き知恵です。"; }
+            else if (finalTime < 700) { rank = "防人"; comment = "地道な努力が実を結びつつあります。"; }
+            else { rank = "下人"; comment = "160語完走、見事なり。さらなる精進を。"; }
+        } else {
+            // 10語モードの判定基準
+            if (finalTime < 15) { rank = "関白"; comment = "瞬きする間に訳せし才能。お見事！"; }
+            else if (finalTime < 25) { rank = "検非違使"; comment = "都の精鋭。迷いなき解答なり。"; }
+            else if (finalTime < 40) { rank = "蔵人"; comment = "宮中に仕える資格十分。良き知恵です。"; }
+            else if (finalTime < 60) { rank = "防人"; comment = "地道な努力が実を結びつつあります。"; }
+            else { rank = "下人"; comment = "焦らず、一歩ずつ覚えてゆきましょう。"; }
+        }
+
+        document.getElementById('rank-display').innerText = rank;
+        document.getElementById('rank-comment').innerText = comment;
+        showScreen('screen-result');
+    }
+
+    initRangeButtons();
+</script>
+</body>
+</html>

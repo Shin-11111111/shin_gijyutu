@@ -1,0 +1,473 @@
+ <!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トータル・ウェザー＆花粉モニター</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --thermometer-color: #34c759;
+            --humidity-color: #007afc;
+            --pop-color: #5856d6;
+            --pollen-color: #ffcc00;
+            --transition-speed: 0.3s;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 天気記号・総合ステータス */
+        .weather-status-panel {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.02);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+        }
+
+        .weather-icon {
+            font-size: 4rem;
+            margin: 0;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .weather-text {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+            margin-top: 8px;
+        }
+
+        /* 4連インジケーターエリア（グリッド配置でスマホでも崩れないように修正） */
+        .displays {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .monitor-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+
+        .value-text {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #222;
+            white-space: nowrap;
+        }
+
+        .status-badge {
+            padding: 4px 6px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            color: white;
+            text-align: center;
+            width: 90%;
+            white-space: nowrap;
+        }
+
+        /* --- 温度計スタイル --- */
+        .thermometer-wrapper {
+            position: relative;
+            height: 100px;
+            width: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .scale {
+            position: absolute;
+            left: -5px;
+            height: 75px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-size: 0.55rem;
+            color: #8e8e93;
+            padding-right: 2px;
+            border-right: 1px solid #e5e5ea;
+        }
+
+        .tube {
+            width: 8px;
+            height: 75px;
+            background: #e5e5ea;
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            overflow: hidden;
+            margin-left: 15px;
+        }
+
+        .fluid {
+            width: 100%;
+            height: 50%;
+            background: var(--thermometer-color);
+            position: absolute;
+            bottom: 0;
+        }
+
+        .bulb {
+            width: 16px;
+            height: 16px;
+            background: var(--thermometer-color);
+            border-radius: 50%;
+            margin-top: -3px;
+            margin-left: 15px;
+        }
+
+        /* --- 共通サークルスタイル（湿度・降水・花粉） --- */
+        .circle-gauge {
+            position: relative;
+            width: 70px;
+            height: 70px;
+        }
+
+        .circle-gauge svg {
+            transform: rotate(-90deg);
+            width: 70px;
+            height: 70px;
+        }
+
+        .circle-gauge circle {
+            fill: none;
+            stroke-width: 6;
+        }
+
+        .circle-gauge .bg-track {
+            stroke: #e5e5ea;
+        }
+
+        .circle-gauge .progress-bar {
+            stroke-linecap: round;
+        }
+
+        /* 半半径28pxの円の周長 = 2 * pi * 28 ≒ 176 */
+        .circle-gauge .progress-bar {
+            stroke-dasharray: 176;
+            stroke-dashoffset: 88;
+        }
+
+        .circle-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1rem;
+        }
+
+        /* --- コントロールパネル --- */
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border-top: 1px solid #e5e5ea;
+            padding-top: 15px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        #tempSlider { accent-color: var(--thermometer-color); }
+        #humiditySlider { accent-color: var(--humidity-color); }
+        #popSlider { accent-color: var(--pop-color); }
+        #pollenSlider { accent-color: var(--pollen-color); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="weather-status-panel">
+        <div id="weatherIcon" class="weather-icon">☀️</div>
+        <div id="weatherText" class="weather-text">快晴 (降水確率 20%) — 最高の天気です！</div>
+    </div>
+    
+    <div class="displays">
+        <div class="monitor-section">
+            <div class="value-text"><span id="tempValue">25</span>°C</div>
+            <div id="tempStatus" class="status-badge" style="background-color: #34c759;">快適</div>
+            
+            <div class="thermometer-wrapper">
+                <div class="scale"><span>50°</span><span>25°</span><span>0°</span><span>-10°</span></div>
+                <div class="tube"><div id="fluid" class="fluid" style="height: 58.3%;"></div></div>
+                <div id="bulb" class="bulb" style="background-color: #34c759;"></div>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <div class="value-text"><span id="humidityValue">50</span>%</div>
+            <div id="humidityStatus" class="status-badge" style="background-color: #007afc;">快適 ✨</div>
+            
+            <div class="circle-gauge">
+                <svg>
+                    <circle class="bg-track" cx="35" cy="35" r="28"></circle>
+                    <circle id="humidityProgress" class="progress-bar" cx="35" cy="35" r="28" style="stroke: #007afc; stroke-dashoffset: 88;"></circle>
+                </svg>
+                <div class="circle-icon">💧</div>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <div class="value-text"><span id="popValue">20</span>%</div>
+            <div id="popStatus" class="status-badge" style="background-color: #34c759;">心配なし</div>
+            
+            <div class="circle-gauge">
+                <svg>
+                    <circle class="bg-track" cx="35" cy="35" r="28"></circle>
+                    <circle id="popProgress" class="progress-bar" cx="35" cy="35" r="28" style="stroke: #5856d6; stroke-dashoffset: 140.8;"></circle>
+                </svg>
+                <div class="circle-icon">☂️</div>
+            </div>
+        </div>
+
+        <div class="monitor-section">
+            <div class="value-text"><span id="pollenValue">30</span>個</div>
+            <div id="pollenStatus" class="status-badge" style="background-color: #ffcc00;">やや多い</div>
+            
+            <div class="circle-gauge">
+                <svg>
+                    <circle class="bg-track" cx="35" cy="35" r="28"></circle>
+                    <circle id="pollenProgress" class="progress-bar" cx="35" cy="35" r="28" style="stroke: #ffcc00; stroke-dashoffset: 123.2;"></circle>
+                </svg>
+                <div class="circle-icon">🌲</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label><span>温度</span><span id="tempCurrentLabel">25°C</span></label>
+            <input type="range" id="tempSlider" min="-10" max="50" value="25">
+        </div>
+        <div class="control-group">
+            <label><span>湿度</span><span id="humidityCurrentLabel">50%</span></label>
+            <input type="range" id="humiditySlider" min="0" max="100" value="50">
+        </div>
+        <div class="control-group">
+            <label><span>降水確率</span><span id="popCurrentLabel">20%</span></label>
+            <input type="range" id="popSlider" min="0" max="100" value="20">
+        </div>
+        <div class="control-group">
+            <label><span>花粉数 (1m³あたり個数目安)</span><span id="pollenCurrentLabel">30個</span></label>
+            <input type="range" id="pollenSlider" min="0" max="150" value="30">
+        </div>
+    </div>
+</div>
+
+<script>
+    // 要素の取得
+    const tempSlider = document.getElementById('tempSlider'), tempValue = document.getElementById('tempValue'), tempStatus = document.getElementById('tempStatus'), tempCurrentLabel = document.getElementById('tempCurrentLabel'), fluid = document.getElementById('fluid'), bulb = document.getElementById('bulb');
+    const humiditySlider = document.getElementById('humiditySlider'), humidityValue = document.getElementById('humidityValue'), humidityStatus = document.getElementById('humidityStatus'), humidityCurrentLabel = document.getElementById('humidityCurrentLabel'), humidityProgress = document.getElementById('humidityProgress');
+    const popSlider = document.getElementById('popSlider'), popValue = document.getElementById('popValue'), popStatus = document.getElementById('popStatus'), popCurrentLabel = document.getElementById('popCurrentLabel'), popProgress = document.getElementById('popProgress');
+    const pollenSlider = document.getElementById('pollenSlider'), pollenValue = document.getElementById('pollenValue'), pollenStatus = document.getElementById('pollenStatus'), pollenCurrentLabel = document.getElementById('pollenCurrentLabel'), pollenProgress = document.getElementById('pollenProgress');
+    const weatherIcon = document.getElementById('weatherIcon'), weatherText = document.getElementById('weatherText');
+
+    const circumference = 176; // 2 * pi * 28
+
+    // 1. 温度更新
+    function updateTemperature() {
+        const val = parseInt(tempSlider.value);
+        tempValue.textContent = val;
+        tempCurrentLabel.textContent = `${val}°C`;
+        fluid.style.height = `${((val - (-10)) / 60) * 100}%`;
+
+        let color = '#34c759', status = '快適';
+        if (val < 10) { color = '#007afc'; status = '寒い ❄️'; }
+        else if (val < 18) { color = '#5ac8fa'; status = '肌寒い 🍃'; }
+        else if (val <= 26) { color = '#34c759'; status = '快適 😊'; }
+        else if (val <= 35) { color = '#ff9500'; status = '暑い ☀️'; }
+        else { color = '#ff3b30'; status = '酷暑 🥵'; }
+
+        document.documentElement.style.setProperty('--thermometer-color', color);
+        tempStatus.style.backgroundColor = color;
+        tempStatus.textContent = status;
+        bulb.style.backgroundColor = color;
+        
+        updateWeatherMasterLogic();
+    }
+
+    // 2. 湿度更新
+    function updateHumidity() {
+        const val = parseInt(humiditySlider.value);
+        humidityValue.textContent = val;
+        humidityCurrentLabel.textContent = `${val}%`;
+        humidityProgress.style.strokeDashoffset = circumference - (val / 100) * circumference;
+
+        let color = '#007afc', status = '快適 ✨';
+        if (val < 40) { color = '#ff9500'; status = '乾燥 🌵'; } 
+        else if (val <= 60) { color = '#007afc'; status = '快適 ✨'; } 
+        else { color = '#5856d6'; status = '多湿 🌧️'; }
+
+        document.documentElement.style.setProperty('--humidity-color', color);
+        humidityStatus.style.backgroundColor = color;
+        humidityStatus.textContent = status;
+        humidityProgress.style.stroke = color;
+        
+        updateWeatherMasterLogic();
+    }
+
+    // 3. 降水確率更新
+    function updatePop() {
+        const val = parseInt(popSlider.value);
+        popValue.textContent = val;
+        popCurrentLabel.textContent = `${val}%`;
+        popProgress.style.strokeDashoffset = circumference - (val / 100) * circumference;
+
+        let color = '#8e8e93', status = '傘なしOK';
+        if (val <= 20) { color = '#34c759'; status = '心配なし'; }
+        else if (val <= 50) { color = '#007afc'; status = '折畳傘推奨'; }
+        else if (val <= 80) { color = '#5856d6'; status = '雨具必須'; }
+        else { color = '#ff3b30'; status = '大雨警戒 🚨'; }
+
+        document.documentElement.style.setProperty('--pop-color', color);
+        popStatus.style.backgroundColor = color;
+        popStatus.textContent = status;
+        
+        updateWeatherMasterLogic();
+    }
+
+    // 4. 【新機能】花粉飛散量更新
+    function updatePollen() {
+        const val = parseInt(pollenSlider.value);
+        pollenValue.textContent = val;
+        pollenCurrentLabel.textContent = `${val}個`;
+        
+        // 最大150個としてゲージ比率を計算
+        const rate = Math.min(val / 150, 1);
+        pollenProgress.style.strokeDashoffset = circumference - rate * circumference;
+
+        let color = '#34c759', status = '少ない';
+        if (val <= 10) { color = '#34c759'; status = '少ない 💧'; }
+        else if (val <= 30) { color = '#ffcc00'; status = 'やや多い 😷'; }
+        else if (val <= 70) { color = '#ff9500'; status = '多い 🌲'; }
+        else { color = '#ff3b30'; status = '非常に多い ⚠️'; }
+
+        document.documentElement.style.setProperty('--pollen-color', color);
+        pollenStatus.style.backgroundColor = color;
+        pollenStatus.textContent = status;
+        pollenProgress.style.stroke = color;
+
+        updateWeatherMasterLogic();
+    }
+
+    // 5. 総合気象連動シミュレーションロジック
+    function updateWeatherMasterLogic() {
+        const t = parseInt(tempSlider.value);
+        const h = parseInt(humiditySlider.value);
+        const p = parseInt(popSlider.value);
+        const pol = parseInt(pollenSlider.value);
+        
+        let icon = '☀️';
+        let text = '快晴';
+
+        // 花粉の飛散条件（晴れていて、気温が高く、乾燥している、かつ実際に飛散量ゲージが多い）
+        const isPollenDay = (t >= 15 && h <= 50 && p <= 20 && pol >= 31);
+
+        if (p >= 50) {
+            if (t <= 2) {
+                icon = '❄️';
+                text = `雪 (降水確率 ${p}%) — 花粉は雨・雪でリセットされています。`;
+            } else if (t >= 28 && h >= 70 && p >= 80) {
+                icon = '⚡️';
+                text = `激しい雷雨 (降水確率 ${p}%) — 落雷に注意！地面の花粉は一時的に落ち着きます。`;
+            } else {
+                icon = '☔️';
+                text = `雨 (降水確率 ${p}%) — 雨のため、本日の花粉飛散は非常に弱まります。`;
+            }
+        } 
+        else if (p >= 20 && p < 50) {
+            if (isPollenDay) {
+                icon = '⛅️';
+                text = `くもり（花粉注意） — 雲はありますが、空気の乾燥により花粉が飛散しています！`;
+            } else {
+                icon = '⛅️';
+                text = `くもり時々晴れ (降水確率 ${p}%) — 日差しは控えめです。`;
+            }
+        } 
+        else {
+            if (isPollenDay || pol >= 71) {
+                // 花粉が「多い」または「非常に多い」かつ晴れ
+                icon = '😷';
+                text = `【花粉警報】晴れて花粉が「${pollenStatus.textContent}」飛散中！対策をして外出してください。`;
+            } else if (h < 35) {
+                icon = '🍂';
+                text = `乾燥した晴天 (降水確率 ${p}%) — 火の取り扱い・お肌の乾燥に注意。`;
+            } else if (t >= 35) {
+                icon = '🥵';
+                text = `危険な酷暑 (降水確率 ${p}%) — 熱中症に厳重警戒！`;
+            } else {
+                icon = '☀️';
+                text = `快晴 (降水確率 ${p}%) — 気持ちよく晴れた快適な天気です。`;
+            }
+        }
+
+        // 画面への適用
+        weatherIcon.textContent = icon;
+        weatherText.textContent = text;
+    }
+
+    // 各スライダーにイベントを登録
+    tempSlider.addEventListener('input', updateTemperature);
+    humiditySlider.addEventListener('input', updateHumidity);
+    popSlider.addEventListener('input', updatePop);
+    pollenSlider.addEventListener('input', updatePollen);
+
+    // 初期化を確実に実行
+    updateTemperature();
+    updateHumidity();
+    updatePop();
+    updatePollen();
+</script>
+
+</body>
+</html>

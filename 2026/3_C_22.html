@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>爆笑！ダジャレメーカー</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            text-align: center;
+            background-color: #eef7f2;
+            margin: 0;
+            padding: 50px 20px;
+        }
+        .card {
+            background: white;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        #result {
+            font-size: 28px;
+            font-weight: bold;
+            color: #e74c3c;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            border: 2px dashed #bdc3c7;
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #fafafa;
+        }
+        button {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 40px;
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>🤣 ダジャレメーカー 🤣</h1>
+        <div id="result">「ボタンを押してね」</div>
+        <button onclick="gacha()">ダジャレを生み出す</button>
+    </div>
+
+    <script>
+    
+        const dajareList = [
+            "布団が吹っ飛んだ！",
+            "アルミ缶の上にあるみかん",
+            "猫が寝転んだ",
+            "車が来るまで待つ",
+            "トイレにいっといれ",
+            "イカはいかが？",
+            "スキーが好き！",
+            "校長先生絶好調！",
+            "内科は無いか？",
+            "カレーは辛ぇ！",
+            "豚をぶった！",
+            "鮭が叫んだ！",
+            
+
+        ];
+
+        function gacha() {
+            const randomIndex = Math.floor(Math.random() * dajareList.length);
+            const selectedDajare = dajareList[randomIndex];
+            document.getElementById('result').textContent = selectedDajare;
+        }
+    </script>
+
+</body>
+</html>

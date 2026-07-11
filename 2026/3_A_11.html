@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学校生活サポートマネージャー</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 18px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 10px;
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        /* --- 明日の持ち物・連絡エリア --- */
+        .belongings-panel {
+            background: #fffdf0;
+            border: 1px solid #f1c40f;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .belongings-textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 15px;
+            box-sizing: border-box;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        /* --- 提出物追加フォーム --- */
+        .todo-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .todo-form select, .todo-form input {
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .todo-form select { flex: 1; min-width: 120px; }
+        .todo-form input[type="text"] { flex: 3; min-width: 200px; }
+        .todo-form input[type="date"] { flex: 1.5; min-width: 150px; }
+
+        /* --- 教科別提出物エリア --- */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .subject-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        }
+
+        .box-kokugo { border-top: 4px solid #e74c3c; }
+        .box-sugaku { border-top: 4px solid #3498db; }
+        .box-eigo { border-top: 4px solid #9b59b6; }
+        .box-rika { border-top: 4px solid #2ecc71; }
+        .box-shakai { border-top: 4px solid #f1c40f; }
+        .box-other { border-top: 4px solid #7f8c8d; }
+
+        .subject-box h3 { margin: 0 0 10px 0; font-size: 16px; color: #334155; }
+        .todo-list { list-style: none; padding: 0; margin: 0; min-height: 50px; }
+
+        .todo-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            background: #f8fafc;
+            padding: 8px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* 明日・今日が期限のタスクを強調 */
+        .todo-item.urgent {
+            background-color: #fff5f5;
+            border-color: var(--danger-color);
+        }
+        .todo-item.urgent .todo-date { color: var(--danger-color); font-weight: bold; }
+
+        .todo-left { display: flex; align-items: flex-start; gap: 6px; flex: 1; }
+        .todo-left input { margin-top: 4px; }
+        .todo-text { word-break: break-all; }
+        .todo-date { display: block; font-size: 11px; color: #7f8c8d; margin-top: 2px; }
+
+        button { cursor: pointer; border: none; padding: 8px 16px; border-radius: 4px; font-size: 14px; font-weight: bold; }
+        .btn-add { background-color: var(--success-color); color: white; }
+        .btn-delete { background-color: transparent; color: var(--danger-color); font-size: 14px; padding: 0 2px; margin-left: 5px; }
+        button:hover { opacity: 0.9; }
+        
+        .completed { opacity: 0.5; background: #e2e8f0 !important; border-color: #cbd5e1 !important; }
+        .completed .todo-text { text-decoration: line-through; color: #94a3b8; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🏫 学校生活サポートマネージャー</h1>
+
+    <h2>🎒 明日の持ち物・メモ</h2>
+    <div class="belongings-panel">
+        <textarea id="memoArea" class="belongings-textarea" placeholder="例：&#13;・数Iの教科書、ノート&#13;・体育館シューズ&#13;・印鑑（プリント回収）"></textarea>
+    </div>
+
+    <h2>📅 提出物の追加</h2>
+    <div class="todo-form">
+        <select id="todoSubject">
+            <option value="kokugo">国語</option>
+            <option value="sugaku">数学</option>
+            <option value="eigo">英語</option>
+            <option value="rika">理科</option>
+            <option value="shakai">社会</option>
+            <option value="other">その他</option>
+        </select>
+        <input type="text" id="todoText" placeholder="課題名（例：ワーク P.10-15）" required>
+        <input type="date" id="todoDate">
+        <button class="btn-add" onclick="addTodo()">リストに追加</button>
+    </div>
+
+    <h2>🗂️ 教科別提出物一覧</h2>
+    <div class="subject-grid">
+        <div class="subject-box box-kokugo"><h3>🔴 国語</h3><ul class="todo-list" id="list-kokugo"></ul></div>
+        <div class="subject-box box-sugaku"><h3>🔵 数学</h3><ul class="todo-list" id="list-sugaku"></ul></div>
+        <div class="subject-box box-eigo"><h3>🟣 英語</h3><ul class="todo-list" id="list-eigo"></ul></div>
+        <div class="subject-box box-rika"><h3>🟢 理科</h3><ul class="todo-list" id="list-rika"></ul></div>
+        <div class="subject-box box-shakai"><h3>🟡 社会</h3><ul class="todo-list" id="list-shakai"></ul></div>
+        <div class="subject-box box-other"><h3>⚪ その他</h3><ul class="todo-list" id="list-other"></ul></div>
+    </div>
+</div>
+
+<script>
+    // --- 日付チェック（明日・今日が期限か判定する） ---
+    function checkUrgency(dateString) {
+        if (!dateString) return false;
+        const today = new Date();
+        const tomorrow = new Date();
+        tomorrow.setDate(today.getDate() + 1);
+        const formatDate = (d) => d.toISOString().split('T')[0];
+        return dateString === formatDate(today) || dateString === formatDate(tomorrow);
+    }
+
+    // --- 教科別提出物管理のロジック ---
+    function addTodo() {
+        const subject = document.getElementById('todoSubject').value;
+        const text = document.getElementById('todoText').value.trim();
+        const date = document.getElementById('todoDate').value;
+
+        if (!text) {
+            alert('課題名を入力してください。');
+            return;
+        }
+
+        const targetList = document.getElementById(`list-${subject}`);
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        
+        if (checkUrgency(date)) { li.classList.add('urgent'); }
+        const dateDisplay = date ? `期限: ${date}` : '期限なし';
+
+        li.innerHTML = `
+            <div class="todo-left">
+                <input type="checkbox" onchange="toggleTodo(this)">
+                <div class="todo-text">
+                    ${text}
+                    <span class="todo-date">${dateDisplay} ${checkUrgency(date) ? '⚠️明日・今日が期限！' : ''}</span>
+                </div>
+            </div>
+            <button class="btn-delete" onclick="deleteTodo(this)">❌</button>
+        `;
+
+        targetList.appendChild(li);
+        document.getElementById('todoText').value = '';
+        document.getElementById('todoDate').value = '';
+    }
+
+    function toggleTodo(checkbox) {
+        const todoItem = checkbox.closest('.todo-item');
+        if (checkbox.checked) {
+            todoItem.classList.add('completed');
+        } else {
+            todoItem.classList.remove('completed');
+        }
+    }
+
+    function deleteTodo(button) { button.closest('.todo-item').remove(); }
+</script>
+
+</body>
+</html>

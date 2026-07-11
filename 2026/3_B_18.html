@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>みつかるハブ (Find Hub)</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        header {
+            background-color: #4a90e2;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+        
+        /* 投稿フォームのスタイル */
+        .post-form {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .post-form h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+            color: #4a90e2;
+        }
+        .form-group {
+            margin-bottom: 12px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+        }
+        .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 5px;
+            box-shadow: 0 2px 4px rgba(255,107,107,0.2);
+        }
+        .btn-submit:hover {
+            background-color: #fa5252;
+        }
+
+        .section-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4a90e2;
+            padding-left: 8px;
+        }
+        .item-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out; /* 追加時のアニメーション */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .item-image {
+            width: 70px;
+            height: 70px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        .item-info {
+            flex-grow: 1;
+        }
+        .item-name {
+            font-weight: bold;
+            font-size: 16px;
+            margin: 0 0 5px 0;
+        }
+        .item-meta {
+            font-size: 13px;
+            color: #666;
+            margin: 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .status-keep {
+            background-color: #ffe3e3;
+            color: #ff6b6b;
+        }
+        .status-office {
+            background-color: #e3faf2;
+            color: #20c997;
+        }
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        .btn-claim, .btn-resolve {
+            border: 1px solid #ced4da;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        .btn-claim {
+            background-color: #f1f3f5;
+            color: #495057;
+        }
+        .btn-claim:hover {
+            background-color: #e9ecef;
+        }
+        .btn-resolve {
+            background-color: #20c997;
+            color: white;
+            border-color: #20c997;
+        }
+        .btn-resolve:hover {
+            background-color: #12b886;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>みつかるハブ</h1>
+        <p>校内の落とし物・忘れ物をみんなで解決</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="post-form">
+            <h3>📥 物を拾った（落とし物の登録）</h3>
+            <form id="itemForm" onsubmit="addItem(event)">
+                <div class="form-group">
+                    <label for="itemName">品名</label>
+                    <input type="text" id="itemName" class="form-control" placeholder="例：黒い筆箱、青いタオル" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="itemPlace">拾った場所</label>
+                    <input type="text" id="itemPlace" class="form-control" placeholder="例：中庭のベンチ、2階廊下" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="itemIcon">アイコン</label>
+                        <select id="itemIcon" class="form-control">
+                            <option value="📦">📦 雑貨物</option>
+                            <option value="🔑">🔑 鍵・小物</option>
+                            <option value="✏️">✏️ 文房具</option>
+                            <option value="🔋">🔋 家電・電子機器</option>
+                            <option value="🧥">🧥 衣類・タオル</option>
+                            <option value="👛">👛 財布・カード</option>
+                            <option value="🧃">🧃 水筒・飲食</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemStatus">現在の保管状態</label>
+                        <select id="itemStatus" class="form-control">
+                            <option value="keep">自分が保管中</option>
+                            <option value="office">職員室へ届け済み</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">この落とし物を追加する</button>
+            </form>
+        </div>
+
+        <h2 class="section-title">最近届いた落とし物</h2>
+
+        <div id="itemList">
+            <div class="item-card">
+                <div class="item-image">🔑</div>
+                <div class="item-info">
+                    <p class="item-name">黒いキーケース</p>
+                    <p class="item-meta">場所：体育館の2階観覧席</p>
+                    <span class="status-badge status-keep">自分が保管中</span>
+                </div>
+                <div class="actions">
+                    <button class="btn-claim" onclick="alert('持ち主として連絡をリクエストしました！')">私のです</button>
+                    <button class="btn-resolve" onclick="resolveItem(this)">解決した</button>
+                </div>
+            </div>
+
+            <div class="item-card">
+                <div class="item-image">🔋</div>
+                <div class="item-info">
+                    <p class="item-name">白のモバイルバッテリー</p>
+                    <p class="item-meta">場所：3階の自動販売機前</p>
+                    <span class="status-badge status-office">職員室へ届け済み</span>
+                </div>
+                <div class="actions">
+                    <button class="btn-claim" onclick="alert('職員室に届いているので、直接取りに行ってみてください！')">確認した</button>
+                    <button class="btn-resolve" onclick="resolveItem(this)">解決した</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // 落とし物を追加する関数
+        function addItem(event) {
+            event.preventDefault(); // フォーム送信によるページリロードを防ぐ
+
+            // 各入力値を取得
+            const name = document.getElementById('itemName').value;
+            const place = document.getElementById('itemPlace').value;
+            const icon = document.getElementById('itemIcon').value;
+            const statusType = document.getElementById('itemStatus').value;
+
+            // ステータスに応じたバッジとボタンのテキスト/アクションを設定
+            let statusBadge = '';
+            let claimButtonHTML = '';
+            
+            if (statusType === 'keep') {
+                statusBadge = '<span class="status-badge status-keep">自分が保管中</span>';
+                claimButtonHTML = `<button class="btn-claim" onclick="alert('持ち主として連絡をリクエストしました！')">私のです</button>`;
+            } else {
+                statusBadge = '<span class="status-badge status-office">職員室へ届け済み</span>';
+                claimButtonHTML = `<button class="btn-claim" onclick="alert('職員室に届いているので、直接取りに行ってみてください！')">確認した</button>`;
+            }
+
+            // 新しいカードのHTMLを作成
+            const newCard = document.createElement('div');
+            newCard.className = 'item-card';
+            newCard.innerHTML = `
+                <div class="item-image">${icon}</div>
+                <div class="item-info">
+                    <p class="item-name">${name}</p>
+                    <p class="item-meta">場所：${place}</p>
+                    ${statusBadge}
+                </div>
+                <div class="actions">
+                    ${claimButtonHTML}
+                    <button class="btn-resolve" onclick="resolveItem(this)">解決した</button>
+                </div>
+            `;
+
+            // リストの先頭（最新）に追加
+            const itemList = document.getElementById('itemList');
+            itemList.insertBefore(newCard, itemList.firstChild);
+
+            // フォームをリセット
+            document.getElementById('itemForm').reset();
+            
+            alert('新しい落とし物を追加しました！');
+        }
+
+        // 落とし物を解決（削除）する関数
+        function resolveItem(button) {
+            if (confirm('この落とし物は解決しましたか？一覧から削除します。')) {
+                // ボタンの親要素のさらに親要素（.item-card）を取得して削除
+                const card = button.closest('.item-card');
+                card.remove();
+            }
+        }
+    </script>
+</body>
+</html>

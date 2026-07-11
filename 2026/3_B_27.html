@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古文単語フラッシュカード</title>
+    <style>
+        :root {
+            --bg-color: #f5f2eb;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --accent-color: #8a3b2c; /* 渋めの和風な赤 */
+            --sub-color: #555555;
+        }
+
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            margin-bottom: 10px;
+        }
+
+        .progress {
+            font-size: 0.9rem;
+            color: var(--sub-color);
+            margin-bottom: 20px;
+        }
+
+        /* カードのスタイル */
+        .card-container {
+            width: 100%;
+            max-width: 400px;
+            height: 250px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 15px;
+        }
+
+        /* 意味を表示するときに180度回転 */
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            background: var(--card-bg);
+            border: 2px solid #e0dacb;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        /* 表（単語） */
+        .card-front {
+            color: var(--accent-color);
+        }
+
+        .word {
+            font-size: 2.2rem;
+            font-weight: bold;
+            letter-spacing: 0.1em;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 15px;
+        }
+
+        /* 裏（意味） */
+        .card-back {
+            transform: rotateY(180deg);
+            background-color: #faf8f5;
+        }
+
+        .meaning {
+            font-size: 1.6rem;
+            font-weight: bold;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        /* ボタンエリア */
+        .btn-container {
+            margin-top: 30px;
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px;
+            visibility: hidden; /* 意味を見るまでは非表示 */
+        }
+
+        .btn-container.show {
+            visibility: visible;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-wrong {
+            background-color: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-correct {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        /* リザルト画面 */
+        .result-screen {
+            display: none;
+            text-align: center;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .result-screen h2 {
+            color: var(--accent-color);
+        }
+
+        .btn-restart {
+            background-color: var(--accent-color);
+            color: white;
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-view">
+        <div class="progress" id="progress">0 / 0</div>
+        
+        <div class="card-container" onclick="flipCard()">
+            <div class="card" id="card">
+                <div class="card-face card-front">
+                    <div class="word" id="word-text">いと</div>
+                    <div class="hint">タップで意味を表示</div>
+                </div>
+                <div class="card-face card-back">
+                    <div class="meaning" id="meaning-text">とても、たいそう</div>
+                    <div class="hint">下のボタンで判定してね</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-container" id="btn-container">
+            <button class="btn-wrong" onclick="handleAnswer(false)">まだ（復習する）</button>
+            <button class="btn-correct" onclick="handleAnswer(true)">覚えた！</button>
+        </div>
+    </div>
+
+    <div class="result-screen" id="result-view">
+        <h2>学習完了！</h2>
+        <p id="result-text">お疲れ様でした！</p>
+        <button class="btn-restart" onclick="restartGame(true)">もう一度最初から</button>
+        <button class="btn-restart" style="background-color: #666;" id="btn-review-only" onclick="restartGame(false)">間違えた単語のみ復習</button>
+    </div>
+
+    <script>
+        // --- 古文単語データ（ここを自由に変更・追加してください） ---
+        const originalWords = [
+            { word: "あはれなり", meaning: "しみじみと心に深く感じられる" },
+            { word: "をかし", meaning: "興味深い" },
+            { word: "つとめて", meaning: "早朝" },
+            { word: "なほ", meaning: "やはり" },
+            { word: "おどろく", meaning: "気づく、目を覚ます" },
+            { word: "ののしる", meaning: "大騒ぎする、評判になる" },
+            { word: "ねんず", meaning: "我慢する、心の中で祈る" },
+            { word: "しのぶ", meaning: "我慢する、人目を避ける" }
+        ];
+
+        let currentWords = []; // 現在のラウンドで解く単語
+        let wrongWords = [];   // 間違えた単語をストックする配列
+        let currentIndex = 0;
+        let isFlipped = false;
+
+        const card = document.getElementById('card');
+        const wordText = document.getElementById('word-text');
+        const meaningText = document.getElementById('meaning-text');
+        const progress = document.getElementById('progress');
+        const btnContainer = document.getElementById('btn-container');
+        const gameView = document.getElementById('game-view');
+        const resultView = document.getElementById('result-view');
+        const resultText = document.getElementById('result-text');
+        const btnReviewOnly = document.getElementById('btn-review-only');
+
+        // ゲームの初期化
+        function initGame(wordList) {
+            // 配列をシャッフル
+            currentWords = [...wordList].sort(() => Math.random() - 0.5);
+            wrongWords = [];
+            currentIndex = 0;
+            isFlipped = false;
+            
+            card.classList.remove('is-flipped');
+            btnContainer.classList.remove('show');
+            gameView.style.display = 'block';
+            resultView.style.display = 'none';
+            
+            showCard();
+        }
+
+        // カードの表示更新
+        function showCard() {
+            if (currentIndex < currentWords.length) {
+                progress.textContent = `${currentIndex + 1} / ${currentWords.length}`;
+                wordText.textContent = currentWords[currentIndex].word;
+                meaningText.textContent = currentWords[currentIndex].meaning;
+            } else {
+                showResult();
+            }
+        }
+
+        // カードをひっくり返す
+        function flipCard() {
+            if (!isFlipped) {
+                card.classList.add('is-flipped');
+                btnContainer.classList.add('show');
+                isFlipped = true;
+            }
+        }
+
+        // 「覚えた」「まだ」のボタン処理
+        function handleAnswer(isCorrect) {
+            if (!isCorrect) {
+                // 間違えた単語をストック
+                wrongWords.push(currentWords[currentIndex]);
+            }
+            
+            // 次のカードへ進む準備
+            card.classList.remove('is-flipped');
+            btnContainer.classList.remove('show');
+            isFlipped = false;
+            
+            // アニメーション（反転）が終わるのを少し待ってから文字を切り替える
+            setTimeout(() => {
+                currentIndex++;
+                showCard();
+            }, 300);
+        }
+
+        // 結果画面の表示
+        function showResult() {
+            gameView.style.display = 'none';
+            resultView.style.display = 'block';
+            
+            if (wrongWords.length === 0) {
+                resultText.textContent = "全問正解です！完璧ですね！";
+                btnReviewOnly.style.display = 'none';
+            } else {
+                resultText.textContent = `テスト終了。忘れていた単語が ${wrongWords.length} 語あります。`;
+                btnReviewOnly.style.display = 'block';
+            }
+        }
+
+        // 再スタート
+        function restartGame(fromAll) {
+            if (fromAll) {
+                initGame(originalWords);
+            } else {
+                initGame(wrongWords);
+            }
+        }
+
+        // 初回起動
+        initGame(originalWords);
+    </script>
+</body>
+</html>

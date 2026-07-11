@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>総合受験対策クイズゲーム</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .quiz-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+        }
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        #timer { color: #ff4757; }
+        #score { color: #2ed573; }
+        .genre {
+            display: inline-block;
+            padding: 4px 10px;
+            background-color: #1e90ff;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+        #question {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            min-height: 60px;
+            line-height: 1.5;
+        }
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .option-btn {
+            background-color: #f1f2f6;
+            border: 2px solid #ced6e0;
+            padding: 14px;
+            font-size: 1.05rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            padding-left: 20px;
+        }
+        .option-btn:hover {
+            background-color: #e4e7eb;
+            border-color: #a4b0be;
+        }
+        .result-screen {
+            display: none;
+        }
+        .start-btn, .restart-btn {
+            background-color: #2ed573;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .start-btn:hover, .restart-btn:hover {
+            background-color: #26af5f;
+        }
+        #feedback {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            height: 25px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <!-- スタート画面 -->
+    <div id="start-screen">
+        <h2>総合受験対策ランダムクイズ</h2>
+        <p>制限時間：30秒（正解すると1〜3秒増えます）</p>
+        <p>一度出た問題は二度と出ません。全問正解を目指そう！</p>
+        <button class="start-btn" onclick="startGame()">ゲームスタート</button>
+    </div>
+
+    <!-- クイズ画面 -->
+    <div id="quiz-screen" style="display: none;">
+        <div class="header-info">
+            <div>残り時間: <span id="timer">30</span> 秒</div>
+            <div>スコア: <span id="score">0</span> 問正解</div>
+        </div>
+        <div id="genre-tag" class="genre">算数</div>
+        <div id="question">問題がここに表示されます</div>
+        <div class="options-container">
+            <button class="option-btn" onclick="checkAnswer(0)"></button>
+            <button class="option-btn" onclick="checkAnswer(1)"></button>
+            <button class="option-btn" onclick="checkAnswer(2)"></button>
+            <button class="option-btn" onclick="checkAnswer(3)"></button>
+        </div>
+        <div id="feedback"></div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen" class="result-screen">
+        <h2>ゲームオーバー！</h2>
+        <p style="font-size: 1.4rem; margin: 20px 0;">あなたの最終スコア</p>
+        <p style="font-size: 2.5rem; font-weight: bold; color: #1e90ff; margin: 10px 0;"><span id="final-score">0</span> 問正解</p>
+        <p id="evaluation-msg" style="margin-bottom: 30px; color: #57606f;"></p>
+        <button class="restart-btn" onclick="startGame()">もう一度挑戦する</button>
+    </div>
+</div>
+
+<script>
+// 問題データバンク（ジャンル、問題文、選択肢、正解インデックス、加算秒数）
+const masterQuestions = [
+    // --- 算数 ---
+    { genre: "算数", q: "13 × 9 = ?", opts: ["107", "117", "127", "137"], ans: 1, bonus: 1 },
+    { genre: "算数", q: "17 × 6 = ?", opts: ["92", "102", "112", "122"], ans: 1, bonus: 1 },
+    { genre: "算数", q: "148 + 79 = ?", opts: ["217", "227", "237", "247"], ans: 1, bonus: 2 },
+    { genre: "算数", q: "302 - 149 = ?", opts: ["143", "153", "163", "173"], ans: 1, bonus: 2 },
+    { genre: "算数", q: "72 ÷ 18 = ?", opts: ["3", "4", "5", "6"], ans: 1, bonus: 2 },
+    
+    // --- 英語 ---
+    { genre: "英語", q: "「〜を延期する」という意味の熟語を選べ。", opts: ["put off", "call off", "look up", "take after"], ans: 0, bonus: 2 },
+    { genre: "英語", q: "次の空欄に入る単語は？\nIf it ( ) tomorrow, we will stay home.", opts: ["rain", "rains", "will rain", "rained"], ans: 1, bonus: 3 },
+    { genre: "英語", q: "「現象」という意味を持つ正しいスペルの単語は？", opts: ["philosophy", "phenomenon", "pavement", "passenger"], ans: 1, bonus: 3 },
+    { genre: "英語", q: "次の空欄に入る単語は？\nHe is the boy ( ) I talked about yesterday.", opts: ["which", "whom", "whose", "what"], ans: 1, bonus: 2 },
+
+    // --- 理科 ---
+    { genre: "理科", q: "植物の細胞にあり、動物の細胞にはない、細胞の周りを囲む硬い仕切りは何？", opts: ["細胞膜", "細胞壁", "液胞", "葉緑体"], ans: 1, bonus: 1 },
+    { genre: "理科", q: "無脊椎動物のうち、アサリやイカのように内臓が外套膜に包まれている仲間を何というか？", opts: ["節足動物", "環形動物", "軟体動物", "棘皮動物"], ans: 2, bonus: 2 },
+    { genre: "理科", q: "震源から遠い場所で、はじめの小さな揺れ（P波）が始まってから大きな揺れ（S波）が来るまでの時間を何というか？", opts: ["初期微動継続時間", "主要動継続時間", "震度時間", "マグニチュード"], ans: 0, bonus: 2 },
+
+    // --- 社会 ---
+    { genre: "社会（歴史）", q: "1192年に源頼朝が征夷大将軍に任じられて始まった幕府は？", opts: ["室町幕府", "鎌倉幕府", "江戸幕府", "吉野幕府"], ans: 1, bonus: 1 },
+    { genre: "社会（地理）", q: "世界で最も面積が大きい、ユーラシア大陸の東部に位置する国は？", opts: ["カナダ", "アメリカ", "中国", "ロシア"], ans: 3, bonus: 1 },
+    { genre: "社会（公民）", q: "日本国憲法の三代原則に含まれないものはどれ？", opts: ["国民主権", "平和主義", "基本的人権の尊重", "地方自治の保障"], ans: 3, bonus: 2 },
+    { genre: "社会（歴史）", q: "1600年、徳川家康が石田三成らを破り、天下分け目の戦いと呼ばれた合戦は？", opts: ["桶狭間の戦い", "長篠の戦い", "関ヶ原の戦い", "壇ノ浦の戦い"], ans: 2, bonus: 1 },
+
+    // --- 国語 ---
+    { genre: "国語（漢字）", q: "「敷居」の正しい読み方は？", opts: ["しきい", "ふきい", "じきい", "やしき"], ans: 0, bonus: 1 },
+    { genre: "国語（四字熟語）", q: "「一朝一夕」の正しい意味は？", opts: ["非常に長い年月", "わずかな時間・わずかな期間", "朝から晩まで働くこと", "毎日休まず続けること"], ans: 1, bonus: 2 },
+    { genre: "国語（古文単語）", q: "古文単語「うつくし」の、当時の本来の意味として最も適切なものは？", opts: ["容姿が美しい", "美味しい", "かわいらしい", "立派だ"], ans: 2, bonus: 3 },
+    { genre: "国語（漢文）", q: "漢文の置き字「焉」や「矣」は、主にどのような役割を持つか？", opts: ["否定を表す", "断定や強調、置き字（文末の語調を整える）", "疑問を表す", "使役を表す"], ans: 1, bonus: 3 }
+];
+
+let questions = [];
+let currentQuestionIndex = 0;
+let currentQuestion = null;
+let score = 0;
+let timeLeft = 30;
+let timerId = null;
+
+function startGame() {
+    // 状態のリセット
+    questions = [...masterQuestions]; // 毎回全問題をコピー
+    shuffleArray(questions); // ランダムに並び替え
+    score = 0;
+    timeLeft = 30;
+    currentQuestionIndex = 0;
+    
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "none";
+    document.getElementById("quiz-screen").style.display = "block";
+    document.getElementById("feedback").innerText = "";
+    
+    updateScoreDisplay();
+    nextQuestion();
+    
+    // タイマー開始
+    clearInterval(timerId);
+    timerId = setInterval(updateTimer, 1000);
+}
+
+function updateTimer() {
+    timeLeft--;
+    document.getElementById("timer").innerText = timeLeft;
+    
+    if (timeLeft <= 0) {
+        endGame();
+    }
+}
+
+function nextQuestion() {
+    if (currentQuestionIndex >= questions.length) {
+        // 全問解き切ってしまった場合（問題の追加もここで行えます）
+        endGame();
+        return;
+    }
+    
+    currentQuestion = questions[currentQuestionIndex];
+    
+    // 画面表示の更新
+    document.getElementById("genre-tag").innerText = currentQuestion.genre;
+    document.getElementById("question").innerText = currentQuestion.q;
+    
+    const btns = document.querySelectorAll(".option-btn");
+    for (let i = 0; i < 4; i++) {
+        btns[i].innerText = currentQuestion.opts[i];
+        btns[i].disabled = false;
+    }
+}
+
+function checkAnswer(selectedIndex) {
+    const btns = document.querySelectorAll(".option-btn");
+    // 連続クリック防止のためにボタンを無効化
+    btns.forEach(btn => btn.disabled = true);
+    
+    if (selectedIndex === currentQuestion.ans) {
+        // 正解
+        score++;
+        timeLeft += currentQuestion.bonus;
+        document.getElementById("timer").innerText = timeLeft;
+        document.getElementById("feedback").innerHTML = `<span style="color:#2ed573;">〇 正解！ (+${currentQuestion.bonus}秒)</span>`;
+        updateScoreDisplay();
+    } else {
+        // 不正解
+        document.getElementById("feedback").innerHTML = `<span style="color:#ff4757;">× 不正解！ (正解: ${currentQuestion.opts[currentQuestion.ans]})</span>`;
+    }
+    
+    // 1秒後に次の問題へ（重複を防ぐためインデックスを進める）
+    currentQuestionIndex++;
+    setTimeout(() => {
+        document.getElementById("feedback").innerText = "";
+        nextQuestion();
+    }, 1000);
+}
+
+function updateScoreDisplay() {
+    document.getElementById("score").innerText = score;
+}
+
+function endGame() {
+    clearInterval(timerId);
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+    document.getElementById("final-score").innerText = score;
+    
+    // スコアに応じた評価メッセージ
+    let msg = "";
+    if (score === masterQuestions.length) msg = "完璧です！全問正解おめでとうございます！";
+    else if (score >= 12) msg = "素晴らしい！受験突破レベルの知識量です！";
+    else if (score >= 6) msg = "ナイスファイト！さらに高得点を目指しましょう。";
+    else msg = "まずは基礎の復習から始めてみましょう！";
+    
+    document.getElementById("evaluation-msg").innerText = msg;
+}
+
+// 配列をランダムにシャッフルする関数（フィッシャー・イェーツのシャッフル）
+function shuffleArray(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+コードは注意してご使用ください。const j = Math.floor(Math.random() * (i + 1));[array[i], array[j]] = [array[j], array[i]];}}
+### 今後の拡張について
+コード内の `const masterQuestions = [ ... ]` の部分に、同じ形式で問題を追加していけば、**どれだけ問題数を増やしても自動でランダムに、かつ重複なしで出題**されるようになっています。
+
+もし**特定の問題（例：「もっと古文の単語を増やしたい」「算数の二桁の掛け算を増やしたい」など）**があれば、問題をさらに追加してコードを書き換えることも可能です。必要であればいつでもお申し付けください！

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>限界突破！秒速敬語ゲーム</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            margin-top: 40px;
+        }
+
+        h1 { margin: 0 0 10px 0; font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .score-board { display: flex; justify-content: space-around; margin-bottom: 20px; font-size: 18px; font-weight: bold; }
+        
+        /* お題表示 */
+        .quiz-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .type-label { font-size: 14px; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; font-weight: bold;}
+        .sonkei { background-color: #ff9f43; }
+        .kenjo { background-color: #0abde3; }
+        .word-to-change { font-size: 32px; font-weight: bold; letter-spacing: 2px; }
+
+        /* 入力エリア */
+        input[type="text"] {
+            width: 80%;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            font-size: 18px;
+            text-align: center;
+            outline: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        /* タイマーバー */
+        .timer-container { width: 100%; background: rgba(255,255,255,0.2); height: 10px; border-radius: 5px; margin-top: 20px; overflow: hidden; }
+        .timer-bar { height: 100%; background: #ff4d4d; width: 100%; transition: width 0.1s linear; }
+
+        /* スタート・リセットボタン */
+        .btn { background: #4cd137; color: white; border: none; padding: 12px 30px; font-size: 18px; font-weight: bold; border-radius: 25px; cursor: pointer; margin-top: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .btn:hover { background: #44bd32; }
+        
+        .result-message { font-size: 18px; margin-top: 15px; min-height: 27px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>秒速敬語タイピング ⚔️</h1>
+        <p style="font-size: 13px; color: #e0d0ff; margin-bottom: 20px;">表示された言葉を正しい敬語に変換して爆速で打ち込め！</p>
+
+        <div class="score-board">
+            <div>スコア: <span id="score">0</span></div>
+            <div>残り時間: <span id="timeText">10</span>秒</div>
+        </div>
+
+        <!-- クイズエリア -->
+        <div class="quiz-box">
+            <span id="typeLabel" class="type-label sonkei">尊敬語にせよ！</span>
+            <div id="wordToChange" class="word-to-change">ーーー</div>
+        </div>
+
+        <input type="text" id="gameInput" placeholder="ここに入力してEnter！" disabled>
+        
+        <div class="timer-container">
+            <div id="timerBar" class="timer-bar"></div>
+        </div>
+
+        <div id="resultMessage" class="result-message"></div>
+
+        <button id="startBtn" class="btn" onclick="startGame()">ゲームスタート</button>
+    </div>
+
+    <script>
+        // 問題データ（答えが複数想定されるものは配列にしています）
+        const quizData = [
+            { word: '行く', type: 'sonkei', label: '尊敬語 (相手の動作)', answers: ['いらっしゃる', 'おいでになる'] },
+            { word: '行く', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['参る', '伺う'] },
+            { word: '言う', type: 'sonkei', label: '尊敬語 (相手の動作)', answers: ['おっしゃる'] },
+            { word: '言う', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['申す', '申し上げる'] },
+            { word: '食べる', type: 'sonkei', label: '尊敬語 (相手の動作)', answers: ['召し上がる'] },
+            { word: '食べる', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['いただく', '頂戴する'] },
+            { word: '見る', type: 'sonkei', label: '尊敬語 (相手の動作)', answers: ['ご覧になる'] },
+            { word: '見る', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['拝見する'] },
+            { word: '知っている', type: 'sonkei', label: '尊敬語 (相手の動作)', answers: ['ご存じだ', 'ご存知だ'] },
+            { word: '知っている', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['存じ上げている', '存じている'] },
+            { word: 'あげる', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['差し上げる'] },
+            { word: 'もらう', type: 'kenjo', label: '謙譲語 (自分の動作)', answers: ['いただく', '頂戴する'] }
+        ];
+
+        let score = 0;
+        let currentQuiz = null;
+        let timeLeft = 10;
+        let timerInterval = null;
+        let isPlaying = false;
+
+        const scoreEl = document.getElementById('score');
+        const timeTextEl = document.getElementById('timeText');
+        const typeLabelEl = document.getElementById('typeLabel');
+        const wordEl = document.getElementById('wordToChange');
+        const inputEl = document.getElementById('gameInput');
+        const timerBarEl = document.getElementById('timerBar');
+        const resultEl = document.getElementById('resultMessage');
+        const startBtnEl = document.getElementById('startBtn');
+
+        // エンターキー判定
+        inputEl.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && isPlaying) {
+                checkAnswer();
+            }
+        });
+
+        function startGame() {
+            score = 0;
+            isPlaying = true;
+            scoreEl.textContent = score;
+            resultEl.textContent = '';
+            inputEl.disabled = false;
+            startBtnEl.style.display = 'none';
+            inputEl.focus();
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            if (!isPlaying) return;
+            
+            inputEl.value = '';
+            timeLeft = 10;
+            timeTextEl.textContent = timeLeft;
+            timerBarEl.style.width = '100%';
+
+            // ランダムに出題
+            const randomIndex = Math.floor(Math.random() * quizData.length);
+            currentQuiz = quizData[randomIndex];
+
+            // ラベルの見た目を切り替え
+            wordEl.textContent = currentQuiz.word;
+            typeLabelEl.textContent = currentQuiz.label;
+            if (currentQuiz.type === 'sonkei') {
+                typeLabelEl.className = 'type-label sonkei';
+            } else {
+                typeLabelEl.className = 'type-label kenjo';
+            }
+
+            // タイマー開始
+            clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 100);
+        }
+
+        function updateTimer() {
+            timeLeft -= 0.1;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                gameOver('タイムアップ！');
+            }
+            timeTextEl.textContent = Math.ceil(timeLeft);
+            timerBarEl.style.width = (timeLeft * 10) + '%';
+        }
+
+        function checkAnswer() {
+            const userAnswer = inputEl.value.trim();
+            
+            // 答え合わせ
+            if (currentQuiz.answers.includes(userAnswer)) {
+                score += 10;
+                scoreEl.textContent = score;
+                resultEl.style.color = '#4cd137';
+                resultEl.textContent = '正解！+10pt';
+                nextQuestion();
+            } else {
+                resultEl.style.color = '#ff4d4d';
+                resultEl.textContent = `不敬である！（正解例: ${currentQuiz.answers[0]}）`;
+                // 間違えてもタイマーは進む、打ち直し可能
+            }
+        }
+
+        function gameOver(reason) {
+            isPlaying = false;
+            clearInterval(timerInterval);
+            inputEl.disabled = true;
+            startBtnEl.style.display = 'inline-block';
+            startBtnEl.textContent = 'もう一度挑戦';
+            resultEl.style.color = '#ff9f43';
+            resultEl.textContent = `${reason} 最終スコア: ${score}点`;
+        }
+    </script>
+</body>
+</html>

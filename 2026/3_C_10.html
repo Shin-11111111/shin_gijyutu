@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS ランニングトラッカー</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-between p-6 font-sans select-none">
+
+    <div class="text-center w-full max-w-md pt-4">
+        <h1 class="text-xl font-bold tracking-wider text-emerald-400">GPS RUN TRACKER</h1>
+        <p id="gps-status" class="text-xs text-slate-400 mt-1">🔴 位置情報未取得</p>
+    </div>
+
+    <div class="w-full max-w-md text-center my-auto space-y-8">
+        <div>
+            <span id="distance-display" class="text-7xl font-mono font-black text-white tracking-tight">0.00</span>
+            <span class="text-xl font-bold text-emerald-400 ml-1">km</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 border-t border-b border-slate-800 py-4 font-mono">
+            <div>
+                <p class="text-xs font-sans text-slate-400 uppercase tracking-wider mb-1">TIME</p>
+                <p id="timer-display" class="text-2xl font-bold text-slate-200">00:00:00</p>
+            </div>
+            <div>
+                <p class="text-xs font-sans text-slate-400 uppercase tracking-wider mb-1">PACE</p>
+                <p id="pace-display" class="text-2xl font-bold text-slate-200">--'--" /km</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-md pb-6 grid grid-cols-2 gap-4">
+        <button id="btn-start-stop" class="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 font-black py-4 rounded-2xl text-lg transition shadow-lg shadow-emerald-900/30">
+            スタート
+        </button>
+        <button id="btn-reset" class="w-full bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-400 font-bold py-4 rounded-2xl text-lg transition border border-slate-700" disabled>
+            リセット
+        </button>
+    </div>
+
+    <script>
+        let timerInterval = null;
+        let watchId = null;
+        
+        let startTime = 0;
+        let elapsedTime = 0;
+        let totalDistance = 0; // 単位: km
+        let lastPosition = null;
+        let isRunning = false;
+
+        const distanceDisplay = document.getElementById('distance-display');
+        const timerDisplay = document.getElementById('timer-display');
+        const paceDisplay = document.getElementById('pace-display');
+        const gpsStatus = document.getElementById('gps-status');
+        const btnStartStop = document.getElementById('btn-start-stop');
+        const btnReset = document.getElementById('btn-reset');
+
+        // 2つの緯度経度から距離（km）を計算する関数（ヒュベニの公式の簡易版）
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 地球の半径 (km)
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = 
+                Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // 時間フォーマット (時間:分:秒)
+        function formatTime(ms) {
+            const hours = Math.floor(ms / 3600000);
+            const minutes = Math.floor((ms % 3600000) / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000);
+            return [
+                hours.toString().padStart(2, '0'),
+                minutes.toString().padStart(2, '0'),
+                seconds.toString().padStart(2, '0')
+            ].join(':');
+        }
+
+        // ペースフォーマット (分'秒" /km)
+        function updatePace() {
+            if (totalDistance === 0 || elapsedTime === 0) {
+                paceDisplay.textContent = `--'--" /km`;
+                return;
+            }
+            const totalMinutes = (elapsedTime / 1000) / 60;
+            const pacePerKm = totalMinutes / totalDistance; // 1kmあたりの分数
+            const paceMin = Math.floor(pacePerKm);
+            const paceSec = Math.floor((pacePerKm - paceMin) * 60);
+            
+            if (paceMin > 99) {
+                paceDisplay.textContent = `--'--" /km`;
+            } else {
+                paceDisplay.textContent = `${paceMin}'${paceSec.toString().padStart(2, '0')}" /km`;
+            }
+        }
+
+        // 位置情報が更新された時の処理
+        function onLocationSuccess(position) {
+            gpsStatus.textContent = "🟢 GPS 受信中 (高精度)";
+            gpsStatus.className = "text-xs text-emerald-400 mt-1";
+
+            if (!isRunning) return;
+
+            const { latitude, longitude, accuracy } = position.coords;
+            
+            // 精度が極端に悪い（100m以上誤差がある）データはスキップして誤計測を防ぐ
+            if (accuracy > 100) return;
+
+            if (lastPosition) {
+                const distanceGap = calculateDistance(
+                    lastPosition.latitude, lastPosition.longitude,
+                    latitude, longitude
+                );
+                
+                // 歩行・走行の現実的な移動（1秒間に50m以上などはノイズとして除外）
+                if (distanceGap > 0 && distanceGap < 0.05) {
+                    totalDistance += distanceGap;
+                    distanceDisplay.textContent = totalDistance.toFixed(2);
+                }
+            }
+            lastPosition = { latitude, longitude };
+        }
+
+        function onLocationError(error) {
+            gpsStatus.textContent = "⚠️ GPS 信号を探しています...";
+            gpsStatus.className = "text-xs text-amber-400 mt-1";
+            console.warn(`ERROR(${error.code}): ${error.message}`);
+        }
+
+        // スタート・ストップ切り替え
+        function toggleStartStop() {
+            if (!isRunning) {
+                // スタート処理
+                if (!navigator.geolocation) {
+                    alert("お使いのブラウザ・端末はGPS計測に対応していません。");
+                    return;
+                }
+
+                isRunning = true;
+                startTime = Date.now() - elapsedTime;
+                
+                // タイマー開始
+                timerInterval = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    timerDisplay.textContent = formatTime(elapsedTime);
+                    updatePace();
+                }, 1000);
+
+                // GPS追跡開始
+                lastPosition = null; 
+                watchId = navigator.geolocation.watchPosition(onLocationSuccess, onLocationError, {
+                    enableHighAccuracy: true, // 高精度モード（重要）
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+
+                btnStartStop.textContent = 'ストップ';
+                btnStartStop.className = "w-full bg-rose-500 hover:bg-rose-600 active:scale-95 text-white font-black py-4 rounded-2xl text-lg transition shadow-lg shadow-rose-950/30";
+                btnReset.disabled = true;
+            } else {
+                // ストップ処理
+                isRunning = false;
+                clearInterval(timerInterval);
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+                
+                gpsStatus.textContent = "🟡 計測一時停止中";
+                gpsStatus.className = "text-xs text-amber-400 mt-1";
+
+                btnStartStop.textContent = '再開';
+                btnStartStop.className = "w-full bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-slate-950 font-black py-4 rounded-2xl text-lg transition shadow-lg shadow-emerald-900/30";
+                btnReset.disabled = false;
+            }
+        }
+
+        // リセット処理
+        function resetTracker() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            elapsedTime = 0;
+            totalDistance = 0;
+            lastPosition = null;
+
+            distanceDisplay.textContent = '0.00';
+            timerDisplay.textContent = '00:00:00';
+            paceDisplay.textContent = `--'--" /km`;
+            gpsStatus.textContent = "🔴 位置情報未取得";
+            gpsStatus.className = "text-xs text-slate-400 mt-1";
+
+            btnStartStop.textContent = 'スタート';
+            btnReset.disabled = true;
+        }
+
+        btnStartStop.addEventListener('click', toggleStartStop);
+        btnReset.addEventListener('click', resetTracker);
+    </script>
+</body>
+</html>

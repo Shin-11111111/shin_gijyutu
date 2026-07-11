@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語ランダムクイズ（音声・爆発音付き）</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #555;
+            line-height: 1.6;
+        }
+        .progress {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .word-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .word {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a73e8;
+        }
+        .audio-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .audio-btn:hover {
+            background-color: #e8f0fe;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .option-btn {
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            outline: none;
+            width: 100%;
+        }
+        .option-btn:hover:not(:disabled) {
+            background-color: #f1f3f4;
+            border-color: #1a73e8;
+        }
+        .option-btn:disabled {
+            cursor: not-allowed;
+        }
+        .correct {
+            background-color: #d4edda !important;
+            border-color: #28a745 !important;
+            color: #155724;
+            font-weight: bold;
+        }
+        .wrong {
+            background-color: #f8d7da !important;
+            border-color: #dc3545 !important;
+            color: #721c24;
+            font-weight: bold;
+            animation: shake 0.3s;
+        }
+        /* 間違えたときにボタンを揺らす演出 */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+        .menu-btn, #next-btn, #restart-btn {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 10px auto;
+            display: block;
+            min-width: 150px;
+            transition: background 0.2s;
+        }
+        .menu-btn:hover, #next-btn:hover, #restart-btn:hover {
+            background-color: #1557b0;
+        }
+        .select-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .result-score {
+            font-size: 48px;
+            font-weight: bold;
+            color: #1a73e8;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <div id="start-screen">
+        <h1>英単語ランダムクイズ</h1>
+        <p>音声付きのクイズです。出題数を選んでスタートしてください。<br><small>※間違えると爆発音が鳴るので音量に注意！</small></p>
+        <div class="select-grid">
+            <button class="menu-btn" onclick="startQuiz(10)">10問</button>
+            <button class="menu-btn" onclick="startQuiz(30)">30問</button>
+            <button class="menu-btn" onclick="startQuiz(50)">50問</button>
+            <button class="menu-btn" onclick="startQuiz(100)">100問 (全問)</button>
+        </div>
+    </div>
+
+    <div id="quiz-screen" style="display: none;">
+        <div class="progress">問題: <span id="current-question">1</span> / <span id="total-questions">100</span></div>
+        <div class="word-container">
+            <div class="word" id="question-word">Loading...</div>
+            <button class="audio-btn" onclick="speakWord()" title="音声を再生">🔊</button>
+        </div>
+        <div class="options-grid" id="options-container"></div>
+        <button id="next-btn" onclick="nextQuestion()" style="display: none;">次の問題へ</button>
+    </div>
+
+    <div id="result-screen" style="display: none;">
+        <h1>クイズ結果</h1>
+        <p>あなたの正解数は...</p>
+        <div class="result-score"><span id="score">0</span> / <span id="result-total">100</span></div>
+        <p id="result-comment"></p>
+        <button id="restart-btn" onclick="showStartScreen()">タイトルに戻る</button>
+    </div>
+</div>
+
+<script>
+// 基本英単語 ぴったり100語のリスト
+const wordList = [
+    { word: "apple", meaning: "りんご" }, { word: "book", meaning: "本" }, { word: "cat", meaning: "猫" },
+    { word: "dog", meaning: "犬" }, { word: "elephant", meaning: "ゾウ" }, { word: "flower", meaning: "花" },
+    { word: "guitar", meaning: "ギター" }, { word: "house", meaning: "家" }, { word: "ice", meaning: "氷" },
+    { word: "juice", meaning: "ジュース" }, { word: "king", meaning: "王" }, { word: "lion", meaning: "ライオン" },
+    { word: "mountain", meaning: "山" }, { word: "notebook", meaning: "ノート" }, { word: "ocean", meaning: "海" },
+    { word: "pencil", meaning: "鉛筆" }, { word: "queen", meaning: "女王" }, { word: "river", meaning: "川" },
+    { word: "sun", meaning: "太陽" }, { word: "tree", meaning: "木" }, { word: "umbrella", meaning: "傘" },
+    { word: "violin", meaning: "バイオリン" }, { word: "window", meaning: "窓" }, { word: "yellow", meaning: "黄色" },
+    { word: "zoo", meaning: "動物園" }, { word: "beautiful", meaning: "美しい" }, { word: "challenge", meaning: "挑戦" },
+    { word: "discover", meaning: "発見する" }, { word: "experience", meaning: "経験" }, { word: "future", meaning: "未来" },
+    { word: "government", meaning: "政府" }, { word: "history", meaning: "歴史" }, { word: "important", meaning: "重要な" },
+    { word: "journey", meaning: "旅" }, { word: "knowledge", meaning: "知識" }, { word: "language", meaning: "言語" },
+    { word: "medicine", meaning: "薬・医学" }, { word: "nature", meaning: "自然" }, { word: "opportunity", meaning: "機会" },
+    { word: "population", meaning: "人口" }, { word: "question", meaning: "質問" }, { word: "relationship", meaning: "関係" },
+    { word: "science", meaning: "科学" }, { word: "technology", meaning: "技術" }, { word: "understand", meaning: "理解する" },
+    { word: "vacation", meaning: "休暇" }, { word: "weather", meaning: "天気" }, { word: "yesterday", meaning: "昨日" },
+    { word: "advertise", meaning: "広告する" }, { word: "believe", meaning: "信じる" }, { word: "century", meaning: "世紀" },
+    { word: "decision", meaning: "決定" }, { word: "environment", meaning: "環境" }, { word: "favorite", meaning: "お気に入りの" },
+    { word: "generous", meaning: "寛大な" }, { word: "hospital", meaning: "病院" }, { word: "imagine", meaning: "想像する" },
+    { word: "judge", meaning: "裁判官・判断する" }, { word: "kitchen", meaning: "台所" }, { word: "library", meaning: "図書館" },
+    { word: "magazine", meaning: "雑誌" }, { word: "neighbor", meaning: "近所の人" }, { word: "opinion", meaning: "意見" },
+    { word: "patient", meaning: "患者・忍耐強い" }, { word: "quality", meaning: "質" }, { word: "receive", meaning: "受け取る" },
+    { word: "situation", meaning: "状況" }, { word: "treasure", meaning: "宝物" }, { word: "university", meaning: "大学" },
+    { word: "various", meaning: "様々な" }, { word: "wonderful", meaning: "素晴らしい" }, { word: "accept", meaning: "受け入れる" },
+    { word: "behavior", meaning: "行動" }, { word: "disappear", meaning: "消える" }, { word: "education", meaning: "教育" },
+    { word: "furniture", meaning: "家具" }, { word: "graduate", meaning: "卒業する" }, { word: "healthy", meaning: "健康な" },
+    { word: "innocent", meaning: "無実の・無邪気な" }, { word: "jealous", meaning: "嫉妬深い" }, { word: "lawyer", meaning: "弁護士" },
+    { word: "masterpiece", meaning: "傑作" }, { word: "nervous", meaning: "緊張して" }, { word: "original", meaning: "元の・独創的な" },
+    { word: "polite", meaning: "礼儀正しい" }, { word: "purpose", meaning: "目的" }, { word: "recognize", meaning: "認める・識別する" },
+    { word: "separate", meaning: "分離する" }, { word: "tradition", meaning: "伝統" }, { word: "urgent", meaning: "緊急の" },
+    { word: "victory", meaning: "勝利" }, { word: "warning", meaning: "警告" }, { word: "ability", meaning: "能力" },
+    { word: "broadcast", meaning: "放送する" }, { word: "congratulate", meaning: "祝う" }, { word: "delicious", meaning: "美味しい" },
+    { word: "exhibition", meaning: "展覧会" }, { word: "flight", meaning: "飛行・便" }, { word: "gather", meaning: "集める" },
+    { word: "honest", meaning: "正直な" }
+];
+
+let shuffledQuestions = [];
+let currentQuestionIndex = 0;
+let score = 0;
+let maxQuestions = 100;
+
+// タイマー用の変数
+let startTime = 0;
+let totalElapsedTime = 0;
+
+// シャッフル関数
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// 初期画面を表示
+function showStartScreen() {
+    document.getElementById("start-screen").style.display = "block";
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "none";
+}
+
+// クイズ開始
+function startQuiz(count) {
+    maxQuestions = count;
+    shuffledQuestions = shuffle([...wordList]).slice(0, maxQuestions);
+    currentQuestionIndex = 0;
+    score = 0;
+    
+    document.getElementById("start-screen").style.display = "none";
+    document.getElementById("quiz-screen").style.display = "block";
+    document.getElementById("total-questions").textContent = maxQuestions;
+    
+    // 【音声制限対策】ユーザー操作時にダミー音声を流してブラウザのロックを解除
+    const dummyUtterance = new SpeechSynthesisUtterance("");
+    window.speechSynthesis.speak(dummyUtterance);
+    
+    // 計測開始
+    startTime = performance.now();
+    
+    showQuestion();
+}
+
+// 問題表示
+function showQuestion() {
+    const nextBtn = document.getElementById("next-btn");
+    nextBtn.style.display = "none";
+    
+    document.getElementById("current-question").textContent = currentQuestionIndex + 1;
+    
+    const currentQuestion = shuffledQuestions[currentQuestionIndex];
+    document.getElementById("question-word").textContent = currentQuestion.word;
+    
+    // 自動発音
+    speakWord();
+    
+    // 選択肢作成 (正解1 + 不正解3)
+    const options = [currentQuestion.meaning];
+    const otherMeanings = [...new Set(
+        wordList
+            .filter(item => item.meaning !== currentQuestion.meaning)
+            .map(item => item.meaning)
+    )];
+    const shuffledOthers = shuffle(otherMeanings);
+    
+    for (let i = 0; i < 3; i++) {
+        if (shuffledOthers[i]) options.push(shuffledOthers[i]);
+    }
+    
+    shuffle(options);
+    
+    const optionsContainer = document.getElementById("options-container");
+    optionsContainer.innerHTML = "";
+    
+    options.forEach(option => {
+        const button = document.createElement("button");
+        button.className = "option-btn";
+        button.textContent = option;
+        button.onclick = () => checkAnswer(button, currentQuestion.meaning);
+        optionsContainer.appendChild(button);
+    });
+}
+
+// 【音声機能】英単語の読み上げ
+function speakWord() {
+    if (currentQuestionIndex >= shuffledQuestions.length) return;
+    const word = shuffledQuestions[currentQuestionIndex].word;
+    window.speechSynthesis.cancel();
+    
+    const utterance = new SpeechSynthesisUtterance(word);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+}
+
+// 共通オーディオコンテキスト取得関数
+function getAudioContext() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    return new AudioContext();
+}
+
+// 【効果音機能】正解時のピコーン音
+function playCorrectSound() {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        // 1音目（ピ）
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now); 
+        gain1.gain.setValueAtTime(0.1, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.1);
+        
+        // 2音目（コーン）
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1318.51, now + 0.08); 
+        gain2.gain.setValueAtTime(0.1, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.35);
+        
+    } catch (e) {
+        console.log("正解音の再生に失敗しました", e);
+    }
+}
+
+// 【効果音機能】ドカーン！という強力な爆発音
+function playExplosionSound() {
+    try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        // 1. 衝撃波（ドカーンの「ド」：強烈なアタックと地響き）
+        const osc = ctx.createOscillator();
+        const oscGain = ctx.createGain();
+        osc.type = 'sawtooth'; 
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + 0.35);
+        
+        oscGain.gain.setValueAtTime(0.8, now);
+        oscGain.gain.linearRampToValueAtTime(0.3, now + 0.1);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.45);
+        
+        osc.connect(oscGain);
+        oscGain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.45);
+        
+        // 2. 爆風と残響（ドカーンの「カーン」：破裂音と空気の震え）
+        const bufferSize = ctx.sampleRate * 0.7; 
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1;
+        }
+        
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, now);
+        filter.frequency.exponentialRampToValueAtTime(40, now + 0.6);
+        
+        const noiseGain = ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.6, now);
+        noiseGain.gain.linearRampToValueAtTime(0.5, now + 0.1);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+        
+        noise.connect(filter);
+        filter.connect(noiseGain);
+        noiseGain.connect(ctx.destination);
+        
+        noise.start(now);
+        noise.stop(now + 0.7);
+        
+    } catch (e) {
+        console.log("爆発音の再生に失敗しました", e);
+    }
+}
+
+// 回報チェック
+function checkAnswer(selectedButton, correctMeaning) {
+    const buttons = document.querySelectorAll(".option-btn");
+    
+    buttons.forEach(button => {
+        button.disabled = true;
+        if (button.textContent === correctMeaning) {
+            button.classList.add("correct");
+        }
+    });
+    
+    if (selectedButton.textContent === correctMeaning) {
+        score++;
+        playCorrectSound(); 
+    } else {
+        selectedButton.classList.add("wrong");
+        playExplosionSound(); 
+    }
+    
+    const nextBtn = document.getElementById("next-btn");
+    if (currentQuestionIndex === shuffledQuestions.length - 1) {
+        nextBtn.textContent = "結果を見る";
+    } else {
+        nextBtn.textContent = "次の問題へ";
+    }
+    nextBtn.style.display = "block";
+}
+
+// 次の問題へ
+function nextQuestion() {
+    currentQuestionIndex++;
+    if (currentQuestionIndex < shuffledQuestions.length) {
+        showQuestion();
+    } else {
+        totalElapsedTime = ((performance.now() - startTime) / 1000).toFixed(1);
+        showResult();
+    }
+}
+
+// 結果表示
+function showResult() {
+    document.getElementById("quiz-screen").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+    document.getElementById("score").textContent = score;
+    document.getElementById("result-total").textContent = maxQuestions;
+    
+    const percentage = (score / maxQuestions) * 100;
+    let comment = "";
+    
+    if (percentage === 100) comment = "完璧です！全問正解おめでとうございます！🎉";
+    else if (percentage >= 80) comment = "素晴らしい！リスニングもバッチリですね！👍";
+    else if (percentage >= 50) comment = "ナイスファイト！半分以上正解です！😊";
+    else comment = "爆発に負けず、もう一度復習してみましょう！がんばって！💪";
+    
+    comment += `<br><span style="font-size: 18px; color: #555;">⏱️ クリアタイム: <strong>${totalElapsedTime}秒</strong></span>`;
+    
+    document.getElementById("result-comment").innerHTML = comment;
+}
+
+window.onload = showStartScreen;
+</script>
+
+</body>
+</html>

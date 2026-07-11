@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>学校用カウントダウンタイマー (50分版)</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        #timer {
+            font-size: 8rem;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .btn-container {
+            display: flex;
+            gap: 15px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            background-color: #3498db;
+            color: white;
+        }
+        #status-lamp {
+            font-size: 1.2rem;
+            color: #2ecc71;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status-lamp">🟢 アプリ起動中（50分設定）</div>
+    <h1 id="status">授業終了まで</h1>
+    <div id="timer">50:00</div>
+
+    <div class="btn-container">
+        <button id="startBtn">スタート</button>
+        <button id="stopBtn" style="background-color: #e67e22;">ストップ</button>
+        <button id="resetBtn" style="background-color: #7f8c8d;">リセット</button>
+    </div>
+
+    <script>
+        window.onload = function() {
+            let countdown;
+            let timeLeft = 50 * 60; // ★ここを50分に変更しました！
+            const totalTime = timeLeft;
+            let isRunning = false;
+
+            const timerDisplay = document.getElementById('timer');
+            const statusDisplay = document.getElementById('status');
+            const lamp = document.getElementById('status-lamp');
+
+            function updateDisplay() {
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                
+                minutes = minutes < 10 ? '0' + minutes : minutes;
+                seconds = seconds < 10 ? '0' + seconds : seconds;
+                
+                timerDisplay.textContent = minutes + ":" + seconds;
+            }
+
+            // スタート
+            document.getElementById('startBtn').addEventListener('click', function() {
+                if (isRunning) return;
+                isRunning = true;
+                lamp.textContent = "🔥 タイマー作動中...";
+
+                countdown = setInterval(function() {
+                    if (timeLeft <= 0) {
+                        clearInterval(countdown);
+                        isRunning = false;
+                        timerDisplay.textContent = "00:00";
+                        statusDisplay.textContent = "キーンコーンカーンコーン🔔";
+                        lamp.textContent = "✅ 終了しました";
+                        alert("授業終了の時間です！");
+                        return;
+                    }
+                    timeLeft--;
+                    updateDisplay();
+                }, 1000);
+            });
+
+            // ストップ
+            document.getElementById('stopBtn').addEventListener('click', function() {
+                clearInterval(countdown);
+                isRunning = false;
+                lamp.textContent = "⏸ 一時停止中";
+            });
+
+            // リセット
+            document.getElementById('resetBtn').addEventListener('click', function() {
+                clearInterval(countdown);
+                isRunning = false;
+                timeLeft = totalTime;
+                updateDisplay();
+                statusDisplay.textContent = "授業終了まで";
+                lamp.textContent = "🟢 リセット完了";
+            });
+
+            updateDisplay();
+        };
+    </script>
+</body>
+</html>
