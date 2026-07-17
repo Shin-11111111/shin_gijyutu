@@ -30,21 +30,30 @@ body {
   height:46px; background:var(--surface);
   border-bottom:1px solid var(--border);
   display:flex; align-items:center; padding:0 14px; gap:6px; flex-shrink:0;
+  overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; scrollbar-width:thin;
 }
-.logo { font-size:14px; font-weight:700; color:var(--accent); letter-spacing:.04em; margin-right:10px; }
-.sep { width:1px; height:22px; background:var(--border); margin:0 4px; }
-.spacer { flex:1; }
+#toolbar::-webkit-scrollbar { height:5px; }
+#toolbar::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:3px; }
+.logo { font-size:14px; font-weight:700; color:var(--accent); letter-spacing:.04em; margin-right:10px; flex-shrink:0; }
+.sep { width:1px; height:22px; background:var(--border); margin:0 4px; flex-shrink:0; }
+.spacer { width:14px; flex-shrink:0; }
 .tb-btn {
   height:30px; padding:0 11px;
   background:transparent; border:1px solid transparent; border-radius:5px;
   color:var(--text-muted); font-size:12px; cursor:pointer;
-  display:flex; align-items:center; gap:5px; white-space:nowrap;
+  display:flex; align-items:center; gap:5px; white-space:nowrap; flex-shrink:0;
   transition:all .15s;
 }
 .tb-btn:hover { border-color:var(--border); color:var(--text); background:rgba(255,255,255,.04); }
 .tb-btn.active { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 .tb-btn:disabled { opacity:.3; cursor:not-allowed; pointer-events:none; }
 .tb-btn svg { width:14px; height:14px; flex-shrink:0; }
+@media (max-width: 900px) {
+  #toolbar { padding:0 8px; gap:2px; }
+  .tb-btn { padding:0 8px; }
+  .tb-label { display:none; }
+  .spacer { width:6px; }
+}
 #main { flex:1; display:flex; overflow:hidden; }
 #side {
   width:210px; background:var(--surface);
@@ -85,12 +94,19 @@ body {
 }
 .add-btn:hover { background:rgba(232,168,76,.22); border-color:var(--accent); }
 #canvas-wrap { flex:1; position:relative; overflow:hidden; background:#000; }
-canvas#scene { position:absolute; inset:0; display:block; }
+canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 .hint {
   position:absolute; bottom:28px; left:50%; transform:translateX(-50%);
   background:rgba(0,0,0,.7); border:1px solid var(--border);
   border-radius:6px; padding:5px 13px; font-size:10px; color:var(--text-muted);
   pointer-events:none; white-space:nowrap;
+}
+.measure-readout {
+  position:absolute; top:14px; left:50%; transform:translateX(-50%);
+  background:rgba(255,80,80,.15); border:1px solid #ff5050;
+  border-radius:7px; padding:7px 16px; font-size:13px; font-weight:700;
+  color:#ff8a8a; pointer-events:none; white-space:nowrap; letter-spacing:.02em;
+  font-family:monospace;
 }
 #inspector {
   width:215px; background:var(--surface);
@@ -103,6 +119,12 @@ canvas#scene { position:absolute; inset:0; display:block; }
 .insp-empty { color:var(--text-muted); font-size:12px; text-align:center; margin-top:40px; line-height:1.8; }
 .insp-sec { margin-bottom:13px; }
 .insp-lbl { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+.insp-axis-badge {
+  position:absolute; top:7px; left:8px; display:none;
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px;
+  background:rgba(0,0,0,.6); backdrop-filter:blur(2px); pointer-events:none;
+  letter-spacing:.03em; border:1px solid transparent; transition:opacity .1s;
+}
 .insp-row { display:flex; align-items:center; gap:5px; margin-bottom:4px; }
 .insp-row label { font-size:11px; color:var(--text-muted); width:32px; flex-shrink:0; }
 .insp-row input {
@@ -183,6 +205,31 @@ canvas#scene { position:absolute; inset:0; display:block; }
   border:1px solid var(--border-strong); border-radius:5px;
   color:var(--text-muted); font-size:12px; cursor:pointer;
 }
+.cutdiag-box {
+  background:var(--surface); border:1px solid var(--border-strong);
+  border-radius:11px; width:640px; max-width:92vw; max-height:82vh;
+  padding:19px; box-shadow:0 4px 32px rgba(0,0,0,.8);
+  display:flex; flex-direction:column;
+}
+.cutdiag-box h3 { font-size:14px; margin-bottom:4px; flex-shrink:0; }
+.cutdiag-legend { font-size:10px; color:var(--text-muted); margin-bottom:13px; display:flex; gap:14px; flex-shrink:0; }
+.cutdiag-legend span { display:inline-flex; align-items:center; gap:5px; }
+.cutdiag-swatch { width:11px; height:11px; border-radius:2px; display:inline-block; border:1px solid rgba(255,255,255,.15); }
+#cutdiag-body { overflow-y:auto; flex:1; display:flex; flex-direction:column; gap:17px; padding-right:4px; }
+#cutdiag-body::-webkit-scrollbar { width:5px; }
+#cutdiag-body::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:3px; }
+.cutdiag-title { font-size:11px; color:var(--text-muted); margin-bottom:6px; font-family:monospace; display:flex; justify-content:space-between; gap:8px; }
+.cutdiag-bar { display:flex; height:40px; border-radius:5px; overflow:hidden; border:1px solid var(--border-strong); background:var(--surface3); }
+.cutdiag-seg {
+  position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-width:3px; color:#1a1005; font-size:10px; font-weight:700; overflow:hidden;
+  border-right:1px solid rgba(0,0,0,.3); text-shadow:0 1px 1px rgba(255,255,255,.15);
+}
+.cutdiag-seg:last-child { border-right:none; }
+.cutdiag-seg.stock { color:#f0e8da; text-shadow:0 1px 2px rgba(0,0,0,.7); }
+.cutdiag-seg-name { white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:100%; padding:0 5px; }
+.cutdiag-seg-len { font-family:monospace; font-size:9px; opacity:.85; }
+.cutdiag-kerf { width:5px; flex-shrink:0; background:repeating-linear-gradient(45deg,#000 0,#000 2px,#1a1a1a 2px,#1a1a1a 4px); }
 .close-btn:hover { border-color:var(--text-muted); }
 </style>
 </head>
@@ -191,46 +238,54 @@ canvas#scene { position:absolute; inset:0; display:block; }
 <div id="toolbar">
   <span class="logo">Wood CAD</span>
   <div class="sep"></div>
-  <button class="tb-btn" onclick="openAddModal()">
+  <button class="tb-btn" onclick="openAddModal()" title="材料を追加">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="12" height="8" rx="1.5"/><line x1="4" y1="7" x2="10" y2="7"/><line x1="7" y1="4" x2="7" y2="10"/></svg>
-	材料を追加
+	<span class="tb-label">材料を追加</span>
   </button>
-  <button class="tb-btn" id="btn-move" onclick="setMode('move')">
+  <button class="tb-btn" id="btn-move" onclick="setMode('move')" title="移動">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v12M1 7h12"/><path d="M4.5 3.5L1 7l3.5 3.5M9.5 3.5L13 7l-3.5 3.5"/></svg>
-	移動
+	<span class="tb-label">移動</span>
   </button>
-  <button class="tb-btn" id="btn-rotate" onclick="setMode('rotate')">
+  <button class="tb-btn" id="btn-rotate" onclick="setMode('rotate')" title="回転">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 7A5 5 0 1 1 7 2"/><path d="M10 1l2 1.5-1.5 2"/></svg>
-	回転
+	<span class="tb-label">回転</span>
   </button>
   <div class="sep"></div>
-  <button class="tb-btn" id="btn-undo" onclick="undo()" disabled>
+  <button class="tb-btn" id="btn-undo" onclick="undo()" disabled title="元に戻す">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7A5 5 0 1 0 3.4 3.4"/><path d="M2 3v4h4"/></svg>
-	元に戻す
+	<span class="tb-label">元に戻す</span>
   </button>
-  <button class="tb-btn" id="btn-redo" onclick="redo()" disabled>
+  <button class="tb-btn" id="btn-redo" onclick="redo()" disabled title="やり直す">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 7A5 5 0 1 1 10.6 3.4"/><path d="M12 3v4h-4"/></svg>
-	やり直す
+	<span class="tb-label">やり直す</span>
   </button>
   <div class="sep"></div>
-  <button class="tb-btn" onclick="resetCamera()">
+  <button class="tb-btn" onclick="resetCamera()" title="視点リセット">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="7" cy="7" r="5"/><circle cx="7" cy="7" r="2"/></svg>
-	視点リセット
+	<span class="tb-label">視点リセット</span>
   </button>
   <div class="spacer"></div>
-  <button class="tb-btn" onclick="saveProject()">
+  <button class="tb-btn" onclick="saveProject()" title="保存">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2h8l2 2v8H2z"/><path d="M4 2v3h6V2M4 8h6v4H4z"/></svg>
-	保存
+	<span class="tb-label">保存</span>
   </button>
-  <button class="tb-btn" onclick="document.getElementById('load-file').click()">
+  <button class="tb-btn" onclick="document.getElementById('load-file').click()" title="開く">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 6V3a1 1 0 0 1 1-1h3l1 1.5h4a1 1 0 0 1 1 1V6"/><path d="M2 6h10v5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6z"/></svg>
-	開く
+	<span class="tb-label">開く</span>
   </button>
   <input type="file" id="load-file" accept=".json,.woodcad" style="display:none" onchange="loadProject(event)">
   <div class="sep"></div>
-  <button class="tb-btn" onclick="showExport()">
+  <button class="tb-btn" onclick="showExport()" title="部材リスト">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 2v7M4.5 6.5L7 9l2.5-2.5"/><path d="M2 12h10"/></svg>
-	部材リスト
+	<span class="tb-label">部材リスト</span>
+  </button>
+  <button class="tb-btn" onclick="showCutDiagram()" title="材料取り図">
+	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="12" height="6" rx="0.5"/><line x1="5" y1="4" x2="5" y2="10"/><line x1="9.5" y1="4" x2="9.5" y2="10"/></svg>
+	<span class="tb-label">材料取り図</span>
+  </button>
+  <button class="tb-btn" id="btn-measure" onclick="toggleMeasureMode()" title="計測">
+	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="5" width="12" height="4" rx="0.5"/><line x1="3.5" y1="5" x2="3.5" y2="7"/><line x1="6" y1="5" x2="6" y2="7.5"/><line x1="8.5" y1="5" x2="8.5" y2="7"/><line x1="11" y1="5" x2="11" y2="7.5"/></svg>
+	<span class="tb-label">計測</span>
   </button>
 </div>
 
@@ -242,6 +297,7 @@ canvas#scene { position:absolute; inset:0; display:block; }
   </div>
   <div id="canvas-wrap">
 	<canvas id="scene"></canvas>
+	<div id="measure-readout" class="measure-readout" style="display:none;"></div>
 	<div class="hint">左ドラッグ: 視点回転 ／ スクロール: ズーム ／ m: 移動 ／ r: 回転 ／ s: 選択</div>
   </div>
   <div id="inspector">
@@ -281,6 +337,19 @@ canvas#scene { position:absolute; inset:0; display:block; }
   </div>
 </div>
 
+<div id="ov-cutdiagram" class="overlay">
+  <div class="cutdiag-box">
+	<h3>材料取り図</h3>
+	<div class="cutdiag-legend">
+	  <span><span class="cutdiag-swatch" style="background:#b07038"></span>使用する部材</span>
+	  <span><span class="cutdiag-swatch" style="background:repeating-linear-gradient(45deg,rgba(0,0,0,.4) 0 3px,#c8864a 3px 6px)"></span>残材（未使用）</span>
+	  <span><span class="cutdiag-swatch" style="background:repeating-linear-gradient(45deg,#000 0,#000 2px,#1a1a1a 2px,#1a1a1a 4px)"></span>切り代（5mm）</span>
+	</div>
+	<div id="cutdiag-body"></div>
+	<button class="close-btn" onclick="closeOv('ov-cutdiagram')">閉じる</button>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const SCALE = 0.004;
@@ -288,10 +357,22 @@ let scene, camera, renderer, raycaster, mouse;
 let pieces = [], sel = null, mode = 'select';
 let hist = [], fut = [], mc = 0;
 let drag = false, orbit = false;
+let lenCommitTimer = null, pendingLenCommit = null;
+
+function flushPendingLenCommit() {
+  if (pendingLenCommit) {
+	clearTimeout(lenCommitTimer);
+	const fn = pendingLenCommit;
+	pendingLenCommit = null;
+	fn();
+  }
+}
+let measureMode = false, measurePoints = [], measureGroup = null, measureDownPos = null;
 let gizmoGrp = null;
 let gizmoDrag = null;
 let gizmoHover = null;
 let dragOff = {x:0,z:0}, orbitSt = {x:0,y:0};
+let snapGuides = [];
 let camTh = 0.5, camPh = 1.05, camD = 7.5;
 let camTgt = new THREE.Vector3(0,0,0);
 let rotSt = 0;
@@ -329,6 +410,10 @@ function init() {
   cv.addEventListener('mouseup', onUp);
   cv.addEventListener('wheel', onWheel, {passive:false});
   cv.addEventListener('contextmenu', e=>e.preventDefault());
+  cv.addEventListener('touchstart', onTouchStart, {passive:false});
+  cv.addEventListener('touchmove', onTouchMove, {passive:false});
+  cv.addEventListener('touchend', onTouchEnd, {passive:false});
+  cv.addEventListener('touchcancel', onTouchEnd, {passive:false});
   window.addEventListener('resize', onResize);
 
   (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
@@ -371,8 +456,89 @@ function hitPiece(e) {
   return p ? {piece: p, point: best.point} : null;
 }
 
+function toggleMeasureMode() {
+  measureMode = !measureMode;
+  document.getElementById('btn-measure').classList.toggle('active', measureMode);
+  renderer.domElement.style.cursor = measureMode ? 'crosshair' : 'default';
+  if (!measureMode) clearMeasure();
+  deselect();
+}
+
+function clearMeasure() {
+  measurePoints = [];
+  if (measureGroup) {
+	measureGroup.children.slice().forEach(c => {
+	  measureGroup.remove(c);
+	  c.geometry.dispose();
+	  c.material.dispose();
+	});
+	scene.remove(measureGroup);
+	measureGroup = null;
+  }
+  hideMeasureReadout();
+}
+
+function measurePickPoint(e) {
+  const hit = hitPiece(e);
+  if (hit) return hit.point.clone();
+  const n = toNDC(e); mouse.set(n.x, n.y);
+  raycaster.setFromCamera(mouse, camera);
+  const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+  const pt = new THREE.Vector3();
+  raycaster.ray.intersectPlane(plane, pt);
+  return pt;
+}
+
+function addMeasurePoint(e) {
+  const pt = measurePickPoint(e);
+  if (!pt) return;
+
+  if (measurePoints.length >= 2) clearMeasure(); // start a fresh measurement
+  measurePoints.push(pt);
+  if (!measureGroup) { measureGroup = new THREE.Group(); scene.add(measureGroup); }
+
+  const dot = new THREE.Mesh(
+	new THREE.SphereGeometry(0.02, 8, 8),
+	new THREE.MeshBasicMaterial({ color: 0xff5050, depthTest: false })
+  );
+  dot.position.copy(pt);
+  dot.renderOrder = 999;
+  measureGroup.add(dot);
+
+  if (measurePoints.length === 2) {
+	const [p0, p1] = measurePoints;
+	const geo = new THREE.BufferGeometry().setFromPoints([p0, p1]);
+	const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xff5050, depthTest: false }));
+	line.renderOrder = 999;
+	measureGroup.add(line);
+	showMeasureReadout(p0.distanceTo(p1) / SCALE);
+  } else {
+	hideMeasureReadout();
+  }
+}
+
+function showMeasureReadout(mm) {
+  const el = document.getElementById('measure-readout');
+  if (!el) return;
+  el.textContent = `📏 距離: ${mm.toFixed(1)} mm`;
+  el.style.display = 'block';
+}
+
+function hideMeasureReadout() {
+  const el = document.getElementById('measure-readout');
+  if (el) el.style.display = 'none';
+}
+
 function onDown(e) {
   drag=false; orbit=false;
+  clearGuides();
+
+  if (measureMode) {
+	measureDownPos = {x:e.clientX, y:e.clientY};
+	orbit = true; orbitSt = {x:e.clientX, y:e.clientY}; // still allow rotating the view
+	return;
+  }
+
   if (e.button===2||e.button===1) { orbit=true; orbitSt={x:e.clientX,y:e.clientY}; return; }
 
   const ring = hitGizmoRing(e);
@@ -440,16 +606,35 @@ function onMove(e) {
 	const plane = new THREE.Plane(new THREE.Vector3(0,1,0), -sel.y);
 	const pt = new THREE.Vector3();
 	raycaster.ray.intersectPlane(plane, pt);
-	sel.x = Math.round((pt.x+dragOff.x)*20)/20;
-	sel.z = Math.round((pt.z+dragOff.z)*20)/20;
+	const rawX = Math.round((pt.x+dragOff.x)*20)/20;
+	const rawZ = Math.round((pt.z+dragOff.z)*20)/20;
+
+	clearGuides();
+	const snap = computeSnappedPos(rawX, rawZ);
+	sel.x = snap.x;
+	sel.z = snap.z;
+	if (snap.guideX) addGuideLine('x', snap.guideX.at, snap.guideX.other);
+	if (snap.guideZ) addGuideLine('z', snap.guideZ.at, snap.guideZ.other);
+
 	applyTransform(sel);
 	updateGizmoPos();
 	syncInspPos();
   }
 }
 
-function onUp() {
+function onUp(e) {
+  if (measureMode) {
+	if (measureDownPos && e) {
+	  const dx = e.clientX-measureDownPos.x, dy = e.clientY-measureDownPos.y;
+	  if (Math.hypot(dx,dy) < 6) addMeasurePoint(e); // tap, not a camera-rotate drag
+	}
+	measureDownPos = null;
+	drag=false; orbit=false;
+	return;
+  }
+
   if (drag && sel) { pushApart(sel); snapshot(); }
+  clearGuides();
   if (gizmoDrag && sel) {
 	liftAboveGround(sel);
 	syncInspRot();
@@ -459,6 +644,26 @@ function onUp() {
 	setGizmoHighlight(null);
   }
   drag=false; orbit=false;
+}
+
+// Touch support: a single finger behaves like the left mouse button (select
+// + move a piece it lands on, or orbit the camera otherwise). Multi-touch
+// (e.g. pinch) is left alone so it doesn't fight with page/browser gestures.
+function onTouchStart(e) {
+  if (e.touches.length !== 1) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  onDown({ clientX:t.clientX, clientY:t.clientY, button:0, buttons:1, preventDefault(){} });
+}
+function onTouchMove(e) {
+  if (e.touches.length !== 1) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  onMove({ clientX:t.clientX, clientY:t.clientY, buttons:1, preventDefault(){} });
+}
+function onTouchEnd(e) {
+  const t = e.changedTouches && e.changedTouches[0];
+  onUp(t ? { clientX:t.clientX, clientY:t.clientY } : undefined);
 }
 function onWheel(e) { e.preventDefault(); camD=Math.max(1.5,Math.min(24,camD+e.deltaY*0.012)); refreshCam(); }
 
@@ -561,9 +766,31 @@ function buildMesh(piece) {
   return grp;
 }
 
+function worldExtents(p) {
+  // A board's true world-space footprint/height depends on its rotation —
+  // e.g. rotated 90° it may stand on its length or width instead of its
+  // thickness, or its length may run along Z instead of X. Compute all
+  // three world-axis half-extents from the rotation matrix once, so the
+  // vertical stacking logic (pieceTop/effectiveHeight) and the horizontal
+  // footprint (getAABB, used for overlap checks and edge-snap guides) never
+  // disagree about a rotated piece's real size.
+  const hx = (p.len * SCALE) / 2, hy = (p.dep * SCALE) / 2, hz = (p.wid * SCALE) / 2;
+  const m = new THREE.Matrix4().makeRotationFromEuler(
+	new THREE.Euler(p.rx || 0, p.ry || 0, p.rz || 0, 'XYZ')
+  );
+  const e = m.elements;
+  return {
+	x: Math.abs(e[0]) * hx + Math.abs(e[4]) * hy + Math.abs(e[8]) * hz,
+	y: Math.abs(e[1]) * hx + Math.abs(e[5]) * hy + Math.abs(e[9]) * hz,
+	z: Math.abs(e[2]) * hx + Math.abs(e[6]) * hy + Math.abs(e[10]) * hz,
+  };
+}
+
+function effectiveHeight(p) { return 2 * worldExtents(p).y; }
+
 function applyTransform(p) {
   p.y = Math.max(0, p.y || 0);
-  p.grp.position.set(p.x, p.y + p.dep*SCALE/2, p.z);
+  p.grp.position.set(p.x, p.y + effectiveHeight(p)/2, p.z);
   p.grp.rotation.set(p.rx||0, p.ry||0, p.rz||0, 'XYZ');
   if (gizmoGrp && sel===p) gizmoGrp.position.copy(p.grp.position);
 }
@@ -573,30 +800,195 @@ function liftAboveGround(p) {
   const box = new THREE.Box3().setFromObject(p.grp);
   if (box.min.y < -0.0001) {
 	p.y += -box.min.y;
-	p.grp.position.set(p.x, p.y + p.dep*SCALE/2, p.z);
+	p.grp.position.set(p.x, p.y + effectiveHeight(p)/2, p.z);
   }
   const iy = document.getElementById('i-y');
   if (iy) iy.value = p.y.toFixed(2);
 }
 
 function getAABB(p) {
-  const hw = (p.len * SCALE) / 2;
-  const hd = (p.wid * SCALE) / 2;
-  return { minX: p.x - hw, maxX: p.x + hw, minZ: p.z - hd, maxZ: p.z + hd };
+  const ext = worldExtents(p);
+  return { minX: p.x - ext.x, maxX: p.x + ext.x, minZ: p.z - ext.z, maxZ: p.z + ext.z };
+}
+
+function pieceTop(p) { return p.y + effectiveHeight(p); }
+
+function clearSnapGuides() {
+  snapGuides.forEach(g => { scene.remove(g); g.geometry.dispose(); g.material.dispose(); });
+  snapGuides = [];
+}
+
+function addSnapGuideLine(p1, p2) {
+  const geo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+  const mat = new THREE.LineBasicMaterial({ color: 0xff3d9a, transparent: true, opacity: 0.9, depthTest: false });
+  const line = new THREE.Line(geo, mat);
+  line.renderOrder = 999;
+  scene.add(line);
+  snapGuides.push(line);
+}
+
+function drawAxisGuide(axis, coord, p, other) {
+  const y = Math.max(pieceTop(p), pieceTop(other)) + 0.015;
+  const a = getAABB(p), b = getAABB(other);
+  if (axis === 'x') {
+	const zMin = Math.min(a.minZ, b.minZ) - 0.15, zMax = Math.max(a.maxZ, b.maxZ) + 0.15;
+	addSnapGuideLine(new THREE.Vector3(coord, y, zMin), new THREE.Vector3(coord, y, zMax));
+  } else {
+	const xMin = Math.min(a.minX, b.minX) - 0.15, xMax = Math.max(a.maxX, b.maxX) + 0.15;
+	addSnapGuideLine(new THREE.Vector3(xMin, y, coord), new THREE.Vector3(xMax, y, coord));
+  }
+}
+
+// While dragging, find the closest edge/center alignment against another
+// board along one axis — so two boards can be dropped flush against each
+// other (or perfectly lined up) instead of relying on the eye.
+function findAxisSnap(axis, p, rawCoord) {
+  const THRESH = 0.05; // world units (~12.5mm) catch distance
+  const half = axis === 'x' ? (p.len * SCALE) / 2 : (p.wid * SCALE) / 2;
+  let best = null, bestDist = THRESH;
+  for (const other of pieces) {
+	if (other === p || other.stock) continue;
+	const b = getAABB(other);
+	const oMin = axis === 'x' ? b.minX : b.minZ;
+	const oMax = axis === 'x' ? b.maxX : b.maxZ;
+	const oCenter = axis === 'x' ? other.x : other.z;
+	const candidates = [
+	  { value: oMin - half, guide: oMin },     // touch: p's far edge meets other's near edge
+	  { value: oMax + half, guide: oMax },     // touch: p's near edge meets other's far edge
+	  { value: oMin + half, guide: oMin },     // flush: edges aligned on the near side
+	  { value: oMax - half, guide: oMax },     // flush: edges aligned on the far side
+	  { value: oCenter,     guide: oCenter },  // centers aligned
+	];
+	for (const c of candidates) {
+	  const d = Math.abs(rawCoord - c.value);
+	  if (d < bestDist) { bestDist = d; best = { value: c.value, guideCoord: c.guide, other }; }
+	}
+  }
+  return best;
+}
+
+let guideGroup = null;
+const SNAP_THRESHOLD = 0.08; // world units (~20mm at SCALE=0.004) — how close an edge must be to snap flush
+
+function ensureGuideGroup() {
+  if (!guideGroup) { guideGroup = new THREE.Group(); scene.add(guideGroup); }
+  return guideGroup;
+}
+
+function clearGuides() {
+  if (!guideGroup) return;
+  guideGroup.children.slice().forEach(c => {
+	guideGroup.remove(c);
+	c.geometry.dispose();
+	c.material.dispose();
+  });
+}
+
+function addGuideLine(axis, at, other) {
+  const a = getAABB(sel), b = getAABB(other);
+  const y = Math.max(pieceTop(sel), pieceTop(other)) + 0.01;
+  const mat = new THREE.LineBasicMaterial({ color: 0x4ec3ff, depthTest: false, transparent: true, opacity: 0.9 });
+  const geo = new THREE.BufferGeometry();
+  let points;
+  if (axis === 'x') {
+	const z0 = Math.min(a.minZ, b.minZ) - 0.15, z1 = Math.max(a.maxZ, b.maxZ) + 0.15;
+	points = [new THREE.Vector3(at, y, z0), new THREE.Vector3(at, y, z1)];
+  } else {
+	const x0 = Math.min(a.minX, b.minX) - 0.15, x1 = Math.max(a.maxX, b.maxX) + 0.15;
+	points = [new THREE.Vector3(x0, y, at), new THREE.Vector3(x1, y, at)];
+  }
+  geo.setFromPoints(points);
+  const line = new THREE.Line(geo, mat);
+  line.renderOrder = 999;
+  ensureGuideGroup().add(line);
+}
+
+// Snap the piece being dragged so its edges/center land flush against the
+// edges/center of any other piece within SNAP_THRESHOLD, and report which
+// guide line(s) to draw for the snap(s) that were applied.
+function computeSnappedPos(rawX, rawZ) {
+  const selExt = worldExtents(sel);
+  const hw = selExt.x, hd = selExt.z;
+  let snapX = rawX, snapZ = rawZ;
+  let guideX = null, guideZ = null;
+  let bestXDelta = SNAP_THRESHOLD, bestZDelta = SNAP_THRESHOLD;
+
+  for (const other of pieces) {
+	if (other === sel || other.stock) continue;
+	const ob = getAABB(other);
+
+	// Only compare like-for-like: an edge only snaps to another edge (so two
+	// boards end up truly flush, edge-to-edge), and a center only snaps to
+	// another center (for genuine centering). Matching an edge against a
+	// center would pull the dragged board's midline onto the other board's
+	// edge — a half-overhang, not a flush stack — so that combination is
+	// intentionally excluded.
+	const selEdgesX = [rawX - hw, rawX + hw];
+	const otherEdgesX = [ob.minX, ob.maxX];
+	selEdgesX.forEach(se => otherEdgesX.forEach(oe => {
+	  const d = Math.abs(se - oe);
+	  if (d < bestXDelta) { bestXDelta = d; snapX = rawX + (oe - se); guideX = { at: oe, other }; }
+	}));
+	{
+	  const oe = (ob.minX + ob.maxX) / 2;
+	  const d = Math.abs(rawX - oe);
+	  if (d < bestXDelta) { bestXDelta = d; snapX = oe; guideX = { at: oe, other }; }
+	}
+
+	const selEdgesZ = [rawZ - hd, rawZ + hd];
+	const otherEdgesZ = [ob.minZ, ob.maxZ];
+	selEdgesZ.forEach(se => otherEdgesZ.forEach(oe => {
+	  const d = Math.abs(se - oe);
+	  if (d < bestZDelta) { bestZDelta = d; snapZ = rawZ + (oe - se); guideZ = { at: oe, other }; }
+	}));
+	{
+	  const oe = (ob.minZ + ob.maxZ) / 2;
+	  const d = Math.abs(rawZ - oe);
+	  if (d < bestZDelta) { bestZDelta = d; snapZ = oe; guideZ = { at: oe, other }; }
+	}
+  }
+
+  return { x: snapX, z: snapZ, guideX, guideZ };
 }
 
 function pushApart(moved) {
   if (moved.stock) return;
   const MAX_ITER = 20;
   for (let iter = 0; iter < MAX_ITER; iter++) {
+	// 1) Settle vertically: rest on top of whatever piece(s) are directly
+	//    underneath this footprint (like a real board dropped in place),
+	//    so it's possible to stack one board on top of another.
+	const fa = getAABB(moved);
+	let restY = 0;
+	for (const other of pieces) {
+	  if (other === moved || other.stock) continue;
+	  const ob = getAABB(other);
+	  const ox = Math.min(fa.maxX, ob.maxX) - Math.max(fa.minX, ob.minX);
+	  const oz = Math.min(fa.maxZ, ob.maxZ) - Math.max(fa.minZ, ob.minZ);
+	  if (ox > 0.001 && oz > 0.001) restY = Math.max(restY, pieceTop(other));
+	}
+	if (Math.abs(moved.y - restY) > 0.0001) {
+	  moved.y = restY;
+	  applyTransform(moved);
+	}
+
+	// 2) Resolve horizontal collisions only against pieces that actually
+	//    occupy the same vertical band (real overlap) — pieces stacked
+	//    above/below moved don't collide horizontally.
 	let moved_ = false;
 	for (const other of pieces) {
 	  if (other === moved || other.stock) continue;
+	  const overlapY = Math.min(pieceTop(moved), pieceTop(other)) - Math.max(moved.y, other.y);
+	  if (overlapY <= 0.0005) continue;
 	  const a = getAABB(moved), b = getAABB(other);
-	  const GAP = 0.005;
-	  const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX) + GAP;
-	  const overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ) + GAP;
-	  if (overlapX > 0 && overlapZ > 0) {
+	  // No artificial margin here: boards that are already flush (zero real
+	  // overlap) must stay flush, not get shoved apart by a fixed gap.
+	  // EPS only absorbs floating-point jitter from the snap/AABB math so
+	  // truly-touching boards aren't endlessly re-triggered as "overlapping".
+	  const EPS = 0.0001;
+	  const overlapX = Math.min(a.maxX, b.maxX) - Math.max(a.minX, b.minX);
+	  const overlapZ = Math.min(a.maxZ, b.maxZ) - Math.max(a.minZ, b.minZ);
+	  if (overlapX > EPS && overlapZ > EPS) {
 		if (overlapX < overlapZ) {
 		  const dir = moved.x < other.x ? -1 : 1;
 		  moved.x += dir * overlapX;
@@ -631,19 +1023,27 @@ function setHighlight(p, on) {
 
   const OUTLINE_ID = '__outline__';
   const existing = p.grp.children.find(c => c.userData.id === OUTLINE_ID);
-  if (on && !existing) {
+  if (on) {
 	const base = p.grp.children[0];
-	const oGeo = base.geometry.clone();
-	const oMat = new THREE.MeshBasicMaterial({
-	  color: 0xffdd44,
-	  side: THREE.BackSide,
-	});
-	const outline = new THREE.Mesh(oGeo, oMat);
-	outline.scale.multiplyScalar(1.02);
-	outline.userData.id = OUTLINE_ID;
-	outline.renderOrder = -1;
-	p.grp.add(outline);
-  } else if (!on && existing) {
+	if (existing) {
+	  // The piece may have been resized (length/width/depth) since the
+	  // outline was first created — refresh its geometry so it always
+	  // matches the current size instead of staying at the old size.
+	  existing.geometry.dispose();
+	  existing.geometry = base.geometry.clone();
+	} else {
+	  const oGeo = base.geometry.clone();
+	  const oMat = new THREE.MeshBasicMaterial({
+		color: 0xffdd44,
+		side: THREE.BackSide,
+	  });
+	  const outline = new THREE.Mesh(oGeo, oMat);
+	  outline.scale.multiplyScalar(1.02);
+	  outline.userData.id = OUTLINE_ID;
+	  outline.renderOrder = -1;
+	  p.grp.add(outline);
+	}
+  } else if (existing) {
 	p.grp.remove(existing);
 	existing.geometry.dispose();
 	existing.material.dispose();
@@ -682,6 +1082,12 @@ function addPieceStock(name, len, wid, dep, parentSeed) {
 }
 
 let toastTimer = null;
+function toRemnantName(name) {
+  // Strip any existing "（残材）" suffix before re-adding one, so repeatedly
+  // placing and re-cutting an offcut doesn't keep stacking the suffix
+  // ("板①（残材）（残材）（残材）...").
+  return name.replace(/（残材）+$/, '') + '（残材）';
+}
 function showRemnantToast(remnantLen) {
   let toast = document.getElementById('remnant-toast');
   if (!toast) {
@@ -713,6 +1119,7 @@ function placeStockPiece() {
 }
 
 function selectPiece(p) {
+  flushPendingLenCommit();
   if (sel) setHighlight(sel, false);
   sel = p;
   setHighlight(p, true);
@@ -724,6 +1131,7 @@ function selectPiece(p) {
 }
 
 function deselect() {
+  flushPendingLenCommit();
   if (sel) setHighlight(sel, false);
   removeGizmo();
   sel=null;
@@ -745,6 +1153,8 @@ function refreshSide() {
 	const wc = woodCSS(p.seed);
 	d.innerHTML=`<div class="mat-name"><span class="color-dot" style="background:${wc.css}"></span>${p.name}<span class="mat-badge">#${p.id}</span>${stockTag}</div><div class="mat-dim">長さ ${p.len} × 奥行 ${p.wid} × 厚み ${p.dep} mm</div><div class="mat-preview-wrap"><canvas width="${PW}" height="${PH}"></canvas></div>`;
 	d.onclick=()=>selectPiece(p);
+	d.ondblclick=()=>{ selectPiece(p); if (p.stock) placeStockPiece(); };
+	if (p.stock) d.title = 'ダブルクリックで配置';
 	list.appendChild(d);
 	const cv=d.querySelector('canvas'), ctx=cv.getContext('2d');
 	const PAD=4;
@@ -772,7 +1182,10 @@ function refreshSide() {
 function showInspector(p) {
   document.getElementById('insp-body').innerHTML=`
 	<div class="insp-sec" style="margin-bottom:8px">
-	  <canvas id="insp-3d" width="191" height="150" style="display:block;border-radius:6px;border:1px solid var(--border);cursor:grab;background:#0d0d0d;"></canvas>
+	  <div style="position:relative;">
+		<canvas id="insp-3d" width="191" height="150" style="display:block;border-radius:6px;border:1px solid var(--border);cursor:grab;background:#0d0d0d;"></canvas>
+		<div id="insp-axis-badge" class="insp-axis-badge"></div>
+	  </div>
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">名前</div>
@@ -822,21 +1235,24 @@ function showInspector(p) {
   const KERF = 5;
   const lenEl = document.getElementById('i-len');
   if (lenEl) {
+	flushPendingLenCommit();
 	lenEl.dataset.prev = p.len;
-	lenEl.addEventListener('change', ()=>{
-	  if (!sel) return;
+
+	function commitLenChange() {
+	  pendingLenCommit = null;
+	  if (!sel || sel !== p) return;
 	  const prev = +lenEl.dataset.prev;
-	  const next = Math.max(10, +lenEl.value || 10);
+	  let next = Math.max(10, +lenEl.value || 10);
 	  if (next === prev) return;
 
-	  const existing = pieces.find(p => p.stock && p.seed === sel.seed);
+	  const existing = pieces.find(pc => pc.stock && pc.seed === sel.seed && pc !== sel);
 
 	  if (next < prev) {
 		const cut = prev - next - KERF;
 		if (existing) {
 		  existing.len = existing.len + (prev - next) - KERF;
 		  existing.len = Math.max(10, existing.len);
-		  existing.name = sel.name + '（残材）';
+		  existing.name = toRemnantName(sel.name);
 		  scene.remove(existing.grp);
             existing.grp = buildMesh(existing);
             applyTransform(existing);
@@ -844,18 +1260,29 @@ function showInspector(p) {
             refreshSide();
             showRemnantToast(existing.len);
 		} else if (cut >= 10) {
-		  addPieceStock(sel.name + '（残材）', cut, sel.wid, sel.dep, sel.seed);
+		  addPieceStock(toRemnantName(sel.name), cut, sel.wid, sel.dep, sel.seed);
 		  showRemnantToast(cut);
 		}
 	  } else {
 		const extend = next - prev;
+		const available = existing ? existing.len : 0;
+		if (extend > available) {
+		  // Can't grow past what's actually left over from the cut(s) made so
+		  // far — otherwise material would be created out of nothing.
+		  next = prev + available;
+		  lenEl.value = next;
+		  sel.len = next;
+		  rebuildGeom(sel);
+		  applyTransform(sel);
+		  setHighlight(sel, true);
+		}
 		if (existing) {
-		  existing.len = existing.len - extend;
+		  existing.len = existing.len - (next - prev);
 		  if (existing.len < 10) {
-			pieces = pieces.filter(p => p !== existing);
+			pieces = pieces.filter(pc => pc !== existing);
 			showRemnantToast(0);
 		  } else {
-			existing.name = sel.name + '（残材）';
+			existing.name = toRemnantName(sel.name);
 			existing.grp = buildMesh(existing);
 			applyTransform(existing);
 			showRemnantToast(existing.len);
@@ -866,6 +1293,19 @@ function showInspector(p) {
 
 	  lenEl.dataset.prev = next;
 	  snapshot();
+	}
+
+	lenEl.addEventListener('change', ()=>{
+	  // A single logical edit (typing a value then pressing Enter/blurring,
+	  // OR clicking the spinner arrows a few times, OR holding an arrow key)
+	  // can fire several native 'change' events in a row. Treating each one
+	  // as its own physical cut would charge a fresh kerf every time,
+	  // silently eating material with no new remnant to show for it. Instead,
+	  // wait briefly for the value to settle and commit once, using the net
+	  // change from when editing started — exactly like a single real cut.
+	  clearTimeout(lenCommitTimer);
+	  pendingLenCommit = commitLenChange;
+	  lenCommitTimer = setTimeout(commitLenChange, 400);
 	});
   }
   document.getElementById('insp-body').querySelectorAll('input:not(#i-len)').forEach(el=>el.addEventListener('change', ()=>snapshot()));
@@ -1025,13 +1465,41 @@ function initInspPreview(p) {
 	return _iRings.find(g=>g.userData.hMesh===hits[0].object);
   }
 
+  const AXIS_LABEL = { x:'X軸', y:'Y軸', z:'Z軸' };
+  const AXIS_COLOR = { x:'#ff4444', y:'#44ee44', z:'#4488ff' };
+
+  function _iSetRingVisual(highlightAxis) {
+	_iRings.forEach(g => {
+	  const on = g.userData.axis === highlightAxis;
+	  const dim = highlightAxis && !on;
+	  g.userData.mat.opacity = on ? 1 : (dim ? 0.18 : 0.75);
+	  g.scale.setScalar(on ? 1.08 : 1);
+	});
+  }
+
+  function _iShowAxisBadge(axis, dragging) {
+	const badge = document.getElementById('insp-axis-badge');
+	if (!badge) return;
+	if (!axis) { badge.style.display = 'none'; return; }
+	badge.textContent = AXIS_LABEL[axis] + (dragging ? ' ・回転中' : '');
+	badge.style.color = AXIS_COLOR[axis];
+	badge.style.borderColor = dragging ? AXIS_COLOR[axis] : 'transparent';
+	badge.style.display = 'block';
+  }
+
   cv.onmousemove = e=>{
 	if (_iActive || _iOrbit) return;
 	const hit=getHitRing(e);
-	_iRings.forEach(g=>{
-	  g.userData.mat.opacity = (g===hit) ? 1.0 : 0.85;
-	});
+	const axis = hit ? hit.userData.axis : null;
+	_iSetRingVisual(axis);
+	_iShowAxisBadge(axis, false);
 	cv.style.cursor = hit ? 'pointer' : 'grab';
+  };
+
+  cv.onmouseleave = () => {
+	if (_iActive || _iOrbit) return;
+	_iSetRingVisual(null);
+	_iShowAxisBadge(null, false);
   };
 
   cv.onmousedown = e=>{
@@ -1044,9 +1512,12 @@ function initInspPreview(p) {
 	  const axis=hit.userData.axis;
 	  const origVal = axis==='x'?(sel.rx||0): axis==='y'?(sel.ry||0):(sel.rz||0);
 	  _iActive={axis, startAngle:Math.atan2(dy,dx), origVal};
+	  _iSetRingVisual(axis);
+	  _iShowAxisBadge(axis, true);
 	  cv.style.cursor='crosshair';
 	} else {
 	  _iOrbit=true; _iOLX=e.clientX; _iOLY=e.clientY;
+	  _iShowAxisBadge(null, false);
 	  cv.style.cursor='grabbing';
 	}
   };
@@ -1091,6 +1562,8 @@ function initInspPreview(p) {
 	  _iActive=null;
 	}
 	_iOrbit=false;
+	_iSetRingVisual(null);
+	_iShowAxisBadge(null, false);
   };
   window.addEventListener('mousemove', window._iMouseMove);
   window.addEventListener('mouseup',   window._iMouseUp);
@@ -1269,6 +1742,72 @@ function showExport() {
   document.getElementById('exp-body').innerHTML=
 	pieces.map((p,i)=>`<tr><td>${i+1}</td><td>${p.name}</td><td>${p.len}mm</td><td>${p.wid}mm</td><td>${p.dep}mm</td></tr>`).join('');
   document.getElementById('ov-export').classList.add('show');
+}
+
+function showCutDiagram() {
+  const KERF = 5;
+  const groups = {};
+  pieces.forEach(p => { (groups[p.seed] = groups[p.seed] || []).push(p); });
+
+  const rows = Object.keys(groups).map(seed => {
+	// Used pieces first (largest first), offcut/stock pieces last — matches
+	// the order they'd actually be cut off the original board.
+	const ordered = [...groups[seed]].sort((a,b) => {
+	  if (!!a.stock !== !!b.stock) return a.stock ? 1 : -1;
+	  return b.len - a.len;
+	});
+	const cutCount = Math.max(0, ordered.length - 1);
+	const totalLen = ordered.reduce((s,p)=>s+p.len,0) + cutCount*KERF;
+	return { seed:Number(seed), pieces:ordered, totalLen, cutCount };
+  }).sort((a,b) => b.totalLen - a.totalLen);
+
+  const body = document.getElementById('cutdiag-body');
+  body.innerHTML = '';
+
+  if (!rows.length) {
+	body.innerHTML = '<p class="insp-empty">部材がありません</p>';
+  } else {
+	const maxLen = Math.max(...rows.map(r => r.totalLen));
+	rows.forEach(r => {
+	  const wc = woodCSS(r.seed);
+	  const dims = r.pieces[0];
+
+	  const rowEl = document.createElement('div');
+	  rowEl.className = 'cutdiag-row';
+	  rowEl.innerHTML = `<div class="cutdiag-title">
+		<span>元板 #${r.seed}（幅 ${dims.wid} × 厚み ${dims.dep}mm）</span>
+		<span>全長 ${r.totalLen}mm　切断 ${r.cutCount}回</span>
+	  </div>`;
+
+	  const barWrap = document.createElement('div');
+	  barWrap.style.width = Math.max(10, (r.totalLen / maxLen) * 100) + '%';
+
+	  const bar = document.createElement('div');
+	  bar.className = 'cutdiag-bar';
+	  r.pieces.forEach((p, i) => {
+		const seg = document.createElement('div');
+		seg.className = 'cutdiag-seg' + (p.stock ? ' stock' : '');
+		seg.style.flex = `${p.len} 0 0`;
+		seg.style.background = p.stock
+		  ? `repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 4px, transparent 4px 8px), ${wc.css}`
+		  : `linear-gradient(${wc.dark}, ${wc.css} 40%, ${wc.mid} 70%, ${wc.dark})`;
+		seg.title = `${p.name} ｜ ${p.len}mm` + (p.stock ? '（残材・未使用）' : '');
+		seg.innerHTML = `<span class="cutdiag-seg-name">${p.name}</span><span class="cutdiag-seg-len">${p.len}mm</span>`;
+		bar.appendChild(seg);
+		if (i < r.pieces.length - 1) {
+		  const kerf = document.createElement('div');
+		  kerf.className = 'cutdiag-kerf';
+		  bar.appendChild(kerf);
+		}
+	  });
+
+	  barWrap.appendChild(bar);
+	  rowEl.appendChild(barWrap);
+	  body.appendChild(rowEl);
+	});
+  }
+
+  document.getElementById('ov-cutdiagram').classList.add('show');
 }
 
 document.querySelectorAll('.overlay').forEach(el=>
