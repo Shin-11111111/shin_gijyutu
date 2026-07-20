@@ -353,10 +353,53 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const SCALE = 0.004;
+
+// Both rotation gizmos (the main 3D view's rings and the inspector preview's
+// rings) are drawn as FIXED axes — the red ring always represents the
+// original world X direction, the green ring always the original world Y,
+// the blue ring always the original world Z, regardless of how the piece
+// has already been rotated. So a drag on a given ring must apply its delta
+// rotation around that FIXED world axis, composed on top of whatever
+// rotation the piece already has — not treated as one more term in a
+// sequential (intrinsic) X-then-Y-then-Z Euler chain. The latter would make
+// the piece's *local* Y axis drift away from the fixed vertical green ring
+// after the local frame had already been tilted by an X rotation, so
+// dragging "Y" would visibly spin the piece around what looks like a
+// completely different (e.g. Z-like) direction instead of around the ring
+// being dragged.
+function axisVector(axis) {
+  return axis==='x' ? new THREE.Vector3(1,0,0) : axis==='y' ? new THREE.Vector3(0,1,0) : new THREE.Vector3(0,0,1);
+}
+function eulerToQuat(rx, ry, rz) {
+  return new THREE.Quaternion().setFromEuler(new THREE.Euler(rx||0, ry||0, rz||0, 'XYZ'));
+}
+function quatToEuler(q) {
+  return new THREE.Euler().setFromQuaternion(q, 'XYZ');
+}
+// Rotates by `angle` around the fixed world `axis`, applied on top of the
+// existing (origRx, origRy, origRz) orientation, and returns the resulting
+// orientation re-expressed as XYZ Euler angles (still stored that way for
+// compatibility with the rest of the app — undo/redo, save/load, etc).
+function composeWorldRotation(origRx, origRy, origRz, axis, angle) {
+  const origQuat = eulerToQuat(origRx, origRy, origRz);
+  const deltaQuat = new THREE.Quaternion().setFromAxisAngle(axisVector(axis), angle);
+  const newQuat = deltaQuat.multiply(origQuat);
+  const e = quatToEuler(newQuat);
+  // Every rotation step in this app is a 90° increment, so the result should
+  // always land exactly on a multiple of 90° — clean up the tiny
+  // floating-point drift that repeated quaternion round-trips can introduce,
+  // so it doesn't gradually accumulate across many rotations.
+  const STEP = Math.PI/2;
+  return {
+	x: Math.round(e.x/STEP)*STEP,
+	y: Math.round(e.y/STEP)*STEP,
+	z: Math.round(e.z/STEP)*STEP,
+  };
+}
 let scene, camera, renderer, raycaster, mouse;
 let pieces = [], sel = null, mode = 'select';
 let hist = [], fut = [], mc = 0;
-let drag = false, orbit = false;
+let drag = false, orbit = false, dragMoved = false;
 let lenCommitTimer = null, pendingLenCommit = null;
 
 function flushPendingLenCommit() {
@@ -544,9 +587,8 @@ function onDown(e) {
   const ring = hitGizmoRing(e);
   if (ring && sel) {
 	const axis = ring.userData.axis;
-	const origVal = axis==='x'?(sel.rx||0): axis==='y'?(sel.ry||0):(sel.rz||0);
 	const startAng = screenAngleForAxis(e, axis);
-	gizmoDrag = {axis, startAng, origVal, lastAng:startAng};
+	gizmoDrag = {axis, startAng, origRx: sel.rx||0, origRy: sel.ry||0, origRz: sel.rz||0};
 	setGizmoHighlight(axis);
 	return;
   }
@@ -555,6 +597,7 @@ function onDown(e) {
   if (hit) {
 	selectPiece(hit.piece);
 	drag=true;
+	dragMoved=false;
 	const plane = new THREE.Plane(new THREE.Vector3(0,1,0), -hit.piece.y);
 	const pt = new THREE.Vector3();
 	const n = toNDC(e); mouse.set(n.x,n.y); raycaster.setFromCamera(mouse,camera);
@@ -579,10 +622,8 @@ function onMove(e) {
 	const ang = screenAngleForAxis(e, gizmoDrag.axis);
 	const delta = ang - gizmoDrag.startAng;
 	const snapped = Math.round(delta/(Math.PI/2))*(Math.PI/2);
-	const val = gizmoDrag.origVal + snapped;
-	if(gizmoDrag.axis==='x') sel.rx=val;
-	if(gizmoDrag.axis==='y') sel.ry=val;
-	if(gizmoDrag.axis==='z') sel.rz=val;
+	const e2 = composeWorldRotation(gizmoDrag.origRx, gizmoDrag.origRy, gizmoDrag.origRz, gizmoDrag.axis, snapped);
+	sel.rx = e2.x; sel.ry = e2.y; sel.rz = e2.z;
 	applyTransform(sel);
 	updateGizmoPos();
 	syncInspRot();
@@ -611,6 +652,7 @@ function onMove(e) {
 
 	clearGuides();
 	const snap = computeSnappedPos(rawX, rawZ);
+	dragMoved = true;
 	sel.x = snap.x;
 	sel.z = snap.z;
 	if (snap.guideX) addGuideLine('x', snap.guideX.at, snap.guideX.other);
@@ -633,7 +675,7 @@ function onUp(e) {
 	return;
   }
 
-  if (drag && sel) { pushApart(sel); snapshot(); }
+  if (drag && sel && dragMoved) { pushApart(sel); snapshot(); }
   clearGuides();
   if (gizmoDrag && sel) {
 	liftAboveGround(sel);
@@ -643,7 +685,7 @@ function onUp(e) {
 	gizmoDrag=null;
 	setGizmoHighlight(null);
   }
-  drag=false; orbit=false;
+  drag=false; orbit=false; dragMoved=false;
 }
 
 // Touch support: a single finger behaves like the left mouse button (select
@@ -706,7 +748,7 @@ function createGizmo(piece) {
 	const hitMesh = new THREE.Mesh(hitGeo, hitMat);
 
 	if (axis==='x') { visMesh.rotation.y=Math.PI/2; hitMesh.rotation.y=Math.PI/2; }
-	if (axis==='z') { visMesh.rotation.x=Math.PI/2; hitMesh.rotation.x=Math.PI/2; }
+	if (axis==='y') { visMesh.rotation.x=Math.PI/2; hitMesh.rotation.x=Math.PI/2; }
 
 	const ring = new THREE.Group();
 	ring.add(visMesh); ring.add(hitMesh);
@@ -911,42 +953,68 @@ function computeSnappedPos(rawX, rawZ) {
   const hw = selExt.x, hd = selExt.z;
   let snapX = rawX, snapZ = rawZ;
   let guideX = null, guideZ = null;
-  let bestXDelta = SNAP_THRESHOLD, bestZDelta = SNAP_THRESHOLD;
+
+  // Edge matches and center matches are tracked separately (per axis) so
+  // edges can be given strict priority: two boards being lined up flush is
+  // almost always what's intended, and for thin boards the center sits only
+  // a few mm from the edge, well within the snap radius of both — without
+  // this priority, whichever happened to be numerically closer could win,
+  // occasionally locking a board's edge onto another board's *center* line
+  // instead of its edge.
+  let bestEdgeX = SNAP_THRESHOLD, edgeX = null;
+  let bestCenterX = SNAP_THRESHOLD, centerX = null;
+  let bestEdgeZ = SNAP_THRESHOLD, edgeZ = null;
+  let bestCenterZ = SNAP_THRESHOLD, centerZ = null;
 
   for (const other of pieces) {
 	if (other === sel || other.stock) continue;
+	// Only snap against pieces that are actually vertically relevant to the
+	// one being dragged: either on the same height "layer" (both sitting at
+	// the same Y — e.g. two boards side by side on the floor), or a piece
+	// the dragged piece is currently resting directly on top of (its bottom
+	// meets that piece's top — e.g. a board standing on top of another,
+	// being slid across that same supporting board's surface). Without the
+	// second case, a piece that's already stacked stays elevated for its
+	// entire drag (Y only updates on release), so this guard would wrongly
+	// exclude the very board it's sitting on and sliding across — exactly
+	// the piece its edges should be snapping against. Anything else (an
+	// unrelated, differently-elevated piece elsewhere in the design) is
+	// still excluded, so a dragged board can't manufacture a false overlap
+	// with something it was never near.
+	const sameLevel = Math.abs(other.y - sel.y) < 0.01;
+	const restingOnOther = Math.abs(sel.y - pieceTop(other)) < 0.01;
+	if (!sameLevel && !restingOnOther) continue;
 	const ob = getAABB(other);
 
-	// Only compare like-for-like: an edge only snaps to another edge (so two
-	// boards end up truly flush, edge-to-edge), and a center only snaps to
-	// another center (for genuine centering). Matching an edge against a
-	// center would pull the dragged board's midline onto the other board's
-	// edge — a half-overhang, not a flush stack — so that combination is
-	// intentionally excluded.
 	const selEdgesX = [rawX - hw, rawX + hw];
 	const otherEdgesX = [ob.minX, ob.maxX];
 	selEdgesX.forEach(se => otherEdgesX.forEach(oe => {
 	  const d = Math.abs(se - oe);
-	  if (d < bestXDelta) { bestXDelta = d; snapX = rawX + (oe - se); guideX = { at: oe, other }; }
+	  if (d < bestEdgeX) { bestEdgeX = d; edgeX = { snap: rawX + (oe - se), at: oe, other }; }
 	}));
 	{
 	  const oe = (ob.minX + ob.maxX) / 2;
 	  const d = Math.abs(rawX - oe);
-	  if (d < bestXDelta) { bestXDelta = d; snapX = oe; guideX = { at: oe, other }; }
+	  if (d < bestCenterX) { bestCenterX = d; centerX = { snap: oe, at: oe, other }; }
 	}
 
 	const selEdgesZ = [rawZ - hd, rawZ + hd];
 	const otherEdgesZ = [ob.minZ, ob.maxZ];
 	selEdgesZ.forEach(se => otherEdgesZ.forEach(oe => {
 	  const d = Math.abs(se - oe);
-	  if (d < bestZDelta) { bestZDelta = d; snapZ = rawZ + (oe - se); guideZ = { at: oe, other }; }
+	  if (d < bestEdgeZ) { bestEdgeZ = d; edgeZ = { snap: rawZ + (oe - se), at: oe, other }; }
 	}));
 	{
 	  const oe = (ob.minZ + ob.maxZ) / 2;
 	  const d = Math.abs(rawZ - oe);
-	  if (d < bestZDelta) { bestZDelta = d; snapZ = oe; guideZ = { at: oe, other }; }
+	  if (d < bestCenterZ) { bestCenterZ = d; centerZ = { snap: oe, at: oe, other }; }
 	}
   }
+
+  const pickX = edgeX || centerX;
+  if (pickX) { snapX = pickX.snap; guideX = { at: pickX.at, other: pickX.other }; }
+  const pickZ = edgeZ || centerZ;
+  if (pickZ) { snapZ = pickZ.snap; guideZ = { at: pickZ.at, other: pickZ.other }; }
 
   return { x: snapX, z: snapZ, guideX, guideZ };
 }
@@ -955,19 +1023,32 @@ function pushApart(moved) {
   if (moved.stock) return;
   const MAX_ITER = 20;
   for (let iter = 0; iter < MAX_ITER; iter++) {
-	// 1) Settle vertically: rest on top of whatever piece(s) are directly
-	//    underneath this footprint (like a real board dropped in place),
-	//    so it's possible to stack one board on top of another.
+	// 1) Settle vertically: rest on top of whatever piece(s) this piece is
+	//    actually, physically interpenetrating (X, Y, and Z all overlapping
+	//    at once) — not merely sharing an XZ footprint with something at a
+	//    different height. Two boards can legitimately share the same XZ
+	//    footprint while stacked (one flush on top of the other) without
+	//    ever intersecting in 3D; that's a valid configuration, not a
+	//    conflict, so moving the lower one must not yank it up onto the
+	//    upper one just because their footprints overlap. If this piece
+	//    isn't truly intersecting anything, leave its height as-is — don't
+	//    force it back down to the floor either, since the height may have
+	//    been set deliberately (e.g. typed into the Y field).
 	const fa = getAABB(moved);
-	let restY = 0;
+	let restY = 0, hasOverlap = false;
 	for (const other of pieces) {
 	  if (other === moved || other.stock) continue;
 	  const ob = getAABB(other);
 	  const ox = Math.min(fa.maxX, ob.maxX) - Math.max(fa.minX, ob.minX);
 	  const oz = Math.min(fa.maxZ, ob.maxZ) - Math.max(fa.minZ, ob.minZ);
-	  if (ox > 0.001 && oz > 0.001) restY = Math.max(restY, pieceTop(other));
+	  if (ox <= 0.001 || oz <= 0.001) continue; // no footprint overlap at all
+	  const yOverlap = Math.min(pieceTop(moved), pieceTop(other)) - Math.max(moved.y, other.y);
+	  if (yOverlap > 0.0005) { // genuine interpenetration, not just touching/flush
+		hasOverlap = true;
+		restY = Math.max(restY, pieceTop(other));
+	  }
 	}
-	if (Math.abs(moved.y - restY) > 0.0001) {
+	if (hasOverlap && Math.abs(moved.y - restY) > 0.0001) {
 	  moved.y = restY;
 	  applyTransform(moved);
 	}
@@ -1102,6 +1183,21 @@ function showRemnantToast(remnantLen) {
   toast.style.opacity = '1';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(()=>{ toast.style.opacity='0'; }, 3000);
+}
+
+let lenWarnTimer = null;
+function showLenWarning(msg) {
+  let toast = document.getElementById('len-warn-toast');
+  if (!toast) {
+	toast = document.createElement('div');
+	toast.id = 'len-warn-toast';
+	toast.style.cssText = 'position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#3a1a1a;border:1px solid #e05252;color:#ffb0b0;font-size:12px;padding:8px 18px;border-radius:8px;z-index:200;pointer-events:none;font-family:monospace;transition:opacity .3s;';
+	document.body.appendChild(toast);
+  }
+  toast.textContent = '⚠ ' + msg;
+  toast.style.opacity = '1';
+  clearTimeout(lenWarnTimer);
+  lenWarnTimer = setTimeout(()=>{ toast.style.opacity='0'; }, 3000);
 }
 
 function placeStockPiece() {
@@ -1242,8 +1338,14 @@ function showInspector(p) {
 	  pendingLenCommit = null;
 	  if (!sel || sel !== p) return;
 	  const prev = +lenEl.dataset.prev;
-	  let next = Math.max(10, +lenEl.value || 10);
-	  if (next === prev) return;
+	  const rawInput = +lenEl.value;
+	  let next = Math.max(10, rawInput || 10);
+
+	  if (!rawInput || rawInput < 10) {
+		showLenWarning('長さが短すぎます（最小 10mm）');
+	  }
+
+	  if (next === prev) { lenEl.value = next; return; }
 
 	  const existing = pieces.find(pc => pc.stock && pc.seed === sel.seed && pc !== sel);
 
@@ -1262,6 +1364,8 @@ function showInspector(p) {
 		} else if (cut >= 10) {
 		  addPieceStock(toRemnantName(sel.name), cut, sel.wid, sel.dep, sel.seed);
 		  showRemnantToast(cut);
+		} else if (cut > 0) {
+		  showLenWarning(`端材（${cut}mm）は小さすぎて残せませんでした`);
 		}
 	  } else {
 		const extend = next - prev;
@@ -1275,6 +1379,11 @@ function showInspector(p) {
 		  rebuildGeom(sel);
 		  applyTransform(sel);
 		  setHighlight(sel, true);
+		  showLenWarning(
+			available > 0
+			  ? `長さが足りません（伸ばせるのはあと ${available}mm までです）`
+			  : '長さが足りません（残材がありません）'
+		  );
 		}
 		if (existing) {
 		  existing.len = existing.len - (next - prev);
@@ -1295,17 +1404,24 @@ function showInspector(p) {
 	  snapshot();
 	}
 
-	lenEl.addEventListener('change', ()=>{
-	  // A single logical edit (typing a value then pressing Enter/blurring,
-	  // OR clicking the spinner arrows a few times, OR holding an arrow key)
-	  // can fire several native 'change' events in a row. Treating each one
-	  // as its own physical cut would charge a fresh kerf every time,
-	  // silently eating material with no new remnant to show for it. Instead,
-	  // wait briefly for the value to settle and commit once, using the net
-	  // change from when editing started — exactly like a single real cut.
+	// Commit only on an explicit confirmation — pressing Enter, or the field
+	// losing focus (as a safety net so an edit isn't silently lost if the
+	// person clicks elsewhere without pressing Enter) — rather than on every
+	// native 'change' event. This makes each commit a single, deliberate
+	// action instead of something that could fire mid-edit.
+	lenEl.addEventListener('keydown', e => {
+	  if (e.key === 'Enter') {
+		e.preventDefault();
+		clearTimeout(lenCommitTimer);
+		pendingLenCommit = null;
+		commitLenChange();
+		lenEl.blur();
+	  }
+	});
+	lenEl.addEventListener('blur', () => {
 	  clearTimeout(lenCommitTimer);
-	  pendingLenCommit = commitLenChange;
-	  lenCommitTimer = setTimeout(commitLenChange, 400);
+	  pendingLenCommit = null;
+	  commitLenChange();
 	});
   }
   document.getElementById('insp-body').querySelectorAll('input:not(#i-len)').forEach(el=>el.addEventListener('change', ()=>snapshot()));
@@ -1358,9 +1474,8 @@ function applyInspector() {
 function rotateAxis(axis, deg) {
   if (!sel) return;
   const r = deg * Math.PI / 180;
-  if (axis==='x') sel.rx = Math.round(((sel.rx||0)+r) / (Math.PI/2)) * (Math.PI/2);
-  if (axis==='y') sel.ry = Math.round(((sel.ry||0)+r) / (Math.PI/2)) * (Math.PI/2);
-  if (axis==='z') sel.rz = Math.round(((sel.rz||0)+r) / (Math.PI/2)) * (Math.PI/2);
+  const e2 = composeWorldRotation(sel.rx||0, sel.ry||0, sel.rz||0, axis, r);
+  sel.rx = e2.x; sel.ry = e2.y; sel.rz = e2.z;
   applyTransform(sel);
   liftAboveGround(sel);
   syncInspRot();
@@ -1369,6 +1484,19 @@ function rotateAxis(axis, deg) {
 }
 
 let _iR=null, _iS=null, _iC=null, _iMesh=null, _iRings=[];
+
+function updateRingPreRotation() {
+  // The preview rings represent FIXED world axes (matching the main 3D
+  // view's gizmo and the new world-space drag composition below), so they
+  // always sit at their default orientation regardless of how the piece has
+  // already been rotated — no per-rotation tracking needed.
+  const xRing = _iRings.find(g => g.userData.axis === 'x');
+  const yRing = _iRings.find(g => g.userData.axis === 'y');
+  const zRing = _iRings.find(g => g.userData.axis === 'z');
+  if (xRing) xRing.rotation.set(0, Math.PI/2, 0);
+  if (yRing) yRing.rotation.set(Math.PI/2, 0, 0);
+  if (zRing) zRing.rotation.set(0, 0, 0);
+}
 let _iTheta=0.5, _iPhi=0.9, _iDist=1, _iH=0;
 let _iActive=null;
 let _iOrbit=false, _iOLX=0, _iOLY=0;
@@ -1432,7 +1560,7 @@ function initInspPreview(p) {
 	tMesh.renderOrder=2; hMesh.renderOrder=2;
 	grp.add(tMesh); grp.add(hMesh);
 	if(axis==='x') grp.rotation.y = Math.PI/2;
-    if(axis==='z') grp.rotation.x = Math.PI/2;
+    if(axis==='y') grp.rotation.x = Math.PI/2;
 	grp.position.copy(center);
 	grp.userData={axis, color, mat:tMat, hMesh};
 	_iS.add(grp);
@@ -1442,6 +1570,7 @@ function initInspPreview(p) {
   makeRing('x',0xff4444);
   makeRing('y',0x44ee44);
   makeRing('z',0x4488ff);
+  updateRingPreRotation();
 
   _iUpdateCam();
 
@@ -1510,8 +1639,7 @@ function initInspPreview(p) {
 	  const dx=e.clientX-rect.left-rect.width/2;
 	  const dy=e.clientY-rect.top-rect.height/2;
 	  const axis=hit.userData.axis;
-	  const origVal = axis==='x'?(sel.rx||0): axis==='y'?(sel.ry||0):(sel.rz||0);
-	  _iActive={axis, startAngle:Math.atan2(dy,dx), origVal};
+	  _iActive={axis, startAngle:Math.atan2(dy,dx), origRx:sel.rx||0, origRy:sel.ry||0, origRz:sel.rz||0};
 	  _iSetRingVisual(axis);
 	  _iShowAxisBadge(axis, true);
 	  cv.style.cursor='crosshair';
@@ -1533,10 +1661,8 @@ function initInspPreview(p) {
 	  const ang=Math.atan2(dy,dx);
 	  const delta=ang-_iActive.startAngle;
 	  const snapped=Math.round(delta/(Math.PI/2))*(Math.PI/2);
-	  const val=_iActive.origVal+snapped;
-	  if(_iActive.axis==='x') _iMesh.rotation.x=val;
-	  if(_iActive.axis==='y') _iMesh.rotation.y=val;
-	  if(_iActive.axis==='z') _iMesh.rotation.z=val;
+	  const e2 = composeWorldRotation(_iActive.origRx, _iActive.origRy, _iActive.origRz, _iActive.axis, snapped);
+	  _iMesh.rotation.set(e2.x, e2.y, e2.z, 'XYZ');
 	  return;
 	}
 	if (_iOrbit) {
@@ -1548,12 +1674,7 @@ function initInspPreview(p) {
   };
   window._iMouseUp = ()=>{
 	if (_iActive && sel) {
-	  const axis=_iActive.axis;
-	  const cur = axis==='x'?_iMesh.rotation.x: axis==='y'?_iMesh.rotation.y:_iMesh.rotation.z;
-	  const snapped=Math.round(cur/(Math.PI/2))*(Math.PI/2);
-	  if(axis==='x') sel.rx=snapped;
-	  if(axis==='y') sel.ry=snapped;
-	  if(axis==='z') sel.rz=snapped;
+	  sel.rx = _iMesh.rotation.x; sel.ry = _iMesh.rotation.y; sel.rz = _iMesh.rotation.z;
 	  applyTransform(sel);
 	  liftAboveGround(sel);
 	  _iMesh.rotation.set(sel.rx||0,sel.ry||0,sel.rz||0,'XYZ');
