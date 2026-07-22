@@ -135,7 +135,23 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
   transition:border-color .15s;
 }
 .insp-row input:focus { border-color:var(--accent); }
+.insp-row input[readonly] { color:var(--text-muted); background:var(--surface2,var(--surface3)); cursor:not-allowed; }
 .insp-row .unit { font-size:10px; color:var(--text-muted); flex-shrink:0; width:16px; }
+.len-slider {
+  width:100%; margin:2px 0 10px; height:16px;
+  -webkit-appearance:none; appearance:none; background:transparent; cursor:pointer;
+}
+.len-slider::-webkit-slider-runnable-track { height:4px; border-radius:2px; background:var(--border-strong); }
+.len-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; appearance:none; width:14px; height:14px; border-radius:50%;
+  background:var(--accent); border:2px solid var(--surface); margin-top:-5px;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
+.len-slider::-moz-range-track { height:4px; border-radius:2px; background:var(--border-strong); }
+.len-slider::-moz-range-thumb {
+  width:14px; height:14px; border-radius:50%; background:var(--accent);
+  border:2px solid var(--surface); box-shadow:0 1px 3px rgba(0,0,0,.4);
+}
 .apply-btn {
   width:100%; height:30px; background:var(--accent); border:none;
   border-radius:5px; color:#000; font-size:12px; font-weight:700;
@@ -521,9 +537,27 @@ function clearMeasure() {
   hideMeasureReadout();
 }
 
+function nearestCorner(piece, worldPoint) {
+  // The 8 corners of the piece's box, in its own local (unrotated) space,
+  // then transformed by its actual current position+rotation so this works
+  // correctly for rotated/standing boards too.
+  const hx = (piece.len * SCALE) / 2, hy = (piece.dep * SCALE) / 2, hz = (piece.wid * SCALE) / 2;
+  piece.grp.updateMatrixWorld(true);
+  let best = null, bestDist = Infinity;
+  for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+	const world = new THREE.Vector3(sx*hx, sy*hy, sz*hz).applyMatrix4(piece.grp.matrixWorld);
+	const d = world.distanceTo(worldPoint);
+	if (d < bestDist) { bestDist = d; best = world; }
+  }
+  return best;
+}
+
 function measurePickPoint(e) {
   const hit = hitPiece(e);
-  if (hit) return hit.point.clone();
+  // Snap to whichever corner of the clicked board is nearest the click —
+  // measuring board-to-board distances almost always means "from this
+  // edge/corner to that one", not an arbitrary point on the face.
+  if (hit) return nearestCorner(hit.piece, hit.point);
   const n = toNDC(e); mouse.set(n.x, n.y);
   raycaster.setFromCamera(mouse, camera);
   const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
@@ -679,6 +713,7 @@ function onUp(e) {
   clearGuides();
   if (gizmoDrag && sel) {
 	liftAboveGround(sel);
+	pushApart(sel);
 	syncInspRot();
 	if(window._syncInspPreview) window._syncInspPreview();
 	snapshot();
@@ -1138,7 +1173,7 @@ function addPiece(name, len, wid, dep, x, z) {
 	x: x!==undefined?x:(Math.random()-.5)*3,
 	y:0,
 	z: z!==undefined?z:(Math.random()-.5)*3,
-	rx:0, ry:0, rz:0, seed:mc
+	rx:0, ry:0, rz:0, seed:mc, childRemnantId: null
   };
   p.grp = buildMesh(p);
   applyTransform(p);
@@ -1154,12 +1189,13 @@ function addPieceStock(name, len, wid, dep, parentSeed) {
 	len:+len, wid:+wid, dep:+dep,
 	x:0, y:0, z:0, rx:0, ry:0, rz:0,
 	seed: parentSeed !== undefined ? parentSeed : mc,
-	stock: true
+	stock: true, childRemnantId: null
   };
   p.grp = buildMesh(p);
   pieces.push(p);
   refreshSide();
   document.getElementById('st-count').textContent=pieces.length;
+  return p;
 }
 
 let toastTimer = null;
@@ -1276,6 +1312,11 @@ function refreshSide() {
 }
 
 function showInspector(p) {
+  const KERF_ = 5;
+  const initExisting = p.childRemnantId ? pieces.find(pc => pc.id === p.childRemnantId) : null;
+  const initAvailable = initExisting ? initExisting.len : 0;
+  const initSliderMax = initAvailable > 0 ? p.len + initAvailable + KERF_ : p.len;
+
   document.getElementById('insp-body').innerHTML=`
 	<div class="insp-sec" style="margin-bottom:8px">
 	  <div style="position:relative;">
@@ -1290,14 +1331,18 @@ function showInspector(p) {
 	<div class="insp-sec">
 	  <div class="insp-lbl">サイズ</div>
 	  <div class="insp-row"><label>長さ</label><input type="number" id="i-len" value="${p.len}" min="10" max="3000"><span class="unit">mm</span></div>
+	  <input type="range" id="i-len-slider" min="10" max="${initSliderMax}" step="1" value="${p.len}" class="len-slider">
 	  <div class="insp-row"><label>奥行</label><input type="number" id="i-wid" value="${p.wid}" min="10" max="1000"><span class="unit">mm</span></div>
-	  <div class="insp-row"><label>厚み</label><input type="number" id="i-dep" value="${p.dep}" min="3" max="100"><span class="unit">mm</span></div>
+	  <div class="insp-row"><label>厚み</label><input type="number" id="i-dep" value="${p.dep}" min="3" max="100" readonly title="厚みは変更できません"><span class="unit">mm</span></div>
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">位置</div>
 	  <div class="insp-row"><label>X</label><input type="number" id="i-x" value="${p.x.toFixed(2)}" step="0.05"><span class="unit">m</span></div>
+	  <input type="range" id="i-x-slider" min="-4" max="4" step="0.01" value="${p.x.toFixed(2)}" class="len-slider">
 	  <div class="insp-row"><label>Y</label><input type="number" id="i-z" value="${p.z.toFixed(2)}" step="0.05"><span class="unit">m</span></div>
+	  <input type="range" id="i-z-slider" min="-4" max="4" step="0.01" value="${p.z.toFixed(2)}" class="len-slider">
 	  <div class="insp-row"><label>Z 高さ</label><input type="number" id="i-y" value="${Math.max(0,p.y).toFixed(2)}" step="0.05" min="0"><span class="unit">m</span></div>
+	  <input type="range" id="i-y-slider" min="0" max="2" step="0.01" value="${Math.max(0,p.y).toFixed(2)}" class="len-slider">
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">回転（90°単位）</div>
@@ -1321,12 +1366,68 @@ function showInspector(p) {
   `;
   const bind = (id, fn) => { const el=document.getElementById(id); if(el) el.addEventListener('input', fn); };
   bind('i-name', ()=>{ if(!sel) return; sel.name=document.getElementById('i-name').value||sel.name; refreshSide(); document.getElementById('st-sel').textContent=sel.name; });
-  bind('i-len',  ()=>{ if(!sel) return; sel.len=Math.max(10,+document.getElementById('i-len').value||10); rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); });
+  bind('i-len',  ()=>{ if(!sel) return; sel.len=Math.max(10,+document.getElementById('i-len').value||10); rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); syncLenSlider(); });
   bind('i-wid',  ()=>{ if(!sel) return; sel.wid=Math.max(10,+document.getElementById('i-wid').value||10); rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); });
-  bind('i-dep',  ()=>{ if(!sel) return; sel.dep=Math.max(3, +document.getElementById('i-dep').value||3);  rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); });
-  bind('i-x',    ()=>{ if(!sel) return; sel.x=+document.getElementById('i-x').value||0; applyTransform(sel); });
-  bind('i-z',    ()=>{ if(!sel) return; sel.z=+document.getElementById('i-z').value||0; applyTransform(sel); });
-  bind('i-y',    ()=>{ if(!sel) return; sel.y=Math.max(0, +document.getElementById('i-y').value||0); applyTransform(sel); });
+  // 厚み(i-dep)は読み取り専用にしたため、変更を反映するバインドは意図的に設けていない。
+
+  const lenSlider = document.getElementById('i-len-slider');
+  function syncLenSlider() {
+	if (!lenSlider || !sel) return;
+	// The slider's usable range should cover everything a single edit could
+	// actually reach: down to the minimum, and up to however much could be
+	// reclaimed from this piece's own paired offcut (including the kerf
+	// that comes back on a full reclaim) — not just capped at the current
+	// length, which would make the slider one-directional (shortening
+	// only) and unable to ever move back up after a cut.
+	const existing = sel.childRemnantId ? pieces.find(pc => pc.id === sel.childRemnantId) : null;
+	const available = existing ? existing.len : 0;
+	const maxLen = available > 0 ? sel.len + available + KERF : sel.len;
+	lenSlider.max = Math.max(10, maxLen);
+	lenSlider.value = sel.len;
+  }
+  if (lenSlider) {
+	// Live visual preview while dragging, exactly like typing in the number
+	// field — no kerf/remnant bookkeeping happens until the drag ends.
+	lenSlider.addEventListener('input', () => {
+	  if (!sel) return;
+	  const v = Math.max(10, +lenSlider.value || 10);
+	  document.getElementById('i-len').value = v;
+	  sel.len = v;
+	  rebuildGeom(sel);
+	  applyTransform(sel);
+	  setHighlight(sel, true);
+	  refreshSide();
+	});
+	// Releasing the slider is the equivalent of pressing Enter on the
+	// number field — that's when the cut is actually confirmed and the
+	// kerf/remnant accounting happens.
+	lenSlider.addEventListener('change', () => {
+	  document.getElementById('i-len').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+	});
+  }
+  bind('i-x',    ()=>{ if(!sel) return; sel.x=+document.getElementById('i-x').value||0; applyTransform(sel); syncPosSlider('x'); });
+  bind('i-z',    ()=>{ if(!sel) return; sel.z=+document.getElementById('i-z').value||0; applyTransform(sel); syncPosSlider('z'); });
+  bind('i-y',    ()=>{ if(!sel) return; sel.y=Math.max(0, +document.getElementById('i-y').value||0); applyTransform(sel); syncPosSlider('y'); });
+
+  // Position sliders: each drives its matching number field live, and vice
+  // versa (via the syncPosSlider calls above), so dragging or typing either
+  // one keeps the other in step.
+  function syncPosSlider(axis) {
+	const slider = document.getElementById(`i-${axis}-slider`);
+	const numEl = document.getElementById(`i-${axis}`);
+	if (!slider || !numEl || !sel) return;
+	slider.value = numEl.value;
+  }
+  ['x','y','z'].forEach(axis => {
+	const slider = document.getElementById(`i-${axis}-slider`);
+	const numEl = document.getElementById(`i-${axis}`);
+	if (!slider || !numEl) return;
+	slider.addEventListener('input', () => {
+	  if (!sel) return;
+	  numEl.value = slider.value;
+	  numEl.dispatchEvent(new Event('input'));
+	});
+  });
 
   const KERF = 5;
   const lenEl = document.getElementById('i-len');
@@ -1347,7 +1448,14 @@ function showInspector(p) {
 
 	  if (next === prev) { lenEl.value = next; return; }
 
-	  const existing = pieces.find(pc => pc.stock && pc.seed === sel.seed && pc !== sel);
+	  // Find THIS piece's own paired offcut — not just any piece that shares
+	  // the same root seed. Once a remnant itself gets cut further, several
+	  // pieces can end up sharing one root seed (the original board, plus
+	  // each generation of leftover), and a seed-only search has no way to
+	  // tell which one is actually this specific piece's counterpart —
+	  // it could grab an unrelated, earlier-generation remnant instead,
+	  // silently pulling material from (or dumping it into) the wrong piece.
+	  let existing = sel.childRemnantId ? pieces.find(pc => pc.id === sel.childRemnantId) : null;
 
 	  if (next < prev) {
 		const cut = prev - next - KERF;
@@ -1362,7 +1470,9 @@ function showInspector(p) {
             refreshSide();
             showRemnantToast(existing.len);
 		} else if (cut >= 10) {
-		  addPieceStock(toRemnantName(sel.name), cut, sel.wid, sel.dep, sel.seed);
+		  const created = addPieceStock(toRemnantName(sel.name), cut, sel.wid, sel.dep, sel.seed);
+		  created.childParentId = sel.id;
+		  sel.childRemnantId = created.id;
 		  showRemnantToast(cut);
 		} else if (cut > 0) {
 		  showLenWarning(`端材（${cut}mm）は小さすぎて残せませんでした`);
@@ -1370,37 +1480,78 @@ function showInspector(p) {
 	  } else {
 		const extend = next - prev;
 		const available = existing ? existing.len : 0;
-		if (extend > available) {
-		  // Can't grow past what's actually left over from the cut(s) made so
-		  // far — otherwise material would be created out of nothing.
-		  next = prev + available;
-		  lenEl.value = next;
+		const fullReclaim = available > 0 && extend >= available;
+
+		if (fullReclaim) {
+		  // Reclaiming the ENTIRE remnant is treated as completely undoing
+		  // that cut — not just gluing the leftover back on — so the kerf
+		  // that was lost when the cut was made comes back too, landing
+		  // exactly on the length this piece had before that cut, instead
+		  // of staying 5mm short forever. This is the outcome whenever the
+		  // full remnant is being used up, regardless of whether the typed
+		  // value exactly matched prev+available or asked for even more.
+		  const maxLen = prev + available + KERF;
+		  if (next !== maxLen) {
+			if (next > maxLen) {
+			  showLenWarning(`長さが足りません（最大 ${maxLen}mm までです）`);
+			}
+			next = maxLen;
+			lenEl.value = next;
+		  }
 		  sel.len = next;
 		  rebuildGeom(sel);
 		  applyTransform(sel);
 		  setHighlight(sel, true);
-		  showLenWarning(
-			available > 0
-			  ? `長さが足りません（伸ばせるのはあと ${available}mm までです）`
-			  : '長さが足りません（残材がありません）'
-		  );
-		}
-		if (existing) {
-		  existing.len = existing.len - (next - prev);
-		  if (existing.len < 10) {
-			pieces = pieces.filter(pc => pc !== existing);
-			showRemnantToast(0);
-		  } else {
+
+		  pieces = pieces.filter(pc => pc !== existing);
+		  // If `existing` itself already had material cut further from it
+		  // (its own child remnant), that piece doesn't disappear along
+		  // with `existing` — it's still real, physical leftover material.
+		  // Re-point it to whoever is absorbing `existing`'s space now, so
+		  // it stays reachable instead of becoming an orphan that nothing
+		  // can ever reclaim from again.
+		  sel.childRemnantId = existing.childRemnantId || null;
+		  if (sel.childRemnantId) {
+			const grandchild = pieces.find(pc => pc.id === sel.childRemnantId);
+			if (grandchild) grandchild.childParentId = sel.id;
+		  }
+		  // `existing` may have been placed out in the 3D workspace (not
+		  // just sitting in the stock list) — removing it from the data
+		  // model alone would leave its mesh behind as an unreachable
+		  // "ghost" board that's still visible but can no longer be
+		  // selected or moved.
+		  if (!existing.stock) scene.remove(existing.grp);
+		  showRemnantToast(0);
+		  refreshSide();
+		} else {
+		  // Partial reclaim: the cut still genuinely happened to some
+		  // degree, so the kerf stays lost, same as ever.
+		  if (extend > available) {
+			next = prev + available;
+			lenEl.value = next;
+			sel.len = next;
+			rebuildGeom(sel);
+			applyTransform(sel);
+			setHighlight(sel, true);
+			showLenWarning(
+			  available > 0
+				? `長さが足りません（伸ばせるのはあと ${available}mm までです）`
+				: '長さが足りません（残材がありません）'
+			);
+		  }
+		  if (existing) {
+			existing.len = existing.len - (next - prev);
 			existing.name = toRemnantName(sel.name);
 			existing.grp = buildMesh(existing);
 			applyTransform(existing);
 			showRemnantToast(existing.len);
+			refreshSide();
 		  }
-		  refreshSide();
 		}
 	  }
 
 	  lenEl.dataset.prev = next;
+	  syncLenSlider();
 	  snapshot();
 	}
 
@@ -1424,7 +1575,7 @@ function showInspector(p) {
 	  commitLenChange();
 	});
   }
-  document.getElementById('insp-body').querySelectorAll('input:not(#i-len)').forEach(el=>el.addEventListener('change', ()=>snapshot()));
+  document.getElementById('insp-body').querySelectorAll('input:not(#i-len):not(#i-len-slider)').forEach(el=>el.addEventListener('change', ()=>snapshot()));
   initInspPreview(p);
 }
 
@@ -1478,6 +1629,7 @@ function rotateAxis(axis, deg) {
   sel.rx = e2.x; sel.ry = e2.y; sel.rz = e2.z;
   applyTransform(sel);
   liftAboveGround(sel);
+  pushApart(sel);
   syncInspRot();
   if (window._syncInspPreview) window._syncInspPreview();
   snapshot();
@@ -1677,6 +1829,7 @@ function initInspPreview(p) {
 	  sel.rx = _iMesh.rotation.x; sel.ry = _iMesh.rotation.y; sel.rz = _iMesh.rotation.z;
 	  applyTransform(sel);
 	  liftAboveGround(sel);
+	  pushApart(sel);
 	  _iMesh.rotation.set(sel.rx||0,sel.ry||0,sel.rz||0,'XYZ');
 	  syncInspRot();
 	  snapshot();
