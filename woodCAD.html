@@ -164,6 +164,26 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 .rot-btn { height:24px; background:var(--surface3); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:11px; cursor:pointer; transition:all .15s; }
 .rot-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 .rot-val { font-size:12px; font-family:monospace; color:var(--accent); text-align:center; font-weight:600; }
+.corner-picker {
+  display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+  width:64px; height:44px; margin:2px 0 10px; position:relative;
+  border:1.5px solid var(--border-strong); border-radius:4px; background:var(--surface3);
+}
+.corner-btn {
+  border:none; background:transparent; padding:0; cursor:pointer; position:relative;
+}
+.corner-btn::before {
+  content:''; position:absolute; width:12px; height:12px; opacity:.35;
+  border:1.5px solid var(--text-muted); background:transparent;
+}
+.corner-btn[data-corner="3"]::before { top:-1.5px; left:-1.5px; border-right:none; border-bottom:none; }
+.corner-btn[data-corner="1"]::before { top:-1.5px; right:-1.5px; border-left:none; border-bottom:none; }
+.corner-btn[data-corner="2"]::before { bottom:-1.5px; left:-1.5px; border-right:none; border-top:none; }
+.corner-btn[data-corner="0"]::before { bottom:-1.5px; right:-1.5px; border-left:none; border-top:none; }
+.corner-btn:hover::before { opacity:.7; border-color:var(--accent); }
+.corner-btn.active::before { opacity:1; border-color:var(--accent); background:var(--accent-dim); }
+.corner-btn.has-cut::before { border-style:solid; background:var(--accent); opacity:.85; }
+.corner-btn.has-cut.active::before { background:var(--accent); opacity:1; box-shadow:0 0 0 1.5px var(--accent); }
 .hide-btn {
   width:100%; height:30px; background:transparent;
   border:1px solid var(--border-strong); border-radius:5px;
@@ -831,10 +851,72 @@ function screenAngleForAxis(e, axis) {
   return Math.atan2(e.clientY-cy, e.clientX-cx);
 }
 
+function buildPieceGeometry(piece) {
+  const W = piece.len*SCALE, H = piece.dep*SCALE, D = piece.wid*SCALE;
+  const cuts = piece.cornerCuts;
+  const hasCuts = cuts && cuts.some(c => c && c.dx > 0 && c.dz > 0);
+  if (!hasCuts) {
+	return new THREE.BoxGeometry(W, H, D);
+  }
+  const hx = W/2, hz = D/2;
+
+  // Perimeter walked in a fixed, consistent order: SW -> SE -> NE -> NW -> SW.
+  // (User-facing corner indices 0-3 have their own +X/-X, +Z/-Z meaning —
+  // see CORNER_TO_PERIM below — this array is purely "position i around the
+  // perimeter", independent of that.)
+  const corners        = [{x:-hx,z:-hz}, {x:hx,z:-hz}, {x:hx,z:hz}, {x:-hx,z:hz}];
+  const signsForPerim  = [[-1,-1],       [1,-1],        [1,1],       [-1,1]];
+  // Map each user-facing corner index (0: +X+Z, 1: +X-Z, 2: -X+Z, 3: -X-Z —
+  // matching the picker UI) to its position in the perimeter walk above.
+  const CORNER_TO_PERIM = {0:2, 1:1, 2:3, 3:0};
+  const cutsByPerimIdx = [null,null,null,null];
+  for (let uc = 0; uc < 4; uc++) {
+	const c = cuts[uc];
+	if (c && c.dx > 0 && c.dz > 0) cutsByPerimIdx[CORNER_TO_PERIM[uc]] = c;
+  }
+
+  // Build the ordered vertex list around the perimeter, substituting two
+  // points (instead of one corner) wherever a cut is active.
+  const pts = [];
+  for (let i = 0; i < 4; i++) {
+	const cut = cutsByPerimIdx[i];
+	const [sx, sz] = signsForPerim[i];
+	if (!cut) { pts.push(corners[i]); continue; }
+	// Clamp so a cut can never consume an entire edge (which would collapse
+	// the shape into a degenerate sliver or triangle).
+	const dx = Math.min(cut.dx*SCALE, W - 0.001);
+	const dz = Math.min(cut.dz*SCALE, D - 0.001);
+	const cx = sx*hx, cz = sz*hz;
+	const zOffsetPt = { x: cx, z: cz - sz*dz };       // point along the constant-X edge
+	const xOffsetPt = { x: cx - sx*dx, z: cz };       // point along the constant-Z edge
+	// Which of the two edges meeting at this corner is the "incoming" one
+	// (arrived at while walking the perimeter in increasing-index order)
+	// alternates every step — SW and NE arrive via a constant-X edge, SE
+	// and NW arrive via a constant-Z edge — so the two substituted points
+	// must swap order accordingly to keep the path from crossing itself.
+	if (i % 2 === 0) { pts.push(zOffsetPt); pts.push(xOffsetPt); }
+	else { pts.push(xOffsetPt); pts.push(zOffsetPt); }
+  }
+
+  // The extruded shape is drawn in a 2D (u,v) plane and extruded along a
+  // third axis; afterwards the whole geometry is rotated so u->X, v->-Z,
+  // extrude->Y, landing it in the same board-local frame (X=length,
+  // Y=thickness, Z=width, centered at the origin) as a plain BoxGeometry.
+  const sp = (x, z) => new THREE.Vector2(x, -z);
+  const shape = new THREE.Shape();
+  shape.moveTo(...sp(pts[0].x, pts[0].z).toArray());
+  for (let i = 1; i < pts.length; i++) shape.lineTo(...sp(pts[i].x, pts[i].z).toArray());
+  shape.lineTo(...sp(pts[0].x, pts[0].z).toArray());
+
+  const geo = new THREE.ExtrudeGeometry(shape, { depth: H, bevelEnabled: false });
+  geo.rotateX(-Math.PI/2);
+  geo.translate(0, -H/2, 0);
+  return geo;
+}
+
 function buildMesh(piece) {
-  const W=piece.len*SCALE, H=piece.dep*SCALE, D=piece.wid*SCALE;
   const grp = new THREE.Group();
-  const geo = new THREE.BoxGeometry(W,H,D);
+  const geo = buildPieceGeometry(piece);
   const mat = new THREE.MeshLambertMaterial({color: woodColor(piece.seed), emissive:new THREE.Color(0), emissiveIntensity:0});
   const mesh = new THREE.Mesh(geo, mat);
   mesh.castShadow=true; mesh.receiveShadow=true;
@@ -1122,8 +1204,7 @@ function pushApart(moved) {
 }
 
 function rebuildGeom(p) {
-  const W=p.len*SCALE, H=p.dep*SCALE, D=p.wid*SCALE;
-  const geo = new THREE.BoxGeometry(W,H,D);
+  const geo = buildPieceGeometry(p);
   const mesh = p.grp.children[0];
   mesh.geometry.dispose();
   mesh.geometry = geo;
@@ -1173,7 +1254,7 @@ function addPiece(name, len, wid, dep, x, z) {
 	x: x!==undefined?x:(Math.random()-.5)*3,
 	y:0,
 	z: z!==undefined?z:(Math.random()-.5)*3,
-	rx:0, ry:0, rz:0, seed:mc, childRemnantId: null
+	rx:0, ry:0, rz:0, seed:mc, childRemnantId: null, cornerCuts: [null,null,null,null]
   };
   p.grp = buildMesh(p);
   applyTransform(p);
@@ -1189,7 +1270,7 @@ function addPieceStock(name, len, wid, dep, parentSeed) {
 	len:+len, wid:+wid, dep:+dep,
 	x:0, y:0, z:0, rx:0, ry:0, rz:0,
 	seed: parentSeed !== undefined ? parentSeed : mc,
-	stock: true, childRemnantId: null
+	stock: true, childRemnantId: null, cornerCuts: [null,null,null,null]
   };
   p.grp = buildMesh(p);
   pieces.push(p);
@@ -1336,6 +1417,18 @@ function showInspector(p) {
 	  <div class="insp-row"><label>厚み</label><input type="number" id="i-dep" value="${p.dep}" min="3" max="100" readonly title="厚みは変更できません"><span class="unit">mm</span></div>
 	</div>
 	<div class="insp-sec">
+	  <div class="insp-lbl">角の切り取り（各角を個別に設定できます）</div>
+	  <div class="corner-picker">
+		<button class="corner-btn" id="cc-btn-3" data-corner="3" title="長さ−側／幅−側"></button>
+		<button class="corner-btn" id="cc-btn-1" data-corner="1" title="長さ＋側／幅−側"></button>
+		<button class="corner-btn" id="cc-btn-2" data-corner="2" title="長さ−側／幅＋側"></button>
+		<button class="corner-btn" id="cc-btn-0" data-corner="0" title="長さ＋側／幅＋側"></button>
+	  </div>
+	  <div class="insp-row"><label>長さ方向</label><input type="number" id="cc-dx" value="${(p.cornerCuts&&p.cornerCuts[0]&&p.cornerCuts[0].dx)||0}" min="0" max="${p.len}"><span class="unit">mm</span></div>
+	  <div class="insp-row"><label>幅方向</label><input type="number" id="cc-dz" value="${(p.cornerCuts&&p.cornerCuts[0]&&p.cornerCuts[0].dz)||0}" min="0" max="${p.wid}"><span class="unit">mm</span></div>
+	  <button class="close-btn" id="cc-clear" style="margin-top:6px;height:26px;">この角の切り取りをクリア</button>
+	</div>
+	<div class="insp-sec">
 	  <div class="insp-lbl">位置</div>
 	  <div class="insp-row"><label>X</label><input type="number" id="i-x" value="${p.x.toFixed(2)}" step="0.05"><span class="unit">m</span></div>
 	  <input type="range" id="i-x-slider" min="-4" max="4" step="0.01" value="${p.x.toFixed(2)}" class="len-slider">
@@ -1428,6 +1521,66 @@ function showInspector(p) {
 	  numEl.dispatchEvent(new Event('input'));
 	});
   });
+
+  // Corner-cut controls: pick which corner via the small 4-button picker,
+  // then set how far the diagonal cut reaches in along each edge. Purely a
+  // shape edit — no kerf/remnant accounting, since the removed sliver isn't
+  // tracked as reusable material in this model. All four corners can carry
+  // their own independent cut at the same time; the picker only controls
+  // which corner's dx/dz values the two fields below are currently showing.
+  (function initCornerCut() {
+	const ccButtons = Array.from(document.querySelectorAll('.corner-btn'));
+	const dxEl = document.getElementById('cc-dx');
+	const dzEl = document.getElementById('cc-dz');
+	const clearBtn = document.getElementById('cc-clear');
+	if (!ccButtons.length || !dxEl || !dzEl) return;
+
+	if (!Array.isArray(sel.cornerCuts)) sel.cornerCuts = [null,null,null,null];
+	let activeCorner = 0;
+
+	function refreshButtons() {
+	  ccButtons.forEach(b => {
+		const idx = +b.dataset.corner;
+		b.classList.toggle('active', idx === activeCorner);
+		b.classList.toggle('has-cut', !!sel.cornerCuts[idx]);
+	  });
+	}
+	function loadFieldsForActiveCorner() {
+	  const c = sel.cornerCuts[activeCorner];
+	  dxEl.value = c ? c.dx : 0;
+	  dzEl.value = c ? c.dz : 0;
+	}
+	refreshButtons();
+
+	function applyCornerCut() {
+	  const dx = Math.max(0, +dxEl.value || 0);
+	  const dz = Math.max(0, +dzEl.value || 0);
+	  sel.cornerCuts[activeCorner] = (dx > 0 && dz > 0) ? { dx, dz } : null;
+	  rebuildGeom(sel);
+	  applyTransform(sel);
+	  setHighlight(sel, true);
+	  refreshButtons();
+	}
+
+	ccButtons.forEach(btn => {
+	  btn.addEventListener('click', () => {
+		activeCorner = +btn.dataset.corner;
+		loadFieldsForActiveCorner();
+		refreshButtons();
+	  });
+	});
+	dxEl.addEventListener('input', applyCornerCut);
+	dzEl.addEventListener('input', applyCornerCut);
+	if (clearBtn) clearBtn.addEventListener('click', () => {
+	  dxEl.value = 0; dzEl.value = 0;
+	  sel.cornerCuts[activeCorner] = null;
+	  rebuildGeom(sel);
+	  applyTransform(sel);
+	  setHighlight(sel, true);
+	  refreshButtons();
+	  snapshot();
+	});
+  })();
 
   const KERF = 5;
   const lenEl = document.getElementById('i-len');
@@ -2018,6 +2171,38 @@ function showExport() {
   document.getElementById('ov-export').classList.add('show');
 }
 
+function cornerCutClipPath(p) {
+  const cuts = p.cornerCuts;
+  if (!cuts || !cuts.some(c => c && c.dx > 0 && c.dz > 0)) return null;
+  // Walk the segment's rectangle clockwise from top-left, in percentage
+  // space: TL, TR, BR, BL. Matches the same "user corner index -> which
+  // physical corner" mapping as the 3D geometry (0: +len+wid, 1: +len-wid,
+  // 2: -len+wid, 3: -len-wid), just re-expressed for a flat 2D rectangle
+  // instead of the 3D board — top edge = +width side, right edge = +length
+  // side, so corner0 lands top-right, corner2 top-left, etc.
+  const order = [2, 0, 1, 3]; // user-corner index at each of TL, TR, BR, BL
+  const cornerXY = [[0,0], [100,0], [100,100], [0,100]];
+  const pts = [];
+  for (let i = 0; i < 4; i++) {
+	const cut = cuts[order[i]];
+	const [cx, cy] = cornerXY[i];
+	if (cut && cut.dx > 0 && cut.dz > 0) {
+	  const fx = Math.min(99, (cut.dx / p.len) * 100);
+	  const fz = Math.min(99, (cut.dz / p.wid) * 100);
+	  const dirX = cx === 0 ? 1 : -1, dirY = cy === 0 ? 1 : -1;
+	  const ptAlongX = [cx + dirX*fx, cy];
+	  const ptAlongY = [cx, cy + dirY*fz];
+	  // Same alternating order as the 3D shape builder — otherwise the
+	  // notch's two edges cross instead of forming a clean diagonal cut.
+	  if (i % 2 === 0) { pts.push(ptAlongY); pts.push(ptAlongX); }
+	  else { pts.push(ptAlongX); pts.push(ptAlongY); }
+	} else {
+	  pts.push([cx, cy]);
+	}
+  }
+  return 'polygon(' + pts.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ') + ')';
+}
+
 function showCutDiagram() {
   const KERF = 5;
   const groups = {};
@@ -2037,6 +2222,7 @@ function showCutDiagram() {
 
   const body = document.getElementById('cutdiag-body');
   body.innerHTML = '';
+  const rowRefs = [];
 
   if (!rows.length) {
 	body.innerHTML = '<p class="insp-empty">部材がありません</p>';
@@ -2065,7 +2251,9 @@ function showCutDiagram() {
 		seg.style.background = p.stock
 		  ? `repeating-linear-gradient(45deg, rgba(0,0,0,.35) 0 4px, transparent 4px 8px), ${wc.css}`
 		  : `linear-gradient(${wc.dark}, ${wc.css} 40%, ${wc.mid} 70%, ${wc.dark})`;
-		seg.title = `${p.name} ｜ ${p.len}mm` + (p.stock ? '（残材・未使用）' : '');
+		const clip = cornerCutClipPath(p);
+		if (clip) seg.style.clipPath = clip;
+		seg.title = `${p.name} ｜ ${p.len}mm` + (p.stock ? '（残材・未使用）' : '') + (clip ? '（角を切り取り済み）' : '');
 		seg.innerHTML = `<span class="cutdiag-seg-name">${p.name}</span><span class="cutdiag-seg-len">${p.len}mm</span>`;
 		bar.appendChild(seg);
 		if (i < r.pieces.length - 1) {
@@ -2078,10 +2266,25 @@ function showCutDiagram() {
 	  barWrap.appendChild(bar);
 	  rowEl.appendChild(barWrap);
 	  body.appendChild(rowEl);
+	  rowRefs.push({ bar, wid: dims.wid, totalLen: r.totalLen });
 	});
   }
 
   document.getElementById('ov-cutdiagram').classList.add('show');
+
+  // Give every bar the SAME real-world mm-per-pixel scale on both axes
+  // (derived from how many pixels the length axis actually rendered at),
+  // instead of a fixed height unrelated to the piece's true width. Without
+  // this, a cut that's the same size in both directions (e.g. 30x30mm)
+  // would render stretched, since the horizontal axis scales with length
+  // while a fixed-height bar has no relationship to the physical width.
+  if (rowRefs.length) {
+	const widestBar = rowRefs.reduce((a,b) => a.totalLen > b.totalLen ? a : b);
+	const pxPerMm = widestBar.bar.getBoundingClientRect().width / widestBar.totalLen;
+	rowRefs.forEach(({ bar, wid }) => {
+	  bar.style.height = Math.max(20, Math.min(220, wid * pxPerMm)) + 'px';
+	});
+  }
 }
 
 document.querySelectorAll('.overlay').forEach(el=>
