@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PHOTOeditor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#16161a;
+  --stage:#0c0c0f;
+  --panel:#1f1f24;
+  --panel-alt:#26262c;
+  --border:#2c2c33;
+  --accent:#3d8aff;
+  --accent-dim:#20355c;
+  --accent-glow: rgba(61,138,255,0.35);
+  --text:#edEDF0;
+  --text-muted:#8a8a93;
+  --text-faint:#55555c;
+  --danger:#e5484d;
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; margin:0; }
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{ font-family:inherit; }
+input{ font-family:inherit; }
+
+/* ===== App shell ===== */
+.app{
+  height:100vh;
+  display:grid;
+  grid-template-rows:56px 1fr 34px;
+  grid-template-columns:64px 1fr 280px;
+  grid-template-areas:
+    "top top top"
+    "rail stage side"
+    "status status status";
+}
+
+/* ===== Top bar ===== */
+.topbar{
+  grid-area:top;
+  background:var(--panel);
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  padding:0 16px;
+  gap:18px;
+  position:relative;
+  overflow:hidden;
+}
+.topbar::after{
+  content:"";
+  position:absolute;
+  left:0; right:0; bottom:-1px;
+  height:2px;
+  background-image:radial-gradient(circle, var(--border) 1.6px, transparent 1.6px);
+  background-size:10px 2px;
+  opacity:.5;
+}
+.brand{
+  display:flex; align-items:center; gap:9px;
+  font-family:var(--font-display);
+  font-weight:700;
+  font-size:16px;
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+.brand-mark{
+  width:9px; height:9px; border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 10px var(--accent-glow);
+}
+.brand small{ color:var(--text-faint); font-weight:400; font-family:var(--font-mono); font-size:11px; margin-left:2px;}
+.topbar-divider{ width:1px; height:24px; background:var(--border); }
+.topbar-group{ display:flex; align-items:center; gap:6px; }
+.btn{
+  display:inline-flex; align-items:center; gap:6px;
+  background:var(--panel-alt);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:7px 12px;
+  border-radius:6px;
+  font-size:12.5px;
+  font-weight:500;
+  cursor:pointer;
+  transition:border-color .12s, background .12s, color .12s;
+}
+.btn:hover:not(:disabled){ border-color:var(--accent); color:var(--accent); }
+.btn:disabled{ opacity:.35; cursor:not-allowed; }
+.btn.primary{
+  background:var(--accent);
+  border-color:var(--accent);
+  color:#0a1526;
+  font-weight:600;
+}
+.btn.primary:hover:not(:disabled){ color:#0a1526; filter:brightness(1.08); }
+.btn.icon{ padding:7px 8px; }
+.btn svg{ width:14px; height:14px; display:block; }
+.spacer{ flex:1; }
+
+/* ===== Tool rail ===== */
+.rail{
+  grid-area:rail;
+  background:var(--panel);
+  border-right:1px solid var(--border);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:14px 0;
+  gap:6px;
+  position:relative;
+}
+.rail-indicator{
+  position:absolute;
+  left:0;
+  width:2px;
+  height:36px;
+  background:var(--accent);
+  box-shadow:0 0 8px var(--accent-glow);
+  border-radius:0 2px 2px 0;
+  transition:top .18s cubic-bezier(.4,0,.2,1);
+  top:14px;
+}
+.tool-btn{
+  width:40px; height:40px;
+  display:flex; align-items:center; justify-content:center;
+  background:transparent;
+  border:1px solid transparent;
+  border-radius:8px;
+  color:var(--text-muted);
+  cursor:pointer;
+  transition:color .12s, background .12s, border-color .12s;
+}
+.tool-btn svg{ width:18px; height:18px; }
+.tool-btn:hover{ color:var(--text); background:var(--panel-alt); }
+.tool-btn.active{ color:var(--accent); background:var(--panel-alt); border-color:var(--accent-dim); }
+.rail-gap{ flex:1; }
+.rail-zoom{
+  writing-mode:vertical-rl;
+  font-family:var(--font-mono);
+  font-size:10px;
+  color:var(--text-faint);
+  letter-spacing:.08em;
+  padding-bottom:6px;
+}
+
+/* ===== Stage ===== */
+.stage{
+  grid-area:stage;
+  background:var(--stage);
+  position:relative;
+  overflow:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:30px;
+}
+.stage::before{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  box-shadow:inset 0 0 90px rgba(0,0,0,.75);
+}
+.placeholder{
+  display:flex; flex-direction:column; align-items:center; gap:14px;
+  color:var(--text-faint);
+  text-align:center;
+  padding:40px;
+  border:1.5px dashed var(--border);
+  border-radius:14px;
+  max-width:360px;
+}
+.placeholder.dragover{ border-color:var(--accent); color:var(--accent); background:rgba(255,138,61,0.04); }
+.placeholder svg{ width:38px; height:38px; opacity:.6; }
+.placeholder p{ margin:0; font-size:13px; line-height:1.6; }
+.placeholder p.lead{ font-family:var(--font-display); font-size:15px; color:var(--text-muted); font-weight:600; }
+
+.canvas-wrap{
+  display:inline-block;
+  line-height:0;
+  position:relative;
+  background-image:
+    linear-gradient(45deg, #232327 25%, transparent 25%),
+    linear-gradient(-45deg, #232327 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #232327 75%),
+    linear-gradient(-45deg, transparent 75%, #232327 75%);
+  background-size:16px 16px;
+  background-position:0 0, 0 8px, 8px -8px, -8px 0px;
+  background-color:#1a1a1e;
+  box-shadow:0 20px 60px rgba(0,0,0,.55), 0 0 0 1px var(--border);
+  border-radius:2px;
+}
+#mainCanvas{ display:block; max-width:none; }
+.overlay-layer{
+  position:absolute; inset:0;
+  pointer-events:none;
+}
+.overlay-layer.active{ pointer-events:auto; cursor:crosshair; }
+
+.crop-sel{
+  position:absolute;
+  border:1.5px solid var(--accent);
+  background:rgba(255,138,61,0.12);
+  box-shadow:0 0 0 2000px rgba(0,0,0,.45);
+  cursor:move;
+}
+.crop-handle{
+  position:absolute;
+  width:10px; height:10px;
+  background:var(--accent);
+  border:1.5px solid #0a1526;
+  border-radius:2px;
+}
+.crop-handle.nw{ left:-6px; top:-6px; cursor:nwse-resize; }
+.crop-handle.ne{ right:-6px; top:-6px; cursor:nesw-resize; }
+.crop-handle.sw{ left:-6px; bottom:-6px; cursor:nesw-resize; }
+.crop-handle.se{ right:-6px; bottom:-6px; cursor:nwse-resize; }
+
+.text-input-box{
+  position:absolute;
+  background:transparent;
+  border:1px dashed var(--accent);
+  outline:none;
+  padding:2px 4px;
+  min-width:60px;
+  color:#fff;
+  caret-color:var(--accent);
+}
+
+#lassoCanvas{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* ===== Side panel ===== */
+.side{
+  grid-area:side;
+  background:var(--panel);
+  border-left:1px solid var(--border);
+  overflow-y:auto;
+  padding:0 0 24px;
+}
+.side::-webkit-scrollbar{ width:8px; }
+.side::-webkit-scrollbar-thumb{ background:var(--panel-alt); border-radius:4px; }
+
+.panel-section{ border-bottom:1px solid var(--border); padding:16px 16px 18px; }
+.panel-title{
+  font-family:var(--font-display);
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--text-muted);
+  margin:0 0 12px;
+  display:flex; align-items:center; justify-content:space-between;
+}
+.panel-title .eyebrow-dot{ color:var(--accent); }
+
+.row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px; }
+.row label{ font-size:12px; color:var(--text-muted); }
+.row .val{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); min-width:34px; text-align:right; }
+.val-input{
+  width:52px;
+  background:var(--panel-alt);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:var(--font-mono);
+  font-size:11px;
+  text-align:right;
+  border-radius:4px;
+  padding:3px 6px;
+  outline:none;
+  transition:border-color .12s;
+}
+.val-input:focus{ border-color:var(--accent); }
+.val-input:hover{ border-color:var(--text-faint); }
+
+input[type=range]{
+  -webkit-appearance:none; appearance:none;
+  width:100%; height:3px;
+  background:var(--border);
+  border-radius:2px;
+  outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:13px; height:13px;
+  border-radius:50%;
+  background:var(--accent);
+  cursor:pointer;
+  border:2px solid #0a1526;
+  box-shadow:0 0 0 1px var(--accent);
+}
+.slider-row{ margin-bottom:12px; }
+.slider-row .row{ margin-bottom:5px; }
+
+.btn-row{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.btn-row .btn{ flex:1; justify-content:center; min-width:0; }
+
+.preset-grid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.preset-btn{
+  background:var(--panel-alt);
+  border:1px solid var(--border);
+  color:var(--text-muted);
+  border-radius:6px;
+  padding:8px 6px;
+  font-size:11px;
+  cursor:pointer;
+  text-align:center;
+  transition:border-color .12s,color .12s;
+}
+.preset-btn:hover{ border-color:var(--accent); color:var(--accent); }
+
+.swatch-row{ display:flex; align-items:center; gap:10px; }
+input[type=color]{
+  width:30px; height:30px;
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:0;
+  background:none;
+  cursor:pointer;
+}
+select{
+  width:100%;
+  background:var(--panel-alt);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:7px 8px;
+  border-radius:6px;
+  font-size:12px;
+  outline:none;
+}
+.hint{ font-size:11px; color:var(--text-faint); line-height:1.6; margin-top:8px; }
+
+/* ===== Status bar ===== */
+.status{
+  grid-area:status;
+  background:var(--panel);
+  border-top:1px solid var(--border);
+  display:flex; align-items:center;
+  padding:0 16px;
+  gap:18px;
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  color:var(--text-faint);
+}
+.status .zoom-ctrl{ display:flex; align-items:center; gap:8px; margin-left:auto; }
+.status input[type=range]{ width:110px; }
+
+.hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="brand"><span class="brand-mark"></span>PHOTOeditor</div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-group">
+      <button class="btn" id="openBtn">開く</button>
+      <input type="file" id="fileInput" accept="image/*" class="hidden">
+      <button class="btn primary" id="downloadBtn" disabled>保存</button>
+    </div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-group">
+      <button class="btn icon" id="undoBtn" disabled title="元に戻す">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-1"/></svg>
+      </button>
+      <button class="btn icon" id="redoBtn" disabled title="やり直す">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h1"/></svg>
+      </button>
+      <button class="btn" id="resetBtn" disabled>リセット</button>
+    </div>
+    <div class="spacer"></div>
+  </div>
+
+  <!-- Tool rail -->
+  <div class="rail">
+    <div class="rail-indicator" id="railIndicator"></div>
+    <button class="tool-btn active" data-tool="adjust" title="調整">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><circle cx="9" cy="6" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="12" x2="20" y2="12"/><circle cx="15" cy="12" r="2" fill="currentColor" stroke="none"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="11" cy="18" r="2" fill="currentColor" stroke="none"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="crop" title="切り抜き">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="brush" title="ブラシ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9.06 11.9l8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08"/><path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="text" title="テキスト">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    </button>
+    <button class="tool-btn" data-tool="bgremove" title="背景削除">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m16 3 1.2 2.5L20 6.7l-2.8 1.2L16 10.5l-1.2-2.6L12 6.7l2.8-1.2z"/><path d="M5 21c0-3.5 2-6 5-6M5 21H3M5 21v2"/><circle cx="9" cy="10" r="4"/></svg>
+    </button>
+    <div class="rail-gap"></div>
+  </div>
+
+  <!-- Canvas stage -->
+  <div class="stage" id="stage">
+    <div class="placeholder" id="placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      <p class="lead">写真をドラッグ&ドロップ</p>
+      <p>またはファイルを開く、クリップボードからの貼り付け（Ctrl+V）でも読み込めます。<br>明るさ・コントラスト・切り抜き・ブラシ・テキスト・背景削除などが使えます。</p>
+      <button class="btn primary" id="placeholderOpenBtn">写真を開く</button>
+    </div>
+
+    <div class="canvas-wrap hidden" id="canvasWrap">
+      <canvas id="mainCanvas"></canvas>
+      <div class="overlay-layer" id="cropOverlay"></div>
+      <div class="overlay-layer" id="textLayer"></div>
+      <div class="overlay-layer" id="bgLassoOverlay"><canvas id="lassoCanvas"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Side panel -->
+  <div class="side">
+
+    <div class="panel-section" id="toolOptionsSection">
+      <p class="panel-title"><span id="toolOptionsHeading">ツール設定</span><span class="eyebrow-dot" id="toolOptionsLabel">ADJUST</span></p>
+      <div id="toolOptions"><p class="hint">画像を開くと編集を開始できます。「調整」タブでは明るさなどをスライダーや数値で調整できます。</p></div>
+    </div>
+
+    <div class="panel-section" id="adjustSection">
+      <p class="panel-title"><span>調整</span><span class="eyebrow-dot">ADJUST</span></p>
+      <div class="slider-row">
+        <div class="row"><label>明るさ</label><input type="number" class="val-input" id="valBrightness" min="0" max="200" value="100"></div>
+        <input type="range" id="rBrightness" min="0" max="200" value="100">
+      </div>
+      <div class="slider-row">
+        <div class="row"><label>コントラスト</label><input type="number" class="val-input" id="valContrast" min="0" max="200" value="100"></div>
+        <input type="range" id="rContrast" min="0" max="200" value="100">
+      </div>
+      <div class="slider-row">
+        <div class="row"><label>彩度</label><input type="number" class="val-input" id="valSaturate" min="0" max="200" value="100"></div>
+        <input type="range" id="rSaturate" min="0" max="200" value="100">
+      </div>
+      <div class="slider-row">
+        <div class="row"><label>色相</label><input type="number" class="val-input" id="valHue" min="-180" max="180" value="0"></div>
+        <input type="range" id="rHue" min="-180" max="180" value="0">
+      </div>
+      <div class="slider-row">
+        <div class="row"><label>ぼかし</label><input type="number" class="val-input" id="valBlur" min="0" max="10" step="0.1" value="0"></div>
+        <input type="range" id="rBlur" min="0" max="10" step="0.1" value="0">
+      </div>
+      <div class="btn-row">
+        <button class="btn" id="adjustResetBtn" style="flex:1;">戻す</button>
+      </div>
+    </div>
+
+    <div class="panel-section" id="scanFixSection">
+      <p class="panel-title"><span>スキャン補正</span><span class="eyebrow-dot">SCAN FIX</span></p>
+      <p class="hint" style="margin-top:0;">薄いスキャン文書は「自動コントラスト」→ 必要に応じて「文字をくっきり」の順に試してください。</p>
+      <div class="btn-row" style="margin:10px 0 14px;">
+        <button class="btn" id="autoContrastBtn">自動コントラスト</button>
+      </div>
+      <label class="row" style="cursor:pointer;">
+        <span style="display:flex;align-items:center;gap:7px;color:var(--text-muted);font-size:12px;">
+          <input type="checkbox" id="thresholdEnable" style="accent-color:var(--accent);width:14px;height:14px;">
+          文字をくっきり（2値化）
+        </span>
+      </label>
+      <div id="thresholdControls" class="hidden" style="margin-top:10px;">
+        <div class="slider-row">
+          <div class="row"><label>しきい値</label><input type="number" class="val-input" id="valThreshold" min="1" max="254" value="128"></div>
+          <input type="range" id="rThreshold" min="1" max="254" value="128">
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="thresholdResetBtn" style="flex:1;">戻す</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section" id="filtersSection">
+      <p class="panel-title"><span>フィルター</span><span class="eyebrow-dot">FILTERS</span></p>
+      <div class="preset-grid">
+        <button class="preset-btn" data-preset="none">オリジナル</button>
+        <button class="preset-btn" data-preset="grayscale">白黒</button>
+        <button class="preset-btn" data-preset="sepia">セピア</button>
+        <button class="preset-btn" data-preset="invert">反転</button>
+        <button class="preset-btn" data-preset="vintage">ヴィンテージ</button>
+        <button class="preset-btn" data-preset="cool">クール</button>
+        <button class="preset-btn" data-preset="warm">ウォーム</button>
+        <button class="preset-btn" data-preset="noir">ノワール</button>
+      </div>
+    </div>
+
+    <div class="panel-section" id="transformSection">
+      <p class="panel-title"><span>変形</span><span class="eyebrow-dot">TRANSFORM</span></p>
+      <div class="btn-row">
+        <button class="btn" id="rotateLeftBtn" title="左回転">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        </button>
+        <button class="btn" id="rotateRightBtn" title="右回転">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+        </button>
+      </div>
+      <div class="btn-row" style="margin-top:6px;">
+        <button class="btn" id="flipHBtn">左右反転</button>
+        <button class="btn" id="flipVBtn">上下反転</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Status bar -->
+  <div class="status">
+    <span id="statusDims">画像なし</span>
+    <span id="statusTool">MOVE</span>
+    <div class="zoom-ctrl">
+      <span>ZOOM</span>
+      <input type="range" id="zoomRange" min="10" max="500" value="100">
+      <span id="zoomVal">100%</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- Element refs ----------
+  const stage = document.getElementById('stage');
+  const placeholder = document.getElementById('placeholder');
+  const canvasWrap = document.getElementById('canvasWrap');
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const cropOverlay = document.getElementById('cropOverlay');
+  const textLayer = document.getElementById('textLayer');
+  const bgLassoOverlay = document.getElementById('bgLassoOverlay');
+  const lassoCanvas = document.getElementById('lassoCanvas');
+  const lassoCtx = lassoCanvas.getContext('2d');
+
+  const fileInput = document.getElementById('fileInput');
+  const openBtn = document.getElementById('openBtn');
+  const placeholderOpenBtn = document.getElementById('placeholderOpenBtn');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const undoBtn = document.getElementById('undoBtn');
+  const redoBtn = document.getElementById('redoBtn');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const railIndicator = document.getElementById('railIndicator');
+  const toolBtns = Array.from(document.querySelectorAll('.tool-btn'));
+  const toolOptions = document.getElementById('toolOptions');
+  const toolOptionsSection = document.getElementById('toolOptionsSection');
+  const adjustSection = document.getElementById('adjustSection');
+  const filtersSection = document.getElementById('filtersSection');
+  const transformSection = document.getElementById('transformSection');
+  const scanFixSection = document.getElementById('scanFixSection');
+  const toolOptionsLabel = document.getElementById('toolOptionsLabel');
+  const toolOptionsHeading = document.getElementById('toolOptionsHeading');
+  const statusTool = document.getElementById('statusTool');
+  const statusDims = document.getElementById('statusDims');
+
+  const zoomRange = document.getElementById('zoomRange');
+  const zoomVal = document.getElementById('zoomVal');
+
+  const sliders = {
+    brightness: document.getElementById('rBrightness'),
+    contrast: document.getElementById('rContrast'),
+    saturate: document.getElementById('rSaturate'),
+    hue: document.getElementById('rHue'),
+    blur: document.getElementById('rBlur'),
+  };
+  const sliderVals = {
+    brightness: document.getElementById('valBrightness'),
+    contrast: document.getElementById('valContrast'),
+    saturate: document.getElementById('valSaturate'),
+    hue: document.getElementById('valHue'),
+    blur: document.getElementById('valBlur'),
+  };
+  const adjustResetBtn = document.getElementById('adjustResetBtn');
+
+  const autoContrastBtn = document.getElementById('autoContrastBtn');
+  const thresholdEnable = document.getElementById('thresholdEnable');
+  const thresholdControls = document.getElementById('thresholdControls');
+  const rThreshold = document.getElementById('rThreshold');
+  const valThreshold = document.getElementById('valThreshold');
+  const thresholdResetBtn = document.getElementById('thresholdResetBtn');
+
+  const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+  const rotateRightBtn = document.getElementById('rotateRightBtn');
+  const flipHBtn = document.getElementById('flipHBtn');
+  const flipVBtn = document.getElementById('flipVBtn');
+
+  // ---------- State ----------
+  let activeTool = 'adjust';
+  let originalSrc = null;
+  let history = [];
+  let historyIndex = -1;
+  const MAX_HISTORY = 24;
+  let zoom = 100;
+  let hasImage = false;
+
+  let thresholdBase = null; // ImageData snapshot for live 2-tone preview
+  let bgRemoveBase = null;  // ImageData snapshot for live background-removal preview
+  let preFilterBase = null; // ImageData snapshot from right before the current filter preset was applied,
+                             // so clicking another preset replaces it instead of stacking on top
+  let bgPickedColor = null; // {r,g,b} currently targeted background color
+  let bgLassoMask = null;   // ImageData whose alpha channel marks pixels inside the drawn lasso; null = whole image
+  let bgLassoBBox = null;   // {minX,minY,maxX,maxY} bounding box of the lasso, in canvas pixel space
+  let lassoPoints = null;   // points of the in-progress lasso drag, in canvasWrap CSS px
+  let lassoDrawing = false;
+
+  let brush = { color:'#3d8aff', size:14, opacity:100 };
+  let textOpt = { color:'#ffffff', size:36, font:'Inter, sans-serif' };
+
+  // ---------- Utility ----------
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+  function clearFilterBase(){ preFilterBase = null; }
+
+  // Keeps a <input type=range> and its paired <input type=number> in sync,
+  // and re-dispatches range 'input'/'change' events so all existing slider
+  // wiring (live preview + auto-commit-on-release) keeps working unchanged.
+  function bindNumberSync(rangeEl, numEl){
+    if(!rangeEl || !numEl) return;
+    numEl.addEventListener('input', ()=>{
+      if(numEl.value === '' || numEl.value === '-') return;
+      const min = rangeEl.min !== '' ? +rangeEl.min : -Infinity;
+      const max = rangeEl.max !== '' ? +rangeEl.max : Infinity;
+      rangeEl.value = clamp(+numEl.value, min, max);
+      rangeEl.dispatchEvent(new Event('input'));
+    });
+    numEl.addEventListener('change', ()=>{
+      numEl.value = rangeEl.value;
+      rangeEl.dispatchEvent(new Event('change'));
+    });
+  }
+
+  function currentFilterString(){
+    const b = sliders.brightness.value, c = sliders.contrast.value,
+          s = sliders.saturate.value, h = sliders.hue.value, bl = sliders.blur.value;
+    return `brightness(${b}%) contrast(${c}%) saturate(${s}%) hue-rotate(${h}deg) blur(${bl}px)`;
+  }
+  function isAdjustDefault(){
+    return sliders.brightness.value=='100' && sliders.contrast.value=='100' &&
+           sliders.saturate.value=='100' && sliders.hue.value=='0' && sliders.blur.value=='0';
+  }
+  function resetSlidersUI(){
+    sliders.brightness.value=100; sliders.contrast.value=100; sliders.saturate.value=100;
+    sliders.hue.value=0; sliders.blur.value=0;
+    updateSliderLabels();
+    canvas.style.filter = 'none';
+  }
+  function updateSliderLabels(){
+    sliderVals.brightness.value = sliders.brightness.value;
+    sliderVals.contrast.value = sliders.contrast.value;
+    sliderVals.saturate.value = sliders.saturate.value;
+    sliderVals.hue.value = sliders.hue.value;
+    sliderVals.blur.value = sliders.blur.value;
+  }
+
+  function cancelThresholdPreview(){
+    if(thresholdBase){ ctx.putImageData(thresholdBase,0,0); thresholdBase = null; }
+    thresholdEnable.checked = false;
+    thresholdControls.classList.add('hidden');
+  }
+  function commitThresholdPreviewSilent(){
+    // Finalizes an in-progress threshold preview into pixel data without an extra history push
+    // (used when another commit is about to push history anyway).
+    if(!thresholdBase) return false;
+    thresholdBase = null;
+    thresholdEnable.checked = false;
+    thresholdControls.classList.add('hidden');
+    return true;
+  }
+  function hideBgPickedUI(){
+    const info = document.getElementById('bgPickedInfo');
+    if(info) info.classList.add('hidden');
+  }
+  function clearLassoState(){
+    bgLassoMask = null;
+    bgLassoBBox = null;
+    lassoPoints = null;
+    lassoDrawing = false;
+    if(lassoCanvas.width && lassoCanvas.height){
+      lassoCtx.clearRect(0,0,lassoCanvas.width,lassoCanvas.height);
+    }
+  }
+  function cancelBgRemovePreview(){
+    if(bgRemoveBase){ ctx.putImageData(bgRemoveBase,0,0); bgRemoveBase = null; }
+    bgPickedColor = null;
+    clearLassoState();
+    hideBgPickedUI();
+  }
+  function commitBgRemovePreviewSilent(){
+    if(!bgRemoveBase) return false;
+    bgRemoveBase = null;
+    bgPickedColor = null;
+    clearLassoState();
+    hideBgPickedUI();
+    return true;
+  }
+
+  // Bake any live (unbaked) CSS filter preview into actual pixel data.
+  function commitAdjustments(){
+    clearFilterBase();
+    const committedThreshold = commitThresholdPreviewSilent();
+    const committedBg = commitBgRemovePreviewSilent();
+    if(!hasImage) return;
+    if(isAdjustDefault()) {
+      canvas.style.filter = 'none';
+      if(committedThreshold || committedBg) pushHistory();
+      return;
+    }
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width; tmp.height = canvas.height;
+    const tctx = tmp.getContext('2d');
+    tctx.filter = currentFilterString();
+    tctx.drawImage(canvas, 0, 0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(tmp, 0, 0);
+    canvas.style.filter = 'none';
+    resetSlidersUI();
+    pushHistory();
+  }
+
+  // ---------- History ----------
+  function pushHistory(){
+    history = history.slice(0, historyIndex+1);
+    history.push(canvas.toDataURL('image/png'));
+    if(history.length > MAX_HISTORY) history.shift();
+    historyIndex = history.length - 1;
+    updateHistoryButtons();
+  }
+  function restoreFromHistory(index){
+    const img = new Image();
+    img.onload = function(){
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0);
+      applyZoomStyle();
+      updateDimsLabel();
+    };
+    img.src = history[index];
+  }
+  function undo(){
+    if(historyIndex <= 0) return;
+    clearFilterBase();
+    cancelThresholdPreview();
+    cancelBgRemovePreview();
+    commitIfDirtyOnly();
+    historyIndex--;
+    restoreFromHistory(historyIndex);
+    updateHistoryButtons();
+  }
+  function redo(){
+    if(historyIndex >= history.length-1) return;
+    clearFilterBase();
+    cancelThresholdPreview();
+    cancelBgRemovePreview();
+    historyIndex++;
+    restoreFromHistory(historyIndex);
+    updateHistoryButtons();
+  }
+  function commitIfDirtyOnly(){
+    if(!isAdjustDefault()) resetSlidersUI();
+  }
+  function updateHistoryButtons(){
+    undoBtn.disabled = historyIndex <= 0;
+    redoBtn.disabled = historyIndex >= history.length-1;
+  }
+
+  // ---------- Load image ----------
+  function loadImageFile(file){
+    if(!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const img = new Image();
+      img.onload = function(){
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const MAX_DIM = 1800;
+        if(Math.max(w,h) > MAX_DIM){
+          const scale = MAX_DIM / Math.max(w,h);
+          w = Math.round(w*scale); h = Math.round(h*scale);
+        }
+        canvas.width = w; canvas.height = h;
+        ctx.clearRect(0,0,w,h);
+        ctx.drawImage(img,0,0,w,h);
+
+        originalSrc = canvas.toDataURL('image/png');
+        history = [originalSrc];
+        historyIndex = 0;
+        hasImage = true;
+        thresholdBase = null;
+        bgRemoveBase = null;
+        bgPickedColor = null;
+        preFilterBase = null;
+
+        placeholder.classList.add('hidden');
+        canvasWrap.classList.remove('hidden');
+        downloadBtn.disabled = false;
+        resetBtn.disabled = false;
+        updateHistoryButtons();
+        resetSlidersUI();
+        setZoom(calculateFitZoom());
+        updateDimsLabel();
+        setActiveTool('adjust');
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function updateDimsLabel(){
+    statusDims.textContent = hasImage ? `${canvas.width} × ${canvas.height} px` : '画像なし';
+  }
+
+  // ---------- Zoom ----------
+  function applyZoomStyle(){
+    if(!hasImage) return;
+    canvas.style.width = Math.round(canvas.width * (zoom/100)) + 'px';
+    canvas.style.height = 'auto';
+  }
+  function setZoom(v){
+    zoom = clamp(v,10,500);
+    zoomRange.value = Math.round(zoom);
+    zoomVal.textContent = Math.round(zoom) + '%';
+    applyZoomStyle();
+  }
+  function calculateFitZoom(){
+    const stageRect = stage.getBoundingClientRect();
+    const pad = 60; // matches .stage padding on both sides
+    const availW = Math.max(stageRect.width - pad, 40);
+    const availH = Math.max(stageRect.height - pad, 40);
+    const scale = Math.min(availW / canvas.width, availH / canvas.height) * 100;
+    return clamp(Math.floor(scale), 10, 500);
+  }
+  zoomRange.addEventListener('input', ()=> setZoom(+zoomRange.value));
+
+  // Scroll wheel zoom in/out, centered on the current scroll position
+  stage.addEventListener('wheel', (e)=>{
+    if(!hasImage) return;
+    e.preventDefault();
+    const stageRect = stage.getBoundingClientRect();
+    const beforeScrollW = canvas.getBoundingClientRect().width;
+    const pointerX = e.clientX - stageRect.left + stage.scrollLeft;
+    const pointerY = e.clientY - stageRect.top + stage.scrollTop;
+    const ratioX = beforeScrollW ? pointerX / beforeScrollW : 0.5;
+    const ratioY = beforeScrollW ? pointerY / (canvas.getBoundingClientRect().height || 1) : 0.5;
+
+    const step = clamp(Math.abs(e.deltaY) * 0.06, 1, 20);
+    const newZoom = clamp(zoom + (e.deltaY < 0 ? step : -step), 10, 500);
+    if(newZoom === zoom) return;
+    setZoom(newZoom);
+
+    const afterRect = canvas.getBoundingClientRect();
+    stage.scrollLeft += (ratioX * afterRect.width) - pointerX;
+    stage.scrollTop += (ratioY * afterRect.height) - pointerY;
+  }, { passive:false });
+
+  // ---------- Tool switching ----------
+  function setActiveTool(tool){
+    activeTool = tool;
+    toolBtns.forEach(b=> b.classList.toggle('active', b.dataset.tool===tool));
+    const idx = toolBtns.findIndex(b=>b.dataset.tool===tool);
+    railIndicator.style.top = (14 + idx*46) + 'px';
+    statusTool.textContent = tool.toUpperCase();
+    toolOptionsLabel.textContent = tool.toUpperCase();
+    toolOptionsHeading.textContent = tool==='adjust' ? '調整' : 'ツール設定';
+
+    toolOptionsSection.classList.toggle('hidden', tool === 'adjust');
+    adjustSection.classList.toggle('hidden', tool !== 'adjust');
+    filtersSection.classList.toggle('hidden', tool !== 'adjust');
+    transformSection.classList.toggle('hidden', tool !== 'crop');
+    scanFixSection.classList.toggle('hidden', tool !== 'adjust');
+    cropOverlay.classList.toggle('active', tool==='crop');
+    textLayer.classList.toggle('active', tool==='text');
+    bgLassoOverlay.classList.toggle('active', tool==='bgremove');
+    canvas.style.cursor = (tool==='brush') ? 'crosshair' : 'default';
+
+    clearCropSelection();
+    renderToolOptions();
+  }
+  toolBtns.forEach(b=> b.addEventListener('click', ()=> {
+    if(!hasImage && b.dataset.tool !== 'adjust') return;
+    commitAdjustments();
+    setActiveTool(b.dataset.tool);
+  }));
+
+  function renderToolOptions(){
+    if(!hasImage){
+      toolOptions.innerHTML = `<p class="hint">画像を開くと編集を開始できます。</p>`;
+      return;
+    }
+    if(activeTool==='adjust'){
+      toolOptions.innerHTML = '';
+    } else if(activeTool==='crop'){
+      toolOptions.innerHTML = `
+        <p class="hint" style="margin-top:0;">ドラッグして範囲を選択し、ハンドルで調整してください。</p>
+        <div class="btn-row" style="margin-bottom:8px;">
+          <button class="preset-btn" data-ratio="free">自由</button>
+          <button class="preset-btn" data-ratio="1:1">1:1</button>
+          <button class="preset-btn" data-ratio="4:3">4:3</button>
+          <button class="preset-btn" data-ratio="16:9">16:9</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="cropCancelBtn">取消</button>
+          <button class="btn primary" id="cropApplyBtn">切り抜く</button>
+        </div>`;
+      document.getElementById('cropApplyBtn').addEventListener('click', applyCrop);
+      document.getElementById('cropCancelBtn').addEventListener('click', clearCropSelection);
+      toolOptions.querySelectorAll('[data-ratio]').forEach(btn=>{
+        btn.addEventListener('click', ()=> startCropWithRatio(btn.dataset.ratio));
+      });
+    } else if(activeTool==='brush'){
+      toolOptions.innerHTML = `
+        <div class="swatch-row" style="margin-bottom:12px;">
+          <input type="color" id="brushColor" value="${brush.color}">
+          <span class="hint" style="margin:0;">ブラシの色</span>
+        </div>
+        <div class="slider-row">
+          <div class="row"><label>太さ</label><input type="number" class="val-input" id="brushSizeVal" min="1" max="60" value="${brush.size}"></div>
+          <input type="range" id="brushSize" min="1" max="60" value="${brush.size}">
+        </div>
+        <div class="slider-row">
+          <div class="row"><label>不透明度</label><input type="number" class="val-input" id="brushOpVal" min="10" max="100" value="${brush.opacity}"></div>
+          <input type="range" id="brushOpacity" min="10" max="100" value="${brush.opacity}">
+        </div>
+        <p class="hint">キャンバス上をドラッグして描画します。</p>`;
+      document.getElementById('brushColor').addEventListener('input', e=> brush.color = e.target.value);
+      document.getElementById('brushSize').addEventListener('input', e=>{
+        brush.size = +e.target.value;
+        document.getElementById('brushSizeVal').value = brush.size;
+      });
+      document.getElementById('brushOpacity').addEventListener('input', e=>{
+        brush.opacity = +e.target.value;
+        document.getElementById('brushOpVal').value = brush.opacity;
+      });
+      bindNumberSync(document.getElementById('brushSize'), document.getElementById('brushSizeVal'));
+      bindNumberSync(document.getElementById('brushOpacity'), document.getElementById('brushOpVal'));
+    } else if(activeTool==='text'){
+      toolOptions.innerHTML = `
+        <div class="swatch-row" style="margin-bottom:12px;">
+          <input type="color" id="textColor" value="${textOpt.color}">
+          <span class="hint" style="margin:0;">テキストの色</span>
+        </div>
+        <div class="slider-row">
+          <div class="row"><label>サイズ</label><input type="number" class="val-input" id="textSizeVal" min="10" max="120" value="${textOpt.size}"></div>
+          <input type="range" id="textSize" min="10" max="120" value="${textOpt.size}">
+        </div>
+        <select id="textFont">
+          <option value="Inter, sans-serif">Inter</option>
+          <option value="'Space Grotesk', sans-serif">Space Grotesk</option>
+          <option value="'JetBrains Mono', monospace">JetBrains Mono</option>
+          <option value="Georgia, serif">Georgia</option>
+        </select>
+        <p class="hint">キャンバス上をクリックしてテキストを入力し、Enterで確定します。</p>`;
+      document.getElementById('textColor').addEventListener('input', e=> textOpt.color = e.target.value);
+      document.getElementById('textSize').addEventListener('input', e=>{
+        textOpt.size = +e.target.value;
+        document.getElementById('textSizeVal').value = textOpt.size;
+      });
+      document.getElementById('textFont').addEventListener('change', e=> textOpt.font = e.target.value);
+      bindNumberSync(document.getElementById('textSize'), document.getElementById('textSizeVal'));
+    } else if(activeTool==='bgremove'){
+      toolOptions.innerHTML = `
+        <p class="hint" style="margin-top:0;">削除したい部分を点線で囲むようにドラッグしてください。囲んだ範囲内の同系色が自動的に検出されて透明になります。</p>
+        <div class="btn-row" style="margin-bottom:12px;">
+          <button class="btn" id="bgAutoDetectBtn">自動検出（四隅から画像全体）</button>
+        </div>
+        <div id="bgPickedInfo" class="hidden">
+          <div class="swatch-row" style="margin-bottom:12px;">
+            <div id="bgColorSwatch" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border);flex-shrink:0;"></div>
+            <span class="hint" style="margin:0;">選択した背景色</span>
+          </div>
+          <div class="slider-row">
+            <div class="row"><label>許容度</label><input type="number" class="val-input" id="valBgTolerance" min="1" max="100" value="30"></div>
+            <input type="range" id="rBgTolerance" min="1" max="100" value="30">
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="bgResetBtn" style="flex:1;">戻す</button>
+          </div>
+        </div>`;
+      document.getElementById('bgAutoDetectBtn').addEventListener('click', autoDetectBg);
+      document.getElementById('rBgTolerance').addEventListener('input', (e)=>{
+        document.getElementById('valBgTolerance').value = e.target.value;
+        renderBgRemovePreview();
+      });
+      document.getElementById('rBgTolerance').addEventListener('change', commitBgRemoveIfActive);
+      document.getElementById('bgResetBtn').addEventListener('click', resetBgRemove);
+      bindNumberSync(document.getElementById('rBgTolerance'), document.getElementById('valBgTolerance'));
+    }
+  }
+
+  // ---------- Adjustments (live preview, auto-apply on release) ----------
+  Object.values(sliders).forEach(s=>{
+    s.addEventListener('input', ()=>{
+      updateSliderLabels();
+      if(hasImage) canvas.style.filter = currentFilterString();
+    });
+    s.addEventListener('change', ()=>{
+      if(hasImage) commitAdjustments();
+    });
+  });
+  bindNumberSync(sliders.brightness, sliderVals.brightness);
+  bindNumberSync(sliders.contrast, sliderVals.contrast);
+  bindNumberSync(sliders.saturate, sliderVals.saturate);
+  bindNumberSync(sliders.hue, sliderVals.hue);
+  bindNumberSync(sliders.blur, sliderVals.blur);
+  adjustResetBtn.addEventListener('click', resetSlidersUI);
+
+  // ---------- Presets ----------
+  document.querySelectorAll('.preset-btn[data-preset]').forEach(btn=>{
+    btn.addEventListener('click', ()=> applyPreset(btn.dataset.preset));
+  });
+  const PRESETS = {
+    none: 'none',
+    grayscale: 'grayscale(100%)',
+    sepia: 'sepia(85%)',
+    invert: 'invert(100%)',
+    vintage: 'sepia(45%) contrast(108%) brightness(104%) saturate(78%)',
+    cool: 'hue-rotate(180deg) saturate(115%) brightness(102%)',
+    warm: 'hue-rotate(-14deg) saturate(118%) brightness(105%)',
+    noir: 'grayscale(100%) contrast(130%) brightness(92%)',
+  };
+  function applyPreset(name){
+    if(!hasImage) return;
+    const committedThreshold = commitThresholdPreviewSilent();
+    const committedBg = commitBgRemovePreviewSilent();
+    if(committedThreshold || committedBg) preFilterBase = null; // a real pixel change happened; start fresh
+    resetSlidersUI();
+
+    // Restore the pre-filter state (if any) so this preset replaces the previous
+    // one instead of compounding on top of it. If this is the first filter
+    // click since the last non-filter edit, capture that clean baseline now.
+    if(!preFilterBase){
+      preFilterBase = ctx.getImageData(0,0,canvas.width,canvas.height);
+    } else {
+      ctx.putImageData(preFilterBase,0,0);
+    }
+
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width; tmp.height = canvas.height;
+    const tctx = tmp.getContext('2d');
+    tctx.filter = PRESETS[name] || 'none';
+    tctx.drawImage(canvas,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(tmp,0,0);
+    pushHistory();
+  }
+
+  // ---------- Transform ----------
+  function rotate90(dir){
+    if(!hasImage) return;
+    commitAdjustments();
+    const w = canvas.width, h = canvas.height;
+    const tmp = document.createElement('canvas');
+    tmp.width = h; tmp.height = w;
+    const tctx = tmp.getContext('2d');
+    tctx.translate(h/2, w/2);
+    tctx.rotate(dir * Math.PI/2);
+    tctx.drawImage(canvas, -w/2, -h/2);
+    canvas.width = h; canvas.height = w;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(tmp,0,0);
+    applyZoomStyle();
+    updateDimsLabel();
+    pushHistory();
+  }
+  function flip(axis){
+    if(!hasImage) return;
+    commitAdjustments();
+    const w = canvas.width, h = canvas.height;
+    const tmp = document.createElement('canvas');
+    tmp.width = w; tmp.height = h;
+    const tctx = tmp.getContext('2d');
+    if(axis==='h'){ tctx.translate(w,0); tctx.scale(-1,1); }
+    else { tctx.translate(0,h); tctx.scale(1,-1); }
+    tctx.drawImage(canvas,0,0);
+    ctx.clearRect(0,0,w,h);
+    ctx.drawImage(tmp,0,0);
+    pushHistory();
+  }
+  rotateLeftBtn.addEventListener('click', ()=> rotate90(-1));
+  rotateRightBtn.addEventListener('click', ()=> rotate90(1));
+  flipHBtn.addEventListener('click', ()=> flip('h'));
+  flipVBtn.addEventListener('click', ()=> flip('v'));
+
+  // ---------- Crop ----------
+  let cropRect = null; // {x,y,w,h} in wrap CSS px
+  let cropDrag = null;
+  let cropStartPt = null;
+  let cropOrigRect = null;
+  let cropSelEl = null;
+  let cropRatio = null; // e.g. 1, 4/3, 16/9, or null
+
+  function clearCropSelection(){
+    cropRect = null;
+    cropOverlay.innerHTML = '';
+    cropSelEl = null;
+  }
+  function startCropWithRatio(r){
+    cropRatio = r==='free' ? null : (r==='1:1' ? 1 : (r==='4:3' ? 4/3 : 16/9));
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width * 0.6;
+    const h = cropRatio ? w / cropRatio : rect.height * 0.6;
+    cropRect = { x: rect.width*0.2, y: rect.height*0.2, w, h };
+    renderCropSelection();
+  }
+  function renderCropSelection(){
+    cropOverlay.innerHTML = '';
+    if(!cropRect) return;
+    const el = document.createElement('div');
+    el.className = 'crop-sel';
+    el.style.left = cropRect.x+'px'; el.style.top = cropRect.y+'px';
+    el.style.width = cropRect.w+'px'; el.style.height = cropRect.h+'px';
+    ['nw','ne','sw','se'].forEach(pos=>{
+      const h = document.createElement('div');
+      h.className = 'crop-handle '+pos;
+      h.dataset.handle = pos;
+      el.appendChild(h);
+    });
+    cropOverlay.appendChild(el);
+    cropSelEl = el;
+  }
+  cropOverlay.addEventListener('pointerdown', (e)=>{
+    if(activeTool!=='crop' || !hasImage) return;
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const px = e.clientX - wrapRect.left, py = e.clientY - wrapRect.top;
+
+    if(e.target.classList.contains('crop-handle')){
+      cropDrag = e.target.dataset.handle;
+      cropOrigRect = {...cropRect};
+      cropStartPt = {x:px,y:py};
+    } else if(e.target.classList.contains('crop-sel')){
+      cropDrag = 'move';
+      cropOrigRect = {...cropRect};
+      cropStartPt = {x:px,y:py};
+    } else {
+      cropDrag = 'new';
+      cropStartPt = {x:px,y:py};
+      cropRect = {x:px,y:py,w:0,h:0};
+      renderCropSelection();
+    }
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if(!cropDrag) return;
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const px = clamp(e.clientX - wrapRect.left, 0, wrapRect.width);
+    const py = clamp(e.clientY - wrapRect.top, 0, wrapRect.height);
+    const dx = px - cropStartPt.x, dy = py - cropStartPt.y;
+
+    if(cropDrag==='new'){
+      let w = px - cropStartPt.x, h = py - cropStartPt.y;
+      if(cropRatio){ h = Math.sign(h||1) * Math.abs(w) / cropRatio; }
+      cropRect = {
+        x: w<0 ? px : cropStartPt.x,
+        y: h<0 ? py : cropStartPt.y,
+        w: Math.abs(w), h: Math.abs(h)
+      };
+    } else if(cropDrag==='move'){
+      cropRect.x = clamp(cropOrigRect.x + dx, 0, wrapRect.width - cropRect.w);
+      cropRect.y = clamp(cropOrigRect.y + dy, 0, wrapRect.height - cropRect.h);
+    } else {
+      // corner resize
+      let {x,y,w,h} = cropOrigRect;
+      if(cropDrag.includes('e')) w = clamp(w+dx, 10, wrapRect.width-x);
+      if(cropDrag.includes('s')) h = clamp(h+dy, 10, wrapRect.height-y);
+      if(cropDrag.includes('w')){ const nw = clamp(w-dx,10,x+w); x = x+w-nw; w = nw; }
+      if(cropDrag.includes('n')){ const nh = clamp(h-dy,10,y+h); y = y+h-nh; h = nh; }
+      if(cropRatio){ h = w / cropRatio; }
+      cropRect = {x,y,w,h};
+    }
+    renderCropSelection();
+  });
+  window.addEventListener('pointerup', ()=>{ cropDrag = null; });
+
+  function applyCrop(){
+    if(!cropRect || cropRect.w < 4 || cropRect.h < 4) return;
+    commitAdjustments();
+    const scale = canvas.width / canvas.getBoundingClientRect().width;
+    const sx = Math.round(cropRect.x * scale);
+    const sy = Math.round(cropRect.y * scale);
+    const sw = Math.round(cropRect.w * scale);
+    const sh = Math.round(cropRect.h * scale);
+    const imgData = ctx.getImageData(clamp(sx,0,canvas.width-1), clamp(sy,0,canvas.height-1),
+                                      Math.min(sw,canvas.width-sx), Math.min(sh,canvas.height-sy));
+    canvas.width = imgData.width;
+    canvas.height = imgData.height;
+    ctx.putImageData(imgData,0,0);
+    applyZoomStyle();
+    updateDimsLabel();
+    clearCropSelection();
+    pushHistory();
+  }
+
+  // ---------- Brush ----------
+  let isDrawing = false, lastPt = null;
+  function canvasPointFromEvent(e){
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width, scaleY = canvas.height / rect.height;
+    return { x:(e.clientX-rect.left)*scaleX, y:(e.clientY-rect.top)*scaleY };
+  }
+  canvas.addEventListener('pointerdown', (e)=>{
+    if(activeTool!=='brush' || !hasImage) return;
+    isDrawing = true;
+    lastPt = canvasPointFromEvent(e);
+    ctx.beginPath();
+    ctx.moveTo(lastPt.x, lastPt.y);
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if(!isDrawing || activeTool!=='brush') return;
+    const pt = canvasPointFromEvent(e);
+    ctx.strokeStyle = brush.color;
+    ctx.lineWidth = brush.size;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.globalAlpha = brush.opacity/100;
+    ctx.lineTo(pt.x, pt.y);
+    ctx.stroke();
+    lastPt = pt;
+  });
+  window.addEventListener('pointerup', ()=>{
+    if(isDrawing){ isDrawing=false; ctx.globalAlpha = 1; clearFilterBase(); pushHistory(); }
+  });
+
+  // ---------- Text ----------
+  canvas.addEventListener('click', (e)=>{
+    if(activeTool!=='text' || !hasImage) return;
+    if(textLayer.querySelector('.text-input-box')) return;
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const left = e.clientX - wrapRect.left;
+    const top = e.clientY - wrapRect.top;
+
+    const box = document.createElement('div');
+    box.className = 'text-input-box';
+    box.contentEditable = 'true';
+    box.style.left = left+'px';
+    box.style.top = (top - textOpt.size*0.6)+'px';
+    box.style.font = `${textOpt.size * (canvas.getBoundingClientRect().width/canvas.width)}px ${textOpt.font}`;
+    box.style.color = textOpt.color;
+    textLayer.appendChild(box);
+    box.focus();
+
+    function commitText(){
+      const value = box.textContent;
+      if(value && value.trim().length){
+        const scale = canvas.width / canvas.getBoundingClientRect().width;
+        const cx = left*scale, cy = top*scale;
+        ctx.font = `${textOpt.size}px ${textOpt.font}`;
+        ctx.fillStyle = textOpt.color;
+        ctx.textBaseline = 'middle';
+        ctx.fillText(value, cx, cy);
+        clearFilterBase();
+        pushHistory();
+      }
+      box.remove();
+    }
+    box.addEventListener('blur', commitText);
+    box.addEventListener('keydown', (ev)=>{
+      if(ev.key==='Enter'){ ev.preventDefault(); box.blur(); }
+      if(ev.key==='Escape'){ box.removeEventListener('blur', commitText); box.remove(); }
+    });
+  });
+
+  // ---------- Scan fix: auto contrast & threshold (binarize) ----------
+  autoContrastBtn.addEventListener('click', ()=>{
+    if(!hasImage) return;
+    commitAdjustments();
+    const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const d = imgData.data;
+    let min = 255, max = 0;
+    for(let i=0;i<d.length;i+=4){
+      const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      if(lum < min) min = lum;
+      if(lum > max) max = lum;
+    }
+    const range = max - min;
+    if(range < 1) return; // already flat, nothing to stretch
+    for(let i=0;i<d.length;i+=4){
+      d[i]   = clamp(((d[i]  -min)/range)*255, 0, 255);
+      d[i+1] = clamp(((d[i+1]-min)/range)*255, 0, 255);
+      d[i+2] = clamp(((d[i+2]-min)/range)*255, 0, 255);
+    }
+    ctx.putImageData(imgData,0,0);
+    pushHistory();
+  });
+
+  function renderThresholdPreview(){
+    if(!thresholdBase) return;
+    const t = +rThreshold.value;
+    const src = thresholdBase.data;
+    const out = ctx.createImageData(thresholdBase.width, thresholdBase.height);
+    const od = out.data;
+    for(let i=0;i<src.length;i+=4){
+      const lum = 0.299*src[i] + 0.587*src[i+1] + 0.114*src[i+2];
+      const v = lum >= t ? 255 : 0;
+      od[i]=v; od[i+1]=v; od[i+2]=v; od[i+3]=src[i+3];
+    }
+    ctx.putImageData(out,0,0);
+  }
+  thresholdEnable.addEventListener('change', ()=>{
+    if(!hasImage){ thresholdEnable.checked = false; return; }
+    if(thresholdEnable.checked){
+      commitAdjustments();
+      thresholdBase = ctx.getImageData(0,0,canvas.width,canvas.height);
+      thresholdControls.classList.remove('hidden');
+      renderThresholdPreview();
+    } else {
+      thresholdControls.classList.add('hidden');
+      if(thresholdBase){ ctx.putImageData(thresholdBase,0,0); thresholdBase = null; }
+    }
+  });
+  rThreshold.addEventListener('input', ()=>{
+    valThreshold.value = rThreshold.value;
+    renderThresholdPreview();
+  });
+  rThreshold.addEventListener('change', commitThresholdIfActive);
+  bindNumberSync(rThreshold, valThreshold);
+  function commitThresholdIfActive(){
+    if(!thresholdBase) return;
+    thresholdBase = null;
+    thresholdEnable.checked = false;
+    thresholdControls.classList.add('hidden');
+    clearFilterBase();
+    pushHistory();
+  }
+  thresholdResetBtn.addEventListener('click', ()=>{
+    if(thresholdBase){ ctx.putImageData(thresholdBase,0,0); thresholdBase = null; }
+    thresholdEnable.checked = false;
+    thresholdControls.classList.add('hidden');
+  });
+
+  // ---------- Background removal (lasso selection + auto same-color detection) ----------
+  function updateBgPickedUI(){
+    const info = document.getElementById('bgPickedInfo');
+    const swatch = document.getElementById('bgColorSwatch');
+    if(info) info.classList.remove('hidden');
+    if(swatch && bgPickedColor){
+      swatch.style.background = `rgb(${Math.round(bgPickedColor.r)},${Math.round(bgPickedColor.g)},${Math.round(bgPickedColor.b)})`;
+    }
+  }
+  function renderBgRemovePreview(){
+    if(!bgRemoveBase || !bgPickedColor) return;
+    const toleranceEl = document.getElementById('rBgTolerance');
+    const tolerance = toleranceEl ? +toleranceEl.value : 30;
+    const toleranceDist = (tolerance/100) * 300;
+    const feather = Math.max(12, toleranceDist*0.3);
+    const src = bgRemoveBase.data;
+    const w = bgRemoveBase.width, h = bgRemoveBase.height;
+    const out = ctx.createImageData(w,h);
+    const od = out.data;
+    const pr = bgPickedColor.r, pg = bgPickedColor.g, pb = bgPickedColor.b;
+    const maskData = bgLassoMask ? bgLassoMask.data : null;
+    for(let i=0;i<src.length;i+=4){
+      od[i]=src[i]; od[i+1]=src[i+1]; od[i+2]=src[i+2]; od[i+3]=src[i+3];
+      if(maskData && maskData[i+3] <= 128) continue; // outside the drawn lasso: leave untouched
+      const dr = src[i]-pr, dg = src[i+1]-pg, db = src[i+2]-pb;
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      let alphaFactor;
+      if(dist <= toleranceDist - feather) alphaFactor = 0;
+      else if(dist >= toleranceDist + feather) alphaFactor = 1;
+      else alphaFactor = (dist - (toleranceDist - feather)) / (2*feather);
+      od[i+3] = Math.round(src[i+3] * alphaFactor);
+    }
+    ctx.putImageData(out,0,0);
+  }
+  function autoDetectBg(){
+    if(!hasImage) return;
+    commitBgRemoveIfActive();
+    clearLassoState();
+    bgRemoveBase = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const w = bgRemoveBase.width, h = bgRemoveBase.height, d = bgRemoveBase.data;
+    const corners = [[0,0],[w-1,0],[0,h-1],[w-1,h-1]];
+    let r=0,g=0,b=0;
+    corners.forEach(([x,y])=>{ const i=(y*w+x)*4; r+=d[i]; g+=d[i+1]; b+=d[i+2]; });
+    bgPickedColor = { r:r/4, g:g/4, b:b/4 };
+    updateBgPickedUI();
+    renderBgRemovePreview();
+  }
+  function commitBgRemoveIfActive(){
+    if(!bgRemoveBase) return false;
+    bgRemoveBase = null;
+    bgPickedColor = null;
+    clearLassoState();
+    hideBgPickedUI();
+    clearFilterBase();
+    pushHistory();
+    return true;
+  }
+  function resetBgRemove(){
+    if(bgRemoveBase) ctx.putImageData(bgRemoveBase,0,0);
+    bgPickedColor = null;
+    clearLassoState();
+    hideBgPickedUI();
+  }
+
+  // --- Lasso drawing (dashed marching-ants outline) ---
+  function sizeLassoCanvas(){
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    lassoCanvas.width = Math.round(wrapRect.width);
+    lassoCanvas.height = Math.round(wrapRect.height);
+  }
+  function drawLassoPath(closed){
+    if(!lassoPoints || lassoPoints.length < 2) return;
+    lassoCtx.clearRect(0,0,lassoCanvas.width,lassoCanvas.height);
+    lassoCtx.save();
+    lassoCtx.lineWidth = 1.5;
+    lassoCtx.setLineDash([5,4]);
+    lassoCtx.strokeStyle = 'rgba(255,255,255,0.9)';
+    if(closed){
+      lassoCtx.fillStyle = 'rgba(61,138,255,0.15)';
+    }
+    lassoCtx.beginPath();
+    lassoCtx.moveTo(lassoPoints[0].x, lassoPoints[0].y);
+    for(let i=1;i<lassoPoints.length;i++) lassoCtx.lineTo(lassoPoints[i].x, lassoPoints[i].y);
+    if(closed){ lassoCtx.closePath(); lassoCtx.fill(); }
+    lassoCtx.stroke();
+    // second pass in accent color, offset dash, for a two-tone marching-ants look
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#3d8aff';
+    lassoCtx.strokeStyle = accentColor;
+    lassoCtx.lineDashOffset = 5;
+    lassoCtx.stroke();
+    lassoCtx.restore();
+  }
+  function lassoBoundingArea(points){
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    points.forEach(p=>{
+      if(p.x<minX)minX=p.x; if(p.x>maxX)maxX=p.x;
+      if(p.y<minY)minY=p.y; if(p.y>maxY)maxY=p.y;
+    });
+    return (maxX-minX)*(maxY-minY);
+  }
+  function finalizeLassoSelection(){
+    if(!lassoPoints || lassoBoundingArea(lassoPoints) < 100){
+      clearLassoState();
+      return;
+    }
+    commitBgRemoveIfActive(); // finalize any earlier selection before starting this one
+
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const scaleX = canvas.width / wrapRect.width;
+    const scaleY = canvas.height / wrapRect.height;
+
+    // Rasterize the drawn polygon into a same-size mask canvas (in image pixel space)
+    const maskCanvas = document.createElement('canvas');
+    maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+    const mctx = maskCanvas.getContext('2d');
+    mctx.fillStyle = '#fff';
+    mctx.beginPath();
+    lassoPoints.forEach((p,i)=>{
+      const px = p.x*scaleX, py = p.y*scaleY;
+      if(i===0) mctx.moveTo(px,py); else mctx.lineTo(px,py);
+    });
+    mctx.closePath();
+    mctx.fill();
+    const maskData = mctx.getImageData(0,0,maskCanvas.width,maskCanvas.height);
+
+    let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity;
+    lassoPoints.forEach(p=>{
+      const px=p.x*scaleX, py=p.y*scaleY;
+      if(px<minX)minX=px; if(px>maxX)maxX=px;
+      if(py<minY)minY=py; if(py>maxY)maxY=py;
+    });
+    minX = clamp(Math.floor(minX),0,canvas.width-1);
+    minY = clamp(Math.floor(minY),0,canvas.height-1);
+    maxX = clamp(Math.ceil(maxX),0,canvas.width-1);
+    maxY = clamp(Math.ceil(maxY),0,canvas.height-1);
+
+    bgRemoveBase = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const md = maskData.data, bd = bgRemoveBase.data, w = canvas.width;
+    let rSum=0,gSum=0,bSum=0,count=0;
+    for(let y=minY;y<=maxY;y++){
+      for(let x=minX;x<=maxX;x++){
+        const idx = (y*w+x)*4;
+        if(md[idx+3] > 128){
+          rSum += bd[idx]; gSum += bd[idx+1]; bSum += bd[idx+2]; count++;
+        }
+      }
+    }
+    if(count === 0){ bgRemoveBase = null; clearLassoState(); return; }
+
+    bgPickedColor = { r:rSum/count, g:gSum/count, b:bSum/count };
+    bgLassoMask = maskData;
+    bgLassoBBox = {minX,minY,maxX,maxY};
+    lassoPoints = null;
+
+    updateBgPickedUI();
+    renderBgRemovePreview();
+  }
+  bgLassoOverlay.addEventListener('pointerdown', (e)=>{
+    if(activeTool!=='bgremove' || !hasImage) return;
+    sizeLassoCanvas();
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    lassoPoints = [{ x:e.clientX-wrapRect.left, y:e.clientY-wrapRect.top }];
+    lassoDrawing = true;
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', (e)=>{
+    if(!lassoDrawing) return;
+    const wrapRect = canvasWrap.getBoundingClientRect();
+    const x = clamp(e.clientX-wrapRect.left, 0, wrapRect.width);
+    const y = clamp(e.clientY-wrapRect.top, 0, wrapRect.height);
+    lassoPoints.push({x,y});
+    drawLassoPath(false);
+  });
+  window.addEventListener('pointerup', ()=>{
+    if(!lassoDrawing) return;
+    lassoDrawing = false;
+    if(lassoPoints && lassoPoints.length > 2){
+      drawLassoPath(true);
+    }
+    finalizeLassoSelection();
+  });
+
+  // ---------- Open / Download / Reset ----------
+  openBtn.addEventListener('click', ()=> fileInput.click());
+  placeholderOpenBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', (e)=>{
+    if(e.target.files[0]) loadImageFile(e.target.files[0]);
+    fileInput.value = '';
+  });
+
+  downloadBtn.addEventListener('click', ()=>{
+    if(!hasImage) return;
+    commitAdjustments();
+    const a = document.createElement('a');
+    a.download = 'darkroom-edit.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if(!hasImage || !originalSrc) return;
+    if(!confirm('すべての編集を破棄してオリジナルに戻しますか？')) return;
+    cancelThresholdPreview();
+    cancelBgRemovePreview();
+    clearFilterBase();
+    const img = new Image();
+    img.onload = ()=>{
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.drawImage(img,0,0);
+      applyZoomStyle();
+      updateDimsLabel();
+      resetSlidersUI();
+      history = [originalSrc]; historyIndex = 0;
+      updateHistoryButtons();
+    };
+    img.src = originalSrc;
+  });
+
+  undoBtn.addEventListener('click', undo);
+  redoBtn.addEventListener('click', redo);
+
+  // ---------- Drag & drop ----------
+  ['dragenter','dragover'].forEach(evt=>{
+    stage.addEventListener(evt, (e)=>{ e.preventDefault(); placeholder.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(evt=>{
+    stage.addEventListener(evt, (e)=>{ e.preventDefault(); placeholder.classList.remove('dragover'); });
+  });
+  stage.addEventListener('drop', (e)=>{
+    e.preventDefault();
+    const file = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(file) loadImageFile(file);
+  });
+
+  // ---------- Keyboard shortcuts ----------
+  window.addEventListener('keydown', (e)=>{
+    const meta = e.ctrlKey || e.metaKey;
+    if(meta && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); undo(); }
+    if(meta && (e.key.toLowerCase()==='y' || (e.key.toLowerCase()==='z' && e.shiftKey))){ e.preventDefault(); redo(); }
+    if(meta && e.key.toLowerCase()==='s'){ e.preventDefault(); downloadBtn.click(); }
+  });
+
+  // ---------- Paste image from clipboard ----------
+  function isEditableTarget(el){
+    if(!el) return false;
+    const tag = el.tagName;
+    return tag==='INPUT' || tag==='TEXTAREA' || el.isContentEditable;
+  }
+  window.addEventListener('paste', (e)=>{
+    if(isEditableTarget(document.activeElement)) return; // let normal text paste happen
+    const items = e.clipboardData && e.clipboardData.items;
+    if(!items) return;
+    for(const item of items){
+      if(item.kind==='file' && item.type && item.type.startsWith('image/')){
+        const blob = item.getAsFile();
+        if(blob){
+          e.preventDefault();
+          loadImageFile(blob);
+        }
+        return;
+      }
+    }
+  });
+
+  // ---------- Init ----------
+  setActiveTool('adjust');
+  updateSliderLabels();
+})();
+</script>
+</body>
+</html>
