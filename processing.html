@@ -700,7 +700,7 @@
 
     const videoHtml = p.videoUrl
       ? `<div class="video-player">
-           <video controls autoplay muted loop playsinline preload="metadata" src="${p.videoUrl}"></video>
+           <video controls autoplay muted loop playsinline preload="metadata" controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false" src="${p.videoUrl}"></video>
          </div>`
       : `<span class="video-hint">参考動画はありません</span>`;
 
