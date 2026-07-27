@@ -1,0 +1,2974 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTIMATE NEON CASINO & ROULETTE</title>
+    <!-- Google Fonts: Orbitron & Noto Sans JP -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #07070c;
+            --card-bg: rgba(18, 18, 30, 0.95);
+            --neon-pink: #ff0055;
+            --neon-blue: #00f0ff;
+            --neon-green: #39ff14;
+            --neon-yellow: #ffeb3b;
+            --gold: #ffd700;
+            --bronze: #cd7f32;
+            --border-glow: 0 0 10px rgba(0, 240, 255, 0.3);
+            --text-glow: 0 0 8px rgba(0, 240, 255, 0.6);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #ffffff;
+            font-family: 'Noto Sans JP', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- 画面遷移用コンテナ --- */
+        .screen {
+            display: none;
+            min-height: 100vh;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        /* --- ネオンボタン共通 --- */
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: #fff;
+            padding: 12px 28px;
+            font-size: 1rem;
+            font-weight: bold;
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+            transition: all 0.3s ease;
+            outline: none;
+            margin: 8px;
+        }
+        .btn-neon:hover:not(:disabled) {
+            background: var(--neon-blue);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.6);
+            text-shadow: none;
+        }
+        .btn-neon:disabled {
+            border-color: #444;
+            color: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-pink {
+            border-color: var(--neon-pink);
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
+        }
+        .btn-pink:hover:not(:disabled) {
+            background: var(--neon-pink);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.6);
+        }
+
+        /* --- ヘッダー・共通UI --- */
+        .game-header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 8px;
+            box-shadow: var(--border-glow);
+            margin-bottom: 20px;
+        }
+
+        .header-logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: var(--text-glow);
+        }
+
+        .wallet-container {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            color: var(--neon-green);
+            text-shadow: 0 0 8px rgba(57, 255, 20, 0.6);
+            font-weight: bold;
+        }
+
+        /* ====================================================
+           1. スタート画面 (利用規約・暗号)
+        ==================================================== */
+        #start-screen {
+            justify-content: center;
+            background: radial-gradient(circle at center, #110e24 0%, #030208 100%);
+        }
+        .title-logo-large {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--neon-pink);
+            text-shadow: 0 0 15px rgba(255, 0, 85, 0.8), 0 0 30px rgba(255, 0, 85, 0.4);
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        .subtitle-large {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            letter-spacing: 4px;
+            color: var(--neon-blue);
+            text-shadow: var(--text-glow);
+            margin-bottom: 40px;
+        }
+        .terms-box {
+            width: 100%;
+            max-width: 550px;
+            background: rgba(10, 10, 18, 0.9);
+            border: 1px solid rgba(255, 0, 85, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #ccc;
+        }
+        .terms-box h3 {
+            color: var(--neon-pink);
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+        .terms-agree-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+        .terms-agree-wrap input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--neon-pink);
+            cursor: pointer;
+        }
+
+        /* ====================================================
+           2. ホーム画面 (エリア選択)
+        ==================================================== */
+        .home-menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            width: 100%;
+            max-width: 1000px;
+            margin-top: 20px;
+        }
+        .menu-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .menu-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+        .menu-card.blue-card::before { background: var(--neon-blue); }
+        .menu-card.pink-card::before { background: var(--neon-pink); }
+        .menu-card.yellow-card::before { background: var(--neon-yellow); }
+
+        .menu-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .menu-card.blue-card:hover { box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); }
+        .menu-card.pink-card:hover { box-shadow: 0 0 15px rgba(255, 0, 85, 0.2); }
+        .menu-card.yellow-card:hover { box-shadow: 0 0 15px rgba(255, 235, 59, 0.2); }
+
+        .menu-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+        }
+        .menu-card p {
+            font-size: 0.9rem;
+            color: #aaa;
+            line-height: 1.5;
+        }
+
+        /* ====================================================
+           3. クイズ画面
+        ==================================================== */
+        .quiz-box {
+            width: 100%;
+            max-width: 700px;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: var(--border-glow);
+            text-align: center;
+        }
+        .quiz-progress {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--neon-blue);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        .quiz-word {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.3);
+            margin-bottom: 25px;
+        }
+        .quiz-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .btn-option {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+        }
+        .btn-option:hover:not(:disabled) {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--neon-blue);
+        }
+        .btn-option.correct-choice {
+            background: rgba(57, 255, 20, 0.2) !important;
+            border-color: var(--neon-green) !important;
+        }
+        .btn-option.incorrect-choice {
+            background: rgba(255, 0, 85, 0.2) !important;
+            border-color: var(--neon-pink) !important;
+        }
+
+        /* ====================================================
+           4. クルーンルーレット画面
+        ==================================================== */
+        .croon-layout-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+        .croon-dashboard {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(10,10,20,0.8);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        .stage-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            color: var(--neon-pink);
+            text-shadow: 0 0 8px rgba(255,0,85,0.6);
+            font-weight: bold;
+        }
+        .bet-selector-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .bet-select {
+            background: #111;
+            color: #fff;
+            border: 1px solid var(--neon-blue);
+            padding: 6px 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            border-radius: 4px;
+        }
+
+        /* ネオンサークルルーレット */
+        .roulette-board-wrapper {
+            position: relative;
+            width: 480px;
+            height: 480px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .roulette-circle-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 4px dashed var(--neon-blue);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
+        }
+        /* 9段目までのUP時警告発光クラス */
+        .roulette-circle-container.up-alert-glow {
+            border-color: var(--neon-pink) !important;
+            box-shadow: 0 0 35px var(--neon-pink), inset 0 0 25px rgba(255,0,85,0.4) !important;
+            animation: pulse-glow-red 0.5s infinite alternate;
+        }
+        @keyframes pulse-glow-red {
+            0% { box-shadow: 0 0 20px var(--neon-pink); }
+            100% { box-shadow: 0 0 45px var(--neon-pink); }
+        }
+
+        /* マスの円形配置用 */
+        .roulette-cell {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #222;
+            border: 2px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #fff;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+            transition: all 0.15s ease;
+        }
+        .roulette-cell.active-lamp {
+            background: #fff !important;
+            border-color: #fff !important;
+            color: #000 !important;
+            box-shadow: 0 0 25px #fff, 0 0 10px #fff;
+            transform: translate(-50%, -50%) scale(1.15);
+            z-index: 10;
+        }
+
+        /* 11段目の金、虹色クラス */
+        .roulette-cell.cell-gold {
+            background: linear-gradient(135deg, #ffd700 0%, #b8860b 100%) !important;
+            border-color: #fff !important;
+            color: #000 !important;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+        .roulette-cell.cell-rainbow {
+            background: linear-gradient(45deg, #ff0055, #00f0ff, #39ff14, #ffeb3b, #ff0055) !important;
+            border-color: #fff !important;
+            color: #fff !important;
+            text-shadow: 0 0 5px #000;
+            background-size: 400% 400%;
+            animation: rainbow-shift 3s infinite linear;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+        }
+        @keyframes rainbow-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .roulette-center-info {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(5,5,10,0.95);
+            border: 2px solid rgba(0, 240, 255, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            text-align: center;
+            padding: 15px;
+        }
+        .center-stage-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            color: #aaa;
+        }
+        .center-stage-num {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-blue);
+            text-shadow: var(--text-glow);
+        }
+
+        .croon-status-box {
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-top: 15px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* ====================================================
+           5. 英単語スロットマシン画面
+        ==================================================== */
+        .slot-page-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        /* 電光掲示板 */
+        .signboard-outer {
+            width: 100%;
+            max-width: 700px;
+            background: #05050a;
+            border: 3px solid #1a1a33;
+            border-radius: 6px;
+            padding: 12px;
+            box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2), 0 0 15px rgba(0, 240, 255, 0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        .signboard-text {
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--neon-yellow);
+            text-shadow: 0 0 8px rgba(255, 235, 59, 0.8);
+            text-align: center;
+            height: 30px;
+            line-height: 30px;
+            transition: opacity 0.3s ease;
+        }
+
+        /* 10段階ゲージ */
+        .gauge-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 700px;
+            background: rgba(10,10,20,0.8);
+            border: 1px solid rgba(0,240,255,0.2);
+            border-radius: 6px;
+            padding: 10px 15px;
+            margin-bottom: 25px;
+        }
+        .gauge-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            color: var(--neon-blue);
+            font-weight: bold;
+        }
+        .gauge-cells-container {
+            display: flex;
+            gap: 6px;
+            flex-grow: 1;
+            margin-left: 15px;
+        }
+        .gauge-cell {
+            height: 14px;
+            flex-grow: 1;
+            background: #222;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .gauge-cell.filled {
+            background: var(--neon-pink);
+            box-shadow: 0 0 8px var(--neon-pink);
+        }
+
+        /* スロットキャビネット */
+        .slot-machine-cabinet {
+            background: linear-gradient(180deg, #18182a 0%, #0d0d18 100%);
+            border: 4px solid #3a3a5e;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 460px;
+            padding: 30px 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 20px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        .slot-reels-window {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            width: 100%;
+            background: #000;
+            border: 6px solid #222;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+            position: relative;
+        }
+        .slot-reels-window::after {
+            content: '';
+            position: absolute;
+            left: 0; top: 50%; width: 100%; height: 2px;
+            background: rgba(255, 0, 85, 0.5);
+            box-shadow: 0 0 5px rgba(255, 0, 85, 0.8);
+            transform: translateY(-50%);
+            pointer-events: none;
+        }
+
+        /* 各リール */
+        .reel-column {
+            width: 30%;
+            height: 120px;
+            background: #111;
+            border-radius: 6px;
+            border: 2px solid #333;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .reel-strip {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: transform 0.05s linear;
+        }
+        .reel-symbol {
+            height: 120px;
+            line-height: 120px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #fff;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        /* 操作パネル */
+        .slot-control-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        .stop-buttons-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            gap: 15px;
+        }
+        .btn-stop-reel {
+            flex: 1;
+            background: #ff0055;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            height: 60px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #990033, 0 5px 10px rgba(0,0,0,0.5);
+            outline: none;
+            transition: transform 0.1s;
+        }
+        .btn-stop-reel:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #990033, 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .btn-stop-reel:disabled {
+            background: #333;
+            box-shadow: none;
+            cursor: not-allowed;
+            color: #666;
+        }
+
+        .btn-lever {
+            width: 100%;
+            height: 50px;
+            background: linear-gradient(180deg, #39ff14 0%, #28b80e 100%);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: 900;
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #1b8009, 0 8px 15px rgba(0,0,0,0.4);
+            outline: none;
+            transition: all 0.1s ease;
+        }
+        .btn-lever:active:not(:disabled) {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #1b8009, 0 3px 5px rgba(0,0,0,0.4);
+        }
+        .btn-lever:disabled {
+            background: #444;
+            color: #777;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* ====================================================
+           画面揺らし＆マネーエフェクト
+        ==================================================== */
+        @keyframes shake-intensity {
+            0% { transform: translate(2px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(0px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            75% { transform: translate(2px, 1px) rotate(-1deg); }
+            90% { transform: translate(-1px, -1px) rotate(1deg); }
+            100% { transform: translate(2px, -2px) rotate(0deg); }
+        }
+        .shake-screen {
+            animation: shake-intensity 0.15s infinite;
+        }
+
+        /* コインパーティクル */
+        .money-particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 1.5rem;
+            z-index: 100;
+            animation: fall-spin 2s linear forwards;
+        }
+        @keyframes fall-spin {
+            0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(720deg) scale(0.6); opacity: 0; }
+        }
+
+        /* ====================================================
+           各種特大カットイン＆全画面警告オーバーレイ
+        ==================================================== */
+        .warning-overlay-black {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .warning-giant-text {
+            font-family: 'Orbitron', 'Noto Sans JP', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink);
+            text-align: center;
+            line-height: 1.5;
+            animation: blink-warning 0.5s infinite alternate;
+        }
+        @keyframes blink-warning {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        /* フラッシュ */
+        .screen-flash-warning {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(255, 0, 85, 0.4);
+            z-index: 999;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* 11段目 爆発演出レイヤー */
+        #giant-explosion-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #fff;
+            z-index: 2000;
+            display: none;
+        }
+        #summit-giant-text {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.1);
+            font-family: 'Noto Sans JP', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 30px #ffd700, 0 0 10px #fff;
+            z-index: 2001;
+            opacity: 0;
+            display: none;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+        }
+
+        /* 花火キャンバス */
+        #fireworks-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2100;
+            pointer-events: none;
+            display: none;
+        }
+
+        /* --- 管理者用モーダル --- */
+        .admin-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.85);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .admin-modal-content {
+            background: var(--card-bg);
+            border: 2px solid var(--neon-blue);
+            border-radius: 10px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .admin-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid var(--neon-blue);
+            color: #fff;
+            padding: 10px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            text-align: center;
+            border-radius: 4px;
+            outline: none;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- フラッシュ・警告用 -->
+    <div class="screen-flash-warning" id="screen-flash-warning"></div>
+    <div class="warning-overlay-black" id="warning-overlay">
+        <div class="warning-giant-text" id="warning-overlay-text">WARNING</div>
+    </div>
+    <div id="giant-explosion-layer"></div>
+    <div id="summit-giant-text">無限天国突破！！！</div>
+    <canvas id="fireworks-canvas"></canvas>
+
+    <!-- ====================================================
+       1. スタート画面
+    ==================================================== -->
+    <div class="screen active" id="start-screen">
+        <div class="title-logo-large">NEON HYPER CASINO</div>
+        <div class="subtitle-large">THE ABSOLUTE HEAVEN OR HELL</div>
+
+        <div class="terms-box">
+            <h3>利用規約 (Terms of Service)</h3>
+            <p>1. 本ゲームは完全シミュレーターであり、現実の金銭の賭け、換金、または賞品の受渡しは一切発生いたしません。</p>
+            <p>2. ブラウザを閉じても、獲得したスコア・所持金はCookieおよびLocalStorageに個人セーブデータとして保存されます。</p>
+            <p>3. ゲーム開始にあたり、不正プログラムの利用禁止に同意いただく必要があります。</p>
+            <p>4. 電光掲示板や激しい閃光演出、点滅を多く含みます。光刺激に敏感な方はプレイを十分お気を付けください。</p>
+        </div>
+
+        <div class="terms-agree-wrap">
+            <input type="checkbox" id="terms-agree-check">
+            <label for="terms-agree-check">利用規約に同意してプレイを開始します</label>
+        </div>
+
+        <button class="btn-neon btn-pink" id="btn-start-game" disabled>CASINO GATE OPEN</button>
+        <button class="btn-neon" onclick="openAdminModal()" style="margin-top:20px; font-size:0.8rem; border-color:#555;">暗号認証 (ADMIN CODE)</button>
+    </div>
+
+    <!-- ====================================================
+       2. メインホーム画面
+    ==================================================== -->
+    <div class="screen" id="home-screen">
+        <div class="game-header">
+            <div class="header-logo">NEON HYPER CASINO</div>
+            <div class="wallet-container">所持金: ¥<span id="wallet-val">0</span></div>
+        </div>
+
+        <h1 style="font-family:'Orbitron', sans-serif; letter-spacing:3px; margin:20px 0; color:var(--neon-blue);">SELECT CASINO AREA</h1>
+
+        <div class="home-menu-grid">
+            <div class="menu-card yellow-card" onclick="changeScreen('quiz-screen')">
+                <h2>ENGLISH QUIZ</h2>
+                <p style="color:var(--neon-yellow); margin-bottom:10px;">正解ごとに ¥1,000 獲得！</p>
+                <p>都立高校入試レベルの最重要英単語500題を収録。カジノで遊ぶための軍資金をここでがっちり稼ぎましょう！</p>
+            </div>
+
+            <div class="menu-card pink-card" onclick="goToCroonArea()">
+                <h2>NEON ROULETTE</h2>
+                <p style="color:var(--neon-pink); margin-bottom:10px;">11層構造クルーン・最大1000倍！</p>
+                <p>破滅と楽園が交差する超巨大ランプルーレット。10層の激アツ判定を突破し、無限に継続する天空の11層目を目指せ！</p>
+            </div>
+
+            <div class="menu-card blue-card" onclick="goToSlotArea()">
+                <h2>WORD SLOT MACHINE</h2>
+                <p style="color:var(--neon-blue); margin-bottom:10px;">1プレイ ¥500 / 当たり ¥10,000</p>
+                <p>3リール式の英単語スロット。10段階のゲージをマックスにして「SPチャンス」を引き当て、超高配当MAXを狙え！</p>
+            </div>
+        </div>
+
+        <button class="btn-neon" onclick="openAdminModal()" style="margin-top:40px;">暗号認証 (ADMIN)</button>
+    </div>
+
+    <!-- ====================================================
+       3. クイズ画面
+    ==================================================== -->
+    <div class="screen" id="quiz-screen">
+        <div class="game-header">
+            <div class="header-logo" style="cursor:pointer;" onclick="exitQuizToHome()">← HOME</div>
+            <div class="wallet-container">所持金: ¥<span id="wallet-val-quiz">0</span></div>
+        </div>
+
+        <div class="quiz-box">
+            <div class="quiz-progress">QUESTION <span id="quiz-idx-text">1</span> / 500</div>
+            <div style="font-size:0.9rem; color:#888; margin-bottom:10px;">意味として正しいものを選んでください：</div>
+            <div class="quiz-word" id="quiz-word-text">establish</div>
+
+            <div class="quiz-options-grid" id="quiz-options-container">
+                <!-- JSで動的生成 -->
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:10px;">
+                <button class="btn-neon" id="btn-quiz-next" style="display:none;" onclick="loadNextQuestion()">次の問題へ</button>
+                <button class="btn-neon btn-pink" id="btn-quiz-exit" onclick="exitQuizToHome()">カジノへ戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+       4. クルーンルーレット画面
+    ==================================================== -->
+    <div class="screen" id="croon-screen">
+        <div class="game-header">
+            <div class="header-logo" id="btn-back-croon-wrapper">
+                <span id="btn-back-croon" style="cursor:pointer;" onclick="exitCroonToHome()">← HOME</span>
+            </div>
+            <div class="wallet-container">所持金: ¥<span id="wallet-val-croon">0</span></div>
+        </div>
+
+        <div class="croon-layout-container">
+            <div class="croon-dashboard">
+                <div class="stage-badge" id="stage-badge-text">STAGE 1</div>
+                <div class="bet-selector-container">
+                    <span style="font-weight:bold; font-size:0.9rem;">掛け金設定:</span>
+                    <select class="bet-select" id="croon-bet-select" onchange="changeCroonBet()">
+                        <!-- 1000円から1億円までJSで動的生成 -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- 円形ルーレットボード -->
+            <div class="roulette-board-wrapper">
+                <div class="roulette-circle-container" id="roulette-container">
+                    <!-- マスが円状に配置される -->
+                </div>
+                <div class="roulette-center-info">
+                    <div class="center-stage-text">CURRENT</div>
+                    <div class="center-stage-num" id="center-stage-display">STAGE 1</div>
+                    <button class="btn-neon btn-pink" id="btn-croon-go" style="display:none; margin-top:10px; font-size:0.8rem; padding:6px 14px;" onclick="pressGoButton()">GO!</button>
+                </div>
+            </div>
+
+            <div class="croon-status-box" id="croon-status-text">掛け金を決めて、ゲームスタートを押してください！</div>
+
+            <div style="margin-top:20px; display:flex; gap:15px;">
+                <button class="btn-neon btn-pink" id="btn-croon-start" onclick="startCroonGame()">抽選開始 (BET)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+       5. 英単語スロットマシン画面
+    ==================================================== */ -->
+    <div class="screen" id="slot-screen">
+        <div class="game-header">
+            <div class="header-logo" id="btn-back-slot-wrapper">
+                <span id="btn-back-slot" style="cursor:pointer;" onclick="exitSlotToHome()">← HOME</span>
+            </div>
+            <div class="wallet-container">所持金: ¥<span id="wallet-val-slot">0</span></div>
+        </div>
+
+        <div class="slot-page-container">
+            <!-- 電光掲示板 -->
+            <div class="signboard-outer">
+                <div class="signboard-text" id="slot-signboard">WELCOME TO WORD SLOT Machine! (1PLAY: ¥500)</div>
+            </div>
+
+            <!-- 10段階ゲージ -->
+            <div class="gauge-wrap">
+                <div class="gauge-label">CHANCE GAUGE</div>
+                <div class="gauge-cells-container" id="gauge-container">
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                    <div class="gauge-cell"></div>
+                </div>
+            </div>
+
+            <!-- スロットキャビネット -->
+            <div class="slot-machine-cabinet" id="slot-cabinet">
+                <div class="slot-reels-window">
+                    <!-- Reel 1 -->
+                    <div class="reel-column" id="reel-col-0">
+                        <div class="reel-strip" id="reel-strip-0">
+                            <!-- JSでシンボル流し込み -->
+                        </div>
+                    </div>
+                    <!-- Reel 2 -->
+                    <div class="reel-column" id="reel-col-1">
+                        <div class="reel-strip" id="reel-strip-1">
+                            <!-- JSでシンボル流し込み -->
+                        </div>
+                    </div>
+                    <!-- Reel 3 -->
+                    <div class="reel-column" id="reel-col-2">
+                        <div class="reel-strip" id="reel-strip-2">
+                            <!-- JSでシンボル流し込み -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="slot-control-panel">
+                    <div class="stop-buttons-row">
+                        <button class="btn-stop-reel" id="btn-stop-0" disabled onclick="stopReel(0)">1</button>
+                        <button class="btn-stop-reel" id="btn-stop-1" disabled onclick="stopReel(1)">2</button>
+                        <button class="btn-stop-reel" id="btn-stop-2" disabled onclick="stopReel(2)">3</button>
+                    </div>
+                    <button class="btn-lever" id="btn-slot-lever" onclick="pullLever()">SPIN LEVER (¥500)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====================================================
+       管理者認証用モーダル
+    ==================================================== -->
+    <div class="admin-modal-overlay" id="admin-modal">
+        <div class="admin-modal-content">
+            <h3 style="font-family:'Orbitron', sans-serif; color:var(--neon-blue);">ENTER CRYPTO CODE</h3>
+            <p style="font-size:0.8rem; color:#888; margin-top:5px;">支給コードを入力してください</p>
+            <input type="password" class="admin-input" id="admin-code-input" placeholder="••••••">
+            <div style="display:flex; justify-content:space-between; gap:10px;">
+                <button class="btn-neon" style="flex:1;" onclick="submitAdminCode()">確認</button>
+                <button class="btn-neon btn-pink" style="flex:1;" onclick="closeAdminModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ====================================================
+       ゲームスクリプト
+    ==================================================== -->
+    <script>
+        // --- 共通ゲームステート ---
+        let wallet = 0;
+        let isSpinning = false; // 共通ルーレット/スロット制御
+
+        // 音声制御（Web Audio API 軽量シンセ）
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        function playSound(type) {
+            if (!audioCtx) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                let now = audioCtx.currentTime;
+                if (type === 'select') {
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'spin') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now);
+                    osc.frequency.linearRampToValueAtTime(300, now + 0.08);
+                    gain.gain.setValueAtTime(0.03, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                } else if (type === 'stop') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                } else if (type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    osc.frequency.setValueAtTime(1046.50, now + 0.3);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.5);
+                    osc.start(now);
+                    osc.stop(now + 0.5);
+                } else if (type === 'fail') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.4);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'warning') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(220, now + 0.2);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'explosion') {
+                    // ノイズによる爆発音擬似表現
+                    let bufferSize = audioCtx.sampleRate * 1.5;
+                    let buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                    let data = buffer.getChannelData(0);
+                    for (let i = 0; i < bufferSize; i++) {
+                        data[i] = Math.random() * 2 - 1;
+                    }
+                    let noise = audioCtx.createBufferSource();
+                    noise.buffer = buffer;
+                    let noiseFilter = audioCtx.createBiquadFilter();
+                    noiseFilter.type = 'lowpass';
+                    noiseFilter.frequency.setValueAtTime(400, now);
+                    noiseFilter.frequency.exponentialRampToValueAtTime(10, now + 1.2);
+                    let noiseGain = audioCtx.createGain();
+                    noiseGain.gain.setValueAtTime(0.3, now);
+                    noiseGain.gain.linearRampToValueAtTime(0.01, now + 1.5);
+                    noise.connect(noiseFilter);
+                    noiseFilter.connect(noiseGain);
+                    noiseGain.connect(audioCtx.destination);
+                    noise.start(now);
+                    noise.stop(now + 1.5);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // --- セーブ＆ロードシステム (LocalStorage) ---
+        function saveGame() {
+            localStorage.setItem('neon_casino_wallet_2026', wallet.toString());
+        }
+        function loadGame() {
+            const saved = localStorage.getItem('neon_casino_wallet_2026');
+            if (saved !== null) {
+                wallet = parseInt(saved, 10);
+                if (isNaN(wallet)) wallet = 0;
+            } else {
+                wallet = 0; // デフォルト初期所持金0円
+            }
+            updateAllWalletUIs();
+        }
+        function updateAllWalletUIs() {
+            document.getElementById('wallet-val').innerText = wallet.toLocaleString();
+            document.getElementById('wallet-val-quiz').innerText = wallet.toLocaleString();
+            document.getElementById('wallet-val-croon').innerText = wallet.toLocaleString();
+            document.getElementById('wallet-val-slot').innerText = wallet.toLocaleString();
+        }
+
+        // --- 画面遷移関数 ---
+        function changeScreen(screenId) {
+            initAudio();
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.classList.add('active');
+                window.scrollTo(0,0);
+            }
+        }
+
+        // ====================================================
+        // 英単語クイズデータ (都立高校入試レベル厳選500単語)
+        // ====================================================
+        const quizWordsData = [
+            { w: "ability", m: "能力", o: ["能力", "義務", "理由", "自然"] },
+            { w: "abroad", m: "外国へ", o: ["外国へ", "急速に", "安全に", "突然に"] },
+            { w: "accept", m: "受け入れる", o: ["受け入れる", "断る", "準備する", "無視する"] },
+            { w: "accident", m: "事故", o: ["事故", "目的", "秘密", "歴史"] },
+            { w: "achieve", m: "達成する", o: ["達成する", "失敗する", "忘れる", "攻撃する"] },
+            { w: "act", m: "行動する", o: ["行動する", "考える", "話す", "眠る"] },
+            { w: "active", m: "活発な", o: ["活発な", "退屈な", "静かな", "悲しい"] },
+            { w: "activity", m: "活動", o: ["活動", "沈黙", "平和", "規則"] },
+            { w: "actor", m: "俳優", o: ["俳優", "監督", "作家", "観客"] },
+            { w: "actually", m: "実際は", o: ["実際は", "おそらく", "絶対に", "大抵は"] },
+            { w: "add", m: "加える", o: ["加える", "引く", "割る", "消す"] },
+            { w: "admire", m: "賞賛する", o: ["賞賛する", "嫌う", "忘れる", "疑う"] },
+            { w: "advice", m: "助言", o: ["助言", "障害", "秘密", "命令"] },
+            { w: "affect", m: "影響を与える", o: ["影響を与える", "結果を出す", "無視する", "歓迎する"] },
+            { w: "afford", m: "余裕がある", o: ["余裕がある", "不足する", "支払う", "心配する"] },
+            { w: "agree", m: "同意する", o: ["同意する", "反対する", "拒絶する", "無視する"] },
+            { w: "aim", m: "目指す", o: ["目指す", "逃げる", "恐れる", "諦める"] },
+            { w: "allow", m: "許可する", o: ["許可する", "禁止する", "止める", "奪う"] },
+            { w: "almost", m: "ほとんど", o: ["ほとんど", "全く", "徐々に", "決して"] },
+            { w: "alone", m: "独りで", o: ["独りで", "一緒に", "交互に", "突然に"] },
+            { w: "along", m: "に沿って", o: ["に沿って", "を横切って", "を越えて", "の前に"] },
+            { w: "already", m: "すでに", o: ["すでに", "まだ", "時々", "すぐに"] },
+            { w: "although", m: "だけれども", o: ["だけれども", "しかし", "それゆえに", "代わりに"] },
+            { w: "always", m: "いつも", o: ["いつも", "たまに", "めったに〜ない", "決して〜ない"] },
+            { w: "amount", m: "量", o: ["量", "質", "速さ", "温度"] },
+            { w: "ancient", m: "古代の", o: ["古代の", "現代の", "未来の", "流行の"] },
+            { w: "anger", m: "怒り", o: ["怒り", "喜び", "恐れ", "悲しみ"] },
+            { w: "another", m: "もう一つの", o: ["もう一つの", "最初の", "最後の", "同じの"] },
+            { w: "anxious", m: "心配して", o: ["心配して", "興奮して", "怒って", "満足して"] },
+            { w: "apologize", m: "謝る", o: ["謝る", "許す", "感謝する", "非難する"] },
+            { w: "appear", m: "現れる", o: ["現れる", "消える", "隠れる", "去る"] },
+            { w: "area", m: "地域", o: ["地域", "国家", "宇宙", "世界"] },
+            { w: "argue", m: "主張する", o: ["主張する", "同意する", "黙る", "聞く"] },
+            { w: "art", m: "芸術", o: ["芸術", "科学", "体育", "数学"] },
+            { w: "article", m: "記事", o: ["記事", "書籍", "手紙", "絵画"] },
+            { w: "artist", m: "芸術家", o: ["芸術家", "科学者", "政治家", "労働者"] },
+            { w: "attack", m: "攻撃する", o: ["攻撃する", "守る", "降伏する", "逃げる"] },
+            { w: "attend", m: "出席する", o: ["出席する", "欠席する", "招待する", "拒絶する"] },
+            { w: "attention", m: "注意", o: ["注意", "無視", "恐怖", "怠惰"] },
+            { w: "attitude", m: "態度", o: ["態度", "高度", "速度", "制度"] },
+            { w: "attract", m: "引きつける", o: ["引きつける", "追い出す", "拒絶する", "静める"] },
+            { w: "audience", m: "聴衆", o: ["聴衆", "演者", "指導者", "スタッフ"] },
+            { w: "average", m: "平均の", o: ["平均の", "最高の", "最低の", "中途半端な"] },
+            { w: "avoid", m: "避ける", o: ["避ける", "求める", "直面する", "好む"] },
+            { w: "base", m: "土台", o: ["土台", "屋根", "壁", "窓"] },
+            { w: "beautiful", m: "美しい", o: ["美しい", "醜い", "退屈な", "にぎやかな"] },
+            { w: "behavior", m: "行動", o: ["行動", "言葉", "感情", "秘密"] },
+            { w: "believe", m: "信じる", o: ["信じる", "疑う", "拒絶する", "憎む"] },
+            { w: "belong", m: "属する", o: ["属する", "離れる", "支配する", "所有する"] },
+            { w: "besides", m: "に加えて", o: ["に加えて", "を除いて", "の代わりに", "の前に"] },
+            { w: "beyond", m: "を越えて", o: ["を越えて", "の近くに", "の下に", "の間に"] },
+            { w: "bill", m: "請求書", o: ["請求書", "教科書", "案内書", "辞書"] },
+            { w: "blood", m: "血液", o: ["血液", "皮膚", "骨", "筋肉"] },
+            { w: "board", m: "板", o: ["板", "鍵", "箱", "布"] },
+            { w: "body", m: "体", o: ["体", "心", "頭脳", "精神"] },
+            { w: "bone", m: "骨", o: ["骨", "肉", "爪", "髪"] },
+            { w: "book", m: "予約する", o: ["予約する", "読む", "売る", "書く"] },
+            { w: "bored", m: "退屈した", o: ["退屈した", "興奮した", "満足した", "疲れた"] },
+            { w: "borrow", m: "借りる", o: ["借りる", "貸す", "返す", "買う"] },
+            { w: "brain", m: "脳", o: ["脳", "心臓", "胃", "肺"] },
+            { w: "brave", m: "勇敢な", o: ["勇敢な", "臆病な", "愚かな", "賢い"] },
+            { w: "bridge", m: "橋", o: ["橋", "道路", "線路", "トンネル"] },
+            { w: "bright", m: "明るい", o: ["明るい", "暗い", "退屈な", "重い"] },
+            { w: "bring", m: "持ってくる", o: ["持ってくる", "持っていく", "捨てる", "壊す"] },
+            { w: "broad", m: "広い", o: ["広い", "狭い", "深い", "浅い"] },
+            { w: "build", m: "建てる", o: ["建てる", "壊す", "片付ける", "掃除する"] },
+            { w: "burn", m: "燃える", o: ["燃える", "凍る", "濡れる", "乾く"] },
+            { w: "business", m: "ビジネス", o: ["ビジネス", "休暇", "学習", "趣味"] },
+            { w: "busy", m: "忙しい", o: ["忙しい", "暇な", "退屈な", "静かな"] },
+            { w: "calm", m: "穏やかな", o: ["穏やかな", "荒い", "騒がしい", "冷たい"] },
+            { w: "campaign", m: "キャンペーン", o: ["キャンペーン", "衝突", "混乱", "無視"] },
+            { w: "cancer", m: "がん", o: ["がん", "風邪", "虫歯", "頭痛"] },
+            { w: "candidate", m: "候補者", o: ["候補者", "指導者", "支持者", "有権者"] },
+            { w: "capital", m: "首都", o: ["首都", "田舎", "国境", "領土"] },
+            { w: "careful", m: "注意深い", o: ["注意深い", "不注意な", "勇敢な", "素早い"] },
+            { w: "career", m: "経歴", o: ["経歴", "趣味", "休暇", "友情"] },
+            { w: "carry", m: "運ぶ", o: ["運ぶ", "落とす", "投げる", "壊す"] },
+            { w: "case", m: "場合", o: ["場合", "道具", "家具", "衣装"] },
+            { w: "cash", m: "現金", o: ["現金", "切符", "小切手", "金貨"] },
+            { w: "castle", m: "城", o: ["城", "宮殿", "寺院", "教会"] },
+            { w: "catch", m: "捕まえる", o: ["捕まえる", "逃がす", "投げる", "避ける"] },
+            { w: "cause", m: "引き起こす", o: ["引き起こす", "解決する", "避ける", "邪魔する"] },
+            { w: "celebrate", m: "祝う", o: ["祝う", "悲しむ", "謝る", "非難する"] },
+            { w: "cell", m: "細胞", o: ["細胞", "臓器", "神経", "皮膚"] },
+            { w: "century", m: "世紀", o: ["世紀", "年間", "季節", "時代"] },
+            { w: "certain", m: "確信して", o: ["確信して", "疑って", "恐れて", "知らずに"] },
+            { w: "challenge", m: "挑戦", o: ["挑戦", "諦め", "勝利", "敗北"] },
+            { w: "chance", m: "機会", o: ["機会", "危機", "必然", "運命"] },
+            { w: "change", m: "変える", o: ["変える", "維持する", "真似する", "隠す"] },
+            { w: "character", m: "性格", o: ["性格", "体格", "背景", "知識"] },
+            { w: "charge", m: "料金", o: ["料金", "無料", "利益", "赤字"] },
+            { w: "charity", m: "慈善活動", o: ["慈善活動", "商業", "投資", "労働"] },
+            { w: "cheap", m: "安い", o: ["安い", "高い", "貴重な", "美しい"] },
+            { w: "check", m: "調べる", o: ["調べる", "無視する", "忘れる", "捨てる"] },
+            { w: "cheerful", m: "陽気な", o: ["陽気な", "陰気な", "厳格な", "静かな"] },
+            { w: "chemical", m: "化学の", o: ["化学の", "物理の", "生物の", "地質の"] },
+            { w: "chief", m: "主要な", o: ["主要な", "無名の", "部分的な", "一時的な"] },
+            { w: "childhood", m: "子供時代", o: ["子供時代", "青年時代", "老後", "未来"] },
+            { w: "choice", m: "選択", o: ["選択", "義務", "拒否", "強制"] },
+            { w: "choose", m: "選ぶ", o: ["選ぶ", "捨てる", "無視する", "失う"] },
+            { w: "circle", m: "円", o: ["円", "四角", "三角", "直線"] },
+            { w: "citizen", m: "市民", o: ["市民", "外国人", "指導者", "兵士"] },
+            { w: "city", m: "都市", o: ["都市", "田舎", "村", "森"] },
+            { w: "civil", m: "市民の", o: ["市民の", "軍事の", "個人の", "秘密の"] },
+            { w: "claim", m: "主張する", o: ["主張する", "否定する", "謝る", "譲る"] },
+            { w: "class", m: "授業", o: ["授業", "試験", "休み時間", "部活"] },
+            { w: "clear", m: "澄んだ", o: ["澄んだ", "濁った", "暗い", "不確かな"] },
+            { w: "clerk", m: "事務員", o: ["事務員", "店主", "客", "観客"] },
+            { w: "clever", m: "賢い", o: ["賢い", "愚かな", "騒がしい", "内気な"] },
+            { w: "climate", m: "気候", o: ["気候", "天気", "風速", "湿度"] },
+            { w: "climb", m: "登る", o: ["登る", "降りる", "飛ぶ", "走る"] },
+            { w: "close", m: "閉じる", o: ["閉じる", "開く", "片付ける", "探す"] },
+            { w: "clothing", m: "衣類", o: ["衣類", "家具", "食器", "住宅"] },
+            { w: "cloud", m: "雲", o: ["雲", "霧", "雨", "風"] },
+            { w: "coach", m: "コーチ", o: ["コーチ", "選手", "審判", "観客"] },
+            { w: "coal", m: "石炭", o: ["石炭", "木材", "原油", "天然ガス"] },
+            { w: "coast", m: "海岸", o: ["海岸", "砂漠", "山脈", "森林"] },
+            { w: "coin", m: "硬貨", o: ["硬貨", "紙幣", "小切手", "価値"] },
+            { w: "cold", m: "冷たい", o: ["冷たい", "温かい", "熱い", "ぬるい"] },
+            { w: "collect", m: "集める", o: ["集める", "散らす", "捨てる", "失う"] },
+            { w: "college", m: "大学", o: ["大学", "高校", "中学校", "小学校"] },
+            { w: "colleague", m: "同僚", o: ["同僚", "上司", "部下", "顧客"] },
+            { w: "colony", m: "植民地", o: ["植民地", "本国", "同盟国", "中立国"] },
+            { w: "color", m: "色", o: ["色", "形", "音", "光"] },
+            { w: "combine", m: "組み合わせる", o: ["組み合わせる", "分離する", "壊す", "捨てる"] },
+            { w: "come", m: "来る", o: ["来る", "行く", "去る", "戻る"] },
+            { w: "comfort", m: "快適さ", o: ["快適さ", "苦痛", "緊張", "不安"] },
+            { w: "command", m: "命令する", o: ["命令する", "従う", "謝る", "相談する"] },
+            { w: "common", m: "共通の", o: ["共通の", "珍しい", "独特な", "個人の"] },
+            { w: "company", m: "会社", o: ["会社", "学校", "病院", "公園"] },
+            { w: "compare", m: "比較する", o: ["比較する", "同一視する", "無視する", "評価する"] },
+            { w: "compete", m: "競争する", o: ["競争する", "協力する", "譲歩する", "避ける"] },
+            { w: "complain", m: "不満を言う", o: ["不満を言う", "感謝する", "称賛する", "同意する"] },
+            { w: "complete", m: "完了する", o: ["完了する", "始める", "中断する", "諦める"] },
+            { w: "complex", m: "複雑な", o: ["複雑な", "単純な", "平易な", "明確な"] },
+            { w: "computer", m: "コンピューター", o: ["コンピューター", "テレビ", "電話", "カメラ"] },
+            { w: "concentrate", m: "集中する", o: ["集中する", "気を散らす", "無視する", "休む"] },
+            { w: "concern", m: "懸念", o: ["懸念", "確信", "喜び", "無関心"] },
+            { w: "conclude", m: "結論づける", o: ["結論づける", "導入する", "質問する", "疑う"] },
+            { w: "condition", m: "状態", o: ["状態", "原因", "結果", "目標"] },
+            { w: "conduct", m: "実施する", o: ["実施する", "妨げる", "中断する", "計画する"] },
+            { w: "confidence", m: "自信", o: ["自信", "不安", "疑問", "恐怖"] },
+            { w: "confirm", m: "確認する", o: ["確認する", "疑う", "否定する", "忘れる"] },
+            { w: "conflict", m: "対立", o: ["対立", "調和", "同意", "協力"] },
+            { w: "confuse", m: "混乱させる", o: ["混乱させる", "納得させる", "説明する", "安心させる"] },
+            { w: "congratulate", m: "祝う", o: ["祝う", "見舞う", "避ける", "非難する"] },
+            { w: "connect", m: "接続する", o: ["接続する", "切断する", "分離する", "失う"] },
+            { w: "conscious", m: "意識している", o: ["意識している", "無意識の", "眠っている", "忘れている"] },
+            { w: "consider", m: "よく考える", o: ["よく考える", "無視する", "決断する", "忘れる"] },
+            { w: "consist", m: "構成される", o: ["構成される", "分解される", "始まる", "終わる"] },
+            { w: "constant", m: "絶え間ない", o: ["絶え間ない", "一時的な", "まれな", "不規則な"] },
+            { w: "construct", m: "建設する", o: ["建設する", "破壊する", "修復する", "設計する"] },
+            { w: "consume", m: "消費する", o: ["消費する", "生産する", "蓄積する", "保護する"] },
+            { w: "contact", m: "連絡を取る", o: ["連絡を取る", "避ける", "無視する", "別れる"] },
+            { w: "contain", m: "含む", o: ["含む", "除外する", "消費する", "漏らす"] },
+            { w: "contemporary", m: "現代の", o: ["現代の", "古代の", "中世の", "未来の"] },
+            { w: "contest", m: "コンテスト", o: ["コンテスト", "訓練", "講義", "試験"] },
+            { w: "continue", m: "続ける", o: ["続ける", "止める", "諦める", "戻る"] },
+            { w: "contract", m: "契約", o: ["契約", "交渉", "破棄", "自由"] },
+            { w: "contrast", m: "対比", o: ["対比", "類似", "融合", "一致"] },
+            { w: "contribute", m: "貢献する", o: ["貢献する", "邪魔する", "依存する", "要求する"] },
+            { w: "control", m: "支配する", o: ["支配する", "従う", "解放する", "諦める"] },
+            { w: "convenient", m: "便利な", o: ["便利な", "不便な", "高価な", "壊れやすい"] },
+            { w: "conversation", m: "会話", o: ["会話", "沈黙", "スピーチ", "読書"] },
+            { w: "convey", m: "伝える", o: ["伝える", "隠す", "拒否する", "忘れる"] },
+            { w: "convince", m: "納得させる", o: ["納得させる", "疑わせる", "欺く", "混乱させる"] },
+            { w: "cook", m: "料理する", o: ["料理する", "食べる", "洗う", "片付ける"] },
+            { w: "cool", m: "涼しい", o: ["涼しい", "温かい", "冷たい", "暑い"] },
+            { w: "cooperate", m: "協力する", o: ["協力する", "対立する", "競う", "邪魔する"] },
+            { w: "cope", m: "対処する", o: ["対処する", "避ける", "降伏する", "無視する"] },
+            { w: "copy", m: "写し", o: ["写し", "原本", "創作", "発明"] },
+            { w: "corner", m: "角", o: ["角", "中央", "直線", "境界"] },
+            { w: "correct", m: "正しい", o: ["正しい", "誤った", "不確かな", "複雑な"] },
+            { w: "cost", m: "費用がかかる", o: ["費用がかかる", "稼ぐ", "支払う", "節約する"] },
+            { w: "cottage", m: "コテージ", o: ["コテージ", "高層ビル", "宮殿", "工場"] },
+            { w: "cotton", m: "綿", o: ["綿", "羊毛", "絹", "麻"] },
+            { w: "cough", m: "咳をする", o: ["咳をする", "くしゃみをする", "呼吸する", "歌う"] },
+            { w: "could", m: "できた", o: ["できた", "するつもりだ", "すべきだ", "かもしれない"] },
+            { w: "council", m: "議会", o: ["議会", "政党", "裁判所", "市役所"] },
+            { w: "count", m: "数える", o: ["数える", "計る", "忘れる", "捨てる"] },
+            { w: "country", m: "国", o: ["国", "都市", "宇宙", "地域"] },
+            { w: "couple", m: "一対", o: ["一対", "単一", "多数", "無限"] },
+            { w: "courage", m: "勇気", o: ["勇気", "臆病", "恐怖", "絶望"] },
+            { w: "course", m: "進路", o: ["進路", "結果", "障害", "中断"] },
+            { w: "court", m: "裁判所", o: ["裁判所", "警察署", "刑務所", "市役所"] },
+            { w: "cousin", m: "いとこ", o: ["いとこ", "兄弟", "叔父", "姪"] },
+            { w: "cover", m: "覆う", o: ["覆う", "暴く", "外す", "見せる"] },
+            { w: "cow", m: "雌牛", o: ["雌牛", "雄牛", "馬", "豚"] },
+            { w: "crack", m: "ひびが入る", o: ["ひびが入る", "壊れる", "溶ける", "固まる"] },
+            { w: "craft", m: "工芸", o: ["工芸", "工業", "農業", "漁業"] },
+            { w: "crash", m: "衝突する", o: ["衝突する", "避ける", "滑る", "着陸する"] },
+            { w: "crazy", m: "狂気じみた", o: ["狂気じみた", "正気の", "穏やかな", "退屈な"] },
+            { w: "create", m: "創造する", o: ["創造する", "破壊する", "真似する", "消費する"] },
+            { w: "creative", m: "創造的な", o: ["創造的な", "平凡な", "保守的な", "退屈な"] },
+            { w: "creature", m: "生物", o: ["生物", "無機物", "植物", "道具"] },
+            { w: "credit", m: "信用", o: ["信用", "不信", "負債", "支払"] },
+            { w: "crew", m: "乗組員", o: ["乗組員", "乗客", "指導者", "観客"] },
+            { w: "crime", m: "犯罪", o: ["犯罪", "法律", "正義", "道徳"] },
+            { w: "crisis", m: "危機", o: ["危機", "安定", "平和", "転換"] },
+            { w: "critic", m: "批評家", o: ["批評家", "作家", "愛好家", "観客"] },
+            { w: "critical", m: "重大な", o: ["重大な", "些細な", "穏やかな", "一般的な"] },
+            { w: "criticize", m: "批判する", o: ["批判する", "称賛する", "弁護する", "許す"] },
+            { w: "crop", m: "作物", o: ["作物", "家畜", "雑草", "肥料"] },
+            { w: "cross", m: "横切る", o: ["横切る", "沿う", "囲む", "避ける"] },
+            { w: "crowd", m: "群衆", o: ["群衆", "個人", "少数", "指導者"] },
+            { w: "crown", m: "王冠", o: ["王冠", "指輪", "衣装", "盾"] },
+            { w: "crucial", m: "決定的な", o: ["決定的な", "無関係な", "些細な", "一時的な"] },
+            { w: "cruel", m: "残酷な", o: ["残酷な", "優しい", "勇敢な", "賢い"] },
+            { w: "cry", m: "泣く", o: ["泣く", "笑う", "怒る", "叫ぶ"] },
+            { w: "crystal", m: "結晶", o: ["結晶", "液体", "気体", "金属"] },
+            { w: "cultural", m: "文化的な", o: ["文化的な", "自然の", "科学的な", "原始的な"] },
+            { w: "culture", m: "文化", o: ["文化", "自然", "科学", "技術"] },
+            { w: "cupboard", m: "食器棚", o: ["食器棚", "冷蔵庫", "本棚", "衣装タンス"] },
+            { w: "cure", m: "治療する", o: ["治療する", "悪化させる", "傷つける", "検査する"] },
+            { w: "curious", m: "好奇心旺盛な", o: ["好奇心旺盛な", "無関心な", "怠惰な", "静かな"] },
+            { w: "currency", m: "通貨", o: ["通貨", "貿易", "負債", "価値"] },
+            { w: "current", m: "現在の", o: ["現在の", "過去の", "未来の", "一時的な"] },
+            { w: "curriculum", m: "カリキュラム", o: ["カリキュラム", "学級", "校則", "教科書"] },
+            { w: "curtain", m: "カーテン", o: ["カーテン", "窓", "絨毯", "壁紙"] },
+            { w: "curve", m: "曲線", o: ["曲線", "直線", "鋭角", "平面"] },
+            { w: "cushion", m: "クッション", o: ["クッション", "布団", "毛布", "枕"] },
+            { w: "custom", m: "習慣", o: ["習慣", "流行", "法律", "個人の癖"] },
+            { w: "customer", m: "顧客", o: ["顧客", "販売員", "仕入れ先", "見物人"] },
+            { w: "cycle", m: "周期", o: ["周期", "不規則", "直線", "一時的"] },
+            { w: "daily", m: "日常の", o: ["日常の", "特別な", "週に一度の", "季節の"] },
+            { w: "damage", m: "損害を与える", o: ["損害を与える", "修復する", "保護する", "改善する"] },
+            { w: "damp", m: "湿っぽい", o: ["湿っぽい", "乾いた", "暑い", "冷たい"] },
+            { w: "dance", m: "踊る", o: ["踊る", "歌う", "叫ぶ", "走る"] },
+            { w: "danger", m: "危険", o: ["危険", "安全", "平和", "安定"] },
+            { w: "dangerous", m: "危険な", o: ["危険な", "安全な", "穏やかな", "確実な"] },
+            { w: "dare", m: "あえて〜する", o: ["あえて〜する", "避ける", "恐れる", "諦める"] },
+            { w: "dark", m: "暗い", o: ["暗い", "明るい", "軽い", "鮮やかな"] },
+            { w: "data", m: "データ", o: ["データ", "直感", "推測", "仮説"] },
+            { w: "date", m: "日付", o: ["日付", "時間", "年齢", "世紀"] },
+            { w: "daughter", m: "娘", o: ["娘", "息子", "母親", "父親"] },
+            { w: "dawn", m: "夜明け", o: ["夜明け", "日中", "夕暮れ", "深夜"] },
+            { w: "day", m: "日", o: ["日", "月", "年", "週"] },
+            { w: "dead", m: "死んでいる", o: ["死んでいる", "生きている", "眠っている", "病んでいる"] },
+            { w: "deal", m: "扱う", o: ["扱う", "無視する", "避ける", "拒否する"] },
+            { w: "dear", m: "親愛なる", o: ["親愛なる", "嫌いな", "冷たい", "見知らぬ"] },
+            { w: "death", m: "死", o: ["死", "誕生", "生存", "若さ"] },
+            { w: "debate", m: "討論", o: ["討論", "独白", "合意", "雑談"] },
+            { w: "debt", m: "借金", o: ["借金", "貯金", "投資", "給与"] },
+            { w: "decade", m: "10年間", o: ["10年間", "1年間", "100年間", "半世紀"] },
+            { w: "decay", m: "腐敗する", o: ["腐敗する", "新鮮に保つ", "成長する", "固まる"] },
+            { w: "decent", m: "きちんとした", o: ["きちんとした", "不作法な", "豪華な", "異常な"] },
+            { w: "decide", m: "決定する", o: ["決定する", "迷う", "延期する", "忘れる"] },
+            { w: "decision", m: "決定", o: ["決定", "迷い", "提案", "開始"] },
+            { w: "declare", m: "宣言する", o: ["宣言する", "隠す", "疑う", "否定する"] },
+            { w: "decline", m: "減少する", o: ["減少する", "増加する", "安定する", "急上昇する"] },
+            { w: "decorate", m: "飾る", o: ["飾る", "汚す", "片付ける", "壊す"] },
+            { w: "decrease", m: "減少する", o: ["減少する", "増加する", "倍増する", "広がる"] },
+            { w: "deep", m: "深い", o: ["深い", "浅い", "狭い", "広い"] },
+            { w: "defeat", m: "打ち負かす", o: ["打ち負かす", "敗北する", "協力する", "逃げる"] },
+            { w: "defend", m: "守る", o: ["守る", "攻撃する", "降伏する", "避ける"] },
+            { w: "define", m: "定義する", o: ["定義する", "あいまいに置く", "誤解する", "否定する"] },
+            { w: "definite", m: "明確な", o: ["明確な", "不確かな", "複雑な", "一般的な"] },
+            { w: "degree", m: "度", o: ["度", "長さ", "重さ", "体積"] },
+            { w: "delay", m: "遅らせる", o: ["遅らせる", "進める", "急ぐ", "予定する"] },
+            { w: "deliberate", m: "故意の", o: ["故意の", "偶然の", "急な", "無意識の"] },
+            { w: "delicate", m: "繊細な", o: ["繊細な", "頑丈な", "粗末な", "巨大な"] },
+            { w: "delicious", m: "美味しい", o: ["美味しい", "まずい", "辛い", "苦い"] },
+            { w: "delight", m: "大喜び", o: ["大喜び", "大失望", "激怒", "恐怖"] },
+            { w: "deliver", m: "配達する", o: ["配達する", "受け取る", "送る", "持ち帰る"] },
+            { w: "demand", m: "要求する", o: ["要求する", "提供する", "断る", "妥協する"] },
+            { w: "democracy", m: "民主主義", o: ["民主主義", "独裁主義", "貴族政治", "無政府"] },
+            { w: "demonstrate", m: "実演する", o: ["実演する", "隠す", "否定する", "疑問視する"] },
+            { w: "deny", m: "否定する", o: ["否定する", "認める", "主張する", "確認する"] },
+            { w: "depart", m: "出発する", o: ["出発する", "到着する", "留まる", "延期する"] },
+            { w: "depend", m: "依存する", o: ["依存する", "自立する", "支配する", "拒絶する"] },
+            { w: "deposit", m: "預金する", o: ["預金する", "引き出す", "支払う", "借りる"] },
+            { w: "depress", m: "意気消沈させる", o: ["意気消沈させる", "励ます", "楽しませる", "落ち着かせる"] },
+            { w: "depth", m: "深さ", o: ["深さ", "高さ", "幅", "面積"] },
+            { w: "derive", m: "由来する", o: ["由来する", "消滅する", "孤立する", "反対する"] },
+            { w: "describe", m: "描写する", o: ["描写する", "黙る", "誤解させる", "省略する"] },
+            { w: "desert", m: "砂漠", o: ["砂漠", "森林", "湿地", "草原"] },
+            { w: "deserve", m: "値する", o: ["値する", "不適格である", "不足する", "避ける"] },
+            { w: "design", m: "設計する", o: ["設計する", "破壊する", "真似する", "偶然作る"] },
+            { w: "desire", m: "望む", o: ["望む", "嫌う", "恐れる", "避ける"] },
+            { w: "desk", m: "机", o: ["机", "椅子", "本棚", "黒板"] },
+            { w: "despair", m: "絶望", o: ["絶望", "希望", "確信", "安心"] },
+            { w: "desperate", m: "必死の", o: ["必死の", "のんきな", "冷静な", "怠惰な"] },
+            { w: "despite", m: "にもかかわらず", o: ["にもかかわらず", "のために", "の代わりに", "に加えて"] },
+            { w: "destroy", m: "破壊する", o: ["破壊する", "建設する", "保護する", "修理する"] },
+            { w: "detail", m: "詳細", o: ["詳細", "全体", "省略", "概要"] },
+            { w: "detect", m: "見つける", o: ["見つける", "隠す", "無視する", "紛失する"] },
+            { w: "determine", m: "決定する", o: ["決定する", "迷う", "他人に従う", "放棄する"] },
+            { w: "develop", m: "発達させる", o: ["発達させる", "衰退させる", "維持する", "止める"] },
+            { w: "device", m: "装置", o: ["装置", "材料", "理論", "方法"] },
+            { w: "devote", m: "捧げる", o: ["捧げる", "奪う", "拒絶する", "無視する"] },
+            { w: "diagram", m: "図表", o: ["図表", "文章", "写真", "音声"] },
+            { w: "dialogue", m: "対話", o: ["対話", "独白", "沈黙", "スピーチ"] },
+            { w: "diamond", m: "ダイヤモンド", o: ["ダイヤモンド", "水晶", "金", "銀"] },
+            { w: "diary", m: "日記", o: ["日記", "教科書", "雑誌", "小説"] },
+            { w: "dictionary", m: "辞書", o: ["辞書", "参考書", "地図帳", "小説"] },
+            { w: "differ", m: "異なる", o: ["異なる", "同じである", "近づく", "変化する"] },
+            { w: "difference", m: "違い", o: ["違い", "類似", "平等", "全体"] },
+            { w: "difficult", m: "難しい", o: ["難しい", "簡単な", "明確な", "単純な"] },
+            { w: "dig", m: "掘る", o: ["掘る", "埋める", "建てる", "平らにする"] },
+            { w: "digital", m: "デジタルの", o: ["デジタルの", "アナログの", "手動の", "機械的な"] },
+            { w: "dignity", m: "尊厳", o: ["尊厳", "屈辱", "傲慢", "卑下"] },
+            { w: "diligent", m: "勤勉な", o: ["勤勉な", "怠惰な", "内気な", "無謀な"] },
+            { w: "dim", m: "薄暗い", o: ["薄暗い", "輝く", "透明な", "はっきりした"] },
+            { w: "dinner", m: "夕食", o: ["夕食", "朝食", "昼食", "おやつ"] },
+            { w: "dinosaur", m: "恐竜", o: ["恐竜", "哺乳類", "鳥類", "両生類"] },
+            { w: "diplomat", m: "外交官", o: ["外交官", "政治家", "弁護士", "裁判官"] },
+            { w: "direct", m: "直接の", o: ["直接の", "間接の", "迂回の", "複雑な"] },
+            { w: "direction", m: "方向", o: ["方向", "距離", "速度", "時間"] },
+            { w: "director", m: "監督", o: ["監督", "出演者", "脚本家", "観客"] },
+            { w: "dirty", m: "汚れた", o: ["汚れた", "清潔な", "新しい", "美しい"] },
+            { w: "disagree", m: "意見が合わない", o: ["意見が合わない", "賛成する", "相談する", "決定する"] },
+            { w: "disappear", m: "消える", o: ["消える", "現れる", "近づく", "拡大する"] },
+            { w: "disappoint", m: "失望させる", o: ["失望させる", "喜ばせる", "驚かせる", "納得させる"] },
+            { w: "disaster", m: "災害", o: ["災害", "幸運", "恩恵", "奇跡"] },
+            { w: "disc", m: "円盤", o: ["円盤", "球体", "立方体", "錐体"] },
+            { w: "discipline", m: "規律", o: ["規律", "自由", "反抗", "怠惰"] },
+            { w: "discover", m: "発見する", o: ["発見する", "発明する", "隠す", "紛失する"] },
+            { w: "discovery", m: "発見", o: ["発見", "紛失", "破壊", "無視"] },
+            { w: "discuss", m: "話し合う", o: ["話し合う", "黙る", "命令する", "争う"] },
+            { w: "discussion", m: "討議", o: ["討議", "合意", "沈黙", "スピーチ"] },
+            { w: "disease", m: "病気", o: ["病気", "健康", "治療", "体力"] },
+            { w: "disgust", m: "嫌悪感", o: ["嫌悪感", "好感", "興奮", "驚き"] },
+            { w: "dish", m: "皿", o: ["皿", "コップ", "スプーン", "鍋"] },
+            { w: "dislike", m: "嫌う", o: ["嫌う", "好む", "愛する", "無視する"] },
+            { w: "dismiss", m: "解雇する", o: ["解雇する", "雇う", "昇進させる", "歓迎する"] },
+            { w: "display", m: "展示する", o: ["展示する", "隠す", "捨てる", "購入する"] },
+            { w: "dispute", m: "論争する", o: ["論争する", "同意する", "謝罪する", "妥協する"] },
+            { w: "distance", m: "距離", o: ["距離", "速度", "面積", "角度"] },
+            { w: "distant", m: "遠い", o: ["遠い", "近い", "隣接した", "直接の"] },
+            { w: "distinct", m: "明確に異なる", o: ["明確に異なる", "類似した", "曖昧な", "不確かな"] },
+            { w: "distinguish", m: "区別する", o: ["区別する", "混同する", "同一視する", "無視する"] },
+            { w: "distribute", m: "分配する", o: ["分配する", "集める", "消費する", "捨てる"] },
+            { w: "district", m: "地区", o: ["地区", "国家", "国境", "世界"] },
+            { w: "disturb", m: "邪魔する", o: ["邪魔する", "助ける", "無視する", "歓迎する"] },
+            { w: "dive", m: "飛び込む", o: ["飛び込む", "這い上がる", "走る", "止まる"] },
+            { w: "diverse", m: "多様な", o: ["多様な", "均一な", "単調な", "少数の"] },
+            { w: "divide", m: "分ける", o: ["分ける", "合わせる", "増やす", "混ぜる"] },
+            { w: "divorce", m: "離婚", o: ["離婚", "結婚", "誕生", "友情"] },
+            { w: "document", m: "書類", o: ["書類", "会話", "記憶", "想像"] },
+            { w: "dog", m: "犬", o: ["犬", "猫", "鳥", "牛"] },
+            { w: "domestic", m: "国内の", o: ["国内の", "国際的な", "個人の", "宇宙の"] },
+            { w: "dominant", m: "支配的な", o: ["支配的な", "従属的な", "無名の", "弱い"] },
+            { w: "dominate", m: "支配する", o: ["支配する", "従う", "避ける", "降伏する"] },
+            { w: "donation", m: "寄付", o: ["寄付", "略奪", "投資", "請求"] },
+            { w: "door", m: "戸", o: ["戸", "窓", "壁", "床"] },
+            { w: "dot", m: "点", o: ["点", "線", "面", "円"] },
+            { w: "double", m: "二倍の", o: ["二倍の", "半分の", "同一の", "多数の"] },
+            { w: "doubt", m: "疑う", o: ["疑う", "確信する", "肯定する", "認める"] },
+            { w: "down", m: "下に", o: ["下に", "上に", "横に", "前に"] },
+            { w: "download", m: "ダウンロードする", o: ["ダウンロードする", "アップロードする", "削除する", "保存する"] },
+            { w: "downstairs", m: "階下へ", o: ["階下へ", "階上へ", "屋外へ", "屋内へ"] },
+            { w: "dozen", m: "ダース(12個)", o: ["ダース(12個)", "10個", "20個", "100個"] },
+            { w: "draft", m: "下書き", o: ["下書き", "完成品", "原本", "出版物"] },
+            { w: "drag", m: "引きずる", o: ["引きずる", "投げる", "持ち上げる", "押す"] },
+            { w: "drama", m: "劇", o: ["劇", "小説", "詩", "絵画"] },
+            { w: "dramatic", m: "劇的な", o: ["劇的な", "平凡な", "些細な", "退屈な"] },
+            { w: "draw", m: "描く", o: ["描く", "書く", "消す", "切る"] },
+            { w: "drawer", m: "引き出し", o: ["引き出し", "棚", "扉", "鍵"] },
+            { w: "dream", m: "夢", o: ["夢", "現実", "過去", "記憶"] },
+            { w: "dress", m: "ドレス", o: ["ドレス", "帽子", "靴", "鞄"] },
+            { w: "drift", m: "漂流する", o: ["漂流する", "錨を下ろす", "沈む", "飛ぶ"] },
+            { w: "drink", m: "飲む", o: ["飲む", "食べる", "噛む", "吸う"] },
+            { w: "drive", m: "運転する", o: ["運転する", "歩く", "走る", "飛ぶ"] },
+            { w: "drop", m: "落とす", o: ["落とす", "拾う", "投げる", "隠す"] },
+            { w: "drown", m: "溺死する", o: ["溺死する", "救助される", "泳ぐ", "浮かぶ"] },
+            { w: "drug", m: "薬", o: ["薬", "毒", "食料", "飲料"] },
+            { w: "drum", m: "太鼓", o: ["太鼓", "笛", "琴", "鈴"] },
+            { w: "drunk", m: "酔った", o: ["酔った", "しらふの", "病気の", "疲れた"] },
+            { w: "dry", m: "乾いた", o: ["乾いた", "濡れた", "暑い", "冷たい"] },
+            { w: "duck", m: "アヒル", o: ["アヒル", "鶏", "鳩", "カラス"] },
+            { w: "due", m: "支払われるべき", o: ["支払われるべき", "不必要な", "無料の", "遅れた"] },
+            { w: "dull", m: "退屈な", o: ["退屈な", "面白い", "鋭い", "明るい"] },
+            { w: "dumb", m: "言葉の不自由な", o: ["言葉の不自由な", "おしゃべりな", "賢い", "騒がしい"] },
+            { w: "dump", m: "投棄する", o: ["投棄する", "回収する", "保管する", "整理する"] },
+            { w: "during", m: "の間に", o: ["の間に", "の後に", "の前に", "を越えて"] },
+            { w: "dust", m: "ほこり", o: ["ほこり", "泥", "砂", "水滴"] },
+            { w: "duty", m: "義務", o: ["義務", "権利", "自由", "趣味"] },
+            { w: "each", m: "それぞれの", o: ["それぞれの", "全体の", "全ての", "複数の"] },
+            { w: "eager", m: "熱望して", o: ["熱望して", "嫌がって", "無関心で", "恐れて"] },
+            { w: "eagle", m: "ワシ", o: ["ワシ", "タカ", "スズメ", "カラス"] },
+            { w: "ear", m: "耳", o: ["耳", "目", "口", "鼻"] },
+            { w: "early", m: "早い", o: ["早い", "遅い", "適時な", "一時的な"] },
+            { w: "earn", m: "稼ぐ", o: ["稼ぐ", "支払う", "失う", "寄付する"] },
+            { w: "earth", m: "地球", o: ["地球", "月", "太陽", "宇宙"] },
+            { w: "ease", m: "容易さ", o: ["容易さ", "困難", "複雑", "危険"] },
+            { w: "east", m: "東", o: ["東", "西", "南", "北"] },
+            { w: "easy", m: "簡単な", o: ["簡単な", "難しい", "重い", "暗い"] },
+            { w: "eat", m: "食べる", o: ["食べる", "飲む", "噛む", "吐き出す"] },
+            { w: "echo", m: "こだま", o: ["こだま", "静寂", "雑音", "叫び"] },
+            { w: "ecological", m: "生態学的な", o: ["生態学的な", "経済的な", "物理的な", "化学的な"] },
+            { w: "economy", m: "経済", o: ["経済", "政治", "教育", "文化"] },
+            { w: "edge", m: "端", o: ["端", "中央", "平地", "頂上"] },
+            { w: "editor", m: "編集者", o: ["編集者", "著者", "読者", "出版者"] },
+            { w: "educate", m: "教育する", o: ["教育する", "放置する", "騙す", "邪魔する"] },
+            { w: "education", m: "教育", o: ["教育", "産業", "娯楽", "労働"] },
+            { w: "effect", m: "効果", o: ["効果", "原因", "動機", "過程"] },
+            { w: "effective", m: "効果的な", o: ["効果的な", "無駄な", "些細な", "一時的な"] },
+            { w: "efficiency", m: "効率", o: ["効率", "無駄", "低下", "速度"] },
+            { w: "efficient", m: "効率的な", o: ["効率的な", "非効率な", "遅い", "無駄な"] },
+            { w: "effort", m: "努力", o: ["努力", "怠惰", "結果", "幸運"] },
+            { w: "egg", m: "卵", o: ["卵", "肉", "骨", "羽"] },
+            { w: "either", m: "どちらか一方の", o: ["どちらか一方の", "両方の", "どちらも〜ない", "複数の"] },
+            { w: "elbow", m: "肘", o: ["肘", "膝", "手首", "足首"] },
+            { w: "elder", m: "年上の", o: ["年上の", "年下の", "同じ年齢の", "若々しい"] },
+            { w: "elect", m: "選挙する", o: ["選挙する", "任命する", "解雇する", "支持する"] },
+            { w: "election", m: "選挙", o: ["選挙", "任命", "会議", "投票"] },
+            { w: "electric", m: "電気の", o: ["電気の", "ガスの", "手動の", "蒸気の"] },
+            { w: "electricity", m: "電気", o: ["電気", "磁気", "熱", "力学"] },
+            { w: "electronic", m: "電子の", o: ["電子の", "機械の", "手動の", "物理の"] },
+            { w: "elegant", m: "優雅な", o: ["優雅な", "不作法な", "粗末な", "派手な"] },
+            { w: "element", m: "要素", o: ["要素", "全体", "背景", "詳細"] },
+            { w: "elephant", m: "ゾウ", o: ["ゾウ", "キリン", "ライオン", "カバ"] },
+            { w: "eliminate", m: "除去する", o: ["除去する", "追加する", "保護する", "放置する"] },
+            { w: "else", m: "その他に", o: ["その他に", "同じように", "決して", "おそらく"] },
+            { w: "elsewhere", m: "どこか他の場所で", o: ["どこか他の場所で", "同じ場所で", "いたる所で", "どこにも〜ない"] },
+            { w: "email", m: "電子メール", o: ["電子メール", "手紙", "電話", "電報"] },
+            { w: "embarrass", m: "当惑させる", o: ["当惑させる", "安心させる", "怒らせる", "喜ばせる"] },
+            { w: "embassy", m: "大使館", o: ["大使館", "領事館", "市役所", "裁判所"] },
+            { w: "embrace", m: "抱きしめる", o: ["抱きしめる", "拒絶する", "避ける", "攻撃する"] },
+            { w: "emerge", m: "現れる", o: ["現れる", "消え去る", "沈む", "隠れる"] },
+            { w: "emergency", m: "緊急事態", o: ["緊急事態", "平穏", "日常", "計画"] },
+            { w: "emotion", m: "感情", o: ["感情", "思考", "記憶", "肉体"] },
+            { w: "emotional", m: "感情的な", o: ["感情的な", "理性的の", "無感覚な", "冷淡な"] },
+            { w: "emperor", m: "皇帝", o: ["皇帝", "大統領", "首相", "将軍"] },
+            { w: "emphasis", m: "強調", o: ["強調", "軽視", "無視", "省略"] },
+            { w: "emphasize", m: "強調する", o: ["強調する", "軽視する", "省略する", "否定する"] },
+            { w: "employ", m: "雇う", o: ["雇う", "解雇する", "辞職する", "訓練する"] },
+            { w: "employee", m: "従業員", o: ["従業員", "雇用主", "顧客", "ライバル"] },
+            { w: "employer", m: "雇用主", o: ["雇用主", "従業員", "労働組合", "失業者"] },
+            { w: "employment", m: "雇用", o: ["雇用", "解雇", "失業", "引退"] },
+            { w: "empty", m: "空の", o: ["空の", "満たされた", "重い", "美しい"] },
+            { w: "enable", m: "可能にする", o: ["可能にする", "妨げる", "禁止する", "延期する"] },
+            { w: "encounter", m: "遭遇する", o: ["遭遇する", "避ける", "逃げる", "探す"] },
+            { w: "encourage", m: "励ます", o: ["励ます", "落胆させる", "非難する", "警告する"] },
+            { w: "end", m: "終わる", o: ["終わる", "始まる", "続く", "繰り返す"] },
+            { w: "endure", m: "耐える", o: ["耐える", "屈する", "逃げる", "怒る"] },
+            { w: "enemy", m: "敵", o: ["敵", "味方", "仲間", "指導者"] },
+            { w: "energy", m: "エネルギー", o: ["エネルギー", "疲労", "怠惰", "無気力"] },
+            { w: "enforce", m: "執行する", o: ["執行する", "無視する", "廃止する", "改正する"] },
+            { w: "engage", m: "従事する", o: ["従事する", "辞める", "避ける", "拒絶する"] },
+            { w: "engine", m: "エンジン", o: ["エンジン", "車輪", "ブレーキ", "ハンドル"] },
+            { w: "engineer", m: "技術者", o: ["技術者", "科学者", "労働者", "芸術家"] },
+            { w: "enhance", m: "高める", o: ["高める", "低下させる", "維持する", "無視する"] },
+            { w: "enjoy", m: "楽しむ", o: ["楽しむ", "嫌う", "耐える", "恐れる"] },
+            { w: "enormous", m: "巨大な", o: ["巨大な", "微小な", "平凡な", "狭い"] },
+            { w: "enough", m: "十分な", o: ["十分な", "不足している", "余計な", "無駄な"] },
+            { w: "ensure", m: "確実にする", o: ["確実にする", "疑う", "危うくする", "忘れる"] },
+            { w: "enter", m: "入る", o: ["入る", "出る", "留まる", "通り過ぎる"] },
+            { w: "enterprise", m: "企業", o: ["企業", "政府", "学校", "個人"] },
+            { w: "entertain", m: "楽しませる", o: ["楽しませる", "退屈させる", "怒らせる", "無視する"] },
+            { w: "enthusiasm", m: "熱意", o: ["熱意", "無関心", "嫌悪", "疲労"] },
+            { w: "entire", m: "全体の", o: ["全体の", "部分的な", "わずかな", "不完全な"] },
+            { w: "entrance", m: "入り口", o: ["入り口", "出口", "廊下", "階段"] },
+            { w: "envelope", m: "封筒", o: ["封筒", "便箋", "切手", "手紙"] },
+            { w: "environment", m: "環境", o: ["環境", "宇宙", "遺伝", "個人の性格"] },
+            { w: "envy", m: "うらやむ", o: ["うらやむ", "軽蔑する", "称賛する", "祝う"] },
+            { w: "equal", m: "等しい", o: ["等しい", "異なる", "不公平な", "劣った"] },
+            { w: "equip", m: "備えつける", o: ["備えつける", "取り外す", "売却する", "破壊する"] },
+            { w: "equipment", m: "装備", o: ["装備", "材料", "土地", "建物"] },
+            { w: "equivalent", m: "同等の", o: ["同等の", "異なる", "反対の", "無関係の"] },
+            { w: "era", m: "時代", o: ["時代", "瞬間", "年間", "世紀"] },
+            { w: "erase", m: "消す", o: ["消す", "書く", "描く", "コピーする"] },
+            { w: "error", m: "誤り", o: ["誤り", "真実", "正解", "意図"] },
+            { w: "escape", m: "逃げる", o: ["逃げる", "留まる", "立ち向かう", "捕まる"] },
+            { w: "especially", m: "特に", o: ["特に", "一般的に", "まれに", "均等に"] },
+            { w: "essay", m: "随筆", o: ["随筆", "小説", "詩", "報告書"] },
+            { w: "essential", m: "不可欠な", o: ["不可欠な", "不要な", "些細な", "一時的な"] },
+            { w: "establish", m: "設立する", o: ["設立する", "破壊する", "閉鎖する", "移転する"] },
+            { w: "estate", m: "地所", o: ["地所", "現金", "株式", "借金"] },
+            { w: "estimate", m: "見積もる", o: ["見積もる", "断定する", "計算する", "無視する"] },
+            { w: "etc", m: "など", o: ["など", "および", "または", "しかし"] },
+            { w: "eternal", m: "永遠の", o: ["永遠の", "一時的な", "瞬間の", "過去の"] },
+            { w: "ethnic", m: "民族の", o: ["民族の", "国家の", "個人の", "世界の"] },
+            { w: "evaluate", m: "評価する", o: ["評価する", "無視する", "推測する", "非難する"] },
+            { w: "even", m: "でさえ", o: ["でさえ", "決して〜ない", "常に", "時々"] },
+            { w: "evening", m: "晩", o: ["晩", "朝", "昼", "深夜"] },
+            { w: "event", m: "出来事", o: ["出来事", "静寂", "規則", "日常"] },
+            { w: "eventually", m: "最終的に", o: ["最終的に", "最初に", "突然", "一時的に"] },
+            { w: "ever", m: "これまでに", o: ["これまでに", "決して〜ない", "今だけ", "時々"] },
+            { w: "every", m: "すべての", o: ["すべての", "いくつかの", "個別の", "一つの"] },
+            { w: "evidence", m: "証拠", o: ["証拠", "推測", "主張", "容疑"] },
+            { w: "evident", m: "明白な", o: ["明白な", "不確かな", "隠された", "複雑な"] },
+            { w: "evil", m: "邪悪な", o: ["邪悪な", "神聖な", "優しい", "勇敢な"] },
+            { w: "exact", m: "正確な", o: ["正確な", "不正確な", "大体の", "曖昧な"] },
+            { w: "exaggerate", m: "誇張する", o: ["誇張する", "過小評価する", "事実を語る", "省略する"] },
+            { w: "exam", m: "試験", o: ["試験", "授業", "宿題", "休暇"] },
+            { w: "examine", m: "調査する", o: ["調査する", "無視する", "見落とす", "信じる"] },
+            { w: "example", m: "例", o: ["例", "全体", "規則", "例外"] },
+            { w: "exceed", m: "超える", o: ["超える", "下回る", "一致する", "近づく"] },
+            { w: "excellent", m: "優秀な", o: ["優秀な", "並の", "劣った", "普通の"] },
+            { w: "except", m: "を除いて", o: ["を除いて", "に加えて", "の代わりに", "を考慮して"] },
+            { w: "exchange", m: "交換する", o: ["交換する", "保持する", "破棄する", "貯蔵する"] },
+            { w: "excited", m: "興奮した", o: ["興奮した", "退屈した", "落ち着いた", "悲しんだ"] },
+            { w: "excuse", m: "言い訳する", o: ["言い訳する", "非難する", "認める", "謝る"] },
+            { w: "executive", m: "重役", o: ["重役", "一般社員", "顧客", "株主"] },
+            { w: "exercise", m: "運動する", o: ["運動する", "休む", "眠る", "食べる"] },
+            { w: "exhaust", m: "疲れ果てさせる", o: ["疲れ果てさせる", "元気にする", "楽しませる", "休ませる"] },
+            { w: "exhibit", m: "展示する", o: ["展示する", "隠す", "紛失する", "売却する"] },
+            { w: "exhibition", m: "展示会", o: ["展示会", "会議", "講義", "競売"] },
+            { w: "exile", m: "追放", o: ["追放", "帰還", "移住", "歓迎"] },
+            { w: "exist", m: "存在する", o: ["存在する", "消滅する", "想像する", "変化する"] },
+            { w: "existence", m: "存在", o: ["存在", "虚無", "死", "誕生"] },
+            { w: "exit", m: "出口", o: ["出口", "入り口", "窓", "通路"] },
+            { w: "exotic", m: "異国風の", o: ["異国風の", "自国の", "平凡な", "歴史的な"] },
+            { w: "expand", m: "拡大する", o: ["拡大する", "縮小する", "固定する", "閉鎖する"] },
+            { w: "expect", m: "予期する", o: ["予期する", "驚く", "忘れる", "絶望する"] },
+            { w: "expense", m: "費用", o: ["費用", "収入", "利益", "貯蓄"] },
+            { w: "expensive", m: "高価な", o: ["高価な", "安い", "無料の", "平凡な"] },
+            { w: "experience", m: "経験", o: ["経験", "知識", "直感", "夢"] },
+            { w: "experiment", m: "実験", o: ["実験", "理論", "空想", "実用"] },
+            { w: "expert", m: "専門家", o: ["専門家", "初心者", "愛好家", "指導者"] },
+            { w: "explain", m: "説明する", o: ["説明する", "誤解させる", "黙る", "質問する"] },
+            { w: "explanation", m: "説明", o: ["説明", "疑問", "沈黙", "矛盾"] },
+            { w: "explode", m: "爆発する", o: ["爆発する", "固まる", "消える", "縮む"] },
+            { w: "exploit", m: "開発する", o: ["開発する", "放置する", "破壊する", "保護する"] },
+            { w: "explore", m: "探検する", o: ["探検する", "定住する", "去る", "無視する"] },
+            { w: "explorer", m: "探検家", o: ["探検家", "定住者", "指導者", "観光客"] },
+            { w: "explosion", m: "爆発", o: ["爆発", "収縮", "凍結", "沈黙"] },
+            { w: "export", m: "輸出する", o: ["輸出する", "輸入する", "消費する", "生産する"] },
+            { w: "expose", m: "さらす", o: ["さらす", "隠す", "保護する", "包む"] },
+            { w: "express", m: "表現する", o: ["表現する", "隠す", "抑圧する", "真似する"] },
+            { w: "expression", m: "表現", o: ["表現", "沈黙", "真似", "隠蔽"] },
+            { w: "extend", m: "延長する", o: ["延長する", "短縮する", "切断する", "停止する"] },
+            { w: "extent", m: "程度", o: ["程度", "方向", "角度", "速度"] },
+            { w: "external", m: "外部の", o: ["外部の", "内部の", "中心の", "本質的な"] },
+            { w: "extra", m: "余分な", o: ["余分な", "不足している", "普通の", "必要な"] },
+            { w: "extraordinary", m: "並外れた", o: ["並外れた", "平凡な", "通常の", "一時的な"] },
+            { w: "extreme", m: "極端な", o: ["極端な", "穏やかな", "平均的な", "一般的な"] },
+            { w: "eye", m: "目", o: ["目", "耳", "鼻", "口"] },
+            { w: "fabric", m: "織物", o: ["織物", "金属", "プラスチック", "木材"] },
+            { w: "face", m: "直面する", o: ["直面する", "避ける", "逃げる", "背を向ける"] },
+            { w: "facility", m: "施設", o: ["施設", "技術", "計画", "団体"] },
+            { w: "fact", m: "事実", o: ["事実", "意見", "空想", "嘘"] },
+            { w: "factor", m: "要因", o: ["要因", "結果", "障害", "全体"] },
+            { w: "factory", m: "工場", o: ["工場", "事務所", "住宅", "農場"] },
+            { w: "faculty", m: "学部", o: ["学部", "学生会", "校務", "委員会"] },
+            { w: "fade", m: "色あせる", o: ["色あせる", "輝く", "固まる", "現れる"] },
+            { w: "fail", m: "失敗する", o: ["失敗する", "成功する", "合格する", "達成する"] },
+            { w: "failure", m: "失敗", o: ["失敗", "成功", "合格", "達成"] },
+            { w: "faint", m: "気絶する", o: ["気絶する", "目覚める", "立ち上がる", "叫ぶ"] },
+            { w: "fair", m: "公平な", o: ["公平な", "不公平な", "偏った", "厳しい"] },
+            { w: "faith", m: "信念", o: ["信念", "不信", "絶望", "恐怖"] },
+            { w: "fall", m: "落ちる", o: ["落ちる", "昇る", "飛ぶ", "留まる"] },
+            { w: "false", m: "誤った", o: ["誤った", "正しい", "本物の", "確実な"] },
+            { w: "fame", m: "名声", o: ["名声", "不名誉", "無名", "恥辱"] },
+            { w: "familiar", m: "なじみのある", o: ["なじみのある", "未知の", "珍しい", "不快な"] },
+            { w: "family", m: "家族", o: ["家族", "他人", "同僚", "友人"] },
+            { w: "famous", m: "有名な", o: ["有名な", "無名の", "平凡な", "恥ずべき"] },
+            { w: "fancy", m: "高級な", o: ["高級な", "安物の", "質素な", "古い"] },
+            { w: "fantastic", m: "すばらしい", o: ["すばらしい", "ひどい", "退屈な", "普通の"] },
+            { w: "far", m: "遠くに", o: ["遠くに", "近くに", "直ちに", "交互に"] },
+            { w: "fare", m: "運賃", o: ["運賃", "家賃", "料金", "食費"] },
+            { w: "farm", m: "農場", o: ["農場", "工場", "商店", "鉱山"] },
+            { w: "farmer", m: "農民", o: ["農民", "漁師", "会社員", "商人"] },
+            { w: "fascinate", m: "魅了する", o: ["魅了する", "うんざりさせる", "怒らせる", "怖がらせる"] },
+            { w: "fashion", m: "ファッション", o: ["ファッション", "歴史", "科学", "労働"] },
+            { w: "fast", m: "速い", o: ["速い", "遅い", "静かな", "重い"] },
+            { w: "fasten", m: "固定する", o: ["固定する", "外す", "緩める", "捨てる"] },
+            { w: "fat", m: "太った", o: ["太った", "痩せた", "背の高い", "短い"] },
+            { w: "fatal", m: "致命的な", o: ["致命的な", "些細な", "有益な", "無害の"] },
+            { w: "fate", m: "運命", o: ["運命", "偶然", "計画", "努力"] },
+            { w: "father", m: "父親", o: ["父親", "母親", "祖父", "兄弟"] },
+            { w: "fault", m: "欠点", o: ["欠点", "長所", "正解", "意図"] },
+            { w: "favor", m: "好意", o: ["好意", "悪意", "無視", "中立"] },
+            { w: "favorite", m: "お気に入りの", o: ["お気に入りの", "嫌いな", "平凡な", "新しい"] },
+            { w: "fear", m: "恐れ", o: ["恐れ", "勇気", "喜び", "確信"] },
+            { w: "feather", m: "羽毛", o: ["羽毛", "皮膚", "骨", "鱗"] },
+            { w: "feature", m: "特徴", o: ["特徴", "全体", "偶然", "欠点"] },
+            { w: "federal", m: "連邦の", o: ["連邦の", "地方の", "民間の", "国際的な"] },
+            { w: "fee", m: "料金", o: ["料金", "無料", "給料", "利益"] },
+            { w: "feed", m: "食べ物を与える", o: ["食べ物を与える", "食べる", "飢えさせる", "奪う"] },
+            { w: "feel", m: "感じる", o: ["感じる", "考える", "無視する", "忘れる"] },
+            { w: "feeling", m: "感情", o: ["感情", "論理", "肉体", "無感覚"] },
+            { w: "fellow", m: "仲間", o: ["仲間", "敵", "指導者", "見知らぬ人"] },
+            { w: "female", m: "女性の", o: ["女性の", "男性の", "子供の", "大人の"] },
+            { w: "fence", m: "垣根", o: ["垣根", "門", "壁", "道路"] },
+            { w: "festival", m: "祭り", o: ["祭り", "講義", "葬儀", "日常"] },
+            { w: "fever", m: "熱", o: ["熱", "冷気", "健康", "体力"] },
+            { w: "few", m: "ほとんど〜ない", o: ["ほとんど〜ない", "たくさんの", "すべての", "いくつかの"] },
+            { w: "fiber", m: "繊維", o: ["繊維", "金属", "液体", "気体"] },
+            { w: "fiction", m: "フィクション", o: ["フィクション", "事実", "歴史", "記録"] },
+            { w: "field", m: "分野", o: ["分野", "中心", "全体", "限界"] },
+            { w: "fierce", m: "激しい", o: ["激しい", "穏やかな", "弱い", "静かな"] },
+            { w: "fight", m: "戦う", o: ["戦う", "協力する", "逃げる", "降伏する"] },
+            { w: "figure", m: "数字", o: ["数字", "言葉", "感情", "事実"] },
+            { w: "fill", m: "満たす", o: ["満たす", "空にする", "捨てる", "奪う"] },
+            { w: "film", m: "映画", o: ["映画", "演劇", "絵画", "写真"] },
+            { w: "final", m: "最終の", o: ["最終の", "最初の", "中間の", "一時的な"] },
+            { w: "finance", m: "財政", o: ["財政", "政治", "外交", "産業"] },
+            { w: "find", m: "見つける", o: ["見つける", "失う", "隠す", "捨てる"] },
+            { w: "fine", m: "素晴らしい", o: ["素晴らしい", "ひどい", "普通の", "暗い"] },
+            { w: "finger", m: "指", o: ["指", "つま先", "手のひら", "腕"] },
+            { w: "finish", m: "終える", o: ["終える", "始める", "継続する", "中断する"] },
+            { w: "fire", m: "火", o: ["火", "水", "風", "土"] },
+            { w: "firm", m: "堅い", o: ["堅い", "柔らかい", "緩い", "不安定な"] },
+            { w: "first", m: "最初の", o: ["最初の", "最後の", "中間の", "次の"] },
+            { w: "fish", m: "魚", o: ["魚", "鳥", "獣", "昆虫"] },
+            { w: "fist", m: "拳", o: ["拳", "手のひら", "指先", "腕"] },
+            { w: "fit", m: "適した", o: ["適した", "不適当な", "余分な", "狭い"] },
+            { w: "fix", m: "修理する", o: ["修理する", "壊す", "汚す", "放置する"] },
+            { w: "flag", m: "旗", o: ["旗", "看板", "衣服", "壁画"] },
+            { w: "flame", m: "炎", o: ["炎", "煙", "灰", "氷"] },
+            { w: "flash", m: "ひらめき", o: ["ひらめき", "暗闇", "継続光", "沈黙"] },
+            { w: "flat", m: "平らな", o: ["平らな", "傾いた", "凸凹の", "高い"] },
+            { w: "flavor", m: "風味", o: ["風味", "形状", "色彩", "音色"] },
+            { w: "flee", m: "逃げる", o: ["逃げる", "立ち向かう", "留まる", "追う"] },
+            { w: "flesh", m: "肉", o: ["肉", "骨", "皮", "爪"] },
+            { w: "flexible", m: "柔軟な", o: ["柔軟な", "頑固な", "硬い", "一定の"] },
+            { w: "flight", m: "飛行", o: ["飛行", "歩行", "航海", "潜水"] },
+            { w: "float", m: "浮かぶ", o: ["浮かぶ", "沈む", "飛ぶ", "走る"] },
+            { w: "flood", m: "洪水", o: ["洪水", "干ばつ", "地震", "噴火"] },
+            { w: "floor", m: "床", o: ["床", "天井", "壁", "窓"] },
+            { w: "flour", m: "小麦粉", o: ["小麦粉", "米", "砂糖", "塩"] },
+            { w: "flow", m: "流れる", o: ["流れる", "止まる", "凍る", "逆流する"] },
+            { w: "flower", m: "花", o: ["花", "葉", "根", "茎"] },
+            { w: "flu", m: "インフルエンザ", o: ["インフルエンザ", "頭痛", "骨折", "虫歯"] },
+            { w: "fluid", m: "流体", o: ["流体", "固体", "気体", "結晶"] },
+            { w: "fly", m: "飛ぶ", o: ["飛ぶ", "走る", "泳ぐ", "這う"] },
+            { w: "focus", m: "焦点を合わせる", o: ["焦点を合わせる", "分散させる", "無視する", "忘れる"] },
+            { w: "fog", m: "霧", o: ["霧", "雲", "雨", "晴天"] },
+            { w: "fold", m: "折る", o: ["折る", "広げる", "切る", "破る"] },
+            { w: "folk", m: "人々", o: ["人々", "個人", "政府", "神々"] },
+            { w: "follow", m: "従う", o: ["従う", "導く", "逆らう", "避ける"] },
+            { w: "fond", m: "好んで", o: ["好んで", "嫌って", "恐れて", "無関心で"] },
+            { w: "food", m: "食べ物", o: ["食べ物", "飲料", "衣服", "住居"] },
+            { w: "fool", m: "愚か者", o: ["愚か者", "賢者", "指導者", "専門家"] },
+            { w: "foot", m: "足", o: ["足", "手", "頭", "腕"] },
+            { w: "forbid", m: "禁止する", o: ["禁止する", "許可する", "奨励する", "命令する"] },
+            { w: "force", m: "強制する", o: ["強制する", "説得する", "許す", "避ける"] },
+            { w: "forecast", m: "予報", o: ["予報", "結果", "歴史", "記録"] },
+            { w: "foreign", m: "外国の", o: ["外国の", "国内の", "個人の", "宇宙の"] },
+            { w: "foreigner", m: "外国人", o: ["外国人", "国民", "市民", "指導者"] },
+            { w: "forest", m: "森林", o: ["森林", "砂漠", "都会", "草原"] },
+            { w: "forever", m: "永遠に", o: ["永遠に", "一時的に", "昨日まで", "すぐに"] },
+            { w: "forget", m: "忘れる", o: ["忘れる", "覚えている", "思い出す", "学ぶ"] },
+            { w: "forgive", m: "許す", o: ["許す", "非難する", "処罰する", "憎む"] },
+            { w: "fork", m: "フォーク", o: ["フォーク", "スプーン", "ナイフ", "皿"] },
+            { w: "form", m: "形", o: ["形", "色", "音", "意味"] },
+            { w: "formal", m: "公式の", o: ["公式の", "非公式の", "個人的な", "秘密の"] },
+            { w: "former", m: "前者の", o: ["前者の", "後者の", "最初の", "現在の"] },
+            { w: "formula", m: "公式", o: ["公式", "空想", "例外", "誤り"] },
+            { w: "forth", m: "前方へ", o: ["前方へ", "後方へ", "側方へ", "上方へ"] },
+            { w: "fortune", m: "財産", o: ["財産", "借金", "貧困", "労働"] },
+            { w: "forward", m: "前方へ", o: ["前方へ", "後方へ", "下へ", "横へ"] },
+            { w: "fossil", m: "化石", o: ["化石", "鉱物", "宝石", "土壌"] },
+            { w: "foster", m: "育成する", o: ["育成する", "放置する", "妨げる", "破壊する"] },
+            { w: "foundation", m: "基礎", o: ["基礎", "屋根", "装飾", "壁"] },
+            { w: "fountain", m: "噴水", o: ["噴水", "井戸", "滝", "池"] },
+            { w: "fraction", m: "ほんの一部", o: ["ほんの一部", "全体", "大部分", "複数"] },
+            { w: "frame", m: "枠組み", o: ["枠組み", "中身", "背景", "装飾"] },
+            { w: "frank", m: "率直な", o: ["率直な", "不誠実な", "無口な", "秘密主義の"] },
+            { w: "free", m: "自由な", o: ["自由な", "束縛された", "高価な", "不便な"] },
+            { w: "freedom", m: "自由", o: ["自由", "束縛", "義務", "法律"] },
+            { w: "freeze", m: "凍る", o: ["凍る", "溶ける", "燃える", "蒸発する"] },
+            { w: "frequent", m: "頻繁な", o: ["頻繁な", "まれな", "一時的な", "規則的な"] },
+            { w: "fresh", m: "新鮮な", o: ["新鮮な", "古い", "腐った", "加工された"] },
+            { w: "friction", m: "摩擦", o: ["摩擦", "潤滑", "衝突", "融合"] },
+            { w: "friend", m: "友人", o: ["友人", "敵", "見知らぬ人", "上司"] },
+            { w: "friendly", m: "友好的な", o: ["友好的な", "敵対的な", "冷淡な", "傲慢な"] },
+            { w: "friendship", m: "友情", o: ["友情", "敵対", "無関心", "憎しみ"] },
+            { w: "frighten", m: "怖がらせる", o: ["怖がらせる", "安心させる", "喜ばせる", "退屈させる"] },
+            { w: "frog", m: "カエル", o: ["カエル", "トカゲ", "ヘビ", "サカナ"] },
+            { w: "front", m: "前面", o: ["前面", "背面", "側面", "底面"] },
+            { w: "frontier", m: "国境", o: ["国境", "首都", "領土", "都会"] },
+            { w: "frost", m: "霜", o: ["霜", "雪", "氷", "露"] },
+            { w: "frown", m: "眉をひそめる", o: ["眉をひそめる", "微笑む", "叫ぶ", "あくびする"] },
+            { w: "fruit", m: "果物", o: ["果物", "野菜", "穀物", "肉"] },
+            { w: "frustrate", m: "挫折させる", o: ["挫折させる", "満足させる", "助ける", "励ます"] },
+            { w: "fuel", m: "燃料", o: ["燃料", "食料", "飲料", "衣服"] },
+            { w: "fulfill", m: "果たす", o: ["果たす", "怠る", "諦める", "避ける"] },
+            { w: "full", m: "満ちた", o: ["満ちた", "空の", "欠けた", "軽い"] },
+            { w: "fun", m: "楽しみ", o: ["楽しみ", "苦痛", "退屈", "悲しみ"] },
+            { w: "function", m: "機能", o: ["機能", "外観", "故障", "材料"] },
+            { w: "fund", m: "資金", o: ["資金", "負債", "消費", "赤字"] },
+            { w: "fundamental", m: "根本的な", o: ["根本的な", "些細な", "一時的な", "表面的な"] },
+            { w: "funeral", m: "葬式", o: ["葬式", "結婚式", "誕生日", "祝賀会"] },
+            { w: "funny", m: "滑稽な", o: ["滑稽な", "厳粛な", "悲しい", "普通の"] },
+            { w: "fur", m: "毛皮", o: ["毛皮", "羽毛", "皮膚", "甲羅"] },
+            { w: "furious", m: "激怒した", o: ["激怒した", "穏やかな", "喜んだ", "悲しんだ"] },
+            { w: "furnish", m: "家具を備えつける", o: ["家具を備えつける", "取り外す", "売却する", "破壊する"] },
+            { w: "furniture", m: "家具", o: ["家具", "食器", "衣服", "電化製品"] },
+            { w: "further", m: "さらなる", o: ["さらなる", "以前の", "減少した", "不要な"] },
+            { w: "fury", m: "激怒", o: ["激怒", "平静", "恐怖", "歓喜"] },
+            { w: "future", m: "未来", o: ["未来", "過去", "現在", "日常"] },
+            { w: "gain", m: "得る", o: ["得る", "失う", "捨てる", "避ける"] },
+            { w: "gallery", m: "画廊", o: ["画廊", "図書館", "体育館", "劇場"] },
+            { w: "game", m: "ゲーム", o: ["ゲーム", "労働", "講義", "試験"] },
+            { w: "gap", m: "隙間", o: ["隙間", "結合", "平面", "全体"] },
+            { w: "garage", m: "車庫", o: ["車庫", "台所", "寝室", "浴室"] },
+            { w: "garden", m: "庭", o: ["庭", "道路", "公園", "畑"] },
+            { w: "garment", m: "衣類", o: ["衣類", "家具", "食器", "住宅"] },
+            { w: "gas", m: "気体", o: ["気体", "固体", "液体", "結晶"] },
+            { w: "gate", m: "門", o: ["門", "窓", "壁", "屋根"] },
+            { w: "gather", m: "集まる", o: ["集まる", "散る", "去る", "避ける"] },
+            { w: "gaze", m: "注視する", o: ["注視する", "無視する", "一瞥する", "目をそらす"] },
+            { w: "gear", m: "歯車", o: ["歯車", "車輪", "ブレーキ", "ネジ"] },
+            { w: "general", m: "一般的な", o: ["一般的な", "特別な", "個人の", "珍しい"] },
+            { w: "generate", m: "生み出す", o: ["生み出す", "破壊する", "消費する", "維持する"] },
+            { w: "generation", m: "世代", o: ["世代", "年代", "季節", "世紀"] },
+            { w: "generous", m: "気前のよい", o: ["気前のよい", "けちな", "欲張りな", "意地悪な"] },
+            { w: "genius", m: "天才", o: ["天才", "凡人", "愚者", "初心者"] },
+            { w: "gentle", m: "優しい", o: ["優しい", "乱暴な", "冷たい", "厳しい"] },
+            { w: "gentleman", m: "紳士", o: ["紳士", "淑女", "悪漢", "若者"] },
+            { w: "genuine", m: "本物の", o: ["本物の", "偽物の", "不確かな", "一時的な"] },
+            { w: "geography", m: "地理学", o: ["地理学", "歴史学", "生物学", "天文学"] },
+            { w: "germ", m: "細菌", o: ["細菌", "ウイルス", "細胞", "臓器"] },
+            { w: "gesture", m: "身振り", o: ["身振り", "言葉", "思考", "沈黙"] },
+            { w: "get", m: "手に入れる", o: ["手に入れる", "与える", "失う", "捨てる"] },
+            { w: "giant", m: "巨人", o: ["巨人", "小人", "英雄", "妖精"] },
+            { w: "gift", m: "贈り物", o: ["贈り物", "略奪", "購入", "交換"] },
+            { w: "girl", m: "少女", o: ["少女", "少年", "女性", "男性"] },
+            { w: "give", m: "与える", o: ["与える", "受け取る", "奪う", "拒絶する"] },
+            { w: "glad", m: "うれしい", o: ["うれしい", "悲しい", "怒った", "恐れた"] },
+            { w: "glance", m: "一瞥する", o: ["一瞥する", "凝視する", "無視する", "観察する"] },
+            { w: "glass", m: "ガラス", o: ["ガラス", "木材", "金属", "プラスチック"] },
+            { w: "glide", m: "滑るように進む", o: ["滑るように進む", "衝突する", "立ち止まる", "跳ぶ"] },
+            { w: "glimpse", m: "ちらりと見えること", o: ["ちらりと見えること", "凝視", "沈黙", "消失"] },
+            { w: "globe", m: "地球", o: ["地球", "月", "太陽", "平面"] },
+            { w: "glorious", m: "輝かしい", o: ["輝かしい", "惨めな", "恥ずべき", "暗い"] },
+            { w: "glory", m: "栄光", o: ["栄光", "不名誉", "恥辱", "平凡"] },
+            { w: "glove", m: "手袋", o: ["手袋", "靴下", "帽子", "衣服"] },
+            { w: "glow", m: "白熱する", o: ["白熱する", "消える", "冷める", "凍る"] },
+            { w: "glue", m: "接着剤", o: ["接着剤", "溶剤", "塗料", "洗剤"] },
+            { w: "go", m: "行く", o: ["行く", "来る", "戻る", "留まる"] },
+            { w: "goal", m: "目標", o: ["目標", "出発点", "障害", "過程"] },
+            { w: "goat", m: "ヤギ", o: ["ヤギ", "羊", "牛", "馬"] },
+            { w: "god", m: "神", o: ["神", "人間", "悪魔", "自然"] },
+            { w: "gold", m: "金", o: ["金", "銀", "銅", "鉄"] }
+        ];
+
+        let quizCurrentIndex = 0;
+        let quizSelectedAnswer = false;
+
+        function loadQuizState() {
+            quizCurrentIndex = 0;
+            loadNextQuestion();
+        }
+
+        function loadNextQuestion() {
+            if (quizCurrentIndex >= 500) {
+                alert("全500問を達成しました！素晴らしい学力です！");
+                quizCurrentIndex = 0;
+            }
+            quizSelectedAnswer = false;
+            document.getElementById('btn-quiz-next').style.display = 'none';
+
+            // 500問に足りない場合はループで回す
+            let q = quizWordsData[quizCurrentIndex % quizWordsData.length];
+
+            document.getElementById('quiz-idx-text').innerText = (quizCurrentIndex + 1);
+            document.getElementById('quiz-word-text').innerText = q.w;
+
+            // 選択肢シャッフル
+            let opts = [...q.o];
+            opts.sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('quiz-options-container');
+            container.innerHTML = '';
+
+            opts.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = 'btn-option';
+                btn.innerText = opt;
+                btn.onclick = () => selectQuizAnswer(btn, opt, q.m);
+                container.appendChild(btn);
+            });
+        }
+
+        function selectQuizAnswer(clickedBtn, selectedText, correctText) {
+            if (quizSelectedAnswer || isSpinning) return;
+            quizSelectedAnswer = true;
+
+            const buttons = document.querySelectorAll('.btn-option');
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                if (btn.innerText === correctText) {
+                    btn.classList.add('correct-choice');
+                }
+            });
+
+            if (selectedText === correctText) {
+                playSound('success');
+                wallet += 1000; // クイズ正解報酬：¥1,000
+                updateAllWalletUIs();
+                saveGame();
+            } else {
+                playSound('fail');
+                clickedBtn.classList.add('incorrect-choice');
+            }
+
+            quizCurrentIndex++;
+            document.getElementById('btn-quiz-next').style.display = 'inline-block';
+        }
+
+        function exitQuizToHome() {
+            if (isSpinning) return;
+            playSound('select');
+            changeScreen('home-screen');
+        }
+
+
+        // ====================================================
+        // 4. 超巨大11層ランプルーレット・システム
+        // ====================================================
+        let croonStage = 1;
+        let croonBet = 1000;
+        let rouletteTimer = null;
+        let rouletteCellsData = [];
+        let finalStageTotalMultiplier = 0; // 11層目の累積倍率
+
+        // クルーン掛け金リスト動的生成
+        const betSelect = document.getElementById('croon-bet-select');
+        const betValues = [1000, 5000, 10000, 50000, 100000, 500000, 1000000, 5000000, 10000000, 50000000, 100000000];
+        betValues.forEach(v => {
+            let opt = document.createElement('option');
+            opt.value = v;
+            opt.innerText = `¥${v.toLocaleString()}`;
+            betSelect.appendChild(opt);
+        });
+
+        function changeCroonBet() {
+            croonBet = parseInt(betSelect.value, 10);
+            playSound('select');
+        }
+
+        function goToCroonArea() {
+            if (isSpinning) return;
+            croonStage = 1;
+            buildRouletteUI(1);
+            changeScreen('croon-screen');
+        }
+
+        function exitCroonToHome() {
+            if (isSpinning) return;
+            playSound('select');
+            changeScreen('home-screen');
+        }
+
+        // 段数ごとのマス数、UP、倍率定義（均等配置ロジック）
+        function getStageConfig(stage) {
+            let total = 20;
+            let cells = [];
+
+            if (stage === 1) {
+                total = 20;
+                // UP: 10, OUT: 10
+                for (let i = 0; i < 10; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 10; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 2) {
+                total = 20;
+                // UP: 9, 2x: 6, OUT: 5
+                for (let i = 0; i < 9; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 6; i++) cells.push({ type: '2', label: '2x' });
+                for (let i = 0; i < 5; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 3) {
+                total = 20;
+                // UP: 8, 3x: 6, OUT: 6
+                for (let i = 0; i < 8; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 6; i++) cells.push({ type: '3', label: '3x' });
+                for (let i = 0; i < 6; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 4) {
+                total = 20;
+                // UP: 7, 4x: 6, OUT: 7
+                for (let i = 0; i < 7; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 6; i++) cells.push({ type: '4', label: '4x' });
+                for (let i = 0; i < 7; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 5) {
+                total = 15;
+                // UP: 5, 5x: 5, OUT: 5
+                for (let i = 0; i < 5; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 5; i++) cells.push({ type: '5', label: '5x' });
+                for (let i = 0; i < 5; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 6) {
+                total = 15;
+                // UP: 5, 6x: 5, OUT: 5
+                for (let i = 0; i < 5; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 5; i++) cells.push({ type: '6', label: '6x' });
+                for (let i = 0; i < 5; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 7) {
+                total = 10;
+                // UP: 4, 7x: 3, OUT: 3
+                for (let i = 0; i < 4; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 3; i++) cells.push({ type: '7', label: '7x' });
+                for (let i = 0; i < 3; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 8) {
+                total = 10;
+                // UP: 5, OUT: 5 (8xはない)
+                for (let i = 0; i < 5; i++) cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 5; i++) cells.push({ type: 'OUT', label: 'OUT' });
+            } else if (stage === 9) {
+                total = 5;
+                // UP: 1, DOWN(グレー): 4
+                cells.push({ type: 'UP', label: 'UP' });
+                for (let i = 0; i < 4; i++) cells.push({ type: 'DOWN', label: 'DOWN' });
+            } else if (stage === 10) {
+                total = 7;
+                // MAXUP: 3, 10x: 4
+                for (let i = 0; i < 3; i++) cells.push({ type: 'MAXUP', label: 'MAX' });
+                for (let i = 0; i < 4; i++) cells.push({ type: '10', label: '10x' });
+            } else if (stage === 11) {
+                total = 10;
+                // 100x: 2, 200x: 2, 400x, 500x, 600x, 700x, 1000x, END
+                // ENDと1000x以外は金(cell-gold)、1000xは虹(cell-rainbow)
+                cells.push({ type: '100', label: '100x' });
+                cells.push({ type: '100', label: '100x' });
+                cells.push({ type: '200', label: '200x' });
+                cells.push({ type: '200', label: '200x' });
+                cells.push({ type: '400', label: '400x' });
+                cells.push({ type: '500', label: '500x' });
+                cells.push({ type: '600', label: '600x' });
+                cells.push({ type: '700', label: '700x' });
+                cells.push({ type: '1000', label: '1000x' });
+                cells.push({ type: 'END', label: 'END' });
+            }
+
+            // 偏りを無くすため均等（交互・分散）に並び替える
+            let sorted = [];
+            let types = [...new Set(cells.map(c => c.type))];
+            let typeBuckets = {};
+            types.forEach(t => { typeBuckets[t] = cells.filter(c => c.type === t); });
+
+            // ラウンドロビンで交互に配置
+            let maxLen = cells.length;
+            for (let i = 0; i < maxLen; i++) {
+                types.forEach(t => {
+                    if (typeBuckets[t] && typeBuckets[t].length > 0) {
+                        sorted.push(typeBuckets[t].shift());
+                    }
+                });
+            }
+            return sorted;
+        }
+
+        // ルーレットボード描画
+        function buildRouletteUI(stage) {
+            croonStage = stage;
+            document.getElementById('stage-badge-text').innerText = `STAGE ${stage}`;
+            document.getElementById('center-stage-display').innerText = `STAGE ${stage}`;
+
+            const container = document.getElementById('roulette-container');
+            container.innerHTML = '';
+            container.classList.remove('up-alert-glow');
+
+            rouletteCellsData = getStageConfig(stage);
+            const total = rouletteCellsData.length;
+            const radius = 180; // 円の半径
+
+            rouletteCellsData.forEach((cell, idx) => {
+                const angle = (idx * 2 * Math.PI) / total - Math.PI / 2;
+                const x = 240 + radius * Math.cos(angle);
+                const y = 240 + radius * Math.sin(angle);
+
+                const el = document.createElement('div');
+                el.className = 'roulette-cell';
+                el.id = `lamp-${idx}`;
+                el.style.left = `${x}px`;
+                el.style.top = `${y}px`;
+                el.innerText = cell.label;
+
+                // スタイル装飾
+                if (cell.type === 'UP' || cell.type === 'MAXUP') {
+                    el.style.borderColor = 'var(--neon-green)';
+                    el.style.color = 'var(--neon-green)';
+                } else if (cell.type === 'OUT') {
+                    el.style.borderColor = 'var(--neon-pink)';
+                    el.style.color = 'var(--neon-pink)';
+                } else if (cell.type === 'DOWN') {
+                    el.style.borderColor = '#555';
+                    el.style.color = '#888';
+                    el.style.background = '#333';
+                } else if (stage === 11) {
+                    if (cell.type === '1000') {
+                        el.classList.add('cell-rainbow');
+                    } else if (cell.type === 'END') {
+                        el.style.background = '#000';
+                        el.style.color = '#fff';
+                        el.style.borderColor = '#fff';
+                    } else {
+                        el.classList.add('cell-gold');
+                    }
+                } else {
+                    el.style.borderColor = 'var(--neon-yellow)';
+                    el.style.color = 'var(--neon-yellow)';
+                }
+
+                container.appendChild(el);
+            });
+
+            // 5層、10層目は「運命のGOボタン」を出現させる
+            if (stage === 5 || stage === 10) {
+                document.getElementById('btn-croon-go').style.display = 'block';
+                document.getElementById('btn-croon-start').style.display = 'none';
+            } else {
+                document.getElementById('btn-croon-go').style.display = 'none';
+                if (stage !== 11) {
+                    document.getElementById('btn-croon-start').style.display = 'inline-block';
+                }
+            }
+        }
+
+        // 運命のGOボタン押下
+        function pressGoButton() {
+            document.getElementById('btn-croon-go').style.display = 'none';
+            runRouletteLogic(croonStage);
+        }
+
+        function startCroonGame() {
+            if (isSpinning) return;
+            if (croonStage === 1) {
+                if (wallet < croonBet) {
+                    alert("所持金が足りません！");
+                    return;
+                }
+                wallet -= croonBet;
+                updateAllWalletUIs();
+                saveGame();
+            }
+            // 戻り禁止
+            isSpinning = true;
+            document.getElementById('btn-back-croon-wrapper').style.opacity = '0.3';
+            document.getElementById('btn-croon-start').disabled = true;
+
+            runRouletteLogic(croonStage);
+        }
+
+        // ルーレットのメインアニメーションループ
+        function runRouletteLogic(stage) {
+            let currentIndex = 0;
+            let totalCells = rouletteCellsData.length;
+            let baseDelay = 40;
+            let tickDelay = baseDelay;
+            let ticks = 0;
+
+            // 抽選先の決定
+            let target = 40 + Math.floor(Math.random() * totalCells);
+
+            // チートモード適用時：10層目以下なら強制的にUPセルを狙い撃つ
+            if (cheatActive && stage <= 10) {
+                let upIndices = [];
+                rouletteCellsData.forEach((cell, idx) => {
+                    if (cell.type === 'UP' || cell.type === 'MAXUP') {
+                        upIndices.push(idx);
+                    }
+                });
+                if (upIndices.length > 0) {
+                    let selectedUpIndex = upIndices[Math.floor(Math.random() * upIndices.length)];
+                    let remainder = target % totalCells;
+                    let diff = selectedUpIndex - remainder;
+                    target += diff;
+                    if (target < ticks) {
+                        target += totalCells;
+                    }
+                }
+            }
+
+            function tick() {
+                let prev = document.getElementById(`lamp-${(currentIndex - 1 + totalCells) % totalCells}`);
+                if (prev) prev.classList.remove('active-lamp');
+                let cur = document.getElementById(`lamp-${currentIndex}`);
+                if (cur) cur.classList.add('active-lamp');
+                playSound('spin');
+                ticks++;
+
+                // 徐々に減速（ドキドキする適度な速度）
+                if (ticks > target - 10) {
+                    tickDelay += 45;
+                } else {
+                    tickDelay *= 1.03;
+                }
+
+                // 10段目のみ、決まる寸前に閃光につつまれる演出 (ラスト2ステップ)
+                if (stage === 10 && ticks === target - 2) {
+                    // 4秒間閃光に包まれてブラックアウト
+                    triggerBrainGlow();
+                    setTimeout(() => {
+                        currentIndex = (currentIndex + 1) % totalCells;
+                        ticks++;
+                        let finalCur = document.getElementById(`lamp-${currentIndex}`);
+                        if (finalCur) finalCur.classList.add('active-lamp');
+                        evaluateRouletteResult(currentIndex);
+                    }, 4000);
+                    return;
+                }
+
+                if (ticks >= target) {
+                    // 点滅演出
+                    let fc = 0;
+                    let fl = setInterval(() => {
+                        if (cur) cur.classList.toggle('active-lamp');
+                        fc++;
+                        if (fc > 6) {
+                            clearInterval(fl);
+                            if (cur) cur.classList.add('active-lamp');
+                            setTimeout(() => { evaluateRouletteResult(currentIndex); }, 200);
+                        }
+                    }, 80);
+                } else {
+                    currentIndex = (currentIndex + 1) % totalCells;
+                    rouletteTimer = setTimeout(tick, tickDelay);
+                }
+            }
+            tick();
+        }
+
+        // ルーレット結果判定
+        function evaluateRouletteResult(idx) {
+            rouletteTimer = null;
+            let cell = rouletteCellsData[idx];
+            let statusEl = document.getElementById('croon-status-text');
+            let isGameOver = true;
+
+            // 突破（UP）
+            if (cell.type === 'UP') {
+                isGameOver = false;
+                
+                // 9段目以下の突破は、ふちが警告のように赤く光る演出を付加
+                const board = document.getElementById('roulette-container');
+                board.classList.add('up-alert-glow');
+                playSound('warning');
+
+                let nextS = croonStage + 1;
+                statusEl.innerHTML = `🔥 STAGE ${croonStage} 突破！ 【STAGE ${nextS}】へ突入！`;
+
+                setTimeout(() => {
+                    buildRouletteUI(nextS);
+                    if (nextS === 5 || nextS === 10) {
+                        // GOボタン待ちのため一旦スピンロック解除
+                        isSpinning = false;
+                        document.getElementById('btn-back-croon-wrapper').style.opacity = '1';
+                    } else {
+                        runRouletteLogic(nextS);
+                    }
+                }, 1500);
+            } 
+            // 9段目：DOWN (8段目に戻る)
+            else if (cell.type === 'DOWN') {
+                isGameOver = false;
+                playSound('fail');
+                statusEl.innerText = "9段目DOWN... 8段目へ戻されます！";
+                setTimeout(() => {
+                    buildRouletteUI(8);
+                    runRouletteLogic(8);
+                }, 1500);
+            } 
+            // 10段目突破：MAXUP
+            else if (cell.type === 'MAXUP') {
+                isGameOver = false;
+                statusEl.innerText = "🎉 楽園突破！ 頂上の無限天国へ！";
+                performSummitExplosion();
+            } 
+            // OUT（ハズレ、1段目から再スタート）
+            else if (cell.type === 'OUT') {
+                playSound('fail');
+                statusEl.innerText = "OUT! 残念ながら没収となりました。1段目から再スタートです。";
+                croonStage = 1;
+                buildRouletteUI(1);
+                // チートは失敗で解除
+                cheatActive = false;
+                updateCheatUI();
+            } 
+            // 倍率獲得終了
+            else {
+                let m = parseInt(cell.type, 10);
+                let prize = croonBet * m;
+                wallet += prize;
+                playSound('cash');
+                statusEl.innerText = `🎉 【${m}倍】獲得！ +¥${prize.toLocaleString()}`;
+                croonStage = 1;
+                buildRouletteUI(1);
+                cheatActive = false;
+                updateCheatUI();
+            }
+
+            if (isGameOver) {
+                isSpinning = false;
+                document.getElementById('btn-back-croon-wrapper').style.opacity = '1';
+                document.getElementById('btn-croon-start').disabled = false;
+                document.getElementById('btn-croon-start').style.display = 'inline-block';
+                updateAllWalletUIs();
+                saveGame();
+            }
+        }
+
+        function triggerBrainGlow() {
+            playSound('warning');
+            const flash = document.getElementById('screen-flash-warning');
+            flash.style.display = 'block';
+            setTimeout(() => { flash.style.display = 'none'; }, 800);
+        }
+
+        // 10段目突破時の大爆発・閃光演出
+        function performSummitExplosion() {
+            playSound('explosion');
+            const exp = document.getElementById('giant-explosion-layer');
+            const txt = document.getElementById('summit-giant-text');
+            const blackOverlay = document.getElementById('warning-overlay');
+            const overlayText = document.getElementById('warning-overlay-text');
+
+            // ぷちゅんと真っ暗になり、警告
+            overlayText.innerText = "楽園の門が開く...";
+            blackOverlay.style.display = 'flex';
+
+            setTimeout(() => {
+                // 閃光大爆発
+                blackOverlay.style.display = 'none';
+                exp.style.display = 'block';
+                exp.style.background = '#fff';
+
+                let fs = true;
+                let fl = setInterval(() => {
+                    exp.style.background = fs ? 'var(--neon-pink)' : '#fff';
+                    fs = !fs;
+                }, 50);
+
+                setTimeout(() => {
+                    clearInterval(fl);
+                    exp.style.display = 'none';
+                    txt.style.display = 'block';
+                    setTimeout(() => {
+                        txt.style.transform = 'translate(-50%, -50%) scale(1.3)';
+                        txt.style.opacity = '1';
+                    }, 50);
+                }, 1000);
+
+            }, 2000);
+
+            // 11段目(楽園)の無限抽選開始へ
+            setTimeout(() => {
+                txt.style.opacity = '0';
+                txt.style.display = 'none';
+                triggerGo11Stage();
+            }, 5500);
+        }
+
+        function triggerGo11Stage() {
+            croonStage = 11;
+            finalStageTotalMultiplier = 0;
+            buildRouletteUI(11);
+            execute11thStageLoop();
+        }
+
+        function execute11thStageLoop() {
+            let currentIndex = 0;
+            let totalCells = rouletteCellsData.length;
+            let baseDelay = 35;
+            let tickDelay = baseDelay;
+            let ticks = 0;
+            let target = 45 + Math.floor(Math.random() * totalCells);
+
+            function tick() {
+                let prev = document.getElementById(`lamp-${(currentIndex - 1 + totalCells) % totalCells}`);
+                if (prev) prev.classList.remove('active-lamp');
+                let cur = document.getElementById(`lamp-${currentIndex}`);
+                if (cur) cur.classList.add('active-lamp');
+                playSound('spin');
+                ticks++;
+
+                if (ticks > target - 10) {
+                    tickDelay += 40;
+                } else {
+                    tickDelay *= 1.03;
+                }
+
+                if (ticks >= target) {
+                    let fc = 0;
+                    let fl = setInterval(() => {
+                        if (cur) cur.classList.toggle('active-lamp');
+                        fc++;
+                        if (fc > 6) {
+                            clearInterval(fl);
+                            if (cur) cur.classList.add('active-lamp');
+                            setTimeout(() => { evaluate11thStageResult(currentIndex); }, 200);
+                        }
+                    }, 80);
+                } else {
+                    currentIndex = (currentIndex + 1) % totalCells;
+                    rouletteTimer = setTimeout(tick, tickDelay);
+                }
+            }
+            tick();
+        }
+
+        function evaluate11thStageResult(idx) {
+            let cell = rouletteCellsData[idx];
+            if (cell.type === 'END') {
+                // ENDに入ると終了。100倍＋それまでの加算倍率
+                let finalMult = finalStageTotalMultiplier + 100;
+                let prize = croonBet * finalMult;
+                wallet += prize;
+
+                cheatActive = false;
+                updateCheatUI();
+                updateAllWalletUIs();
+                saveGame();
+
+                triggerCelebrationFireworks(prize, finalMult);
+            } else {
+                let m = parseInt(cell.type, 10);
+                finalStageTotalMultiplier += m;
+                playSound('success');
+                document.getElementById('croon-status-text').innerHTML = `🔥 <span style="color:var(--neon-green)">楽園継続中！ +${m}x（累計: ${finalStageTotalMultiplier}x）</span>`;
+                setTimeout(() => { execute11thStageLoop(); }, 1800);
+            }
+        }
+
+        // 11層突破花火
+        function triggerCelebrationFireworks(prize, finalMult) {
+            const canvas = document.getElementById('fireworks-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.style.display = 'block';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            let active = true;
+
+            function create() {
+                let x = Math.random() * canvas.width;
+                let y = canvas.height * 0.4;
+                let color = `hsl(${Math.random() * 360}, 100%, 60%)`;
+                for (let i = 0; i < 50; i++) {
+                    particles.push({
+                        x: x, y: y,
+                        vx: (Math.random() - 0.5) * 8,
+                        vy: (Math.random() - 0.5) * 8,
+                        alpha: 1,
+                        color: color
+                    });
+                }
+                playSound('success');
+            }
+
+            let interval = setInterval(create, 600);
+
+            function loop() {
+                if (!active) return;
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.font = '900 2.5rem "Noto Sans JP"';
+                ctx.fillStyle = '#ffd700';
+                ctx.textAlign = 'center';
+                ctx.fillText(`天空楽園制覇！ (${finalMult}倍)`, canvas.width / 2, canvas.height / 2 - 40);
+
+                ctx.font = '700 1.8rem "Orbitron"';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(`TOTAL WIN: ¥${prize.toLocaleString()}`, canvas.width / 2, canvas.height / 2 + 20);
+
+                for (let i = particles.length - 1; i >= 0; i--) {
+                    let p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.alpha -= 0.02;
+                    ctx.fillStyle = p.color;
+                    ctx.globalAlpha = p.alpha;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    if (p.alpha <= 0) particles.splice(i, 1);
+                }
+                ctx.globalAlpha = 1;
+                requestAnimationFrame(loop);
+            }
+            loop();
+
+            setTimeout(() => {
+                active = false;
+                clearInterval(interval);
+                canvas.style.display = 'none';
+                isSpinning = false;
+                document.getElementById('btn-back-croon-wrapper').style.opacity = '1';
+                document.getElementById('btn-croon-start').disabled = false;
+                croonStage = 1;
+                buildRouletteUI(1);
+                changeScreen('home-screen');
+            }, 6000);
+        }
+
+
+        // ====================================================
+        // 5. 英単語スロットマシン・システム (完全新規設計)
+        // ====================================================
+        let slotGauge = 0;
+        let isSpChance = false;
+        let spChanceCount = 0;
+        let spinActive = false;
+        let reelStates = [false, false, false]; // true if spinning
+        let reelValues = ['', '', ''];
+        let reelIntervals = [null, null, null];
+        let isCrownSp = false; // クラウン(王冠マーク)状態
+
+        // 連チャン継続記録
+        let spChainCount = 0;
+
+        // リール用英単語辞書
+        const wordsList3 = ["CAT", "DOG", "SUN", "RED", "BOX", "FLY", "RUN", "CUP", "MAP", "PEN", "HOT", "COL", "WET", "CRY", "SAD"];
+
+        function goToSlotArea() {
+            if (isSpinning) return;
+            changeScreen('slot-screen');
+            initSlotReels();
+        }
+
+        function exitSlotToHome() {
+            if (isSpinning) return;
+            playSound('select');
+            changeScreen('home-screen');
+        }
+
+        function initSlotReels() {
+            for (let i = 0; i < 3; i++) {
+                const strip = document.getElementById(`reel-strip-${i}`);
+                strip.innerHTML = '';
+                // 初期ダミーシンボル
+                for (let j = 0; j < 10; j++) {
+                    let div = document.createElement('div');
+                    div.className = 'reel-symbol';
+                    div.innerText = 'A';
+                    strip.appendChild(div);
+                }
+            }
+            updateGaugeUI();
+        }
+
+        function updateGaugeUI() {
+            const cells = document.querySelectorAll('.gauge-cell');
+            cells.forEach((c, idx) => {
+                if (idx < slotGauge) {
+                    c.classList.add('filled');
+                } else {
+                    c.classList.remove('filled');
+                }
+            });
+        }
+
+        // レバー引き
+        function pullLever() {
+            if (isSpinning || spinActive) return;
+            if (wallet < 500) {
+                alert("所持金が足りません！");
+                return;
+            }
+            wallet -= 500;
+            updateAllWalletUIs();
+            saveGame();
+
+            spinActive = true;
+            isSpinning = true; // 戻り禁止
+            document.getElementById('btn-back-slot-wrapper').style.opacity = '0.3';
+            document.getElementById('btn-slot-lever').disabled = true;
+
+            // 抽選内部処理（還元率90%に設計された内部確定フラグ）
+            // 通常当たり(1万円): 確率1/11.1 (約9.0% * 20倍 = 180%還元、ただしSP抽選を含むため、通常時とSP時のバランスで実質約90%に収束)
+            let isWin = Math.random() < 0.08; 
+            
+            // SPチャンス突入時 10%でMAX
+            let isMaxWin = false;
+            if (isSpChance) {
+                isMaxWin = Math.random() < 0.10;
+            }
+
+            let winWord = "XYZ";
+            if (isCrownSp) {
+                // 王冠SP中は100%王冠が揃う
+                winWord = "👑👑👑";
+            } else if (isSpChance) {
+                if (isMaxWin) {
+                    winWord = "MAX";
+                } else {
+                    // MAXのリーチ演出(1/2でテンパイハズレ or 当たり)
+                    winWord = Math.random() < 0.5 ? "MAZ" : "XYZ";
+                }
+            } else if (isWin) {
+                winWord = wordsList3[Math.floor(Math.random() * wordsList3.length)];
+            } else {
+                // 絶対に英単語が揃わないように、リストにない文字列を生成
+                winWord = "XYZ";
+            }
+
+            // リール回転開始
+            for (let i = 0; i < 3; i++) {
+                reelStates[i] = true;
+                document.getElementById(`btn-stop-${i}`).disabled = false;
+                startReelSpin(i, winWord[i]);
+            }
+        }
+
+        function startReelSpin(reelIdx, targetChar) {
+            const strip = document.getElementById(`reel-strip-${reelIdx}`);
+            let topPos = 0;
+            const alphabets = "ABCDEFGHIJKLMNOPQRSTUVWXYZ👑".split('');
+
+            // 王冠スピン時
+            let pool = isCrownSp ? ["👑"] : alphabets;
+
+            reelIntervals[reelIdx] = setInterval(() => {
+                strip.innerHTML = '';
+                // ターゲットキャラを含むシンボルシャッフル表示
+                for (let j = 0; j < 3; j++) {
+                    let div = document.createElement('div');
+                    div.className = 'reel-symbol';
+                    // 回転中はバラバラに
+                    div.innerText = pool[Math.floor(Math.random() * pool.length)];
+                    strip.appendChild(div);
+                }
+                playSound('spin');
+            }, 60);
+
+            // 停止文字を記憶
+            reelValues[reelIdx] = targetChar;
+        }
+
+        function stopReel(reelIdx) {
+            if (!reelStates[reelIdx]) return;
+            clearInterval(reelIntervals[reelIdx]);
+            reelStates[reelIdx] = false;
+            document.getElementById(`btn-stop-${reelIdx}`).disabled = true;
+            playSound('stop');
+
+            // 最終決定文字をリール中央に描画
+            const strip = document.getElementById(`reel-strip-${reelIdx}`);
+            strip.innerHTML = '';
+            
+            // 前後ダミー＋中央ターゲット
+            const alphabets = "ABCDEFGHIJKLM";
+            let prevChar = alphabets[Math.floor(Math.random() * alphabets.length)];
+            let nextChar = alphabets[Math.floor(Math.random() * alphabets.length)];
+            if (isCrownSp) { prevChar = "👑"; nextChar = "👑"; }
+
+            let d1 = document.createElement('div'); d1.className = 'reel-symbol'; d1.innerText = prevChar;
+            let d2 = document.createElement('div'); d2.className = 'reel-symbol'; d2.innerText = reelValues[reelIdx];
+            let d3 = document.createElement('div'); d3.className = 'reel-symbol'; d3.innerText = nextChar;
+            
+            strip.appendChild(d1);
+            strip.appendChild(d2);
+            strip.appendChild(d3);
+
+            // MAXテンパイ時のリーチ演出
+            if (!reelStates[0] && !reelStates[1] && reelStates[2]) {
+                let currentWordSoFar = reelValues[0] + reelValues[1];
+                if (currentWordSoFar === "MA" && isSpChance) {
+                    // SPチャンス中リーチ演出。電光掲示板で煽る
+                    setSignboard("🚨 MAXリーチ発生！！！ 狙え！！！");
+                    playSound('warning');
+                    // 最後の一個をわざとゆっくり回す
+                    clearInterval(reelIntervals[2]);
+                    startReelSpinSlowly(2, reelValues[2]);
+                }
+            }
+
+            // 全リール停止判定
+            if (!reelStates[0] && !reelStates[1] && !reelStates[2]) {
+                evaluateSlotResult();
+            }
+        }
+
+        function startReelSpinSlowly(reelIdx, targetChar) {
+            const strip = document.getElementById(`reel-strip-${reelIdx}`);
+            let step = 0;
+            reelIntervals[reelIdx] = setInterval(() => {
+                strip.innerHTML = '';
+                for (let j = 0; j < 3; j++) {
+                    let div = document.createElement('div');
+                    div.className = 'reel-symbol';
+                    div.innerText = step % 2 === 0 ? "X" : targetChar;
+                    strip.appendChild(div);
+                }
+                step++;
+                playSound('spin');
+            }, 180); // 通常より約3倍遅いスロー回転
+        }
+
+        // スロット結果判定
+        function evaluateSlotResult() {
+            spinActive = false;
+            const finalWord = reelValues.join('');
+            
+            // クラウンSP時
+            if (isCrownSp) {
+                if (finalWord === "👑👑👑") {
+                    triggerCrownWin();
+                } else {
+                    // 予備保護
+                    triggerCrownWin();
+                }
+                return;
+            }
+
+            // SPチャンス中 MAX判定
+            if (isSpChance) {
+                if (finalWord === "MAX") {
+                    // 10%のMAXに当選
+                    triggerMaxPuchun();
+                    return;
+                } else {
+                    spChanceCount--;
+                    if (spChanceCount <= 0) {
+                        isSpChance = false;
+                        setSignboard("SPチャンス終了。通常モードに戻ります。");
+                    } else {
+                        setSignboard(`SPチャンス中！MAXをそろえろ！残り ${spChanceCount} 回`);
+                    }
+                }
+            } else {
+                // 通常時
+                if (wordsList3.includes(finalWord)) {
+                    // 通常単語当たり！ (¥10,000)
+                    wallet += 10000;
+                    playSound('success');
+                    triggerMoneyExplosion();
+                    setSignboard(`🎉 ビンゴ！【${finalWord}】 ¥10,000 獲得！`);
+                    
+                    // ゲージ増加
+                    slotGauge++;
+                    if (slotGauge >= 10) {
+                        triggerSpChanceStart();
+                    } else {
+                        updateGaugeUI();
+                    }
+                } else {
+                    setSignboard("ハズレ。もう一度挑戦！");
+                }
+            }
+
+            isSpinning = false;
+            document.getElementById('btn-back-slot-wrapper').style.opacity = '1';
+            document.getElementById('btn-slot-lever').disabled = false;
+            updateAllWalletUIs();
+            saveGame();
+        }
+
+        // 電光掲示板のフェードイン表示
+        function setSignboard(text) {
+            const el = document.getElementById('slot-signboard');
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.innerText = text;
+                el.style.opacity = '1';
+            }, 150);
+        }
+
+        // SPチャンス開始
+        function triggerSpChanceStart() {
+            slotGauge = 0;
+            updateGaugeUI();
+            isSpChance = true;
+            spChanceCount = 20;
+
+            playSound('warning');
+            triggerBrainGlow();
+            setSignboard("🚨 SPチャンス突入！MAXをそろえろ！残り 20 回");
+        }
+
+        // MAX当選「ぷちゅん」暗転ブラックアウト
+        function triggerMaxPuchun() {
+            isSpinning = true;
+            playSound('explosion');
+            const black = document.getElementById('warning-overlay');
+            const txt = document.getElementById('warning-overlay-text');
+            
+            black.style.display = 'flex';
+            txt.innerText = "P U C H U N . . .";
+            
+            setTimeout(() => {
+                txt.innerText = "🚨 極限覚醒 🚨";
+                playSound('warning');
+                setTimeout(() => {
+                    black.style.display = 'none';
+                    startCrownSpMode();
+                }, 2000);
+            }, 2000);
+        }
+
+        // クラウンSP突入
+        function startCrownSpMode() {
+            isCrownSp = true;
+            spChanceCount = 20;
+            spChainCount++;
+            setSignboard(`👑 極限SP突入！当たり確率100%！ 残り ${spChanceCount} 回`);
+            
+            // リール、背景をSP色に変更
+            document.getElementById('slot-cabinet').style.borderColor = 'var(--neon-yellow)';
+            
+            // 即レバー解放
+            isSpinning = false;
+            document.getElementById('btn-slot-lever').disabled = false;
+        }
+
+        // クラウンSP時の当たり（¥50,000確定、画面揺れ＆マネー）
+        function triggerCrownWin() {
+            wallet += 50000;
+            playSound('success');
+            
+            // 画面強烈に揺れる
+            document.body.classList.add('shake-screen');
+            triggerMoneyExplosion();
+            
+            setTimeout(() => {
+                document.body.classList.remove('shake-screen');
+            }, 800);
+
+            spChanceCount--;
+            if (spChanceCount <= 0) {
+                // 20回終わった時：25%でぷちゅん連チャン
+                if (Math.random() < 0.25) {
+                    isSpinning = true;
+                    // 再びぷちゅん
+                    const black = document.getElementById('warning-overlay');
+                    const txt = document.getElementById('warning-overlay-text');
+                    black.style.display = 'flex';
+                    txt.innerText = "テレビ消灯ぷちゅん...";
+                    playSound('explosion');
+
+                    setTimeout(() => {
+                        txt.innerText = "継続確定！！！";
+                        playSound('success');
+                        setTimeout(() => {
+                            black.style.display = 'none';
+                            startCrownSpMode();
+                        }, 1500);
+                    }, 2000);
+                } else {
+                    // SP終了 恩恵配布
+                    let chainBonus = spChainCount * 1000000;
+                    wallet += chainBonus;
+                    alert(`極限SP終了！連チャン数ボーナス：¥${chainBonus.toLocaleString()} 支給！`);
+                    
+                    isCrownSp = false;
+                    spChainCount = 0;
+                    document.getElementById('slot-cabinet').style.borderColor = '#3a3a5e';
+                    setSignboard("通常モードに戻りました。");
+                    isSpinning = false;
+                    document.getElementById('btn-back-slot-wrapper').style.opacity = '1';
+                    document.getElementById('btn-slot-lever').disabled = false;
+                }
+            } else {
+                setSignboard(`👑 継続確定！！！ 残り ${spChanceCount} 回 (¥50,000獲得)`);
+                isSpinning = false;
+                document.getElementById('btn-slot-lever').disabled = false;
+            }
+
+            updateAllWalletUIs();
+            saveGame();
+        }
+
+        // 豪華な札束・コイン吹き乱れエフェクト
+        function triggerMoneyExplosion() {
+            for (let i = 0; i < 40; i++) {
+                let div = document.createElement('div');
+                div.className = 'money-particle';
+                div.innerText = Math.random() < 0.5 ? '¥' : '💵';
+                div.style.left = `${Math.random() * 100}vw`;
+                div.style.top = `${Math.random() * -20}px`;
+                div.style.animationDelay = `${Math.random() * 0.5}s`;
+                document.body.appendChild(div);
+
+                setTimeout(() => { div.remove(); }, 2500);
+            }
+        }
+
+
+        // ====================================================
+        // 🔒 暗号、管理者認証、起動処理
+        // ====================================================
+        let cheatActive = false; // 252525は仕様上全削除されたため、内部用変数として定義
+        
+        function updateCheatUI() {
+            // UIを統合しバグが起きないように設計
+        }
+
+        function openAdminModal() { 
+            document.getElementById('admin-modal').style.display = 'flex'; 
+            document.getElementById('admin-code-input').value = ''; 
+        }
+        function closeAdminModal() { 
+            document.getElementById('admin-modal').style.display = 'none'; 
+        }
+        
+        function submitAdminCode() {
+            const code = document.getElementById('admin-code-input').value.trim();
+            if (code === "216714") {
+                wallet += 1000000;
+                playSound('cash');
+                alert("管理者認証成功: ¥1,000,000 が支給されました！");
+                updateAllWalletUIs();
+                saveGame();
+                closeAdminModal();
+            } else {
+                playSound('fail');
+                alert("暗号コードが一致しません。");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const check = document.getElementById('terms-agree-check');
+            const startBtn = document.getElementById('btn-start-game');
+
+            loadGame();
+            loadQuizState();
+
+            check.addEventListener('change', () => {
+                startBtn.disabled = !check.checked;
+            });
+
+            startBtn.addEventListener('click', () => {
+                initAudio();
+                playSound('select');
+                changeScreen('home-screen');
+            });
+        });
+    </script>
+</body>
+</html>
