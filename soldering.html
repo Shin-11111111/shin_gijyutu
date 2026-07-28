@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はんだ付け学習サイト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0c0d0e;
+  --steel:#1b1d20;
+  --steel-2:#24272b;
+  --steel-edge:#3a3f44;
+  --steel-hi:#565c62;
+  --spark:#ff7a29;
+  --spark-hot:#ffb347;
+  --arc:#8fd8ff;
+  --hazard:#f4c430;
+  --danger:#e5482f;
+  --danger-dim:#5c2116;
+  --text:#e6e4de;
+  --text-dim:#9a9d9f;
+  --plate:#eae6da;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Sans JP', sans-serif;
+  line-height:1.7;
+  background-image:
+    repeating-linear-gradient(100deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 4px);
+  background-color:var(--bg);
+}
+h1,h2,h3,.mono,.eyebrow,.step-num,.tag-en{ font-family:'Oswald', sans-serif; text-transform:uppercase; }
+.wrap{ max-width:960px; margin:0 auto; padding:0 24px; position:relative; z-index:1; }
+
+/* HAZARD STRIP */
+.hazard-strip{
+  height:12px;
+  background:repeating-linear-gradient(135deg, var(--hazard) 0 16px, #131313 16px 32px);
+}
+
+/* WELD SEAM DIVIDER - signature element */
+.weld-seam{
+  height:14px;
+  margin:0;
+  background-image: radial-gradient(circle at 7px 6px, var(--spark-hot) 0 2px, var(--spark) 2px 4px, transparent 5px);
+  background-size:15px 12px;
+  background-repeat:repeat-x;
+  background-position:center;
+  filter: drop-shadow(0 0 3px rgba(255,122,41,.55));
+  opacity:.9;
+}
+
+/* HERO */
+header.hero{
+  padding:52px 0 40px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.03), transparent 60%);
+}
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:600; letter-spacing:.16em;
+  color:var(--spark-hot);
+  margin-bottom:16px;
+}
+.eyebrow::before{
+  content:"";
+  width:9px; height:9px;
+  background:var(--spark);
+  transform:rotate(45deg);
+  box-shadow:0 0 6px var(--spark);
+}
+h1{
+  font-family:'Noto Sans JP', sans-serif;
+  font-size:42px; font-weight:900; letter-spacing:.02em;
+  color:var(--plate);
+  margin-bottom:12px;
+  text-shadow:0 1px 0 rgba(0,0,0,.6), 0 0 18px rgba(255,122,41,.12);
+}
+.hero-sub{ color:var(--text-dim); font-size:16px; max-width:56ch; }
+.hero-meta{ display:flex; gap:0; margin-top:30px; flex-wrap:wrap; border:1px solid var(--steel-edge); border-radius:2px;}
+.meta-item{
+  font-family:'JetBrains Mono', monospace; font-size:12.5px; color:var(--text-dim);
+  padding:12px 20px; border-right:1px solid var(--steel-edge); flex:1; min-width:140px;
+}
+.meta-item:last-child{ border-right:none; }
+.meta-item b{ color:var(--spark-hot); display:block; font-size:11px; letter-spacing:.08em; margin-bottom:4px; font-weight:600; font-family:'Oswald', sans-serif; text-transform:uppercase;}
+
+/* SECTION */
+.section{ padding:48px 0; position:relative; }
+.plate-head{
+  position:relative;
+  background:linear-gradient(180deg, var(--steel-2), var(--steel));
+  border:1px solid var(--steel-edge);
+  border-radius:3px;
+  padding:14px 20px;
+  margin-bottom:26px;
+  display:flex; align-items:baseline; gap:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), inset 0 -1px 0 rgba(0,0,0,.4);
+}
+.rivet{
+  position:absolute; width:8px; height:8px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #cfd2d4, #55585c 55%, #202224 100%);
+  box-shadow:0 1px 1px rgba(0,0,0,.6);
+}
+.rivet.tl{ top:6px; left:8px; } .rivet.tr{ top:6px; right:8px; }
+.rivet.bl{ bottom:6px; left:8px; } .rivet.br{ bottom:6px; right:8px; }
+.sec-num{ font-family:'JetBrains Mono', monospace; color:var(--spark); font-size:14px; }
+.plate-head h2{ font-family:'Noto Sans JP', sans-serif; font-size:23px; font-weight:900; color:var(--plate); letter-spacing:.01em;}
+.sec-desc{ color:var(--text-dim); font-size:14px; margin:-14px 0 24px; max-width:60ch; }
+
+.visor{
+  background:#050708;
+  border:2px solid var(--steel-edge);
+  border-radius:4px;
+  padding:16px;
+  position:relative;
+  box-shadow:inset 0 0 40px rgba(255,122,41,.03);
+}
+.visor::before{
+  content:"";
+  position:absolute; inset:-2px;
+  border-radius:6px;
+  padding:2px;
+  background:linear-gradient(120deg, var(--spark), transparent 30%, transparent 70%, var(--arc));
+  opacity:.25;
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;
+}
+.visor-bar{
+  display:flex; align-items:center; gap:10px;
+  padding:0 4px 12px;
+  font-family:'JetBrains Mono', monospace;
+  font-size:10.5px;
+  color:var(--text-dim);
+  letter-spacing:.05em;
+}
+.visor-bar .dot{ width:7px; height:7px; border-radius:50%; background:var(--steel-edge); }
+.visor-bar .dot.on{ background:var(--spark); box-shadow:0 0 6px var(--spark); }
+.screen{
+  aspect-ratio:16/9;
+  background:#000;
+  border-radius:2px;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  position:relative;
+}
+.screen iframe{ width:100%; height:100%; border:0; display:none; }
+
+/* TOOLS GRID - plate tags */
+.tools-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; }
+.tool-card{
+  background:linear-gradient(180deg, var(--steel-2), var(--steel));
+  border:1px solid var(--steel-edge);
+  border-top:2px solid var(--spark);
+  padding:14px 16px;
+  border-radius:2px;
+}
+.tool-card .name{ font-weight:500; font-size:14.5px; color:var(--plate); }
+.tool-card .desc{ font-size:12.5px; color:var(--text-dim); margin-top:3px; }
+
+/* STEPS - torch-cut numbering with weld bead connector */
+.steps{ position:relative; }
+.steps::before{
+  content:"";
+  position:absolute; left:23px; top:8px; bottom:8px; width:3px;
+  background-image: radial-gradient(circle at 1.5px 5px, var(--spark) 0 2px, transparent 3px);
+  background-size:8px 10px;
+  background-repeat:repeat-y;
+  opacity:.7;
+}
+.step{ position:relative; display:flex; gap:20px; padding:0 0 30px 0; }
+.step:last-child{ padding-bottom:0; }
+.step-num{
+  flex:0 0 48px; height:48px;
+  border-radius:50%;
+  background:radial-gradient(circle at 32% 28%, var(--steel-hi), var(--steel) 65%, #101113);
+  border:2px solid var(--spark);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Oswald', sans-serif;
+  font-size:19px; font-weight:700; color:var(--spark-hot);
+  position:relative; z-index:1;
+  box-shadow:0 0 10px rgba(255,122,41,.25);
+}
+.step-body{ padding-top:6px; }
+.step-body h3{ font-family:'Noto Sans JP', sans-serif; font-size:16px; font-weight:700; color:var(--plate); margin-bottom:4px; }
+.step-body p{ font-size:14px; color:var(--text-dim); }
+
+/* SAFETY CARDS - caution plates */
+.safety-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:14px; }
+.safety-card{
+  background:linear-gradient(180deg, var(--steel-2), var(--steel));
+  border:1px solid var(--danger-dim);
+  border-radius:2px;
+  padding:16px 18px 16px 20px;
+  position:relative;
+  overflow:hidden;
+}
+.safety-card::before{
+  content:"";
+  position:absolute; left:0; top:0; bottom:0; width:6px;
+  background:repeating-linear-gradient(-45deg, var(--danger) 0 6px, #1a1a1a 6px 12px);
+}
+.safety-card.caution{ border-color:#5c4b0f; }
+.safety-card.caution::before{ background:repeating-linear-gradient(-45deg, var(--hazard) 0 6px, #1a1a1a 6px 12px); }
+.tag-en{
+  display:inline-block;
+  font-size:10.5px; font-weight:600; letter-spacing:.1em;
+  padding:2px 8px; border-radius:2px;
+  background:var(--danger-dim); color:#ffb0a4;
+  margin-bottom:10px;
+}
+.safety-card.caution .tag-en{ background:#4a3c0c; color:var(--hazard); }
+.safety-card h3{ font-family:'Noto Sans JP', sans-serif; font-size:15.5px; font-weight:700; color:var(--plate); margin-bottom:6px; }
+.safety-card p{ font-size:13.5px; color:var(--text-dim); }
+
+footer{ padding:28px 0 56px; text-align:center; color:#4d4f51; font-size:12px; }
+footer .mono{ font-family:'JetBrains Mono', monospace; letter-spacing:.06em; }
+
+@media (max-width:640px){
+  h1{ font-size:30px; }
+  .meta-item{ min-width:100%; border-right:none; border-bottom:1px solid var(--steel-edge); }
+}
+</style>
+</head>
+<body>
+
+<div class="hazard-strip"></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">久保田の技術部屋 - エネルギー変換の技術</div>
+    <h1>はんだ付け マニュアル</h1>
+    <p class="hero-sub">はんだごては300℃を超える高温工具です。作業を始める前に、この動画と注意事項を必ず確認してください。</p>
+  </header>
+</div>
+
+<div class="weld-seam"></div>
+
+<div class="wrap">
+
+  <section class="section">
+    <div class="plate-head">
+      <div class="rivet tl"></div><div class="rivet tr"></div><div class="rivet bl"></div><div class="rivet br"></div>
+      <span class="sec-num">01</span><h2>解説動画</h2>
+    </div>
+    <p class="sec-desc">はんだ付けのやり方をまとめた動画です。やり方やコツを学びましょう。</p>
+
+    <div class="visor">
+      <div class="visor-bar">
+      </div>
+      <div class="screen" id="screen">
+        <video id="videoPlayer" controls controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false;" style="width:100%;height:100%;display:block;background:#000;">
+          <source src="https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/soldering.mp4" type="video/mp4">
+        </video>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="plate-head">
+      <div class="rivet tl"></div><div class="rivet tr"></div><div class="rivet bl"></div><div class="rivet br"></div>
+      <span class="sec-num">02</span><h2>安全上の注意</h2>
+    </div>
+    <p class="sec-desc">作業前に確認しましょう。</p>
+    <div class="safety-grid">
+      <div class="safety-card">
+        <span class="tag-en">危険</span>
+        <h3>こて先には絶対に触れない</h3>
+        <p>300℃を超える高温になる。作業中も置いた直後も金属部分には触れない。</p>
+      </div>
+      <div class="safety-card">
+        <span class="tag-en">危険</span>
+        <h3>置き場所を決めておく</h3>
+        <p>使わない時は必ずこて台に戻す。机の上に直接置かない。</p>
+      </div>
+      <div class="safety-card">
+        <span class="tag-en">危険</span>
+        <h3>こて台も熱くなる</h3>
+        <p>こて台も高温になるため、特に片付けの時に直接触らないようにする。</p>
+      </div>
+      <div class="safety-card caution">
+        <span class="tag-en">注意</span>
+        <h3>煙を吸い込まない</h3>
+        <p>はんだが溶ける際に出る煙には有害な成分が含まれる。顔を近づけすぎない。</p>
+      </div>
+      <div class="safety-card caution">
+        <span class="tag-en">注意</span>
+        <h3>周囲に燃えやすい物を置かない</h3>
+        <p>紙・布・プラスチックの下敷きなどをこて先の近くに置かない。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="plate-head">
+      <div class="rivet tl"></div><div class="rivet tr"></div><div class="rivet bl"></div><div class="rivet br"></div>
+      <span class="sec-num">03</span><h2>準備するもの</h2>
+    </div>
+    <div class="tools-grid">
+      <div class="tool-card"><div class="name">はんだごて</div><div class="desc">コンセントを挿すときは周囲の人に伝える</div></div>
+      <div class="tool-card"><div class="name">こて台</div><div class="desc">スポンジは濡らしておく</div></div>
+      <div class="tool-card"><div class="name">ニッパー</div><div class="desc">リード線の切断に使用</div></div>
+      <div class="tool-card"><div class="name">はんだ</div><div class="desc">キットの中に入っている</div></div>
+      <div class="tool-card"><div class="name">部品</div><div class="desc">つけ間違えないように注意</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="plate-head">
+      <div class="rivet tl"></div><div class="rivet tr"></div><div class="rivet bl"></div><div class="rivet br"></div>
+      <span class="sec-num">04</span><h2>作業の手順</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <h3>電源を入れて予熱する</h3>
+          <p>コンセントに接続し、こて先が十分に温まるまで2分待つ。この間はこて台に置いたままにして、部品を基板に取り付けておく。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <h3>基板を温める</h3>
+          <p>【4秒】温めないとはんだが付かない。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <h3>はんだをこて先に当てる</h3>
+          <p>【2秒】こて先の反対側からはんだを当て、はんだを溶かす。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <h3>はんだを離す</h3>
+          <p>【1秒】先にはんだを離さないと、はんだ線が基板にくっついてしまう。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <h3>はんだごてを離す</h3>
+          <p>【1秒】きれいにはんだが付いたら、はんだごてを離す。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">6</div>
+        <div class="step-body">
+          <h3>こて先をスポンジで拭く</h3>
+          <p>湿らせたスポンジでこて先の汚れを軽く拭き取り、光沢のある状態にする。</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">7</div>
+        <div class="step-body">
+          <h3>ニッパーで部品の足を切る</h3>
+          <p>根本からニッパーで切断する。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p class="mono">©久保田の技術部屋</p>
+  </footer>
+
+</div>
+
+<script>
+
+</script>
+
+</body>
+</html>
