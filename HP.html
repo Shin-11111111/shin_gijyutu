@@ -41,6 +41,14 @@
             }
         };
     </script>
+
+    <!-- ==================== ひらがなモード用ライブラリ ====================
+         kuroshiro(本体) + kuromoji(形態素解析エンジン) を読み込むことで、
+         ページ内の文章を自動でひらがなに変換できるようにする。
+         新しく本文を追加しても、この仕組み自体には一切手を加える必要はない。 -->
+    <script src="https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/build/kuromoji.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kuroshiro@1.2.0/dist/kuroshiro.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/kuroshiro-analyzer-kuromoji@1.1.0/dist/kuroshiro-analyzer-kuromoji.min.js"></script>
 </head>
 <body class="font-sans bg-gray-50 text-gray-800 p-4 md:p-8 min-h-screen">
 
@@ -89,6 +97,10 @@
             <h2 class="bg-content text-white p-3 rounded-lg font-bold text-xl flex-1">
                 目次
             </h2>
+            <button id="hiragana-mode-button"
+                    class="bg-third hover:bg-third/70 text-white font-bold p-3 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-third/50 whitespace-nowrap">
+                ひらがなモード: OFF
+            </button>
             <button id="teacher-mode-button"
                     class="bg-teacher hover:bg-teacher/50 text-white font-bold p-3 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher/50 whitespace-nowrap">
                 教員モード
@@ -1574,6 +1586,111 @@
             searchInput.value = '';
             clearBtn.classList.add('hidden');
             searchInput.focus();
+        });
+
+        // ==================== ひらがなモード ====================
+        // 変換対象に含めたくない要素には data-no-hiragana 属性を付ければ除外できる。例: <p data-no-hiragana>この文章は変換しない</p>
+
+        const hiraganaButton = document.getElementById('hiragana-mode-button');
+        let kuroshiroInstance = null;
+        let isHiraganaOn = false;
+        let isConverting = false;
+        const hiraganaOriginalTextMap = new Map();
+
+        // 変換対象から除外する要素(script/style/入力欄/通知/パスワード欄など)
+        const HIRAGANA_EXCLUDE_SELECTOR =
+            'script, style, input, textarea, #message-container, #password-modal, [data-no-hiragana]';
+
+        // ==== 読み間違いの手動修正辞書 ====
+        const HIRAGANA_OVERRIDES = {
+            "久保田": "くぼた",
+            "技術部屋": "ぎじゅつべや",
+            "評定": "ひょうてい",
+            "増戸": "ますこ",
+            "五日市": "いつかいち",
+        };
+        const HIRAGANA_OVERRIDE_KEYS = Object.keys(HIRAGANA_OVERRIDES)
+            .sort((a, b) => b.length - a.length);
+
+        function applyHiraganaOverrides(text) {
+            let result = text;
+            for (const kanji of HIRAGANA_OVERRIDE_KEYS) {
+                result = result.split(kanji).join(HIRAGANA_OVERRIDES[kanji]);
+            }
+            return result;
+        }
+
+        const KuroshiroCtor = (typeof Kuroshiro !== 'undefined' && Kuroshiro.default) ? Kuroshiro.default : Kuroshiro;
+        const KuromojiAnalyzerCtor = (typeof KuromojiAnalyzer !== 'undefined' && KuromojiAnalyzer.default) ? KuromojiAnalyzer.default : KuromojiAnalyzer;
+
+        async function getKuroshiro() {
+            if (kuroshiroInstance) return kuroshiroInstance;
+            kuroshiroInstance = new KuroshiroCtor();
+            await kuroshiroInstance.init(new KuromojiAnalyzerCtor({
+                dictPath: "https://cdn.jsdelivr.net/npm/kuromoji@0.1.2/dict/"
+            }));
+            return kuroshiroInstance;
+        }
+
+        function collectHiraganaTextNodes() {
+            const main = document.querySelector('main');
+            const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
+                acceptNode(node) {
+                    if (!node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+                    if (node.parentElement && node.parentElement.closest(HIRAGANA_EXCLUDE_SELECTOR)) {
+                        return NodeFilter.FILTER_REJECT;
+                    }
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            });
+            const nodes = [];
+            let current;
+            while ((current = walker.nextNode())) nodes.push(current);
+            return nodes;
+        }
+
+        async function turnHiraganaOn() {
+            isConverting = true;
+            hiraganaButton.disabled = true;
+            hiraganaButton.textContent = 'へんかんちゅう...';
+            try {
+                const kuroshiro = await getKuroshiro();
+                const nodes = collectHiraganaTextNodes();
+                for (const node of nodes) {
+                    if (!hiraganaOriginalTextMap.has(node)) {
+                        hiraganaOriginalTextMap.set(node, node.textContent);
+                    }
+                    const original = hiraganaOriginalTextMap.get(node);
+                    const preprocessed = applyHiraganaOverrides(original);
+                    node.textContent = await kuroshiro.convert(preprocessed, { to: 'hiragana', mode: 'normal' });
+                }
+                isHiraganaOn = true;
+                hiraganaButton.textContent = 'ひらがなモード: ON';
+            } catch (error) {
+                console.error(error);
+                alert_message('ひらがな変換の読み込みに失敗しました。', 'error');
+                hiraganaButton.textContent = 'ひらがなモード: OFF';
+            } finally {
+                isConverting = false;
+                hiraganaButton.disabled = false;
+            }
+        }
+
+        function turnHiraganaOff() {
+            hiraganaOriginalTextMap.forEach((original, node) => {
+                node.textContent = original;
+            });
+            isHiraganaOn = false;
+            hiraganaButton.textContent = 'ひらがなモード: OFF';
+        }
+
+        hiraganaButton.addEventListener('click', function () {
+            if (isConverting) return;
+            if (isHiraganaOn) {
+                turnHiraganaOff();
+            } else {
+                turnHiraganaOn();
+            }
         });
     </script>
 </body>
