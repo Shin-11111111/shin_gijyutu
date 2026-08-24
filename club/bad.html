@@ -52,6 +52,49 @@
             height: 100%;
         }
 
+        /* PDF変更吹き出し */
+        #pdfCalloutOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .pdf-callout {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: auto;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25));
+            animation: callout-pop 0.3s ease-out;
+        }
+
+        .pdf-callout-bubble {
+            background-color: #dc2626;
+            color: white;
+            font-weight: 700;
+            font-size: 0.75rem;
+            line-height: 1.3;
+            padding: 0.4rem 0.7rem;
+            border-radius: 0.25rem;
+            white-space: nowrap;
+            border: 2px solid white;
+        }
+
+        @media (min-width: 640px) {
+            .pdf-callout-bubble {
+                font-size: 0.875rem;
+                padding: 0.5rem 0.9rem;
+            }
+        }
+
+        @keyframes callout-pop {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
         .section-anchor {
             scroll-margin-top: 110px;
         }
@@ -167,7 +210,7 @@
                 お知らせ
             </h2>
             <p class="text-gray-700">
-                <span class="font-bold text-blue-600">合同練習が決定しました！</span>8/22(土)12:45～、8/30(日)13:00～
+                <span class="font-bold text-blue-600">合同練習が決定しました！</span>8/30(日)13:00～
             </p>
         </section>
 
@@ -188,6 +231,7 @@
                     loading="lazy"
                 >
                 </iframe>
+                <div id="pdfCalloutOverlay"></div>
             </div>
             
             <p class="mt-4 text-center">
@@ -375,7 +419,22 @@
 
         // ------------------------------ 月間練習予定 ------------------------------
         const pdfDocuments = [
-            { title: "8月", url: "https://shin-11111111.github.io/shin_gijyutu/club/8.pdf#navpanes=0" },
+            {
+                title: "8月",
+                url: "https://shin-11111111.github.io/shin_gijyutu/club/8.pdf#navpanes=0",
+                changes: [
+                    // 不要になったらこの行を削除するかコメントアウト
+                    { top: "90%", left: "60%", text: "8/30 13:00～合同練習" },
+                ]
+            },
+            {
+                title: "9月",
+                url: "https://shin-11111111.github.io/shin_gijyutu/club/9.pdf#navpanes=0",
+                changes: [
+                    // 不要になったらこの行を削除するかコメントアウト
+                    //{ top: "90%", left: "60%", text: "8/30 13:00～に変更" },
+                ]
+            },
         ];
 
         // ------------------------------ チェックリスト ------------------------------
@@ -466,7 +525,7 @@
             }, 300);
         }
 
-        function displayPdf(url, buttonElement) {
+        function displayPdf(doc, buttonElement) {
             const iframeElement = document.getElementById('pdfViewerFrame');
             const downloadLinkElement = document.getElementById('pdfDownloadLink');
             const buttons = document.querySelectorAll('.pdf-button');
@@ -474,10 +533,32 @@
             buttons.forEach(btn => btn.classList.remove('active'));
             if (buttonElement) buttonElement.classList.add('active');
 
-            iframeElement.src = url;
+            iframeElement.src = doc.url;
             if (downloadLinkElement) {
-                downloadLinkElement.href = url;
+                downloadLinkElement.href = doc.url;
             }
+
+            renderPdfCallouts(doc.changes || []);
+        }
+
+        function renderPdfCallouts(changes) {
+            const overlay = document.getElementById('pdfCalloutOverlay');
+            if (!overlay) return;
+            overlay.innerHTML = '';
+
+            changes.forEach(change => {
+                const callout = document.createElement('div');
+                callout.className = 'pdf-callout';
+                callout.style.top = change.top;
+                callout.style.left = change.left;
+
+                const bubble = document.createElement('div');
+                bubble.className = 'pdf-callout-bubble';
+                bubble.textContent = change.text;
+
+                callout.appendChild(bubble);
+                overlay.appendChild(callout);
+            });
         }
 
         function initializePdfSelector() {
@@ -489,10 +570,10 @@
                     const button = document.createElement('button');
                     button.textContent = doc.title;
                     button.className = "pdf-button px-4 py-2 text-sm bg-blue-100 text-blue-800 font-semibold rounded-lg hover:bg-blue-200 transition duration-150 shadow-md transform hover:scale-[1.01] active:scale-[0.99]";
-                    button.onclick = () => displayPdf(doc.url, button);
+                    button.onclick = () => displayPdf(doc, button);
                     container.appendChild(button);
 
-                    if (index === 0) displayPdf(doc.url, button);
+                    if (index === 0) displayPdf(doc, button);
                 });
             }
         }
