@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GEAR-SIM // ギヤ比・回転速度シミュレーター</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #0a0e14;
+      --panel: #101826;
+      --panel-alt: #0c131f;
+      --line: #1e2a3d;
+      --line-bright: #2c4058;
+      --grid: rgba(79, 209, 255, 0.055);
+      --cyan: #4fd8ff;
+      --cyan-dim: #2b7d94;
+      --amber: #ffb020;
+      --green: #00e08a;
+      --red: #ff5f56;
+      --text: #dce6f0;
+      --text-dim: #6f8299;
+      --text-faint: #445369;
+      --mono: 'JetBrains Mono', 'Noto Sans JP', monospace;
+      --sans: 'Noto Sans JP', 'JetBrains Mono', sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--void);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 60px;
+      min-height: 100vh;
+    }
+
+    .frame {
+      width: 100%;
+      max-width: 880px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ---- ヘッダー：機器の銘板風 ---- */
+    header.nameplate {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line-bright);
+      padding-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    header.nameplate .title-block {
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    header.nameplate h1 {
+      font-size: 1.35rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+    }
+    header.nameplate .subtitle {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--cyan-dim);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    header.nameplate .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--text-faint);
+      letter-spacing: 0.08em;
+      border: 1px solid var(--line);
+      padding: 3px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    /* ---- 共通パネル：コーナーブラケット付き ---- */
+    .panel {
+      position: relative;
+      background: linear-gradient(180deg, var(--panel), var(--panel-alt));
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 20px;
+    }
+    .panel::before, .panel::after,
+    .panel .br-tl, .panel .br-br {
+      content: "";
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-color: var(--cyan-dim);
+      border-style: solid;
+      opacity: 0.8;
+    }
+    .panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+    .panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+    .panel-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-label::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--cyan);
+      border-radius: 1px;
+      box-shadow: 0 0 6px var(--cyan);
+      flex-shrink: 0;
+    }
+
+    /* ---- モード切替：セグメントコントロール ---- */
+    .segmented {
+      display: flex;
+      border: 1px solid var(--line-bright);
+      border-radius: 4px;
+      overflow: hidden;
+      width: fit-content;
+    }
+    .segmented button {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-dim);
+      background: var(--panel-alt);
+      border: none;
+      border-right: 1px solid var(--line-bright);
+      padding: 9px 16px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .segmented button:last-child { border-right: none; }
+    .segmented button:hover { color: var(--text); background: #16223399; }
+    .segmented button.active {
+      background: var(--cyan);
+      color: #04151d;
+      font-weight: 700;
+    }
+
+    /* ---- 入力欄 ---- */
+    .fields {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .field-input {
+      display: flex;
+      align-items: center;
+      background: var(--void);
+      border: 1px solid var(--line-bright);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .field-input:focus-within {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(79,216,255,0.15);
+    }
+    input[type="number"] {
+      font-family: var(--mono);
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--cyan);
+      background: transparent;
+      border: none;
+      width: 76px;
+      padding: 9px 4px 9px 10px;
+      outline: none;
+    }
+    input[type="number"]::-webkit-inner-spin-button { opacity: 0.5; }
+    .field-input .unit {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      padding-right: 10px;
+      white-space: nowrap;
+    }
+
+    /* ---- ボタン行 ---- */
+    .button-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .button-row button {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: filter 0.15s, transform 0.05s;
+      text-transform: uppercase;
+    }
+    .button-row button:active { transform: translateY(1px); }
+    #startBtn { background: var(--green); color: #04211a; border-color: #04211a20; }
+    #stopBtn { background: var(--panel-alt); color: var(--red); border-color: var(--red); }
+    #resetBtn { background: var(--panel-alt); color: var(--text-dim); border-color: var(--line-bright); }
+    .button-row button:hover { filter: brightness(1.15); }
+
+    /* ---- マーカー表示切替トグル ---- */
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      height: 100%;
+      padding: 9px 0;
+    }
+    .toggle input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-track {
+      position: relative;
+      width: 38px;
+      height: 20px;
+      background: var(--void);
+      border: 1px solid var(--line-bright);
+      border-radius: 999px;
+      transition: background 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      background: var(--text-faint);
+      border-radius: 50%;
+      transition: transform 0.15s, background 0.15s;
+    }
+    .toggle input:checked + .toggle-track {
+      background: rgba(255, 95, 86, 0.15);
+      border-color: var(--red);
+    }
+    .toggle input:checked + .toggle-track .toggle-thumb {
+      transform: translateX(18px);
+      background: var(--red);
+      box-shadow: 0 0 6px rgba(255,95,86,0.6);
+    }
+    .toggle-text {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      min-width: 28px;
+    }
+
+    /* ---- キャンバス：スコープ風フレーム ---- */
+    .scope {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+    .scope canvas {
+      display: block;
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+      border-radius: 4px;
+      background-color: var(--void);
+      background-image:
+        linear-gradient(rgba(79,216,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(79,216,255,0.07) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* ---- 読み取りパネル（LCD風） ---- */
+    .readouts {
+      display: flex;
+      gap: 14px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+    .readout {
+      flex: 1;
+      min-width: 160px;
+      background: var(--void);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 10px 14px;
+    }
+    .readout .r-label {
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.12em;
+      color: var(--text-faint);
+      text-transform: uppercase;
+    }
+    .readout .r-value {
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--green);
+      letter-spacing: 0.02em;
+      margin-top: 2px;
+      text-shadow: 0 0 8px rgba(0,224,138,0.35);
+    }
+    .readout .r-value .unit {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-weight: 500;
+      margin-left: 4px;
+      text-shadow: none;
+    }
+
+    footer.note {
+      font-family: var(--mono);
+      font-size: 0.66rem;
+      color: var(--text-faint);
+      text-align: center;
+      letter-spacing: 0.04em;
+    }
+
+    @media (max-width: 560px) {
+      .fields { gap: 14px; }
+      .readouts { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="frame">
+    <header class="nameplate">
+      <div class="title-block">
+        <h1>ギヤ比シミュレーター</h1>
+        <span class="subtitle">回転速度を比較してみよう</span>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="panel-label">Mode Select</div>
+      <div class="segmented" id="modeSwitch" role="group">
+        <button type="button" data-mode="standard" class="active">2つのギヤ</button>
+        <button type="button" data-mode="three">3つのギヤ</button>
+        <button type="button" data-mode="compound">二段ギヤ</button>
+      </div>
+
+      <div class="panel-label" style="margin-top:20px;">Parameters</div>
+      <div class="fields">
+        <div class="field">
+          <label for="gearA">駆動軸ギヤ</label>
+          <div class="field-input"><input type="number" id="gearA" value="12" min="6" max="60"><span class="unit">T</span></div>
+        </div>
+        <div class="field">
+          <label for="gearB" id="labelB">被動軸ギヤ</label>
+          <div class="field-input"><input type="number" id="gearB" value="24" min="6" max="60"><span class="unit">T</span></div>
+        </div>
+        <div class="field" id="groupB2" style="display:none;">
+          <label for="gearB2">中間ギヤ (小)</label>
+          <div class="field-input"><input type="number" id="gearB2" value="10" min="6" max="60"><span class="unit">T</span></div>
+        </div>
+        <div class="field" id="groupC" style="display:none;">
+          <label for="gearC" id="labelC">被動軸ギヤ</label>
+          <div class="field-input"><input type="number" id="gearC" value="18" min="6" max="60"><span class="unit">T</span></div>
+        </div>
+        <div class="field">
+          <label for="speed">駆動軸 ギヤ速度</label>
+          <div class="field-input"><input type="number" id="speed" value="30" min="1" max="120"><span class="unit">RPM</span></div>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <div class="button-row">
+            <button id="startBtn" type="button">スタート</button>
+            <button id="stopBtn" type="button">ストップ</button>
+            <button id="resetBtn" type="button">リセット</button>
+          </div>
+        </div>
+        <div class="field">
+          <label for="markerToggle">基準マーカー</label>
+          <label class="toggle">
+            <input type="checkbox" id="markerToggle" checked>
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            <span class="toggle-text" id="markerToggleText">表示</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel scope">
+      <div class="panel-label" style="align-self:flex-start;">Output Display</div>
+      <canvas id="gearCanvas" width="600" height="350"></canvas>
+      <div class="readouts">
+        <div class="readout">
+          <div class="r-label">Gear Ratio</div>
+          <div class="r-value" id="ratioDisplay">1 : 2</div>
+        </div>
+        <div class="readout">
+          <div class="r-label">Final Stage Speed</div>
+          <div class="r-value"><span id="outputSpeedDisplay">15</span><span class="unit">RPM</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gearCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const modeButtons = document.querySelectorAll('#modeSwitch button');
+    let currentMode = 'standard';
+    const inputA = document.getElementById('gearA');
+    const inputB = document.getElementById('gearB');
+    const inputB2 = document.getElementById('gearB2');
+    const inputC = document.getElementById('gearC');
+    const inputSpeed = document.getElementById('speed');
+    const labelB = document.getElementById('labelB');
+    const labelC = document.getElementById('labelC');
+    const groupB2 = document.getElementById('groupB2');
+    const groupC = document.getElementById('groupC');
+    const ratioDisplay = document.getElementById('ratioDisplay');
+    const outputSpeedDisplay = document.getElementById('outputSpeedDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const markerToggle = document.getElementById('markerToggle');
+    const markerToggleText = document.getElementById('markerToggleText');
+    let showMarkers = true;
+
+    let angleA = 0;
+    let angleB = 0;
+    let angleC = 0;
+    let lastTime = performance.now();
+    let isRunning = true;
+
+    function clamp(value, min, max, fallback) {
+      if (isNaN(value)) return fallback;
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function restrictNumberInput(input, min, max, fallback) {
+      input.addEventListener('input', () => {
+        const cleaned = input.value.replace(/[^\d]/g, '');
+        if (cleaned !== input.value) input.value = cleaned;
+      });
+      input.addEventListener('blur', () => {
+        let v = parseInt(input.value, 10);
+        if (isNaN(v)) v = fallback;
+        v = clamp(v, min, max, fallback);
+        input.value = v;
+      });
+    }
+    restrictNumberInput(inputA, 6, 60, 12);
+    restrictNumberInput(inputB, 6, 60, 24);
+    restrictNumberInput(inputB2, 6, 60, 10);
+    restrictNumberInput(inputC, 6, 60, 18);
+    restrictNumberInput(inputSpeed, 1, 120, 30);
+
+    function getMeshOffset(teeth) {
+      return Math.PI - (Math.PI / teeth);
+    }
+
+    function farSideIsValley(offset, teeth) {
+      const pitch = (Math.PI * 2) / teeth;
+      const localAngle = ((-offset % pitch) + pitch) % pitch;
+      const distToValley = Math.min(localAngle, pitch - localAngle);
+      const distToTooth = Math.abs(localAngle - pitch / 2);
+      return distToValley < distToTooth;
+    }
+
+    function getComplementOffset(teeth, neighborShowsValley) {
+      const pitch = (Math.PI * 2) / teeth;
+      return neighborShowsValley ? (Math.PI - pitch / 2) : Math.PI;
+    }
+    function getComplementMarker(teeth, neighborShowsValley) {
+      const pitch = (Math.PI * 2) / teeth;
+      return neighborShowsValley ? (pitch / 2) : 0;
+    }
+
+    function drawGear(x, y, teeth, radius, angle, color, markerOffset = 0, alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#04151d';
+      ctx.lineWidth = 2;
+
+      const toothDepth = 10;
+      ctx.beginPath();
+
+      const pitch = (Math.PI * 2) / teeth;
+      const tipHalfWidth = pitch * 0.20;
+      const rootHalfWidth = pitch * 0.35;
+
+      for (let i = 0; i < teeth; i++) {
+        const center = (i + 0.5) * pitch;
+        const rootLeft = center - rootHalfWidth;
+        const tipLeft = center - tipHalfWidth;
+        const tipRight = center + tipHalfWidth;
+        const rootRight = center + rootHalfWidth;
+
+        const rOuter = radius + toothDepth / 2;
+        const rInner = radius - toothDepth / 2;
+
+        const rootLeftX = Math.cos(rootLeft) * rInner;
+        const rootLeftY = Math.sin(rootLeft) * rInner;
+
+        if (i === 0) {
+          ctx.moveTo(rootLeftX, rootLeftY);
+        } else {
+          ctx.lineTo(rootLeftX, rootLeftY);
+        }
+        ctx.lineTo(Math.cos(tipLeft) * rOuter, Math.sin(tipLeft) * rOuter);
+        ctx.lineTo(Math.cos(tipRight) * rOuter, Math.sin(tipRight) * rOuter);
+        ctx.lineTo(Math.cos(rootRight) * rInner, Math.sin(rootRight) * rInner);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.fill();
+      ctx.stroke();
+
+      if (showMarkers) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(markerOffset) * (radius - 5), Math.sin(markerOffset) * (radius - 5));
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function layoutRow(canvasCenterX, radii) {
+      const sum = radii.reduce((a, b) => a + b, 0);
+      const positions = [];
+      let x = canvasCenterX - sum + radii[0];
+      positions.push(x);
+      for (let i = 1; i < radii.length; i++) {
+        x += radii[i - 1] + radii[i];
+        positions.push(x);
+      }
+      return positions;
+    }
+
+    function updateModeUI() {
+      groupB2.style.display = (currentMode === 'compound') ? 'flex' : 'none';
+      groupC.style.display = (currentMode === 'three' || currentMode === 'compound') ? 'flex' : 'none';
+      labelB.textContent = (currentMode === 'standard') ? '被動軸ギヤ' : '中間ギヤ (大)';
+      labelC.textContent = '被動軸ギヤ';
+    }
+    modeButtons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        currentMode = btn.dataset.mode;
+        modeButtons.forEach((b) => b.classList.toggle('active', b === btn));
+        updateModeUI();
+        angleA = 0; angleB = 0; angleC = 0;
+        lastTime = performance.now();
+      });
+    });
+    updateModeUI();
+
+    function readTeeth(input, fallback) {
+      return clamp(parseInt(input.value), 6, 60, fallback);
+    }
+
+    function animate(currentTime) {
+      const deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
+      const mode = currentMode;
+      const teethA = readTeeth(inputA, 12);
+      const rpmA = clamp(parseFloat(inputSpeed.value), 1, 120, 30);
+      const speedA = (rpmA * Math.PI * 2) / 60;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const padding = 20;
+      const baseModuleSize = 5;
+      const centerY = canvas.height / 2;
+      const centerX = canvas.width / 2;
+
+      if (mode === 'standard') {
+        const teethB = readTeeth(inputB, 24);
+        const rpmB = rpmA * (teethA / teethB);
+        const speedB = (rpmB * Math.PI * 2) / 60;
+
+        if (isRunning) {
+          angleA += speedA * deltaTime;
+          angleB -= speedB * deltaTime;
+        }
+
+        ratioDisplay.textContent = `${teethA} : ${teethB}`;
+        outputSpeedDisplay.textContent = rpmB.toFixed(1);
+
+        const maxTeeth = Math.max(teethA, teethB);
+        const moduleByWidth = (canvas.width - padding * 2) / (2 * (teethA + teethB));
+        const moduleByHeight = (canvas.height - padding * 2) / (2 * maxTeeth);
+        const moduleSize = Math.min(baseModuleSize, moduleByWidth, moduleByHeight);
+
+        const radiusA = teethA * moduleSize;
+        const radiusB = teethB * moduleSize;
+        const [xA, xB] = layoutRow(centerX, [radiusA, radiusB]);
+
+        const offsetB = getMeshOffset(teethB);
+        const pitchB = (Math.PI * 2) / teethB;
+
+        drawGear(xA, centerY, teethA, radiusA, angleA, '#4fd8ff');
+        drawGear(xB, centerY, teethB, radiusB, angleB + offsetB, '#ffb020', pitchB / 2);
+
+      } else if (mode === 'three') {
+        const teethB = readTeeth(inputB, 18);
+        const teethC = readTeeth(inputC, 24);
+        const rpmB = rpmA * (teethA / teethB);
+        const rpmC = rpmB * (teethB / teethC);
+        const speedB = (rpmB * Math.PI * 2) / 60;
+        const speedC = (rpmC * Math.PI * 2) / 60;
+
+        if (isRunning) {
+          angleA += speedA * deltaTime;
+          angleB -= speedB * deltaTime;
+          angleC += speedC * deltaTime;
+        }
+
+        ratioDisplay.textContent = `${teethA} : ${teethB} : ${teethC}`;
+        outputSpeedDisplay.textContent = rpmC.toFixed(1);
+
+        const maxTeeth = Math.max(teethA, teethB, teethC);
+        const moduleByWidth = (canvas.width - padding * 2) / (2 * (teethA + teethB + teethC));
+        const moduleByHeight = (canvas.height - padding * 2) / (2 * maxTeeth);
+        const moduleSize = Math.min(baseModuleSize, moduleByWidth, moduleByHeight);
+
+        const radiusA = teethA * moduleSize;
+        const radiusB = teethB * moduleSize;
+        const radiusC = teethC * moduleSize;
+        const [xA, xB, xC] = layoutRow(centerX, [radiusA, radiusB, radiusC]);
+
+        const offsetB = getMeshOffset(teethB);
+        const pitchB = (Math.PI * 2) / teethB;
+
+        const bShowsValleyToC = farSideIsValley(offsetB, teethB);
+        const offsetC = getComplementOffset(teethC, bShowsValleyToC);
+        const markerOffsetC = getComplementMarker(teethC, bShowsValleyToC);
+
+        drawGear(xA, centerY, teethA, radiusA, angleA, '#4fd8ff');
+        drawGear(xB, centerY, teethB, radiusB, angleB + offsetB, '#ffb020', pitchB / 2);
+        drawGear(xC, centerY, teethC, radiusC, angleC + offsetC, '#00e08a', markerOffsetC);
+
+      } else {
+        const teethB1 = readTeeth(inputB, 30);
+        const teethB2 = readTeeth(inputB2, 10);
+        const teethC = readTeeth(inputC, 18);
+        const rpmB = rpmA * (teethA / teethB1);
+        const rpmC = rpmB * (teethB2 / teethC);
+        const speedB = (rpmB * Math.PI * 2) / 60;
+        const speedC = (rpmC * Math.PI * 2) / 60;
+
+        if (isRunning) {
+          angleA += speedA * deltaTime;
+          angleB -= speedB * deltaTime;
+          angleC += speedC * deltaTime;
+        }
+
+        ratioDisplay.textContent = `${teethA} : ${teethB1} / ${teethB2} : ${teethC}`;
+        outputSpeedDisplay.textContent = rpmC.toFixed(1);
+
+        const maxTeeth = Math.max(teethA, teethB1, teethB2, teethC);
+        const moduleByHeight = (canvas.height - padding * 2) / (2 * maxTeeth);
+        const teethWidthUnits = teethA * 2 + teethB1 + teethB2 + teethC * 2;
+        const moduleByWidth = (canvas.width - padding * 2) / teethWidthUnits;
+        const moduleSize = Math.min(baseModuleSize, moduleByWidth, moduleByHeight);
+
+        const radiusA = teethA * moduleSize;
+        const radiusB1 = teethB1 * moduleSize;
+        const radiusB2 = teethB2 * moduleSize;
+        const radiusC = teethC * moduleSize;
+
+        const totalWidth = radiusA * 2 + radiusB1 + radiusB2 + radiusC * 2;
+        const xA = centerX - totalWidth / 2 + radiusA;
+        const xCompound = xA + radiusA + radiusB1;
+        const xC = xCompound + radiusB2 + radiusC;
+
+        const offsetB1 = getMeshOffset(teethB1);
+        const offsetC = getMeshOffset(teethC);
+        const pitchB1 = (Math.PI * 2) / teethB1;
+        const pitchC = (Math.PI * 2) / teethC;
+
+        drawGear(xA, centerY, teethA, radiusA, angleA, '#4fd8ff');
+        drawGear(xCompound, centerY, teethB1, radiusB1, angleB + offsetB1, '#ffb020', pitchB1 / 2, 0.55);
+        drawGear(xCompound, centerY, teethB2, radiusB2, angleB, '#c98200');
+        drawGear(xC, centerY, teethC, radiusC, angleC + offsetC, '#00e08a', pitchC / 2);
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+
+    startBtn.addEventListener('click', () => {
+      if (isRunning) return;
+      isRunning = true;
+      lastTime = performance.now();
+    });
+
+    stopBtn.addEventListener('click', () => {
+      isRunning = false;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      angleA = 0;
+      angleB = 0;
+      angleC = 0;
+      lastTime = performance.now();
+    });
+
+    markerToggle.addEventListener('change', () => {
+      showMarkers = markerToggle.checked;
+      markerToggleText.textContent = showMarkers ? '表示' : '非表示';
+    });
+  </script>
+</body>
+</html>
