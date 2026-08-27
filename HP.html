@@ -66,8 +66,8 @@
                 <strong class="text-xl mb-1">お知らせ</strong>
                 <span id="notice-updated-at" class="text-xs text-blue-600"></span>
             </div>
-            <p data-updated="2026-08-25">
-                夏休み課題の提出準備はできていますか？
+            <p data-updated="2026-08-28">
+                ２学期もがんばろう！実習が増えていきます！
             </p>
         </div>
 
@@ -1619,6 +1619,24 @@
 
         const KuroshiroCtor = (typeof Kuroshiro !== 'undefined' && Kuroshiro.default) ? Kuroshiro.default : Kuroshiro;
         const KuromojiAnalyzerCtor = (typeof KuromojiAnalyzer !== 'undefined' && KuromojiAnalyzer.default) ? KuromojiAnalyzer.default : KuromojiAnalyzer;
+
+        // kuromoji.js の既知のバグ対策:
+        // dictPath に絶対URL(https://...)を渡すと、内部の path.join() が
+        // "//" を "/" に正規化してしまい、"https:/cdn.jsdelivr.net/..." という
+        // 壊れたURLになる。ブラウザはこれを自サイトからの相対パスと解釈し、
+        // "https://(自分のサイト)/cdn.jsdelivr.net/..." という存在しないURLに
+        // アクセスして404になる(参考: https://github.com/takuyaa/kuromoji.js/issues/37)。
+        // ここでXMLHttpRequestのURLを事前に補正して回避する。
+        if (!window.__kuromojiUrlPatchApplied) {
+            window.__kuromojiUrlPatchApplied = true;
+            const OriginalXhrOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function (method, url, ...rest) {
+                if (typeof url === "string") {
+                    url = url.replace(/^(https?):\/([^/])/, "$1://$2");
+                }
+                return OriginalXhrOpen.call(this, method, url, ...rest);
+            };
+        }
 
         async function getKuroshiro() {
             if (kuroshiroInstance) return kuroshiroInstance;
