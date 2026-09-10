@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>農業シミュレーション 〜育てて学ぶ 作物のひみつ〜</title>
+<style>
+:root{
+  --sky-top:    #bfe7f5;
+  --sky-bottom: #eaf7e3;
+  --soil:       #8b5a2b;
+  --soil-dark:  #6b431e;
+  --leaf-good:  #3f8f4f;
+  --leaf-bad:   #b8a23c;
+  --stem:       #4f7942;
+  --sun:        #ffc145;
+  --water:      #4aa3d8;
+  --card-bg:    #ffffff;
+  --ink:        #2f3a2e;
+  --ink-soft:   #5c6b58;
+  --accent:     #e6633d;
+  --good:       #3f8f4f;
+  --bad:        #d3572f;
+  --border:     #d9e6d3;
+  --radius-lg:  22px;
+  --radius-md:  14px;
+  --radius-sm:  8px;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:"Hiragino Maru Gothic ProN","Yu Gothic","BIZ UDPGothic","Meiryo",
+               "Segoe UI",sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--sky-top) 0%, var(--sky-bottom) 65%, #dff0d3 100%);
+  padding:20px;
+}
+
+/* ---------- 全体レイアウト ---------- */
+.app{
+  max-width:1080px;
+  margin:0 auto;
+}
+
+header.title-area{
+  text-align:center;
+  margin-bottom:18px;
+}
+header.title-area h1{
+  font-size:clamp(22px,4vw,32px);
+  margin:0 0 4px;
+  letter-spacing:.02em;
+}
+header.title-area p{
+  margin:0;
+  color:var(--ink-soft);
+  font-size:14px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap:18px;
+}
+@media (max-width:820px){
+  .layout{ grid-template-columns:1fr; }
+}
+
+.card{
+  background:var(--card-bg);
+  border-radius:var(--radius-lg);
+  border:1px solid var(--border);
+  box-shadow:0 6px 18px rgba(60,90,50,.10);
+  padding:18px 20px;
+}
+
+/* ---------- 左：作物の様子 ---------- */
+.plant-card{ display:flex; flex-direction:column; gap:10px; }
+
+.plant-stage-label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:8px;
+}
+.stage-name{
+  font-size:20px;
+  font-weight:700;
+  background:linear-gradient(90deg,#eafbe4,#ffffff);
+  border:1px solid var(--border);
+  padding:6px 14px;
+  border-radius:999px;
+}
+.day-counter{
+  font-size:14px;
+  color:var(--ink-soft);
+  background:#fff7e6;
+  border:1px solid #ffe3ac;
+  padding:6px 12px;
+  border-radius:999px;
+}
+.weather-badge{
+  font-size:14px;
+  font-weight:700;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid #cfe3ee;
+  background:#eaf6fb;
+  color:#2c6b8a;
+  transition:background .3s ease, color .3s ease, border-color .3s ease;
+}
+.weather-badge.weather-sunny{ background:#fff6de; border-color:#ffe0a0; color:#8a6a10; }
+.weather-badge.weather-cloudy{ background:#eef1f0; border-color:#d6dcda; color:#5c6b68; }
+.weather-badge.weather-rainy{ background:#e3f0f8; border-color:#b9d9ec; color:#2c6b8a; }
+.weather-badge.weather-typhoon{ background:#3a3f4a; border-color:#20242c; color:#ffe9d6; }
+
+.season-badge{
+  font-size:14px;
+  font-weight:700;
+  padding:6px 12px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:#f3f7ee;
+  color:var(--ink-soft);
+  transition:background .3s ease, color .3s ease, border-color .3s ease;
+}
+.season-badge.season-spring{ background:#fdeef3; border-color:#f6cede; color:#b8477a; }
+.season-badge.season-summer{ background:#fff2df; border-color:#ffd79a; color:#b5701a; }
+.season-badge.season-autumn{ background:#fbeee0; border-color:#eec99a; color:#9a5c1f; }
+.season-badge.season-winter{ background:#e9f3fa; border-color:#bcdcef; color:#2c6b8a; }
+
+.plant-visual-wrap{
+  position:relative;
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  background:linear-gradient(180deg,#dff3fb 0%, #f3fbe9 75%);
+  border:1px solid var(--border);
+}
+.plant-visual-wrap svg{ display:block; width:100%; height:auto; }
+
+/* 成長度バー */
+.growth-bar-wrap{
+  margin-top:2px;
+}
+.growth-bar-label{
+  display:flex; justify-content:space-between; font-size:13px; color:var(--ink-soft); margin-bottom:4px;
+}
+.growth-bar-outer{
+  width:100%; height:18px; background:#eef3ea; border-radius:999px; overflow:hidden; border:1px solid var(--border);
+}
+.growth-bar-inner{
+  height:100%; width:0%;
+  background:linear-gradient(90deg,#8bc46b,#3f8f4f);
+  transition:width .5s ease;
+  border-radius:999px;
+}
+
+/* 「なぜ育った？」解説パネル */
+.reason-box{
+  background:#f6fbf3;
+  border:1px dashed #b9d9ae;
+  border-radius:var(--radius-md);
+  padding:12px 14px;
+  font-size:13.5px;
+  line-height:1.6;
+  min-height:54px;
+}
+.reason-box strong{ color:var(--accent); }
+.reason-list{ margin:6px 0 0; padding-left:1.1em; }
+.reason-list li{ margin-bottom:2px; }
+.reason-list li.good{ color:var(--good); }
+.reason-list li.bad{ color:var(--bad); }
+
+/* 記録ログ */
+.log-box{
+  max-height:130px;
+  overflow-y:auto;
+  font-size:12.5px;
+  background:#fbfbf6;
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:8px 10px;
+  color:var(--ink-soft);
+}
+.log-box div{ padding:2px 0; border-bottom:1px dotted #e3e8dd; }
+.log-box div:last-child{ border-bottom:none; }
+
+/* ---------- 右：操作パネル ---------- */
+.control-card{ display:flex; flex-direction:column; gap:16px; }
+.control-card h2{
+  font-size:16px; margin:0 0 2px;
+  display:flex; align-items:center; gap:6px;
+}
+
+.slider-group{ display:flex; flex-direction:column; gap:14px; }
+.slider-item{
+  background:#f8faf5;
+  border:1px solid var(--border);
+  border-radius:var(--radius-md);
+  padding:10px 14px 12px;
+}
+.slider-item .row1{
+  display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px;
+}
+.slider-item .icon-label{ font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px;}
+.slider-item .value-tag{
+  font-weight:700; font-size:14px; color:var(--accent);
+  background:#fff; border:1px solid #ffd9c6; border-radius:999px; padding:1px 10px;
+}
+input[type="range"]{
+  width:100%;
+  -webkit-appearance:none;
+  appearance:none;
+  height:8px;
+  border-radius:999px;
+  background:#dcebd5;
+  outline:none;
+  margin-top:4px;
+}
+input[type="range"]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:22px; height:22px; border-radius:50%;
+  background:var(--good);
+  border:3px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.25);
+  cursor:pointer;
+}
+input[type="range"]::-moz-range-thumb{
+  width:22px; height:22px; border-radius:50%;
+  background:var(--good); border:3px solid #fff;
+  box-shadow:0 1px 4px rgba(0,0,0,.25); cursor:pointer;
+}
+.range-scale{
+  display:flex; justify-content:space-between; font-size:10.5px; color:#9aab93; margin-top:2px;
+}
+
+/* 自動で決まる条件（日光・気温）の表示カード */
+.slider-item.auto-item{
+  background:#f6f3fb;
+  border-style:dashed;
+}
+.auto-tag{
+  font-size:10px;
+  font-weight:700;
+  color:#7a5fc0;
+  background:#ece5fb;
+  border:1px solid #d9c9f5;
+  border-radius:999px;
+  padding:1px 7px;
+  margin-left:6px;
+  vertical-align:middle;
+}
+.auto-note{
+  font-size:11.5px;
+  color:var(--ink-soft);
+  line-height:1.5;
+  margin-top:4px;
+}
+
+/* 環境条件の現在値まとめ表示 */
+.env-summary{
+  display:grid; grid-template-columns:1fr 1fr; gap:8px;
+}
+.env-summary .item{
+  background:#eef7ea; border-radius:var(--radius-sm); padding:8px 10px; font-size:12.5px;
+  display:flex; flex-direction:column; gap:2px;
+}
+.env-summary .item b{ font-size:15px; color:var(--ink); }
+
+/* 操作ボタン */
+.btn-row{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px;
+}
+button{
+  font-family:inherit;
+  font-size:14.5px;
+  font-weight:700;
+  border-radius:999px;
+  border:none;
+  padding:12px 10px;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease, opacity .2s ease;
+  box-shadow:0 3px 0 rgba(0,0,0,.12);
+}
+button:active{ transform:translateY(2px); box-shadow:0 1px 0 rgba(0,0,0,.12); }
+button:disabled{ opacity:.45; cursor:not-allowed; transform:none; box-shadow:none; }
+
+.btn-start{ background:var(--good); color:#fff; grid-column:1 / -1; padding:14px; font-size:16px; }
+.btn-day{ background:#fff2cf; color:#7a5b00; border:1px solid #f0d98a; }
+.btn-days{ background:#ffe3d2; color:#9a3f1c; border:1px solid #f5c2a2; }
+.btn-reset{ background:#f0f0f0; color:#555; border:1px solid #dcdcdc; grid-column:1 / -1; }
+
+/* ---------- 結果パネル ---------- */
+.result-overlay{
+  display:none;
+  margin-top:16px;
+  background:linear-gradient(180deg,#fffdf3,#fff7e3);
+  border:2px solid #ffdf94;
+  border-radius:var(--radius-lg);
+  padding:18px 20px;
+}
+.result-overlay.show{ display:block; }
+.result-overlay h2{ margin:0 0 8px; font-size:19px; }
+.result-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;
+}
+.result-grid .box{
+  background:#fff; border:1px solid #f0e2b8; border-radius:var(--radius-md); padding:10px 12px; font-size:13px;
+}
+.result-grid .box b{ display:block; font-size:15px; margin-bottom:2px; }
+.factor-bars{ margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+.factor-bars .frow{ display:flex; align-items:center; gap:8px; font-size:12.5px; }
+.factor-bars .flabel{ width:64px; flex-shrink:0; }
+.factor-bars .fbar-outer{ flex:1; background:#f1ecd8; border-radius:999px; height:10px; overflow:hidden; }
+.factor-bars .fbar-inner{ height:100%; border-radius:999px; }
+
+footer.note{
+  text-align:center; font-size:11.5px; color:#8a9a85; margin-top:18px; line-height:1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="title-area">
+    <h1>🌱 農業シミュレーション 〜育てて学ぶ 作物のひみつ〜</h1>
+    <p>「水」「日光」「気温」「肥料」の条件を変えて、作物の育ち方を観察してみよう！</p>
+  </header>
+
+  <div class="layout">
+
+    <!-- ================= 左カラム：作物の様子 ================= -->
+    <section class="card plant-card">
+
+      <div class="plant-stage-label">
+        <span class="stage-name" id="stageName">たね（スタートを押してね）</span>
+        <span class="season-badge" id="seasonBadge">季節：―</span>
+        <span class="weather-badge" id="weatherBadge">今日の天気：―</span>
+        <span class="day-counter" id="dayCounter">経過日数：0 日目</span>
+      </div>
+
+      <div class="plant-visual-wrap">
+        <!-- 作物のイラストはSVGでJavaScriptから動的に変化させる -->
+        <svg id="plantSvg" viewBox="0 0 320 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- 空 -->
+          <rect x="0" y="0" width="320" height="180" fill="#eaf6fb"></rect>
+          <!-- 太陽（日光の量で明るさ・大きさが変わる） -->
+          <g id="sunGroup">
+            <circle id="sunCircle" cx="262" cy="46" r="26" fill="#ffc145"></circle>
+            <g id="sunRays" stroke="#ffc145" stroke-width="3" stroke-linecap="round"></g>
+          </g>
+          <!-- 雲（天気によって数・色・大きさが変わる） -->
+          <g id="cloudGroup" fill="#ffffff" opacity="0.9">
+            <ellipse cx="60" cy="40" rx="28" ry="14"></ellipse>
+            <ellipse cx="85" cy="34" rx="20" ry="12"></ellipse>
+          </g>
+          <!-- 雨（雨の天気のときだけ表示される） -->
+          <g id="rainGroup" stroke="#4aa3d8" stroke-width="3" stroke-linecap="round"></g>
+          <!-- 地面 -->
+          <rect x="0" y="180" width="320" height="80" fill="#8b5a2b"></rect>
+          <rect x="0" y="180" width="320" height="10" fill="#a9723d"></rect>
+          <!-- 肥料のキラキラ（肥料の量で数が変わる） -->
+          <g id="fertGroup" fill="#ffe08a"></g>
+          <!-- 気温計（右下に簡易表示） -->
+          <g id="thermoGroup" transform="translate(14,190)"></g>
+          <!-- 植物本体（茎・葉・実） -->
+          <g id="plantGroup" transform="translate(160,220)">
+            <!-- 種の粒（成長0%のとき見える） -->
+            <ellipse id="seedDot" cx="0" cy="-4" rx="6" ry="4" fill="#7a5230"></ellipse>
+            <!-- 茎 -->
+            <line id="stemLine" x1="0" y1="0" x2="0" y2="0" stroke="#4f7942" stroke-width="6" stroke-linecap="round"></line>
+            <!-- 葉・実はJSで追加 -->
+            <g id="leavesGroup"></g>
+            <g id="fruitGroup"></g>
+          </g>
+        </svg>
+      </div>
+
+      <div class="growth-bar-wrap">
+        <div class="growth-bar-label">
+          <span>成長度</span>
+          <span id="growthPercentText">0%</span>
+        </div>
+        <div class="growth-bar-outer">
+          <div class="growth-bar-inner" id="growthBarInner"></div>
+        </div>
+      </div>
+
+      <div class="reason-box" id="reasonBox">
+        スライダーで条件を決めて「スタート」ボタンを押すと、栽培が始まります。<br>
+        「1日進める」を押すたびに、その日の作物の様子と、育った理由・育たなかった理由がここに表示されます。
+      </div>
+
+      <div class="log-box" id="logBox"></div>
+
+      <!-- ================= 結果パネル（栽培終了時に表示） ================= -->
+      <div class="result-overlay" id="resultOverlay">
+        <h2 id="resultTitle">🌾 今回の栽培結果</h2>
+        <p id="resultSummary"></p>
+        <div class="result-grid">
+          <div class="box"><b id="resultDays">-</b>かかった日数</div>
+          <div class="box"><b id="resultGrowth">-</b>最終的な成長度</div>
+        </div>
+        <p style="margin:12px 0 4px;font-size:13.5px;"><strong>成長に最も影響した条件：</strong>
+          <span id="resultMainFactor">-</span></p>
+        <div class="factor-bars" id="resultFactorBars"></div>
+        <p style="font-size:12px;color:#8a7a3d;margin-top:10px;">
+          ※ グラフは「シミュレーション中、それぞれの条件がどれくらい理想に近かったか」の平均を表しています。
+          一番低い条件が、成長を止めていた（ボトルネックになっていた）可能性が高い条件です。
+        </p>
+      </div>
+
+    </section>
+
+    <!-- ================= 右カラム：操作パネル ================= -->
+    <section class="card control-card">
+
+      <div>
+        <h2>🎛 条件を設定しよう（あなたが管理する条件）</h2>
+        <div class="slider-group">
+
+          <div class="slider-item">
+            <div class="row1">
+              <span class="icon-label">💧 水の量</span>
+              <span class="value-tag" id="waterValue">30%</span>
+            </div>
+            <input type="range" id="waterSlider" min="0" max="100" step="1" value="30">
+            <div class="range-scale"><span>かんそう</span><span>ちょうどよい</span><span>じめじめ</span></div>
+          </div>
+
+          <div class="slider-item">
+            <div class="row1">
+              <span class="icon-label">🌿 肥料の量</span>
+              <span class="value-tag" id="fertValue">10%</span>
+            </div>
+            <input type="range" id="fertSlider" min="0" max="100" step="1" value="10">
+            <div class="range-scale"><span>足りない</span><span>ちょうどよい</span><span>あげすぎ</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <div>
+        <h2>🌤 季節・天気で自動的に決まる条件</h2>
+        <div class="slider-group">
+
+          <div class="slider-item auto-item">
+            <div class="row1">
+              <span class="icon-label">☀️ 日光の量<span class="auto-tag">自動</span></span>
+              <span class="value-tag" id="sunValue">65%</span>
+            </div>
+            <div class="auto-note">今の季節・天気（晴れ／曇り／雨）によって、日光の量は毎日自動で変わります。</div>
+          </div>
+
+          <div class="slider-item auto-item">
+            <div class="row1">
+              <span class="icon-label">🌡 気温<span class="auto-tag">自動</span></span>
+              <span class="value-tag" id="tempValue">20℃</span>
+            </div>
+            <div class="auto-note">今の季節・天気によって、気温は毎日自動で変わります（例：夏は暑く、冬は寒い）。</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div>
+        <h2>📋 現在の環境条件</h2>
+        <div class="env-summary">
+          <div class="item">水の量<b id="envWater">30%</b></div>
+          <div class="item">日光の量<b id="envSun">65%</b></div>
+          <div class="item">気温<b id="envTemp">20℃</b></div>
+          <div class="item">肥料の量<b id="envFert">10%</b></div>
+        </div>
+      </div>
+
+      <div>
+        <h2>🕹 操作</h2>
+        <div class="btn-row">
+          <button class="btn-start" id="btnStart">▶ スタート</button>
+          <button class="btn-day"  id="btnDay1"  disabled>1日進める</button>
+          <button class="btn-days" id="btnDay10" disabled>10日進める</button>
+          <button class="btn-reset" id="btnReset">⟲ リセット</button>
+        </div>
+      </div>
+
+    </section>
+  </div>
+
+  <footer class="note">
+    このシミュレーションは、実際の農業を正確に再現したものではありません。<br>
+    「条件を変えると結果が変わる」というしくみを体験して学ぶための教材です。
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   農業シミュレーション ロジック部分
+   中学生・先生向けメモ：
+   ・このアプリは「水」「日光」「気温」「肥料」の4つの条件から
+     その日の作物の成長量を計算し、それを毎日積み重ねていきます。
+   ・それぞれの条件には「ちょうどよい範囲（理想の範囲）」があり、
+     そこから離れるほど成長のスコア（0〜1）が下がる仕組みです。
+   ・4つのスコアのうち「一番低いスコア」を重視して計算することで、
+     「どれか1つでも条件が悪いと、全体の成長が制限される」という
+     植物栽培の考え方（＝最小律・リービッヒの法則の考え方）を
+     体験できるようにしています。
+============================================================ */
+
+// ---------- 理想の範囲（この中にあればスコア1.0＝ベスト） ----------
+const IDEAL = {
+  water: { min: 0, max: 100, idealMin: 40, idealMax: 70 },
+  sun:   { min: 0, max: 100, idealMin: 60, idealMax: 90 },
+  temp:  { min: 0, max: 40,  idealMin: 20, idealMax: 28 },
+  fert:  { min: 0, max: 100, idealMin: 20, idealMax: 50 },
+};
+
+// 1日あたりの最大成長量（条件が全て完璧なとき）
+const MAX_DAILY_GROWTH = 6;
+
+// ---------- 季節の設定 ----------
+// 経過日数から「春・夏・秋・冬」を自動で判定します。
+// 季節によって天気の出やすさ（確率）に加え、
+// 「気温」「日光の量」の基本値（ベース）も変わります。
+const SEASON_LENGTH = 15; // 1つの季節が続く日数（4季節で1年＝60日）
+const SEASONS = [
+  {
+    key:'spring', label:'春', icon:'🌸',
+    // 春：晴れ・曇り・雨がバランスよく現れる。気温・日光は穏やか
+    weights: { sunny:0.5, cloudy:0.3, rainy:0.2, typhoon:0 },
+    baseTemp: 18, baseSun: 65,
+  },
+  {
+    key:'summer', label:'夏', icon:'☀️',
+    // 夏：雨が多い。低確率で台風が発生する。気温は高く、日光も強い
+    weights: { sunny:0.35, cloudy:0.15, rainy:0.45, typhoon:0.05 },
+    baseTemp: 29, baseSun: 82,
+  },
+  {
+    key:'autumn', label:'秋', icon:'🍁',
+    // 秋：曇りがやや多め。気温はやや低下し、日光もおだやかになる
+    weights: { sunny:0.45, cloudy:0.35, rainy:0.2, typhoon:0 },
+    baseTemp: 17, baseSun: 55,
+  },
+  {
+    key:'winter', label:'冬', icon:'❄️',
+    // 冬：乾燥して晴れが多く、雨は少ない。気温は低く、日光の量も少ない
+    weights: { sunny:0.75, cloudy:0.20, rainy:0.05, typhoon:0 },
+    baseTemp: 6,  baseSun: 42,
+  },
+];
+
+// 経過日数（0始まり）から、今の季節を求める
+function seasonOf(dayIndex){
+  const idx = Math.floor(dayIndex / SEASON_LENGTH) % SEASONS.length;
+  return SEASONS[idx];
+}
+
+// ---------- 天気の設定 ----------
+// 天気は毎日、季節ごとの確率にしたがってランダムに変化します。
+// 「日光の量」「気温」は季節の基本値に天気の影響（sunDelta/tempDelta）を
+// 足して自動的に決まります。「水の量」は生徒が設定した値に、
+// 天気による自然の水分（雨など）が上乗せされます。
+const WEATHER_TYPES = {
+  sunny:   { label: '晴れ', icon: '☀️', sunDelta:  0,  tempDelta:  2, waterDelta: 0  },
+  cloudy:  { label: '曇り', icon: '☁️', sunDelta:-25,  tempDelta: -1, waterDelta: 0  },
+  rainy:   { label: '雨',   icon: '🌧', sunDelta:-40,  tempDelta: -2, waterDelta: 20 },
+  // 台風：夏だけ低確率で発生する特別なイベント。発生すると作物が大きな被害を受ける
+  typhoon: { label: '台風', icon: '🌀', sunDelta:-70,  tempDelta: -3, waterDelta: 80, severe:true },
+};
+
+// 季節ごとの確率（weights）にしたがって、今日の天気をランダムに1つ選ぶ
+function pickWeather(weights){
+  const r = Math.random();
+  let acc = 0;
+  for (const key of Object.keys(WEATHER_TYPES)){
+    acc += (weights[key] || 0);
+    if (r <= acc) return key;
+  }
+  return 'sunny';
+}
+
+// 季節の基本値＋天気の影響（＋少しの日ごとのばらつき）から、今日の「日光の量」を自動計算する
+function calcAutoSun(seasonKey, weatherKey, withNoise){
+  const season = SEASONS.find(s => s.key === seasonKey) || SEASONS[0];
+  const weather = WEATHER_TYPES[weatherKey] || WEATHER_TYPES.sunny;
+  const noise = withNoise ? (Math.random() * 10 - 5) : 0; // ±5 のランダムなばらつき
+  const value = season.baseSun + weather.sunDelta + noise;
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+// 季節の基本値＋天気の影響（＋少しの日ごとのばらつき）から、今日の「気温」を自動計算する
+function calcAutoTemp(seasonKey, weatherKey, withNoise){
+  const season = SEASONS.find(s => s.key === seasonKey) || SEASONS[0];
+  const weather = WEATHER_TYPES[weatherKey] || WEATHER_TYPES.sunny;
+  const noise = withNoise ? (Math.random() * 4 - 2) : 0; // ±2℃ のランダムなばらつき
+  const value = season.baseTemp + weather.tempDelta + noise;
+  return Math.max(0, Math.min(40, Math.round(value)));
+}
+
+// 天気による「水の量」への自然の影響（雨で増える等）を反映する（スライダーの値自体は変えない）
+function applyWeatherToWater(baseWater, weatherKey){
+  const w = WEATHER_TYPES[weatherKey] || WEATHER_TYPES.sunny;
+  return Math.max(0, Math.min(100, baseWater + w.waterDelta));
+}
+
+// ---------- DOM要素の取得 ----------
+const el = (id) => document.getElementById(id);
+
+const waterSlider = el('waterSlider');
+const fertSlider  = el('fertSlider');
+
+const waterValue = el('waterValue');
+const sunValue   = el('sunValue');
+const tempValue  = el('tempValue');
+const fertValue  = el('fertValue');
+
+const envWater = el('envWater');
+const envSun   = el('envSun');
+const envTemp  = el('envTemp');
+const envFert  = el('envFert');
+
+const btnStart = el('btnStart');
+const btnDay1  = el('btnDay1');
+const btnDay10 = el('btnDay10');
+const btnReset = el('btnReset');
+
+const stageNameEl = el('stageName');
+const dayCounterEl = el('dayCounter');
+const seasonBadgeEl = el('seasonBadge');
+const weatherBadgeEl = el('weatherBadge');
+const growthBarInner = el('growthBarInner');
+const growthPercentText = el('growthPercentText');
+const reasonBox = el('reasonBox');
+const logBox = el('logBox');
+
+const resultOverlay = el('resultOverlay');
+const resultTitle = el('resultTitle');
+const resultSummary = el('resultSummary');
+const resultDays = el('resultDays');
+const resultGrowth = el('resultGrowth');
+const resultMainFactor = el('resultMainFactor');
+const resultFactorBars = el('resultFactorBars');
+
+// ---------- シミュレーションの状態（データ） ----------
+let state = {
+  started: false,   // スタート済みか
+  ended: false,     // 栽培が終了したか（収穫 or 失敗）
+  day: 0,           // 経過日数
+  growth: 0,        // 成長度 0〜100
+  season: null,      // 現在の季節（'spring'|'summer'|'autumn'|'winter'）
+  weather: null,     // 今日の天気（'sunny' | 'cloudy' | 'rainy' | 'typhoon'）
+  // 今日の「日光の量」「気温」（季節・天気から自動で決まる。開始前は春・晴れの目安値を表示）
+  currentSun: calcAutoSun('spring', 'sunny', false),
+  currentTemp: calcAutoTemp('spring', 'sunny', false),
+  poorStreak: 0,     // 「よくない成長」が何日連続したか（枯れ判定用）
+  history: {         // 各条件のスコアの記録（最後に「一番影響した条件」を出すため）
+    water: [], sun: [], temp: [], fert: []
+  }
+};
+
+// ============================================================
+// 1) 条件のスコア計算（0〜1）
+//    理想の範囲の中なら1.0。範囲から離れるほど0に近づく。
+// ============================================================
+function calcScore(value, cfg){
+  const { min, max, idealMin, idealMax } = cfg;
+  if (value >= idealMin && value <= idealMax) return 1.0;
+  if (value < idealMin){
+    const dist = idealMin - value;
+    const maxDist = idealMin - min;
+    return Math.max(0, 1 - dist / maxDist);
+  } else {
+    const dist = value - idealMax;
+    const maxDist = max - idealMax;
+    return Math.max(0, 1 - dist / maxDist);
+  }
+}
+
+// 現在の条件をまとめて取得
+// 水・肥料は生徒が操作するスライダーの値、日光・気温は季節と天気から自動で決まる値を使う
+function getConditions(){
+  return {
+    water: Number(waterSlider.value),
+    sun:   state.currentSun,
+    temp:  state.currentTemp,
+    fert:  Number(fertSlider.value),
+  };
+}
+
+// ============================================================
+// 2) その日の成長量と、理由メッセージを計算する
+// ============================================================
+function calcDailyResult(cond){
+  const scores = {
+    water: calcScore(cond.water, IDEAL.water),
+    sun:   calcScore(cond.sun,   IDEAL.sun),
+    temp:  calcScore(cond.temp,  IDEAL.temp),
+    fert:  calcScore(cond.fert,  IDEAL.fert),
+  };
+
+  const values = Object.values(scores);
+  const minScore = Math.min(...values);
+  const avgScore = values.reduce((a,b)=>a+b,0) / values.length;
+
+  // 「一番弱い条件」を重視しつつ、平均も少し反映する（最小律の考え方）
+  const combined = minScore * 0.6 + avgScore * 0.4;
+
+  let increment = MAX_DAILY_GROWTH * combined;
+
+  // ---- 「やりすぎ」による追加ダメージ（水のやりすぎ・肥料のやりすぎ） ----
+  const harmMsgs = [];
+  if (cond.water > 85){
+    increment -= 2;
+    harmMsgs.push('水のやりすぎで根が呼吸できず、傷んでいます。');
+  }
+  if (cond.fert > 85){
+    increment -= 2;
+    harmMsgs.push('肥料のやりすぎで「肥料焼け」を起こしています。');
+  }
+
+  // 成長量は -3% 〜 MAX_DAILY_GROWTH% の範囲に収める
+  increment = Math.max(-3, Math.min(MAX_DAILY_GROWTH, increment));
+
+  return { scores, combined, increment, harmMsgs };
+}
+
+// ============================================================
+// 3) 各条件についての「理由コメント」を作る
+// ============================================================
+function buildReasonList(cond, scores){
+  const list = [];
+
+  // 水
+  if (scores.water >= 0.9) list.push({text:'💧 水の量はちょうどよい範囲です。', good:true});
+  else if (cond.water < IDEAL.water.idealMin) list.push({text:'💧 水が少なく、土がかわき気味です。成長が遅くなります。', good:false});
+  else list.push({text:'💧 水が多すぎて、土の中の空気が足りません。成長が悪くなります。', good:false});
+
+  // 日光
+  if (scores.sun >= 0.9) list.push({text:'☀️ 日光の量はちょうどよい範囲です。', good:true});
+  else if (cond.sun < IDEAL.sun.idealMin) list.push({text:'☀️ 日光が不足していて、光合成が十分にできません。', good:false});
+  else list.push({text:'☀️ 強い光が当たりすぎて、葉に負担がかかっています。', good:false});
+
+  // 気温
+  if (scores.temp >= 0.9) list.push({text:'🌡 気温はちょうどよい範囲です。', good:true});
+  else if (cond.temp < IDEAL.temp.idealMin) list.push({text:'🌡 気温が低すぎて、成長のはたらきが鈍っています。', good:false});
+  else list.push({text:'🌡 気温が高すぎて、植物がストレスを受けています。', good:false});
+
+  // 肥料
+  if (scores.fert >= 0.9) list.push({text:'🌿 肥料の量はちょうどよい範囲です。', good:true});
+  else if (cond.fert < IDEAL.fert.idealMin) list.push({text:'🌿 肥料が足りず、栄養不足になっています。', good:false});
+  else list.push({text:'🌿 肥料が多すぎて、逆に成長のさまたげになっています。', good:false});
+
+  return list;
+}
+
+// ============================================================
+// 4) 成長度から「作物のステージ名」を決める
+// ============================================================
+function stageOf(growth){
+  if (growth >= 80) return { key:'harvest', label:'🌾 収穫可能' };
+  if (growth >= 50) return { key:'grown',   label:'🌳 成長した植物' };
+  if (growth >= 25) return { key:'small',   label:'🌿 小さな植物' };
+  if (growth > 0)   return { key:'sprout',  label:'🌱 芽' };
+  return { key:'seed', label:'🌰 たね（まだ成長していません）' };
+}
+
+// ============================================================
+// 5) 画面表示の更新まわり
+// ============================================================
+
+// スライダー（水・肥料）の数値表示・環境条件パネルを更新
+function updateSliderDisplays(){
+  const water = Number(waterSlider.value);
+  const fert  = Number(fertSlider.value);
+
+  waterValue.textContent = water + '%';
+  fertValue.textContent  = fert + '%';
+  envWater.textContent = water + '%';
+  envFert.textContent  = fert + '%';
+
+  // 太陽・肥料・温度計は最新の値で再描画する
+  // （天気（雲・雨）は現在の state.weather を使って別途描画する）
+  updateEnvironmentVisual(getConditions(), state.weather);
+}
+
+// 自動で決まる条件（日光・気温）の数値表示を更新
+// state.currentSun / state.currentTemp の値を画面に反映する
+function refreshAutoConditionDisplay(){
+  sunValue.textContent  = state.currentSun + '%';
+  tempValue.textContent = state.currentTemp + '℃';
+  envSun.textContent  = state.currentSun + '%';
+  envTemp.textContent = state.currentTemp + '℃';
+}
+
+// 季節の表示（アイコン・ラベル・色）を更新
+function updateSeasonBadge(seasonKey){
+  seasonBadgeEl.classList.remove('season-spring','season-summer','season-autumn','season-winter');
+  if (!seasonKey){
+    seasonBadgeEl.textContent = '季節：―';
+    return;
+  }
+  const s = SEASONS.find(x=>x.key===seasonKey);
+  seasonBadgeEl.textContent = `季節：${s.icon} ${s.label}`;
+  seasonBadgeEl.classList.add('season-' + seasonKey);
+}
+
+// 天気の表示（アイコン・ラベル・色）を更新
+function updateWeatherBadge(weatherKey){
+  weatherBadgeEl.classList.remove('weather-sunny','weather-cloudy','weather-rainy','weather-typhoon');
+  if (!weatherKey){
+    weatherBadgeEl.textContent = '今日の天気：―';
+    return;
+  }
+  const w = WEATHER_TYPES[weatherKey];
+  weatherBadgeEl.textContent = `今日の天気：${w.icon} ${w.label}`;
+  weatherBadgeEl.classList.add('weather-' + weatherKey);
+}
+
+// 太陽・肥料キラキラ・温度計のイラストを条件に合わせて描き直す
+// （太陽の明るさは「日光の量」（自動計算値）を基本に、天気でさらに暗くなる）
+function updateEnvironmentVisual(cond, weatherKey){
+  const weatherFactor = weatherKey === 'cloudy' ? 0.55
+                        : weatherKey === 'rainy' ? 0.3
+                        : weatherKey === 'typhoon' ? 0.12
+                        : 1.0; // 晴れ・未設定（スタート前）は通常どおり
+
+  // 太陽：日光スライダーが多いほど明るく大きく。曇り・雨の日はさらに暗くなる
+  const sunCircle = el('sunCircle');
+  const baseOpacity = 0.25 + (cond.sun / 100) * 0.75;
+  const sunOpacity = baseOpacity * weatherFactor;
+  const sunRadius = 16 + (cond.sun / 100) * 16;
+  sunCircle.setAttribute('opacity', sunOpacity.toFixed(2));
+  sunCircle.setAttribute('r', sunRadius.toFixed(1));
+
+  const sunRays = el('sunRays');
+  sunRays.innerHTML = '';
+  sunRays.setAttribute('opacity', sunOpacity.toFixed(2));
+  const rayCount = 8;
+  const cx = 262, cy = 46;
+  const rInner = sunRadius + 6;
+  const rOuter = sunRadius + 14;
+  for (let i=0;i<rayCount;i++){
+    const angle = (Math.PI*2/rayCount) * i;
+    const x1 = cx + Math.cos(angle)*rInner;
+    const y1 = cy + Math.sin(angle)*rInner;
+    const x2 = cx + Math.cos(angle)*rOuter;
+    const y2 = cy + Math.sin(angle)*rOuter;
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    sunRays.appendChild(line);
+  }
+
+  // 雲・雨：現在の天気（state.weather）に合わせて描き直す
+  renderWeatherSky(weatherKey);
+
+  // 肥料のキラキラ：肥料の量が多いほど数が増える（土の上あたりに表示）
+  const fertGroup = el('fertGroup');
+  fertGroup.innerHTML = '';
+  const fertCount = Math.round((cond.fert/100) * 10);
+  for (let i=0;i<fertCount;i++){
+    const x = 20 + (i * 29) % 300;
+    const y = 190 + ((i*13) % 55);
+    const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', 2.4);
+    fertGroup.appendChild(c);
+  }
+
+  // 温度計：気温を棒グラフのように表示
+  const thermoGroup = el('thermoGroup');
+  thermoGroup.innerHTML = '';
+  const tempRatio = cond.temp / 40; // 0〜1
+  const barH = 46;
+  const filledH = barH * tempRatio;
+  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  bg.setAttribute('x',0); bg.setAttribute('y',0);
+  bg.setAttribute('width',10); bg.setAttribute('height',barH);
+  bg.setAttribute('rx',5); bg.setAttribute('fill','#ffffff');
+  bg.setAttribute('stroke','#c98a4b');
+  thermoGroup.appendChild(bg);
+  const fg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  fg.setAttribute('x',0); fg.setAttribute('y', barH-filledH);
+  fg.setAttribute('width',10); fg.setAttribute('height',filledH);
+  fg.setAttribute('rx',5);
+  fg.setAttribute('fill', cond.temp>28 ? '#e6633d' : (cond.temp<20 ? '#4aa3d8' : '#8bc46b'));
+  thermoGroup.appendChild(fg);
+  const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+  label.setAttribute('x',16); label.setAttribute('y', barH);
+  label.setAttribute('font-size','11'); label.setAttribute('fill','#6b431e');
+  label.textContent = cond.temp + '℃';
+  thermoGroup.appendChild(label);
+}
+
+// 天気に応じて空の雲・雨を描き直す
+// weatherKey: 'sunny' | 'cloudy' | 'rainy' | null（スタート前は晴れ扱いのプレビュー）
+function renderWeatherSky(weatherKey){
+  const cloudGroup = el('cloudGroup');
+  const rainGroup = el('rainGroup');
+  cloudGroup.innerHTML = '';
+  rainGroup.innerHTML = '';
+
+  // 天気ごとの雲の設定（数・大きさ・色）
+  let clouds, cloudColor, cloudOpacity;
+  if (weatherKey === 'typhoon'){
+    clouds = [ [30,32,34,17], [75,26,30,15], [120,36,32,16], [165,28,28,14], [205,38,26,13], [245,30,24,12] ];
+    cloudColor = '#4b555c'; cloudOpacity = 1.0;
+  } else if (weatherKey === 'cloudy'){
+    clouds = [ [40,36,30,15], [80,30,26,13], [125,40,24,12], [165,32,22,11] ];
+    cloudColor = '#dfe6e2'; cloudOpacity = 0.95;
+  } else if (weatherKey === 'rainy'){
+    clouds = [ [40,34,32,16], [85,28,28,14], [130,36,28,14], [175,30,24,12], [210,40,20,10] ];
+    cloudColor = '#8d9a9c'; cloudOpacity = 1.0;
+  } else {
+    // 晴れ・未スタート時は、装飾程度の小さな雲だけ
+    clouds = [ [60,40,28,14], [85,34,20,12] ];
+    cloudColor = '#ffffff'; cloudOpacity = 0.9;
+  }
+  cloudGroup.setAttribute('fill', cloudColor);
+  cloudGroup.setAttribute('opacity', cloudOpacity);
+  clouds.forEach(([cx,cy,rx,ry])=>{
+    const c = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+    c.setAttribute('cx',cx); c.setAttribute('cy',cy);
+    c.setAttribute('rx',rx); c.setAttribute('ry',ry);
+    cloudGroup.appendChild(c);
+  });
+
+  // 雨（雨・台風の日に、雲の下に降らせる。台風はより激しく斜めに）
+  if (weatherKey === 'rainy' || weatherKey === 'typhoon'){
+    const isTyphoon = weatherKey === 'typhoon';
+    const dropCount = isTyphoon ? 20 : 12;
+    const slant = isTyphoon ? 16 : 4;
+    rainGroup.setAttribute('stroke', isTyphoon ? '#2c6b8a' : '#4aa3d8');
+    rainGroup.setAttribute('stroke-width', isTyphoon ? 3.5 : 3);
+    for (let i=0;i<dropCount;i++){
+      const x = 15 + (i * 17) % 300;
+      const y = 50 + ((i*29) % 110);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', x); line.setAttribute('y1', y);
+      line.setAttribute('x2', x-slant); line.setAttribute('y2', y+13);
+      rainGroup.appendChild(line);
+    }
+  }
+}
+
+// 作物本体（茎・葉・実）を成長度と健康度に応じて描画
+function renderPlant(growth, healthScore){
+  const seedDot = el('seedDot');
+  const stemLine = el('stemLine');
+  const leavesGroup = el('leavesGroup');
+  const fruitGroup = el('fruitGroup');
+
+  // 健康度（0〜1）で葉の色を変える：低いほど黄色っぽく、高いほど濃い緑に
+  const leafColor = mixColor('#c9b23c', '#2f6b3b', healthScore);
+  const stemColor = mixColor('#b7a23a', '#4f7942', healthScore);
+
+  // 種の状態（成長0%）
+  seedDot.style.display = growth <= 0 ? 'block' : 'none';
+
+  // 茎の高さ：成長度0〜100を、茎の長さ0〜150pxに変換
+  const stemHeight = (growth/100) * 150;
+  stemLine.setAttribute('x2', 0);
+  stemLine.setAttribute('y2', -stemHeight);
+  stemLine.setAttribute('stroke', stemColor);
+  stemLine.style.display = growth > 0 ? 'block' : 'none';
+
+  // 葉：成長度に応じて葉のペア数を増やす
+  leavesGroup.innerHTML = '';
+  const leafPairs = growth >= 75 ? 4 : growth >= 50 ? 3 : growth >= 25 ? 2 : growth >= 8 ? 1 : 0;
+  for (let i=0;i<leafPairs;i++){
+    const t = (i+1) / (leafPairs+0.4);
+    const yPos = -stemHeight * t;
+    const size = 16 + i*2;
+    [-1,1].forEach((dir)=>{
+      const leaf = document.createElementNS('http://www.w3.org/2000/svg','ellipse');
+      leaf.setAttribute('cx', dir * (size*0.7));
+      leaf.setAttribute('cy', yPos);
+      leaf.setAttribute('rx', size);
+      leaf.setAttribute('ry', size*0.5);
+      leaf.setAttribute('fill', leafColor);
+      leaf.setAttribute('transform', `rotate(${dir*28} ${dir*(size*0.7)} ${yPos})`);
+      leavesGroup.appendChild(leaf);
+    });
+  }
+
+  // 実（収穫可能ステージ80%以上で登場）
+  fruitGroup.innerHTML = '';
+  if (growth >= 80){
+    const fruitCount = growth >= 95 ? 3 : 2;
+    for (let i=0;i<fruitCount;i++){
+      const fx = (i - (fruitCount-1)/2) * 22;
+      const fy = -stemHeight + 10;
+      const fruit = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      fruit.setAttribute('cx', fx);
+      fruit.setAttribute('cy', fy);
+      fruit.setAttribute('r', 9);
+      fruit.setAttribute('fill', '#e6633d');
+      fruit.setAttribute('stroke', '#b8431f');
+      fruitGroup.appendChild(fruit);
+    }
+  }
+}
+
+// 2つの色を割合(0〜1)で混ぜる補助関数
+function mixColor(colorLow, colorHigh, ratio){
+  const c1 = hexToRgb(colorLow), c2 = hexToRgb(colorHigh);
+  const r = Math.round(c1.r + (c2.r-c1.r)*ratio);
+  const g = Math.round(c1.g + (c2.g-c1.g)*ratio);
+  const b = Math.round(c1.b + (c2.b-c1.b)*ratio);
+  return `rgb(${r},${g},${b})`;
+}
+function hexToRgb(hex){
+  const v = hex.replace('#','');
+  return {
+    r: parseInt(v.substring(0,2),16),
+    g: parseInt(v.substring(2,4),16),
+    b: parseInt(v.substring(4,6),16),
+  };
+}
+
+// 成長度バー・ステージ名・日数表示を更新
+function updateGrowthDisplay(){
+  const g = Math.round(state.growth);
+  growthBarInner.style.width = g + '%';
+  growthPercentText.textContent = g + '%';
+  dayCounterEl.textContent = `経過日数：${state.day} 日目`;
+
+  const stage = stageOf(state.growth);
+  stageNameEl.textContent = stage.label;
+}
+
+// ログ欄に1行追加
+function addLog(text){
+  const div = document.createElement('div');
+  div.textContent = text;
+  logBox.appendChild(div);
+  logBox.scrollTop = logBox.scrollHeight;
+}
+
+// ============================================================
+// 6) 1日進める処理（コアロジック）
+// ============================================================
+function stepOneDay(){
+  if (state.ended) return;
+
+  const managedCond = getConditions(); // water・fert は生徒のスライダー値（sun/temp は前日の値。今日の分はこの後で計算）
+
+  // 今日の季節を求め、その季節の確率にしたがって天気を決める
+  const season = seasonOf(state.day); // state.day（実行前）＝これから迎える日のインデックス
+  const weatherKey = pickWeather(season.weights);
+  state.season = season.key;
+  state.weather = weatherKey;
+  const weatherInfo = WEATHER_TYPES[weatherKey];
+
+  // 今日の「日光の量」「気温」を、季節＋天気から自動計算する
+  const autoSun = calcAutoSun(season.key, weatherKey, true);
+  const autoTemp = calcAutoTemp(season.key, weatherKey, true);
+  state.currentSun = autoSun;
+  state.currentTemp = autoTemp;
+  refreshAutoConditionDisplay();
+
+  state.day += 1;
+
+  // ---- 画面表示の更新（季節・天気・空のようす） ----
+  updateSeasonBadge(season.key);
+  updateWeatherBadge(weatherKey);
+  updateEnvironmentVisual({ ...managedCond, sun: autoSun, temp: autoTemp }, weatherKey); // 太陽・雲・雨を今日の天気に合わせて描き直す
+
+  // ============================================================
+  // 台風（夏だけ低確率で発生）：発生すると作物が大きな被害を受け、
+  // そのまま栽培が終了する特別なイベント
+  // ============================================================
+  if (weatherKey === 'typhoon'){
+    state.growth = Math.max(0, state.growth - 40); // 作物が大きく傷つく
+    updateGrowthDisplay();
+    renderPlant(state.growth, 0.15);
+
+    reasonBox.innerHTML = `
+      ${state.day}日目：<strong style="color:#d3572f;">🌀 台風が発生しました！</strong>
+      <ul class="reason-list">
+        <li class="bad">強い風と雨で、作物が大きな被害を受けてしまいました。</li>
+        <li class="bad">台風は自然の力によるもので、条件の管理だけでは防ぐことができません。</li>
+      </ul>`;
+    addLog(`${state.day}日目：🌀 台風が発生し、大きな被害が出ました。`);
+
+    finishSimulation('typhoon');
+    return;
+  }
+
+  // 今日の実際の条件（水は天気で自然に増減、日光・気温は自動計算済みの値、肥料はスライダーのまま）
+  const dayCond = {
+    water: applyWeatherToWater(managedCond.water, weatherKey),
+    sun:   autoSun,
+    temp:  autoTemp,
+    fert:  managedCond.fert,
+  };
+  const result = calcDailyResult(dayCond);
+
+  // 記録に追加（最後に「一番影響した条件」を出すため）
+  state.history.water.push(result.scores.water);
+  state.history.sun.push(result.scores.sun);
+  state.history.temp.push(result.scores.temp);
+  state.history.fert.push(result.scores.fert);
+
+  // 成長度を更新（0〜100の範囲に収める）
+  state.growth = Math.max(0, Math.min(100, state.growth + result.increment));
+
+  // 「良くない成長」が続いていないかチェック（枯れる演出用）
+  if (result.increment <= 0.3) state.poorStreak += 1;
+  else state.poorStreak = 0;
+
+  // ---- 画面表示の更新 ----
+  updateGrowthDisplay();
+  renderPlant(state.growth, result.combined);
+
+  const reasonList = buildReasonList(dayCond, result.scores);
+  const signText = result.increment > 0.3
+    ? `<strong>成長度が +${result.increment.toFixed(1)}% 増えました。</strong>`
+    : result.increment < -0.1
+      ? `<strong style="color:#d3572f;">成長度が ${result.increment.toFixed(1)}% 減ってしまいました。</strong>`
+      : `<strong style="color:#b8901f;">ほとんど成長しませんでした。</strong>`;
+
+  // 天気の説明文（今日の自動計算された気温・日光の量も伝える）
+  let weatherMsg;
+  if (weatherKey === 'sunny') weatherMsg = `${weatherInfo.icon} 今日は晴れでした。気温${autoTemp}℃・日光${autoSun}%でした。`;
+  else if (weatherKey === 'cloudy') weatherMsg = `${weatherInfo.icon} 今日は曇りでした。気温${autoTemp}℃・日光${autoSun}%（雲で少し弱め）でした。`;
+  else weatherMsg = `${weatherInfo.icon} 今日は雨でした。気温${autoTemp}℃・日光${autoSun}%（雨で水分は自然に増加）でした。`;
+
+  let html = `${state.day}日目（${season.icon}${season.label}）：${signText}<ul class="reason-list">`;
+  html += `<li>${weatherMsg}</li>`;
+  reasonList.forEach(r=>{
+    html += `<li class="${r.good?'good':'bad'}">${r.text}</li>`;
+  });
+  if (result.harmMsgs.length){
+    result.harmMsgs.forEach(m=> html += `<li class="bad">⚠️ ${m}</li>`);
+  }
+  html += `</ul>`;
+  reasonBox.innerHTML = html;
+
+  addLog(`${state.day}日目（${season.label}/${weatherInfo.label}）：気温${autoTemp}℃・日光${autoSun}% → 成長度 ${Math.round(state.growth)}%（${result.increment>=0?'+':''}${result.increment.toFixed(1)}%）`);
+
+  // ---- 終了判定 ----
+  if (state.growth >= 100){
+    finishSimulation('harvest');
+  } else if (state.poorStreak >= 8){
+    finishSimulation('wither');
+  }
+}
+
+// 複数日まとめて進める
+function stepDays(n){
+  for (let i=0;i<n;i++){
+    if (state.ended) break;
+    stepOneDay();
+  }
+}
+
+// ============================================================
+// 7) 栽培終了処理（収穫 or 失敗）と結果表示
+// ============================================================
+function finishSimulation(type){
+  state.ended = true;
+  btnDay1.disabled = true;
+  btnDay10.disabled = true;
+
+  // 各条件の平均スコアを計算 → 一番低いものが「最も影響した条件」
+  const avg = (arr)=> arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0;
+  const avgScores = {
+    water: avg(state.history.water),
+    sun:   avg(state.history.sun),
+    temp:  avg(state.history.temp),
+    fert:  avg(state.history.fert),
+  };
+  const factorNames = { water:'💧 水の量', sun:'☀️ 日光の量', temp:'🌡 気温', fert:'🌿 肥料の量' };
+  let worstKey = 'water';
+  Object.keys(avgScores).forEach(k=>{
+    if (avgScores[k] < avgScores[worstKey]) worstKey = k;
+  });
+
+  if (type === 'harvest'){
+    resultTitle.textContent = '🌾 今回の栽培結果：収穫成功！';
+    resultSummary.textContent = '作物が収穫できる大きさまで育ちました。よく育った条件・改善できる条件を確認してみましょう。';
+  } else if (type === 'typhoon'){
+    resultTitle.textContent = '🌀 今回の栽培結果：台風により栽培中止';
+    resultSummary.textContent = '低い確率で発生する台風により、作物が大きな被害を受けてしまいました。これは条件の管理ではなく自然災害によるものです。実際の農業でも、台風のような自然災害は人の努力だけでは防ぎきれないことがあります。';
+  } else {
+    resultTitle.textContent = '🥀 今回の栽培結果：栽培失敗（枯れてしまいました）';
+    resultSummary.textContent = '良くない条件が続いたため、作物が育つ前に元気をなくしてしまいました。条件を見直して、もう一度チャレンジしてみましょう。';
+  }
+
+  resultDays.textContent = state.day + ' 日';
+  resultGrowth.textContent = Math.round(state.growth) + '%';
+
+  if (type === 'typhoon'){
+    resultMainFactor.textContent =
+      '今回の終了は「台風」という自然災害が原因です。水・日光・気温・肥料の条件とは直接関係ありません。';
+  } else {
+    resultMainFactor.textContent =
+      `${factorNames[worstKey]}（平均スコア ${(avgScores[worstKey]*100).toFixed(0)}点／100点中）が、今回の成長に最も影響していました。`;
+  }
+
+  // 条件ごとのスコアバーを描画
+  resultFactorBars.innerHTML = '';
+  Object.keys(avgScores).forEach(k=>{
+    const pct = Math.round(avgScores[k]*100);
+    const row = document.createElement('div');
+    row.className = 'frow';
+    row.innerHTML = `
+      <span class="flabel">${factorNames[k]}</span>
+      <div class="fbar-outer"><div class="fbar-inner" style="width:${pct}%; background:${pct>=70?'#3f8f4f':pct>=40?'#e0a83f':'#d3572f'};"></div></div>
+      <span>${pct}点</span>
+    `;
+    resultFactorBars.appendChild(row);
+  });
+
+  resultOverlay.classList.add('show');
+  addLog(type === 'harvest' ? '🌾 収穫可能な大きさまで育ちました！'
+        : type === 'typhoon' ? '🌀 台風により栽培が終了しました。'
+        : '🥀 作物が枯れてしまいました。');
+}
+
+// ============================================================
+// 8) ボタン操作
+// ============================================================
+function handleStart(){
+  // 状態を初期化（水・肥料のスライダー値はそのまま使う）
+  const previewSun  = calcAutoSun('spring', 'sunny', false);
+  const previewTemp = calcAutoTemp('spring', 'sunny', false);
+  state = {
+    started: true,
+    ended: false,
+    day: 0,
+    growth: 0,
+    season: 'spring',
+    weather: null,
+    currentSun: previewSun,
+    currentTemp: previewTemp,
+    poorStreak: 0,
+    history: { water:[], sun:[], temp:[], fert:[] }
+  };
+  logBox.innerHTML = '';
+  resultOverlay.classList.remove('show');
+
+  btnStart.disabled = true;
+  btnDay1.disabled = false;
+  btnDay10.disabled = false;
+
+  updateGrowthDisplay();
+  updateSeasonBadge(seasonOf(0).key);
+  updateWeatherBadge(null);
+  refreshAutoConditionDisplay();
+  updateEnvironmentVisual(getConditions(), null);
+  renderPlant(0, 1);
+  reasonBox.innerHTML = '栽培を開始しました。「1日進める」または「10日進める」を押して、作物の成長を観察してみましょう。季節は春から始まり、気温・日光の量は季節と天気によって毎日自動で変わります。夏には低い確率で台風が発生することもあります。';
+  addLog('🌰 栽培を開始しました。（季節：🌸 春）');
+}
+
+function handleReset(){
+  const previewSun  = calcAutoSun('spring', 'sunny', false);
+  const previewTemp = calcAutoTemp('spring', 'sunny', false);
+  state = {
+    started:false, ended:false, day:0, growth:0, season:null, weather:null,
+    currentSun: previewSun, currentTemp: previewTemp, poorStreak:0,
+    history:{ water:[], sun:[], temp:[], fert:[] }
+  };
+  // スライダー（水・肥料）を初期値に戻す
+  waterSlider.value = 30;
+  fertSlider.value = 10;
+  updateSliderDisplays();
+  refreshAutoConditionDisplay();
+  updateSeasonBadge(null);
+  updateWeatherBadge(null);
+
+  btnStart.disabled = false;
+  btnDay1.disabled = true;
+  btnDay10.disabled = true;
+
+  logBox.innerHTML = '';
+  resultOverlay.classList.remove('show');
+  reasonBox.innerHTML = 'スライダーで「水の量」「肥料の量」を決めて「スタート」ボタンを押すと、栽培が始まります。<br>「気温」「日光の量」は季節と天気によって自動で変わります。「1日進める」を押すたびに、その日の作物の様子と、育った理由・育たなかった理由がここに表示されます。';
+
+  updateGrowthDisplay();
+  renderPlant(0, 1);
+}
+
+// ---------- イベント登録 ----------
+[waterSlider, fertSlider].forEach(s=>{
+  s.addEventListener('input', updateSliderDisplays);
+});
+btnStart.addEventListener('click', handleStart);
+btnDay1.addEventListener('click', ()=> stepDays(1));
+btnDay10.addEventListener('click', ()=> stepDays(10));
+btnReset.addEventListener('click', handleReset);
+
+// ---------- 初期表示 ----------
+updateSliderDisplays();
+refreshAutoConditionDisplay();
+updateSeasonBadge(null);
+updateWeatherBadge(null);
+updateGrowthDisplay();
+renderPlant(0, 1);
+</script>
+</body>
+</html>
