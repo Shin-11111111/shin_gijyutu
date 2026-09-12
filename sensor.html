@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>計測制御プログラミング</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EEEFE6;
+    --paper-line:#D7D8C6;
+    --paper-white:#FBFAF4;
+    --ink:#1B231E;
+    --ink-soft:#54594F;
+    --chalk:#1F3A2E;
+    --chalk-text-dim:#9FB3A4;
+    --rust:#B84A32;
+    --amber:#DE9A2E;
+    --amber-soft:#FBEBD2;
+    --blue:#2C5FCC;
+    --blue-soft:#DCE6FB;
+    --green:#3E7A55;
+    --green-soft:#DFEEE2;
+    --purple:#7B4FA0;
+    --purple-soft:#EAE0F2;
+    --teal:#1E7F82;
+    --teal-soft:#D9EEEE;
+    --indigo:#3B4A9E;
+    --indigo-soft:#E1E4F5;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+
+  body{
+    margin:0;
+    color:var(--ink);
+    background-color:var(--paper);
+    background-image:
+      repeating-linear-gradient(0deg, var(--paper-line) 0 1px, transparent 1px 32px),
+      repeating-linear-gradient(90deg, var(--paper-line) 0 1px, transparent 1px 32px);
+    background-position:-1px -1px;
+    font-family:'Zen Maru Gothic', sans-serif;
+    line-height:1.7;
+  }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  .wrap{ max-width:960px; margin:0 auto; padding:48px 22px 100px; }
+
+  /* ---------- header ---------- */
+  header.top{ border-bottom:3px solid var(--ink); padding-bottom:22px; margin-bottom:40px; }
+  .kicker{ font-family:'JetBrains Mono', monospace; font-size:13px; color:var(--ink-soft); margin:0 0 6px; }
+  h1.site-title{ font-size:clamp(28px, 5vw, 40px); margin:0 0 10px; font-weight:900; }
+  .site-lead{ max-width:62ch; color:var(--ink-soft); margin:0 0 22px; font-size:15.5px; }
+
+  /* ---------- experiment sections ---------- */
+  section.experiment{ margin-bottom:64px; }
+  section.experiment.theme-amber{ --accent:var(--amber); --accent-soft:var(--amber-soft); }
+  section.experiment.theme-blue{ --accent:var(--blue); --accent-soft:var(--blue-soft); }
+  section.experiment.theme-purple{ --accent:var(--purple); --accent-soft:var(--purple-soft); }
+  section.experiment.theme-teal{ --accent:var(--teal); --accent-soft:var(--teal-soft); }
+  section.experiment.theme-indigo{ --accent:var(--indigo); --accent-soft:var(--indigo-soft); }
+
+  .exp-head{ margin-bottom:22px; }
+  .exp-no{ display:inline-block; font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:700; color:var(--accent); background:var(--accent-soft); padding:3px 10px; border-radius:4px; margin-bottom:10px; }
+  .exp-head h2{ font-size:24px; margin:0 0 8px; font-weight:700; }
+  .exp-lead{ color:var(--ink-soft); margin:0; max-width:68ch; font-size:15px; }
+
+  .exp-body{ display:grid; grid-template-columns:270px 1fr; gap:20px; align-items:start; }
+  @media (max-width:760px){ .exp-body{ grid-template-columns:1fr; } }
+
+  .panel{ background:var(--paper-white); border-left:4px solid var(--accent); border-top:1px solid var(--paper-line); padding:20px; }
+  .sensor-panel h3, .block-panel h3{ margin:0 0 14px; font-size:14px; font-weight:700; color:var(--ink-soft); }
+  .privacy-note{ font-size:12.5px; color:var(--ink-soft); margin-top:12px; line-height:1.6; }
+
+  /* ---------- camera ---------- */
+  .cam-preview{ width:100%; aspect-ratio:4/3; background:var(--ink); border-radius:6px; overflow:hidden; margin-bottom:12px; }
+  .cam-preview video{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .btn{ font-family:'Zen Maru Gothic', sans-serif; font-size:14px; padding:9px 16px; border-radius:6px; border:1.5px solid var(--accent); background:transparent; color:var(--accent); cursor:pointer; transition:background .15s ease, color .15s ease; }
+  .btn:hover{ background:var(--accent-soft); }
+  .btn-fill{ background:var(--accent); color:#fff; }
+  .btn-fill:hover{ filter:brightness(1.06); }
+  .btn-fill.is-active{ background:var(--rust); border-color:var(--rust); }
+  .btn:focus-visible{ outline:2px solid var(--ink); outline-offset:2px; }
+  .btn[hidden]{ display:none; }
+
+  .status-line{ font-size:13px; color:var(--ink-soft); margin:10px 0 0; }
+  .status-line.is-error{ color:var(--rust); }
+  .status-line.is-waiting::before{
+    content:''; display:inline-block; width:10px; height:10px; margin-right:6px;
+    border:2px solid var(--ink-soft); border-top-color:transparent; border-radius:50%;
+    vertical-align:-1px; animation:statusSpin .8s linear infinite;
+  }
+  @keyframes statusSpin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- gauge ---------- */
+  .gauge-wrap{ text-align:center; }
+  .gauge-wrap svg{ width:100%; max-width:220px; }
+  .gauge-readout{ font-family:'JetBrains Mono', monospace; font-size:30px; font-weight:700; margin-top:-6px; }
+  .gauge-readout small{ font-size:14px; color:var(--ink-soft); font-weight:400; }
+  .history-bars{ display:flex; align-items:flex-end; gap:2px; height:44px; margin-top:14px; border-bottom:1px solid var(--paper-line); }
+  .history-bar{ flex:1; background:var(--accent); opacity:.75; min-height:3px; }
+
+  /* ---------- tilt bowl ---------- */
+  .tilt-wrap{ text-align:center; }
+  .tilt-wrap svg{ width:100%; max-width:200px; }
+  .accel-readouts{ display:flex; justify-content:center; gap:14px; font-family:'JetBrains Mono', monospace; font-size:13px; margin-top:10px; }
+  .accel-readouts span b{ color:var(--ink-soft); font-weight:500; }
+  .accel-sliders{ margin-top:16px; text-align:left; }
+  .accel-sliders[hidden]{ display:none; }
+  .slider-row{ display:flex; align-items:center; gap:8px; margin-bottom:8px; font-family:'JetBrains Mono', monospace; font-size:12.5px; }
+  .slider-row label{ width:16px; color:var(--ink-soft); }
+  .slider-row input[type=range]{ flex:1; accent-color:var(--accent); }
+  .slider-row output{ width:34px; text-align:right; color:var(--ink-soft); }
+
+  /* ---------- mic (VU meter) ---------- */
+  .vu-meter{ width:44px; height:150px; background:var(--paper-line); border-radius:8px; margin:14px auto 10px; overflow:hidden; display:flex; align-items:flex-end; }
+  .vu-fill{ width:100%; height:0%; background:var(--purple); transition:height .1s linear; }
+
+  /* ---------- GPS readouts ---------- */
+  .geo-readouts{ font-size:13px; margin-top:12px; line-height:1.9; }
+  .geo-target{ margin-top:6px; }
+  .geo-target .slider-row label{ width:auto; }
+  .geo-target input[type=number]{ font-family:'JetBrains Mono', monospace; font-size:12.5px; padding:4px 7px; border:1px solid var(--ink-soft); border-radius:5px; width:120px; }
+
+  /* ---------- compass (orientation) ---------- */
+  .orient-sliders[hidden]{ display:none; }
+
+  /* ---------- LED lamp ---------- */
+  .led-lamp{ width:52px; height:52px; border-radius:50%; background:var(--paper-line); border:2px solid var(--ink-soft); margin:16px auto 4px; transition:background .15s ease, box-shadow .15s ease; }
+  .led-lamp.is-on{ border-color:transparent; box-shadow:0 0 22px 4px currentColor; }
+  .led-caption{ text-align:center; font-size:12px; color:var(--ink-soft); }
+
+  /* ---------- block workspace ---------- */
+  .run-toolbar{ display:flex; gap:8px; margin-bottom:16px; }
+
+  .block-workspace{ margin-bottom:14px; }
+  .block-empty{ font-size:13px; color:var(--ink-soft); border:2px dashed var(--paper-line); border-radius:8px; padding:14px; text-align:center; margin-bottom:10px; }
+
+  .block{ position:relative; border-radius:10px; padding:10px 12px 12px; margin:14px 0 0; }
+  .block.block-flash{ animation:blockFlash .6s ease-out; }
+  @keyframes blockFlash{
+    0%{ box-shadow:0 0 0 4px var(--accent); }
+    100%{ box-shadow:0 0 0 4px transparent; }
+  }
+  .block::before{ content:''; position:absolute; top:-8px; left:16px; width:20px; height:8px; background:var(--paper-white); border-radius:4px 4px 0 0; }
+  .block-action{ background:var(--accent-soft); border:2px solid var(--accent); }
+  .block-action::before{ border:2px solid var(--accent); border-bottom:none; background:var(--accent-soft); }
+  .block-control{ background:var(--paper-white); border:2px solid var(--ink); }
+  .block-control::before{ border:2px solid var(--ink); border-bottom:none; background:var(--paper-white); }
+
+  .block-header{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .block-title{ font-size:13.5px; font-weight:700; }
+  .block-controls{ display:flex; gap:4px; flex-shrink:0; }
+  .block-controls button{ width:24px; height:24px; border-radius:5px; border:1px solid var(--ink-soft); background:#fff; color:var(--ink-soft); font-size:12px; line-height:1; cursor:pointer; padding:0; }
+  .block-controls button:hover{ background:var(--paper-line); }
+  .block-controls button.danger{ color:var(--rust); border-color:var(--rust); }
+
+  .block-row{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; font-size:13px; }
+  .block select, .block input[type=text], .block input[type=number]{
+    font-family:'Zen Maru Gothic', sans-serif; font-size:13px; padding:4px 7px; border:1px solid var(--ink-soft); border-radius:5px; background:#fff; color:var(--ink);
+  }
+  .block input[type=number]{ width:64px; }
+  .block input[type=text]{ width:150px; }
+  .cond-fixed{ font-weight:700; padding:4px 7px; background:#fff; border:1px solid var(--paper-line); border-radius:5px; }
+
+  .nested{ margin:10px 0 2px 16px; padding:10px 10px 8px; background:var(--paper); border:2px dashed var(--paper-line); border-radius:8px; }
+  .nested-label{ font-size:12px; color:var(--ink-soft); font-weight:700; margin:0 0 8px; }
+  .nested-hint{ display:flex; align-items:flex-start; gap:5px; font-size:11.5px; color:var(--ink-soft); background:var(--accent-soft); border-radius:6px; padding:6px 9px; margin:8px 0 2px; line-height:1.5; }
+
+  .add-row{ display:flex; align-items:center; gap:6px; margin-top:10px; flex-wrap:wrap; }
+  .add-row select{ font-family:'Zen Maru Gothic', sans-serif; font-size:13px; padding:6px 8px; border:1.5px dashed var(--accent); border-radius:6px; background:#fff; color:var(--ink); }
+  .add-row button{ font-family:'Zen Maru Gothic', sans-serif; font-size:13px; padding:6px 12px; border-radius:6px; border:none; background:var(--accent); color:#fff; cursor:pointer; }
+  .add-row button:hover{ filter:brightness(1.08); }
+
+  .add-control-row{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .add-control-row button{ font-family:'Zen Maru Gothic', sans-serif; font-size:13px; padding:7px 14px; border-radius:6px; border:1.5px dashed var(--ink); background:transparent; color:var(--ink); cursor:pointer; }
+  .add-control-row button:hover{ background:var(--paper-line); }
+
+  .console-output{ background:#152A20; color:var(--chalk-text-dim); font-family:'JetBrains Mono', monospace; font-size:12.5px; border-radius:6px; padding:10px 14px; height:96px; overflow-y:auto; }
+  .console-line{ padding:2px 0; white-space:pre-wrap; word-break:break-word; }
+
+  .sample-row{ display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+
+  /* ---------- footer / teacher notes ---------- */
+  details.teacher-notes{ background:var(--paper-white); border-top:3px solid var(--ink); padding:20px 22px; margin-top:20px; }
+  details.teacher-notes summary{ cursor:pointer; font-weight:700; font-size:15px; list-style:none; }
+  details.teacher-notes summary::-webkit-details-marker{ display:none; }
+  details.teacher-notes summary::before{ content:'▸ '; color:var(--ink-soft); }
+  details.teacher-notes[open] summary::before{ content:'▾ '; }
+  details.teacher-notes ul{ margin:14px 0 0; padding-left:20px; color:var(--ink-soft); font-size:14px; }
+  details.teacher-notes li{ margin-bottom:8px; }
+
+  footer.site-footer{ text-align:left; color:var(--ink-soft); font-size:12.5px; margin-top:36px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <p class="kicker">中学 技術科</p>
+    <h1 class="site-title">計測制御プログラミング</h1>
+    <p class="site-lead">パソコンのカメラで「明るさ」を、マイクで「音の大きさ」を、センサーで「かたむき・向き・位置情報」を計測して、ブロックを組み合わせてプログラムを作ろう。</p>
+  </header>
+
+  <!-- ============ 実験1: 明るさ ============ -->
+  <section class="experiment theme-amber" id="exp1">
+    <div class="exp-head">
+      <span class="exp-no">実験1</span>
+      <h2>明るさをはかる</h2>
+      <p class="exp-lead">カメラの映像から明るさ（0〜255）を計測します。「もし〜なら」ブロックと「LED」「表示する」ブロックを組み合わせて、明るさに反応するプログラムを作ってみよう。</p>
+    </div>
+    <div class="exp-body">
+      <div class="panel sensor-panel">
+        <h3>カメラ</h3>
+        <div class="cam-preview"><video id="camVideo" autoplay muted playsinline></video></div>
+        <button class="btn btn-fill" id="btnCamStart">カメラをはじめる</button>
+        <button class="btn" id="btnCamStop" hidden>カメラを止める</button>
+        <p class="status-line" id="camStatus">まだカメラは動いていません</p>
+
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 200 120">
+            <path d="M10,110 A90,90 0 0,1 190,110" fill="none" stroke="var(--paper-line)" stroke-width="14" stroke-linecap="round"/>
+            <path id="gaugeArcBrightness" d="M10,110 A90,90 0 0,1 190,110" fill="none" stroke="var(--amber)" stroke-width="14" stroke-linecap="round" stroke-dasharray="283" stroke-dashoffset="283"/>
+            <g id="needleBrightness">
+              <line x1="100" y1="110" x2="100" y2="34" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="100" cy="110" r="6" fill="var(--ink)"/>
+            </g>
+          </svg>
+          <div class="gauge-readout"><span id="brightnessReadout">0</span><small> / 255</small></div>
+          <div class="history-bars" id="brightnessHistory"></div>
+        </div>
+        <p class="privacy-note">映像はこの画面の中だけで処理され、サーバーに送られたり保存されたりしません。</p>
+      </div>
+
+      <div class="panel block-panel" id="pg-exp1">
+        <h3>ブロックでプログラムしよう</h3>
+        <div class="run-toolbar">
+          <button class="btn btn-fill" data-action="run-once">1回実行</button>
+          <button class="btn" data-action="toggle-loop">くり返し実行</button>
+        </div>
+        <div class="sample-row"></div>
+        <div class="block-workspace"></div>
+        <div class="console-output"></div>
+        <div class="led-lamp"></div>
+        <p class="led-caption">「LEDをつける／消す」ブロックでこのランプが光ります</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 実験2: かたむき ============ -->
+  <section class="experiment theme-blue" id="exp2">
+    <div class="exp-head">
+      <span class="exp-no">実験2</span>
+      <h2>かたむき・うごきをはかる</h2>
+      <p class="exp-lead">加速度センサーの値（x・y・z）を使います。スマートフォンやタブレットで開くと実際のセンサーが、パソコンではスライダーで動きをためせます。ブロックを組み合わせて、かたむきに反応するプログラムを作ろう。</p>
+    </div>
+    <div class="exp-body">
+      <div class="panel sensor-panel">
+        <h3>加速度センサー</h3>
+        <button class="btn btn-fill" id="btnAccelStart">センサーをはじめる</button>
+        <p class="status-line" id="accelStatus">まだセンサーは動いていません</p>
+
+        <div class="tilt-wrap">
+          <svg viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="3"/>
+            <line x1="12" y1="100" x2="188" y2="100" stroke="var(--paper-line)" stroke-width="1"/>
+            <line x1="100" y1="12" x2="100" y2="188" stroke="var(--paper-line)" stroke-width="1"/>
+            <circle id="tiltBall" cx="100" cy="100" r="14" fill="var(--blue)"/>
+          </svg>
+          <div class="accel-readouts">
+            <span><b>x</b> <span id="accelReadoutX" class="mono">0</span></span>
+            <span><b>y</b> <span id="accelReadoutY" class="mono">0</span></span>
+            <span><b>z</b> <span id="accelReadoutZ" class="mono">0</span></span>
+          </div>
+        </div>
+
+        <div class="accel-sliders" id="accelSliders" hidden>
+          <div class="slider-row"><label for="sliderX">x</label><input type="range" id="sliderX" min="-10" max="10" step="0.5" value="0"><output id="sliderValX">0</output></div>
+          <div class="slider-row"><label for="sliderY">y</label><input type="range" id="sliderY" min="-10" max="10" step="0.5" value="0"><output id="sliderValY">0</output></div>
+          <div class="slider-row"><label for="sliderZ">z</label><input type="range" id="sliderZ" min="-10" max="10" step="0.5" value="0"><output id="sliderValZ">0</output></div>
+        </div>
+        <p class="privacy-note">センサーの値もこの画面の中だけで使われ、外部には送られません。</p>
+      </div>
+
+      <div class="panel block-panel" id="pg-exp2">
+        <h3>ブロックでプログラムしよう</h3>
+        <div class="run-toolbar">
+          <button class="btn btn-fill" data-action="run-once">1回実行</button>
+          <button class="btn" data-action="toggle-loop">くり返し実行</button>
+        </div>
+        <div class="sample-row"></div>
+        <div class="block-workspace"></div>
+        <div class="console-output"></div>
+        <div class="led-lamp"></div>
+        <p class="led-caption">「LEDをつける／消す」ブロックでこのランプが光ります</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 実験3: マイク ============ -->
+  <section class="experiment theme-purple" id="exp3">
+    <div class="exp-head">
+      <span class="exp-no">実験3</span>
+      <h2>音の大きさをはかる</h2>
+      <p class="exp-lead">マイクから音の大きさ（0〜100）を計測します。「もし〜なら」ブロックと組み合わせて、音に反応するプログラムを作ってみよう。</p>
+    </div>
+    <div class="exp-body">
+      <div class="panel sensor-panel">
+        <h3>マイク</h3>
+        <button class="btn btn-fill" id="btnMicStart">マイクをはじめる</button>
+        <button class="btn" id="btnMicStop" hidden>マイクを止める</button>
+        <p class="status-line" id="micStatus">まだマイクは動いていません</p>
+
+        <div class="vu-meter"><div class="vu-fill" id="volumeBar"></div></div>
+        <div class="gauge-readout"><span id="volumeReadout">0</span><small> / 100</small></div>
+        <div class="history-bars" id="volumeHistory"></div>
+        <p class="privacy-note">音はこの画面の中だけで数値化され、録音やサーバーへの送信はしません。</p>
+      </div>
+
+      <div class="panel block-panel" id="pg-exp3">
+        <h3>ブロックでプログラムしよう</h3>
+        <div class="run-toolbar">
+          <button class="btn btn-fill" data-action="run-once">1回実行</button>
+          <button class="btn" data-action="toggle-loop">くり返し実行</button>
+        </div>
+        <div class="sample-row"></div>
+        <div class="block-workspace"></div>
+        <div class="console-output"></div>
+        <div class="led-lamp"></div>
+        <p class="led-caption">「LEDをつける／消す」ブロックでこのランプが光ります</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 実験4: 位置情報(GPS) ============ -->
+  <section class="experiment theme-teal" id="exp4">
+    <div class="exp-head">
+      <span class="exp-no">実験4</span>
+      <h2>位置情報をはかる</h2>
+      <p class="exp-lead">GPSで現在地（緯度・経度）を取得し、決めた目印の場所からの距離を計算します。屋内やパソコンでは電波の状況によって誤差が大きくなることがあります。</p>
+    </div>
+    <div class="exp-body">
+      <div class="panel sensor-panel">
+        <h3>位置情報 (GPS)</h3>
+        <button class="btn btn-fill" id="btnGeoStart">位置情報をはじめる</button>
+        <button class="btn" id="btnGeoStop" hidden>位置情報を止める</button>
+        <p class="status-line" id="geoStatus">まだ位置情報は取得していません</p>
+
+        <div class="geo-readouts mono">
+          <div>緯度: <span id="geoLat">-</span></div>
+          <div>経度: <span id="geoLng">-</span></div>
+        </div>
+
+        <div class="geo-target">
+          <p class="nested-label">目印の緯度・経度を入れると、そこからの距離を計算します</p>
+          <div class="slider-row"><label for="targetLat">緯度</label><input type="number" id="targetLat" step="0.0001" value="35.0000"></div>
+          <div class="slider-row"><label for="targetLng">経度</label><input type="number" id="targetLng" step="0.0001" value="139.0000"></div>
+          <div class="gauge-readout"><span id="geoDistance">-</span><small> m</small></div>
+        </div>
+        <p class="privacy-note">位置情報もこの画面の中だけで使われ、外部には送信されません。ただし本物の現在地なので、教室でみんなの位置を映すときは扱いに注意しましょう。</p>
+      </div>
+
+      <div class="panel block-panel" id="pg-exp4">
+        <h3>ブロックでプログラムしよう</h3>
+        <div class="run-toolbar">
+          <button class="btn btn-fill" data-action="run-once">1回実行</button>
+          <button class="btn" data-action="toggle-loop">くり返し実行</button>
+        </div>
+        <div class="sample-row"></div>
+        <div class="block-workspace"></div>
+        <div class="console-output"></div>
+        <div class="led-lamp"></div>
+        <p class="led-caption">「LEDをつける／消す」ブロックでこのランプが光ります</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 実験5: 画面の向き・回転 ============ -->
+  <section class="experiment theme-indigo" id="exp5">
+    <div class="exp-head">
+      <span class="exp-no">実験5</span>
+      <h2>画面の向き・回転をはかる</h2>
+      <p class="exp-lead">向きセンサーで画面の回転（alpha）・前後の傾き（beta）・左右の傾き（gamma）を計測します。alphaは画面が回転しためやすで、方位磁石のような正確な方角ではありません。</p>
+    </div>
+    <div class="exp-body">
+      <div class="panel sensor-panel">
+        <h3>向きセンサー</h3>
+        <button class="btn btn-fill" id="btnOrientStart">センサーをはじめる</button>
+        <p class="status-line" id="orientStatus">まだセンサーは動いていません</p>
+
+        <div class="tilt-wrap">
+          <svg viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" fill="var(--indigo-soft)" stroke="var(--indigo)" stroke-width="3"/>
+            <text x="100" y="24" text-anchor="middle" font-size="14" fill="var(--ink-soft)">N</text>
+            <text x="100" y="186" text-anchor="middle" font-size="14" fill="var(--ink-soft)">S</text>
+            <text x="14" y="105" text-anchor="middle" font-size="14" fill="var(--ink-soft)">W</text>
+            <text x="186" y="105" text-anchor="middle" font-size="14" fill="var(--ink-soft)">E</text>
+            <g id="compassNeedle">
+              <line x1="100" y1="100" x2="100" y2="30" stroke="var(--rust)" stroke-width="4" stroke-linecap="round"/>
+              <circle cx="100" cy="100" r="6" fill="var(--ink)"/>
+            </g>
+          </svg>
+          <div class="accel-readouts">
+            <span><b>alpha</b> <span id="orientReadoutAlpha" class="mono">0</span></span>
+            <span><b>beta</b> <span id="orientReadoutBeta" class="mono">0</span></span>
+            <span><b>gamma</b> <span id="orientReadoutGamma" class="mono">0</span></span>
+          </div>
+        </div>
+
+        <div class="accel-sliders orient-sliders" id="orientSliders" hidden>
+          <div class="slider-row"><label for="sliderOA">α</label><input type="range" id="sliderOA" min="0" max="360" step="1" value="0"><output id="sliderValOA">0</output></div>
+          <div class="slider-row"><label for="sliderOB">β</label><input type="range" id="sliderOB" min="-180" max="180" step="1" value="0"><output id="sliderValOB">0</output></div>
+          <div class="slider-row"><label for="sliderOG">γ</label><input type="range" id="sliderOG" min="-90" max="90" step="1" value="0"><output id="sliderValOG">0</output></div>
+        </div>
+        <p class="privacy-note">向きの値もこの画面の中だけで使われ、外部には送信されません。</p>
+      </div>
+
+      <div class="panel block-panel" id="pg-exp5">
+        <h3>ブロックでプログラムしよう</h3>
+        <div class="run-toolbar">
+          <button class="btn btn-fill" data-action="run-once">1回実行</button>
+          <button class="btn" data-action="toggle-loop">くり返し実行</button>
+        </div>
+        <div class="sample-row"></div>
+        <div class="block-workspace"></div>
+        <div class="console-output"></div>
+        <div class="led-lamp"></div>
+        <p class="led-caption">「LEDをつける／消す」ブロックでこのランプが光ります</p>
+      </div>
+    </div>
+  </section>
+
+  <details class="teacher-notes">
+    <summary>使い方のヒント</summary>
+    <ul>
+      <li>カメラ・マイク・位置情報・センサーの利用には、ブラウザの設定で利用の許可が求められることがあります。</li>
+      <li>加速度センサー・向きセンサーは主にスマートフォン・タブレットで動作します。デスクトップパソコンなどセンサーが無い機器では、自動的にスライダーでの疑似操作に切り替わります。</li>
+      <li>位置情報（GPS）は実際の現在地を扱います。授業で使う際は、画面共有の方法や記録の扱いについて事前に生徒と確認してください。</li>
+      <li>すべての処理は生徒のブラウザの中だけで行われ、映像・音声・センサー値・位置情報は保存・送信されません。</li>
+      <li>プログラムはテキストのコードではなく、ブロックを追加・並べ替え・削除して組み立てます。「もし〜なら」ブロックの中には「動作ブロック」だけを入れられます（入れ子は1段階まで）。</li>
+      <li>「1回実行」でその瞬間の値を使って1回だけプログラムを動かし、「くり返し実行」で0.4秒ごとに実行し続けます。</li>
+      <li>Chrome・Edge・Safariの最新版での動作を想定しています。</li>
+    </ul>
+  </details>
+
+  <footer class="site-footer">中学 技術科 ／ 計測制御プログラミング</footer>
+</div>
+
+<script>
+'use strict';
+
+/* ==================== センサーの状態 ==================== */
+const state = {
+  brightness: 0,
+  brightnessHistory: [],
+  accel: { x: 0, y: 0, z: 0 },
+  volume: 0,
+  volumeHistory: [],
+  lat: null,
+  lng: null,
+  distance: 0,
+  orient: { alpha: 0, beta: 0, gamma: 0 }
+};
+
+function round1(n){ return Math.round(n * 10) / 10; }
+
+/* ==================== 実験1: カメラで明るさを計測 ==================== */
+let videoEl, camCanvas, camCtx, camStream, camTimer;
+
+function initCamera(){
+  videoEl = document.getElementById('camVideo');
+  camCanvas = document.createElement('canvas');
+  camCanvas.width = 24;
+  camCanvas.height = 18;
+  camCtx = camCanvas.getContext('2d', { willReadFrequently: true });
+  document.getElementById('btnCamStart').addEventListener('click', startCamera);
+  document.getElementById('btnCamStop').addEventListener('click', stopCamera);
+}
+
+async function startCamera(){
+  const statusEl = document.getElementById('camStatus');
+
+  if (camStream) return;
+
+  try{
+    if (camTimer) {
+      clearInterval(camTimer);
+      camTimer = null;
+    }
+
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'user' },
+      audio: false
+    });
+
+    videoEl.srcObject = camStream;
+
+    await videoEl.play();
+
+    document.getElementById('btnCamStart').hidden = true;
+    document.getElementById('btnCamStop').hidden = false;
+
+    statusEl.textContent = 'カメラが動いています';
+    statusEl.classList.remove('is-error');
+
+    camTimer = setInterval(measureBrightness, 150);
+
+  }catch(err){
+
+    statusEl.textContent =
+      'カメラを使えませんでした。カメラの利用を許可しているか確認してください。';
+
+    statusEl.classList.add('is-error');
+  }
+}
+
+function stopCamera(){
+
+  if (camTimer){
+    clearInterval(camTimer);
+    camTimer = null;
+  }
+
+  if (camStream){
+    camStream.getTracks().forEach(track => track.stop());
+    camStream = null;
+  }
+
+  if (videoEl){
+    videoEl.srcObject = null;
+  }
+
+  document.getElementById('btnCamStart').hidden = false;
+  document.getElementById('btnCamStop').hidden = true;
+
+  document.getElementById('camStatus').textContent =
+    'カメラは止まっています';
+}
+
+function measureBrightness(){
+  if (!videoEl.videoWidth) return;
+  camCtx.drawImage(videoEl, 0, 0, camCanvas.width, camCanvas.height);
+  const { data } = camCtx.getImageData(0, 0, camCanvas.width, camCanvas.height);
+  let sum = 0, count = 0;
+  for (let i = 0; i < data.length; i += 4){
+    sum += 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
+    count++;
+  }
+  const avg = sum / count;
+  state.brightness = avg;
+  state.brightnessHistory.push(avg);
+  if (state.brightnessHistory.length > 20) state.brightnessHistory.shift();
+  updateBrightnessGauge(avg);
+  updateBrightnessHistoryBars();
+}
+
+function updateBrightnessGauge(value){
+  const clamped = Math.max(0, Math.min(255, value));
+  const ratio = clamped / 255;
+  const deg = -90 + ratio * 180;
+  const needle = document.getElementById('needleBrightness');
+  if (needle) needle.setAttribute('transform', 'rotate(' + deg + ' 100 110)');
+  const arc = document.getElementById('gaugeArcBrightness');
+  if (arc) arc.setAttribute('stroke-dashoffset', String(283 * (1 - ratio)));
+  document.getElementById('brightnessReadout').textContent = Math.round(clamped);
+}
+
+function updateBrightnessHistoryBars(){
+  const wrap = document.getElementById('brightnessHistory');
+  wrap.innerHTML = '';
+  state.brightnessHistory.forEach(v => {
+    const bar = document.createElement('div');
+    bar.className = 'history-bar';
+    bar.style.height = Math.max(4, (v/255)*100) + '%';
+    wrap.appendChild(bar);
+  });
+}
+
+/* ==================== 実験2: 加速度センサー ==================== */
+let accelActive = false;
+let accelStarted = false;
+let orientStarted = false;
+
+function initAccel(){
+  document.getElementById('btnAccelStart').addEventListener('click', startAccel);
+  ['X','Y','Z'].forEach(axis => {
+    const input = document.getElementById('slider' + axis);
+    input.addEventListener('input', () => {
+      state.accel[axis.toLowerCase()] = Number(input.value);
+      document.getElementById('sliderVal' + axis).textContent = input.value;
+      updateAccelVisuals();
+    });
+  });
+}
+
+async function startAccel(){
+  if (accelStarted) return;
+  accelStarted = true;
+  const statusEl = document.getElementById('accelStatus');
+  if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+    try{
+      const res = await DeviceMotionEvent.requestPermission();
+      if (res !== 'granted'){ showAccelFallback('センサーの利用が許可されませんでした。スライダーで動きをためしてみましょう。'); return; }
+    }catch(err){ showAccelFallback('センサーを使えませんでした。スライダーで動きをためしてみましょう。'); return; }
+  }
+  window.addEventListener('devicemotion', handleMotion);
+  statusEl.textContent = 'センサーを確認しています…';
+  statusEl.classList.add('is-waiting');
+  document.getElementById('btnAccelStart').hidden = true;
+  setTimeout(() => {
+    if (!accelActive){
+      window.removeEventListener('devicemotion', handleMotion);
+      showAccelFallback('このパソコンには加速度センサーが見つかりませんでした。下のスライダーで動きをためしてみましょう。');
+    }
+  }, 1200);
+}
+
+function handleMotion(e){
+  const a = e.accelerationIncludingGravity || e.acceleration;
+  if (!a || (a.x === null && a.y === null && a.z === null)) return;
+  accelActive = true;
+  state.accel.x = a.x || 0;
+  state.accel.y = a.y || 0;
+  state.accel.z = a.z || 0;
+  const statusEl = document.getElementById('accelStatus');
+  statusEl.textContent = 'センサーが動いています';
+  statusEl.classList.remove('is-waiting');
+  updateAccelVisuals();
+}
+
+function showAccelFallback(message){
+  const statusEl = document.getElementById('accelStatus');
+  statusEl.textContent = message;
+  statusEl.classList.remove('is-waiting');
+  document.getElementById('accelSliders').hidden = false;
+}
+
+function updateAccelVisuals(){
+  const cx2 = Math.max(-10, Math.min(10, state.accel.x));
+  const cy2 = Math.max(-10, Math.min(10, state.accel.y));
+  const ball = document.getElementById('tiltBall');
+  ball.setAttribute('cx', 100 + (cx2/10) * 76);
+  ball.setAttribute('cy', 100 - (cy2/10) * 76);
+  document.getElementById('accelReadoutX').textContent = round1(state.accel.x);
+  document.getElementById('accelReadoutY').textContent = round1(state.accel.y);
+  document.getElementById('accelReadoutZ').textContent = round1(state.accel.z);
+}
+
+/* ==================== 実験4: マイク（音の大きさ） ==================== */
+let audioCtx, analyser, micStream, micDataArray, micTimer;
+
+function initMic(){
+  document.getElementById('btnMicStart').addEventListener('click', startMic);
+  document.getElementById('btnMicStop').addEventListener('click', stopMic);
+}
+
+async function startMic(){
+
+  const statusEl = document.getElementById('micStatus');
+
+  if (micStream) return;
+
+  try{
+
+    if (micTimer){
+      clearInterval(micTimer);
+      micTimer = null;
+    }
+
+    micStream =
+      await navigator.mediaDevices.getUserMedia({
+        audio:true,
+        video:false
+      });
+
+    audioCtx =
+      new (window.AudioContext || window.webkitAudioContext)();
+
+    const source =
+      audioCtx.createMediaStreamSource(micStream);
+
+    analyser = audioCtx.createAnalyser();
+
+    analyser.fftSize = 512;
+
+    source.connect(analyser);
+
+    micDataArray =
+      new Uint8Array(analyser.fftSize);
+
+    document.getElementById('btnMicStart').hidden = true;
+    document.getElementById('btnMicStop').hidden = false;
+
+    statusEl.textContent = 'マイクが動いています';
+
+    statusEl.classList.remove('is-error');
+
+    micTimer =
+      setInterval(measureVolume, 100);
+
+  }catch(err){
+
+    statusEl.textContent =
+      'マイクを使えませんでした。マイクの利用を許可しているか確認してください。';
+
+    statusEl.classList.add('is-error');
+  }
+}
+
+
+function stopMic(){
+
+  if (micTimer){
+    clearInterval(micTimer);
+    micTimer = null;
+  }
+
+  if (micStream){
+    micStream.getTracks().forEach(track => track.stop());
+    micStream = null;
+  }
+
+  if (audioCtx){
+    audioCtx.close();
+    audioCtx = null;
+  }
+
+  analyser = null;
+  micDataArray = null;
+
+  document.getElementById('btnMicStart').hidden = false;
+  document.getElementById('btnMicStop').hidden = true;
+
+  document.getElementById('micStatus').textContent =
+    'マイクは止まっています';
+}
+
+
+function measureVolume(){
+
+  if (!analyser || !micDataArray) return;
+
+  analyser.getByteTimeDomainData(micDataArray);
+
+  let sumSquares = 0;
+
+  for (let i = 0; i < micDataArray.length; i++){
+
+    const norm =
+      (micDataArray[i] - 128) / 128;
+
+    sumSquares += norm * norm;
+  }
+
+  const rms =
+    Math.sqrt(sumSquares / micDataArray.length);
+
+  const volume =
+    Math.max(
+      0,
+      Math.min(
+        100,
+        Math.round(rms * 100 * 3)
+      )
+    );
+
+  state.volume = volume;
+
+  state.volumeHistory.push(volume);
+  if (state.volumeHistory.length > 20) state.volumeHistory.shift();
+  document.getElementById('volumeBar').style.height = volume + '%';
+  document.getElementById('volumeReadout').textContent = volume;
+  const wrap = document.getElementById('volumeHistory');
+  wrap.innerHTML = '';
+  state.volumeHistory.forEach(v => {
+    const bar = document.createElement('div');
+    bar.className = 'history-bar';
+    bar.style.height = Math.max(4, v) + '%';
+    wrap.appendChild(bar);
+  });
+}
+
+/* ==================== 実験5: 位置情報 (GPS) ==================== */
+let geoWatchId = null;
+
+function initGeo(){
+  document.getElementById('btnGeoStart').addEventListener('click', startGeo);
+  document.getElementById('btnGeoStop').addEventListener('click', stopGeo);
+  document.getElementById('targetLat').addEventListener('input', updateDistance);
+  document.getElementById('targetLng').addEventListener('input', updateDistance);
+}
+
+function startGeo(){
+
+  const statusEl =
+    document.getElementById('geoStatus');
+
+  if (!('geolocation' in navigator)){
+
+    statusEl.textContent =
+      'この端末は位置情報に対応していません。';
+
+    statusEl.classList.add('is-error');
+
+    return;
+  }
+
+  if (geoWatchId !== null){
+    navigator.geolocation.clearWatch(geoWatchId);
+    geoWatchId = null;
+  }
+
+  geoWatchId =
+    navigator.geolocation.watchPosition(
+
+      pos => {
+
+        state.lat = pos.coords.latitude;
+        state.lng = pos.coords.longitude;
+
+        statusEl.textContent =
+          '位置情報を取得しています';
+
+        statusEl.classList.remove('is-error');
+
+        document.getElementById(
+          'btnGeoStart'
+        ).hidden = true;
+
+        document.getElementById(
+          'btnGeoStop'
+        ).hidden = false;
+
+        document.getElementById(
+          'geoLat'
+        ).textContent =
+          state.lat.toFixed(5);
+
+        document.getElementById(
+          'geoLng'
+        ).textContent =
+          state.lng.toFixed(5);
+
+        updateDistance();
+
+      },
+
+      err => {
+
+        statusEl.textContent =
+          '位置情報を取得できませんでした。位置情報の利用を許可しているか確認してください。';
+
+        statusEl.classList.add('is-error');
+
+      },
+
+      {
+        enableHighAccuracy:true,
+        maximumAge:2000,
+        timeout:8000
+      }
+    );
+}
+
+function stopGeo(){
+  if (geoWatchId !== null) navigator.geolocation.clearWatch(geoWatchId);
+  geoWatchId = null;
+  document.getElementById('btnGeoStart').hidden = false;
+  document.getElementById('btnGeoStop').hidden = true;
+  document.getElementById('geoStatus').textContent = '位置情報は止まっています';
+}
+
+function haversineMeters(lat1, lon1, lat2, lon2){
+  const R = 6371000;
+  const toRad = d => d * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function updateDistance(){
+
+  const latInput =
+    document.getElementById('targetLat');
+
+  const lngInput =
+    document.getElementById('targetLng');
+
+  const distanceEl =
+    document.getElementById('geoDistance');
+
+  if (
+    state.lat === null ||
+    state.lng === null
+  ){
+    distanceEl.textContent = '-';
+    return;
+  }
+
+  if (
+    latInput.value === '' ||
+    lngInput.value === ''
+  ){
+    distanceEl.textContent = '-';
+    return;
+  }
+
+  const tLat =
+    Number(latInput.value);
+
+  const tLng =
+    Number(lngInput.value);
+
+  if (
+    !Number.isFinite(tLat) ||
+    !Number.isFinite(tLng)
+  ){
+    distanceEl.textContent = '-';
+    return;
+  }
+
+  if (
+    tLat < -90 ||
+    tLat > 90 ||
+    tLng < -180 ||
+    tLng > 180
+  ){
+    distanceEl.textContent = '入力エラー';
+    return;
+  }
+
+  state.distance =
+    Math.round(
+      haversineMeters(
+        state.lat,
+        state.lng,
+        tLat,
+        tLng
+      )
+    );
+
+  distanceEl.textContent =
+    state.distance;
+}
+
+/* ==================== 実験6: 画面の向き・回転 ==================== */
+let orientActive = false;
+
+function initOrient(){
+  document.getElementById('btnOrientStart').addEventListener('click', startOrient);
+  [['OA','alpha'], ['OB','beta'], ['OG','gamma']].forEach(([id, key]) => {
+    const input = document.getElementById('slider' + id);
+    input.addEventListener('input', () => {
+      state.orient[key] = Number(input.value);
+      document.getElementById('sliderVal' + id).textContent = input.value;
+      updateOrientVisuals();
+    });
+  });
+}
+
+async function startOrient(){
+  if (orientStarted) return;
+  orientStarted = true;
+  const statusEl = document.getElementById('orientStatus');
+  if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function'){
+    try{
+      const res = await DeviceOrientationEvent.requestPermission();
+      if (res !== 'granted'){ showOrientFallback('センサーの利用が許可されませんでした。スライダーでためしてみましょう。'); return; }
+    }catch(err){ showOrientFallback('センサーを使えませんでした。スライダーでためしてみましょう。'); return; }
+  }
+  window.addEventListener('deviceorientation', handleOrientation);
+  statusEl.textContent = 'センサーを確認しています…';
+  statusEl.classList.add('is-waiting');
+  document.getElementById('btnOrientStart').hidden = true;
+  setTimeout(() => {
+    if (!orientActive){
+      window.removeEventListener('deviceorientation', handleOrientation);
+      showOrientFallback('この端末には向きセンサーが見つかりませんでした。下のスライダーでためしてみましょう。');
+    }
+  }, 1200);
+}
+
+function handleOrientation(e){
+  if (e.alpha === null && e.beta === null && e.gamma === null) return;
+  orientActive = true;
+  state.orient.alpha = e.alpha || 0;
+  state.orient.beta = e.beta || 0;
+  state.orient.gamma = e.gamma || 0;
+  const statusEl = document.getElementById('orientStatus');
+  statusEl.textContent = 'センサーが動いています';
+  statusEl.classList.remove('is-waiting');
+  updateOrientVisuals();
+}
+
+function showOrientFallback(message){
+  const statusEl = document.getElementById('orientStatus');
+  statusEl.textContent = message;
+  statusEl.classList.remove('is-waiting');
+  document.getElementById('orientSliders').hidden = false;
+}
+
+function updateOrientVisuals(){
+  const needle = document.getElementById('compassNeedle');
+  if (needle) needle.setAttribute('transform', 'rotate(' + state.orient.alpha + ' 100 100)');
+  document.getElementById('orientReadoutAlpha').textContent = round1(state.orient.alpha);
+  document.getElementById('orientReadoutBeta').textContent = round1(state.orient.beta);
+  document.getElementById('orientReadoutGamma').textContent = round1(state.orient.gamma);
+}
+
+/* ==================== すべてのセンサーの値をまとめて取得 ==================== */
+function getSensorSnapshot(){
+  return {
+    brightness: Math.round(state.brightness),
+    accelX: round1(state.accel.x),
+    accelY: round1(state.accel.y),
+    accelZ: round1(state.accel.z),
+    volume: Math.round(state.volume),
+    lat: state.lat === null ? 0 : state.lat,
+    lng: state.lng === null ? 0 : state.lng,
+    distance: Math.round(state.distance),
+    orientAlpha: round1(state.orient.alpha),
+    orientBeta: round1(state.orient.beta),
+    orientGamma: round1(state.orient.gamma)
+  };
+}
+
+/* ==================== ブロックの定義 ==================== */
+const SENSOR_LABELS = {
+  brightness: '明るさ',
+  accelX: 'かたむきX',
+  accelY: 'かたむきY',
+  accelZ: 'かたむきZ',
+  volume: '音の大きさ',
+  lat: '緯度',
+  lng: '経度',
+  distance: '目印までの距離(m)',
+  orientAlpha: '画面の向き(alpha)',
+  orientBeta: '前後の傾き(beta)',
+  orientGamma: '左右の傾き(gamma)'
+};
+const OP_LABELS = { '<':'より小さい', '<=':'以下', '>':'より大きい', '>=':'以上', '==':'と等しい' };
+const COLOR_OPTIONS = [
+  { key:'red', label:'赤', hex:'#D64545' },
+  { key:'blue', label:'青', hex:'#2C5FCC' },
+  { key:'green', label:'緑', hex:'#3E8B58' },
+  { key:'yellow', label:'黄', hex:'#DE9A2E' },
+  { key:'white', label:'白', hex:'#F5F1E6' }
+];
+function colorHex(key){ const c = COLOR_OPTIONS.find(c => c.key === key); return c ? c.hex : '#DE9A2E'; }
+function colorLabel(key){ const c = COLOR_OPTIONS.find(c => c.key === key); return c ? c.label : key; }
+
+function readSensor(key, sensor){
+  switch(key){
+    case 'brightness': return sensor.brightness;
+    case 'accelX': return sensor.accelX;
+    case 'accelY': return sensor.accelY;
+    case 'accelZ': return sensor.accelZ;
+    case 'volume': return sensor.volume;
+    case 'lat': return sensor.lat;
+    case 'lng': return sensor.lng;
+    case 'distance': return sensor.distance;
+    case 'orientAlpha': return sensor.orientAlpha;
+    case 'orientBeta': return sensor.orientBeta;
+    case 'orientGamma': return sensor.orientGamma;
+    default: return 0;
+  }
+}
+
+const ACTION_DEFS = [
+  { type:'led_on', label:'LEDを色でつける', defaults:{ color:'yellow' } },
+  { type:'led_off', label:'LEDを消す', defaults:{} },
+  { type:'say', label:'文字を表示する', defaults:{ text:'メッセージ' } },
+  { type:'show_sensor', label:'センサーの値を表示する', defaults:{ sensor:'brightness' } }
+];
+
+/* ==================== ブロックの実行 ==================== */
+let blockUidCounter = 1;
+function ensureBlockUid(block){
+  if (!block.__uid) block.__uid = 'b' + (blockUidCounter++);
+  return block.__uid;
+}
+
+function evalCondition(block, sensor){
+  const left = readSensor(block.sensor, sensor);
+  const right = Number(block.value);
+  switch(block.op){
+    case '<': return left < right;
+    case '<=': return left <= right;
+    case '>': return left > right;
+    case '>=': return left >= right;
+    case '==': return left === right;
+    default: return false;
+  }
+}
+
+function execAction(block, sensor, api){
+  api.highlight(ensureBlockUid(block));
+  switch(block.type){
+    case 'led_on': api.led.on(block.color); api.log('LED: ' + colorLabel(block.color)); break;
+    case 'led_off': api.led.off(); api.log('LED: 消灯'); break;
+    case 'say': api.log(String(block.text)); break;
+    case 'show_sensor': api.log(SENSOR_LABELS[block.sensor] + ': ' + readSensor(block.sensor, sensor)); break;
+  }
+}
+
+function runBlocks(blocks, sensor, api){
+  blocks.forEach(b => {
+    if (b.type === 'if'){
+      const result = evalCondition(b, sensor);
+      api.highlight(ensureBlockUid(b));
+      if (result) runBlocks(b.then, sensor, api);
+    } else if (b.type === 'ifelse'){
+      const result = evalCondition(b, sensor);
+      api.highlight(ensureBlockUid(b));
+      if (result) runBlocks(b.then, sensor, api);
+      else runBlocks(b.else, sensor, api);
+    } else {
+      execAction(b, sensor, api);
+    }
+  });
+}
+
+/* ==================== ブロックのDOM描画 ==================== */
+function fieldRow(){ const row = document.createElement('div'); row.className = 'block-row'; return row; }
+
+function sensorSelectEl(sensors, value, onChange){
+  if (sensors.length === 1){
+    const span = document.createElement('span');
+    span.className = 'cond-fixed';
+    span.textContent = SENSOR_LABELS[sensors[0]];
+    return span;
+  }
+  const sel = document.createElement('select');
+  sensors.forEach(key => {
+    const opt = document.createElement('option');
+    opt.value = key; opt.textContent = SENSOR_LABELS[key];
+    if (key === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => onChange(sel.value));
+  return sel;
+}
+
+function opSelectEl(value, onChange){
+  const sel = document.createElement('select');
+  Object.keys(OP_LABELS).forEach(op => {
+    const opt = document.createElement('option');
+    opt.value = op; opt.textContent = OP_LABELS[op];
+    if (op === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => onChange(sel.value));
+  return sel;
+}
+
+function numberInputEl(value, onChange){
+  const input = document.createElement('input');
+  input.type = 'number';
+  input.value = value;
+  input.addEventListener('input', () => onChange(input.value));
+  return input;
+}
+
+function textInputEl(value, onChange){
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = value;
+  input.addEventListener('input', () => onChange(input.value));
+  return input;
+}
+
+function colorSelectEl(value, onChange){
+  const sel = document.createElement('select');
+  COLOR_OPTIONS.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c.key; opt.textContent = c.label;
+    if (c.key === value) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', () => onChange(sel.value));
+  return sel;
+}
+
+function makeControls(containerArray, idx, ctx){
+  const wrap = document.createElement('div');
+  wrap.className = 'block-controls';
+
+  const up = document.createElement('button'); up.type='button'; up.title='上へ'; up.textContent='▲';
+  up.addEventListener('click', () => {
+    if (idx === 0) return;
+    [containerArray[idx-1], containerArray[idx]] = [containerArray[idx], containerArray[idx-1]];
+    ctx.rerender();
+  });
+
+  const down = document.createElement('button'); down.type='button'; down.title='下へ'; down.textContent='▼';
+  down.addEventListener('click', () => {
+    if (idx === containerArray.length - 1) return;
+    [containerArray[idx+1], containerArray[idx]] = [containerArray[idx], containerArray[idx+1]];
+    ctx.rerender();
+  });
+
+  const del = document.createElement('button'); del.type='button'; del.title='削除'; del.textContent='×'; del.classList.add('danger');
+  del.addEventListener('click', () => {
+    containerArray.splice(idx, 1);
+    ctx.rerender();
+  });
+
+  wrap.appendChild(up); wrap.appendChild(down); wrap.appendChild(del);
+  return wrap;
+}
+
+function labelForBlock(block){
+  const def = ACTION_DEFS.find(d => d.type === block.type);
+  return def ? def.label : block.type;
+}
+
+function createNestedHint(){
+  const hint = document.createElement('p');
+  hint.className = 'nested-hint';
+  const icon = document.createElement('span');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.textContent = '💡';
+  const text = document.createElement('span');
+  text.textContent = 'ここには「動作ブロック」だけを追加できます。「もし」ブロックは1段目にしか置けません。';
+  hint.appendChild(icon);
+  hint.appendChild(text);
+  return hint;
+}
+
+function createBlockElement(block, containerArray, idx, ctx){
+  const el = document.createElement('div');
+  const isControl = block.type === 'if' || block.type === 'ifelse';
+  el.className = 'block ' + (isControl ? 'block-control' : 'block-action');
+  el.dataset.blockUid = ensureBlockUid(block);
+
+  const header = document.createElement('div');
+  header.className = 'block-header';
+  const title = document.createElement('span');
+  title.className = 'block-title';
+  title.textContent = isControl ? (block.type === 'if' ? 'もし〜なら' : 'もし〜なら／そうでなければ') : labelForBlock(block);
+  header.appendChild(title);
+  header.appendChild(makeControls(containerArray, idx, ctx));
+  el.appendChild(header);
+
+  if (isControl){
+    const row = fieldRow();
+    row.appendChild(document.createTextNode('もし'));
+    row.appendChild(sensorSelectEl(ctx.sensors, block.sensor, v => block.sensor = v));
+    row.appendChild(opSelectEl(block.op, v => block.op = v));
+    row.appendChild(numberInputEl(block.value, v => block.value = v));
+    row.appendChild(document.createTextNode('なら'));
+    el.appendChild(row);
+
+    const thenWrap = document.createElement('div');
+    thenWrap.className = 'nested';
+    const thenLabel = document.createElement('p');
+    thenLabel.className = 'nested-label';
+    thenLabel.textContent = 'そうなったら';
+    thenWrap.appendChild(thenLabel);
+    thenWrap.appendChild(createNestedHint());
+    const thenList = document.createElement('div');
+    thenWrap.appendChild(thenList);
+    thenWrap.appendChild(createAddActionRow(block.then, ctx));
+    el.appendChild(thenWrap);
+    renderBlockList(block.then, thenList, ctx);
+
+    if (block.type === 'ifelse'){
+      const elseWrap = document.createElement('div');
+      elseWrap.className = 'nested';
+      const elseLabel = document.createElement('p');
+      elseLabel.className = 'nested-label';
+      elseLabel.textContent = 'そうでなかったら';
+      elseWrap.appendChild(elseLabel);
+      elseWrap.appendChild(createNestedHint());
+      const elseList = document.createElement('div');
+      elseWrap.appendChild(elseList);
+      elseWrap.appendChild(createAddActionRow(block.else, ctx));
+      el.appendChild(elseWrap);
+      renderBlockList(block.else, elseList, ctx);
+    }
+    return el;
+  }
+
+  const row = fieldRow();
+  switch(block.type){
+    case 'led_on':
+      row.appendChild(document.createTextNode('色:'));
+      row.appendChild(colorSelectEl(block.color, v => block.color = v));
+      break;
+    case 'led_off':
+      break;
+    case 'say':
+      row.appendChild(document.createTextNode('内容:'));
+      row.appendChild(textInputEl(block.text, v => block.text = v));
+      break;
+    case 'show_sensor':
+      row.appendChild(document.createTextNode('センサー:'));
+      row.appendChild(sensorSelectEl(ctx.sensors, block.sensor, v => block.sensor = v));
+      break;
+  }
+  if (row.childNodes.length) el.appendChild(row);
+  return el;
+}
+
+function renderBlockList(blocks, listEl, ctx){
+  listEl.innerHTML = '';
+  if (blocks.length === 0){
+    const empty = document.createElement('p');
+    empty.className = 'block-empty';
+    empty.textContent = 'まだブロックがありません';
+    listEl.appendChild(empty);
+  }
+  blocks.forEach((block, idx) => {
+    listEl.appendChild(createBlockElement(block, blocks, idx, ctx));
+  });
+}
+
+function createAddActionRow(containerArray, ctx){
+  const row = document.createElement('div');
+  row.className = 'add-row';
+  const sel = document.createElement('select');
+  ctx.actionDefs.forEach(def => {
+    const opt = document.createElement('option');
+    opt.value = def.type; opt.textContent = def.label;
+    sel.appendChild(opt);
+  });
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.textContent = '＋ 動作ブロックを追加';
+  btn.addEventListener('click', () => {
+    const def = ctx.actionDefs.find(d => d.type === sel.value);
+    const instance = { type: def.type, ...JSON.parse(JSON.stringify(def.defaults)) };
+    if (Object.prototype.hasOwnProperty.call(instance, 'sensor')) instance.sensor = ctx.sensors[0];
+    containerArray.push(instance);
+    ctx.rerender();
+  });
+  row.appendChild(sel);
+  row.appendChild(btn);
+  return row;
+}
+
+function createAddControlRow(ctx){
+  const row = document.createElement('div');
+  row.className = 'add-control-row';
+
+  const ifBtn = document.createElement('button');
+  ifBtn.type = 'button';
+  ifBtn.textContent = '＋ もし〜なら';
+  ifBtn.addEventListener('click', () => {
+    ctx.program.push({ type:'if', sensor: ctx.sensors[0], op:'<', value: ctx.defaultValue, then:[] });
+    ctx.rerender();
+  });
+
+  const ifElseBtn = document.createElement('button');
+  ifElseBtn.type = 'button';
+  ifElseBtn.textContent = '＋ もし〜なら／そうでなければ';
+  ifElseBtn.addEventListener('click', () => {
+    ctx.program.push({ type:'ifelse', sensor: ctx.sensors[0], op:'<', value: ctx.defaultValue, then:[], else:[] });
+    ctx.rerender();
+  });
+
+  row.appendChild(ifBtn);
+  row.appendChild(ifElseBtn);
+  return row;
+}
+
+/* ==================== プレイグラウンドの組み立て ==================== */
+function setupPlayground({ rootId, sensors, defaultValue, samples }){
+  const root = document.getElementById(rootId);
+  const workspaceEl = root.querySelector('.block-workspace');
+  const consoleEl = root.querySelector('.console-output');
+  const sampleRow = root.querySelector('.sample-row');
+  const runOnceBtn = root.querySelector('[data-action="run-once"]');
+  const loopBtn = root.querySelector('[data-action="toggle-loop"]');
+  const ledEl = root.querySelector('.led-lamp');
+
+  const ctx = {
+    sensors,
+    defaultValue,
+    actionDefs: ACTION_DEFS,
+    program: JSON.parse(JSON.stringify(samples[0])),
+    rerender: null
+  };
+
+  ctx.rerender = () => {
+    renderBlockList(ctx.program, workspaceEl, ctx);
+    workspaceEl.appendChild(createAddActionRow(ctx.program, ctx));
+    workspaceEl.appendChild(createAddControlRow(ctx));
+  };
+
+  function log(text){
+    const line = document.createElement('div');
+    line.className = 'console-line';
+    line.textContent = text;
+    consoleEl.appendChild(line);
+    consoleEl.scrollTop = consoleEl.scrollHeight;
+    while (consoleEl.children.length > 40) consoleEl.removeChild(consoleEl.firstChild);
+  }
+
+  function ledApi(){
+    if (!ledEl) return { on(){}, off(){} };
+    return {
+      on(colorKey){ const hex = colorHex(colorKey); ledEl.style.background = hex; ledEl.style.color = hex; ledEl.classList.add('is-on'); },
+      off(){ ledEl.classList.remove('is-on'); ledEl.style.background = ''; }
+    };
+  }
+
+  function highlight(uid){
+    const el = workspaceEl.querySelector('[data-block-uid="' + uid + '"]');
+    if (!el) return;
+    el.classList.remove('block-flash');
+    void el.offsetWidth; // 強制的に再描画させ、連続実行時にもアニメーションを再生させる
+    el.classList.add('block-flash');
+  }
+
+  let timer = null;
+  function execute(){
+    const sensorSnapshot = getSensorSnapshot();
+    runBlocks(ctx.program, sensorSnapshot, { led: ledApi(), log, highlight });
+  }
+  function startLoop(){
+    if (timer) return;
+    timer = setInterval(execute, 400);
+    loopBtn.textContent = 'くり返しを止める';
+    loopBtn.classList.add('is-active');
+  }
+  function stopLoop(){
+    if (timer){ clearInterval(timer); timer = null; }
+    loopBtn.textContent = 'くり返し実行';
+    loopBtn.classList.remove('is-active');
+  }
+
+  runOnceBtn.addEventListener('click', execute);
+  loopBtn.addEventListener('click', () => { timer ? stopLoop() : startLoop(); });
+
+  samples.forEach((sample, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.textContent = 'サンプル' + (i + 1);
+    btn.addEventListener('click', () => {
+      ctx.program = JSON.parse(JSON.stringify(sample));
+      ctx.rerender();
+      log('サンプル' + (i + 1) + 'を読み込みました');
+    });
+    sampleRow.appendChild(btn);
+  });
+
+  ctx.rerender();
+}
+
+/* ==================== サンプルプログラム ==================== */
+const SAMPLES_EXP1 = [
+  [
+    { type:'ifelse', sensor:'brightness', op:'<', value:80, then:[ { type:'led_on', color:'yellow' } ], else:[ { type:'led_off' } ] },
+    { type:'show_sensor', sensor:'brightness' }
+  ],
+  [
+    { type:'if', sensor:'brightness', op:'<', value:60, then:[ { type:'led_on', color:'blue' } ] },
+    { type:'if', sensor:'brightness', op:'>=', value:150, then:[ { type:'led_on', color:'red' } ] },
+    { type:'show_sensor', sensor:'brightness' }
+  ]
+];
+
+const SAMPLES_EXP2 = [
+  [
+    { type:'ifelse', sensor:'accelX', op:'>', value:3, then:[ { type:'led_on', color:'red' }, { type:'say', text:'右にかたむいています' } ], else:[ { type:'led_off' } ] },
+    { type:'show_sensor', sensor:'accelX' }
+  ],
+  [
+    { type:'show_sensor', sensor:'accelX' },
+    { type:'show_sensor', sensor:'accelY' },
+    { type:'show_sensor', sensor:'accelZ' }
+  ]
+];
+
+const SAMPLES_EXP3 = [
+  [
+    { type:'ifelse', sensor:'volume', op:'>', value:50, then:[ { type:'led_on', color:'red' }, { type:'say', text:'大きな音です' } ], else:[ { type:'led_off' } ] },
+    { type:'show_sensor', sensor:'volume' }
+  ],
+  [
+    { type:'show_sensor', sensor:'volume' }
+  ]
+];
+
+const SAMPLES_EXP4 = [
+  [
+    { type:'ifelse', sensor:'distance', op:'<', value:100, then:[ { type:'led_on', color:'green' }, { type:'say', text:'目印の近くにいます' } ], else:[ { type:'led_off' } ] },
+    { type:'show_sensor', sensor:'distance' }
+  ],
+  [
+    { type:'show_sensor', sensor:'lat' },
+    { type:'show_sensor', sensor:'lng' },
+    { type:'show_sensor', sensor:'distance' }
+  ]
+];
+
+const SAMPLES_EXP5 = [
+  [
+    { type:'ifelse', sensor:'orientBeta', op:'>', value:45, then:[ { type:'led_on', color:'blue' }, { type:'say', text:'前にかたむいています' } ], else:[ { type:'led_off' } ] },
+    { type:'show_sensor', sensor:'orientAlpha' }
+  ],
+  [
+    { type:'show_sensor', sensor:'orientAlpha' },
+    { type:'show_sensor', sensor:'orientBeta' },
+    { type:'show_sensor', sensor:'orientGamma' }
+  ]
+];
+
+/* ==================== 初期化 ==================== */
+document.addEventListener('DOMContentLoaded', () => {
+  initCamera();
+  initAccel();
+  initMic();
+  initGeo();
+  initOrient();
+  setupPlayground({ rootId:'pg-exp1', sensors:['brightness'], defaultValue:128, samples: SAMPLES_EXP1 });
+  setupPlayground({ rootId:'pg-exp2', sensors:['accelX','accelY','accelZ'], defaultValue:3, samples: SAMPLES_EXP2 });
+  setupPlayground({ rootId:'pg-exp3', sensors:['volume'], defaultValue:50, samples: SAMPLES_EXP3 });
+  setupPlayground({ rootId:'pg-exp4', sensors:['distance','lat','lng'], defaultValue:100, samples: SAMPLES_EXP4 });
+  setupPlayground({ rootId:'pg-exp5', sensors:['orientAlpha','orientBeta','orientGamma'], defaultValue:90, samples: SAMPLES_EXP5 });
+});
+</script>
+</body>
+</html>
