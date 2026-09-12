@@ -235,7 +235,7 @@ button:disabled{ opacity:.45; cursor:not-allowed; transform:none; box-shadow:non
 .chart-empty{ font-size:12px; color:#9aab93; text-align:center; padding:30px 0; }
 
 .table-wrap{ overflow-x:auto; margin-top:16px; }
-table.records{ border-collapse:collapse; width:100%; font-size:12px; min-width:640px; }
+table.records{ border-collapse:collapse; width:100%; font-size:12px; min-width:920px; }
 table.records th, table.records td{
   border:1px solid var(--border); padding:7px 9px; text-align:center; white-space:nowrap;
 }
@@ -251,7 +251,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
 
   <header class="title-area">
     <h1>🌱 生物育成シミュレーション 〜育てて学ぶ 作物のひみつ〜</h1>
-    <p>「水」「肥料」「日光」「気温」「天気」が、土の中でどうつながって作物を育てるのかを体験しよう。</p>
+    <p>「水」「肥料」「日光」「気温」「天気」が、植物とどうつながっているのかを体験しよう。</p>
   </header>
 
   <!-- ================= モード切り替え ================= -->
@@ -346,7 +346,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
     <section class="card control-card">
 
       <div>
-        <h2>💧🌿 あなたが管理する条件</h2>
+        <h2>💧🌿 管理する条件</h2>
         <div class="slider-group">
           <div class="slider-item">
             <div class="row1">
@@ -354,7 +354,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
               <span class="value-tag" id="waterValue">30%</span>
             </div>
             <input type="range" id="waterSlider" min="0" max="100" step="1" value="30">
-            <div class="range-scale"><span>少ない</span><span>ちょうどよい</span><span>多い</span></div>
+            <div class="range-scale"><span>少ない</span><span>多い</span></div>
           </div>
           <div class="slider-item">
             <div class="row1">
@@ -362,7 +362,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
               <span class="value-tag" id="fertValue">15%</span>
             </div>
             <input type="range" id="fertSlider" min="0" max="100" step="1" value="15">
-            <div class="range-scale"><span>少ない</span><span>ちょうどよい</span><span>多い</span></div>
+            <div class="range-scale"><span>少ない</span><span>多い</span></div>
           </div>
         </div>
       </div>
@@ -402,7 +402,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
 
       <!-- 自然モード専用パネル：日光・気温は季節と天気で自動的に決まる -->
       <div id="naturalPanel" style="display:none;">
-        <h2>🌤 季節・天気で自動的に決まる条件</h2>
+        <h2>🌤 季節・天気で自動的に決まる条件（自然モード）</h2>
         <div class="slider-group">
           <div class="slider-item auto-item">
             <div class="row1">
@@ -434,7 +434,7 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
       </div>
 
       <div>
-        <h2>🕹 操作</h2>
+        <h2>🕹 シミュレーション操作</h2>
         <div class="btn-row">
           <button class="btn-start" id="btnStart">▶ スタート</button>
           <button class="btn-day"  id="btnDay1"  disabled>1日進める</button>
@@ -479,12 +479,13 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
         <thead>
           <tr>
             <th>実験番号</th><th>モード</th><th>水やり</th><th>肥料</th>
+            <th>日光</th><th>気温</th><th>天気</th><th>ランダム</th>
             <th>開始水分</th><th>開始養分</th><th>日数</th>
             <th>終了理由</th><th>最終成長度</th><th>最終水分</th><th>最終養分</th>
           </tr>
         </thead>
         <tbody id="recordsTableBody">
-          <tr><td colspan="11" style="color:#9aab93;">まだ記録がありません。実験を行うとここに追加されます。</td></tr>
+          <tr><td colspan="15" style="color:#9aab93;">まだ記録がありません。実験を行うとここに追加されます。</td></tr>
         </tbody>
       </table>
     </div>
@@ -525,7 +526,7 @@ const MAX_DAILY_GROWTH = 6; // 1日あたりの最大成長量（条件が全て
 const SEASON_LENGTH = 15; // 1つの季節が続く日数
 const SEASONS = [
   { key:'spring', label:'春', icon:'🌸', weights:{ sunny:0.5, cloudy:0.3, rainy:0.2, typhoon:0 }, baseTemp:18, baseSun:65 },
-  { key:'summer', label:'夏', icon:'☀️', weights:{ sunny:0.35, cloudy:0.15, rainy:0.45, typhoon:0.05 }, baseTemp:29, baseSun:82 },
+  { key:'summer', label:'夏', icon:'☀️', weights:{ sunny:0.36, cloudy:0.15, rainy:0.48, typhoon:0.01 }, baseTemp:29, baseSun:82 },
   { key:'autumn', label:'秋', icon:'🍁', weights:{ sunny:0.45, cloudy:0.35, rainy:0.2, typhoon:0 }, baseTemp:17, baseSun:55 },
   { key:'winter', label:'冬', icon:'❄️', weights:{ sunny:0.75, cloudy:0.20, rainy:0.05, typhoon:0 }, baseTemp:6,  baseSun:42 },
 ];
@@ -636,21 +637,29 @@ let state = {
   mode: 'experiment',   // 'experiment' | 'natural'
   started: false,
   ended: false,
+  resultSaved: false,     // この実験の結果をすでに記録したか（二重保存防止）
   day: 0,
   growth: 0,
-  soilWater: 50,          // 土の水分量の初期値（0〜100）
-  soilNutrients: 20,      // 土の養分量の初期値（0〜100）
+  soilWater: 50,          // 土の水分量の初期値（0〜100。スタート時に必ず INITIAL_SOIL_WATER へ戻す）
+  soilNutrients: 20,      // 土の養分量の初期値（0〜100。スタート時に必ず INITIAL_SOIL_NUTRIENTS へ戻す）
   season: null,
   weather: null,
   currentSun: 75,
   currentTemp: 25,
   poorStreak: 0,
   dailyLog: [],           // 今回の実験の毎日の記録（グラフ表示に使用）
+  recordMeta: { sun:'-', temp:'-', weather:'-', randomness:'-' }, // 記録表に表示する固定条件
 };
 
 // 保存された実験結果（表・比較グラフに使用）
 let savedExperiments = [];
 let experimentCounter = 0;
+
+// 実験中は変更できない入力（水やり・肥料・日光・気温・天気・ランダム要素）
+const lockableInputs = [waterSlider, fertSlider, expSunSlider, expTempSlider, expWeatherSelect, noiseToggle];
+function setInputsLocked(locked){
+  lockableInputs.forEach(elm => { elm.disabled = locked; });
+}
 
 // ============================================================
 // 1) 条件のスコア計算（0〜1、山型モデル）
@@ -701,30 +710,62 @@ function decideTodayEnvironment(){
   }
 }
 
+// ---------- 土の初期状態（実験のたびに必ずこの値へ戻す） ----------
+const INITIAL_SOIL_WATER = 50;
+const INITIAL_SOIL_NUTRIENTS = 20;
+
+// ---------- 水分・養分モデルの係数（数値実験で調整済み） ----------
+const SOIL_PARAMS = {
+  waterGainRate: 0.24,      // 水やり量 → 水分の増加率
+  waterUptakeBase: 2.5,     // 植物による水分吸収の基本量（成長段階で変化）
+  waterDrainThreshold: 65,  // これを超えた分だけ排水される（適正範囲では排水なし）
+  waterDrainRate: 0.5,      // 超過分に対する排水の強さ
+
+  fertGainRate: 0.10,       // 肥料量 → 養分の増加率
+  nutrientUptakeBase: 1.0,  // 植物による養分吸収の基本量（成長段階で変化）
+  leachWaterThreshold: 70,  // 土の水分がこれを超えると養分が流れ出し始める
+  leachRate: 0.15,          // 水分超過分に対する養分の溶脱の強さ
+};
+
 // ============================================================
 // 3) 土の水分量・養分量の変化を計算する
 //    「与えた量」と「土の中に残っている量」を分けて扱う
+//
+//    水分の計算（因果関係）：
+//      前日の水分 ＋ 水やり ＋ 雨 － 蒸発 － 植物の吸水 － 排水 ＝ 今日の水分
+//      ※ 排水は「土の水分が適正範囲を超えて多すぎる場合」にだけ発生する。
+//        （水分が少ないときに排水で余計に減ることはない）
+//
+//    養分の計算（因果関係）：
+//      前日の養分 ＋ 肥料 － 植物の吸収 － 溶脱 ＝ 今日の養分
+//      ※ 溶脱は「土の水分が多すぎる（大雨・水のやりすぎ）」場合にだけ発生する。
+//        水やりをしていなくても養分が一方的に減り続けることはない。
 // ============================================================
 function updateSoilState(prevSoilWater, prevSoilNutrients, inputs, env, growth){
   const weather = WEATHER_TYPES[env.weatherKey];
+  const P = SOIL_PARAMS;
 
-  // 植物が大きいほど、水や養分を多く必要とする
+  // 植物が大きいほど、水や養分を多く必要とする（発芽直後は少なく、成長するほど増える）
   const sizeFactor = 0.4 + (growth / 100) * 1.0; // 0.4〜1.4
 
   // ---- 水分の変化 ----
-  const wateringGain = inputs.watering * 0.45;                // 水やりによる増加
-  const rainfallGain = weather.rainfall;                      // 天気による自然の水分（雨など）
-  const evaporation = (2 + env.temp*0.15 + env.sun*0.05) * weather.evapMultiplier; // 蒸発による減少
-  const plantWaterUptake = 2.5 * sizeFactor;                  // 植物が吸収する水分
-  const drainage = prevSoilWater * 0.20;                      // 土の中を通り抜けて流れ出ていく水分（浸透）
+  const wateringGain = inputs.watering * P.waterGainRate;      // 水やりによる増加
+  const rainfallGain = weather.rainfall;                       // 天気による自然の水分（雨など）
+  const evaporation = (2 + env.temp*0.15 + env.sun*0.05) * weather.evapMultiplier; // 蒸発（気温・日光・天気で変化）
+  const plantWaterUptake = P.waterUptakeBase * sizeFactor;     // 植物が吸収する水分
+
+  // 排水：土の水分が「適正範囲を超えて多すぎる」場合にだけ発生する（少ない場合は排水なし）
+  const drainage = Math.max(0, prevSoilWater - P.waterDrainThreshold) * P.waterDrainRate;
 
   let soilWater = prevSoilWater + wateringGain + rainfallGain - evaporation - plantWaterUptake - drainage;
   soilWater = clamp(soilWater, 0, 100);
 
   // ---- 養分の変化 ----
-  const fertilizerGain = inputs.fertilizer * 0.18;             // 肥料による増加
-  const plantNutrientUptake = 2 * sizeFactor;                  // 植物が吸収する養分
-  const leaching = prevSoilNutrients * 0.18;                   // 雨や水やりで流れ出ていく養分（溶脱）
+  const fertilizerGain = inputs.fertilizer * P.fertGainRate;   // 肥料による増加
+  const plantNutrientUptake = P.nutrientUptakeBase * sizeFactor; // 植物が吸収する養分（成長するほど増える）
+
+  // 溶脱：土の水分が多すぎる（大雨・水のやりすぎ）場合にだけ、養分が水と一緒に流れ出る
+  const leaching = Math.max(0, prevSoilWater - P.leachWaterThreshold) * P.leachRate;
 
   let soilNutrients = prevSoilNutrients + fertilizerGain - plantNutrientUptake - leaching;
   soilNutrients = clamp(soilNutrients, 0, 100);
@@ -789,7 +830,15 @@ function calcDailyGrowth(soilWater, soilNutrients, sun, temp){
 
   // 「一番弱い条件」を重視しつつ、平均・相互作用も反映する
   const combined = minScore*0.45 + avgScore*0.35 + interactionScore*0.20;
-  const increment = clamp(MAX_DAILY_GROWTH * combined, -3, MAX_DAILY_GROWTH);
+  let increment = clamp(MAX_DAILY_GROWTH * combined, -3, MAX_DAILY_GROWTH);
+
+  // 致命的な条件（いずれかの条件がほぼ0点）のときは、成長をきっぱり止める。
+  // ただし「1つの条件が少し悪い」程度（例：スコア0.3など）では止まらないよう、
+  // しきい値はごく低い値（0.05）にしている。
+  const CRITICAL_SCORE_THRESHOLD = 0.05;
+  if (minScore < CRITICAL_SCORE_THRESHOLD){
+    increment = Math.min(increment, 0);
+  }
 
   return {
     increment, combined,
@@ -858,7 +907,7 @@ function stageOf(growth){
   if (growth >= 50) return { key:'grown',   label:'🌳 成長した植物' };
   if (growth >= 25) return { key:'small',   label:'🌿 小さな植物' };
   if (growth > 0)   return { key:'sprout',  label:'🌱 芽' };
-  return { key:'seed', label:'🌰 たね（まだ成長していません）' };
+  return { key:'seed', label:'🌰 種（未成長）' };
 }
 
 // ============================================================
@@ -1229,7 +1278,11 @@ function stepDays(n){
 // 10) 実験終了処理（収穫／失敗／台風／生徒による手動終了）と結果表示・記録
 // ============================================================
 function finishSimulation(type){
+  // 複数の終了経路（自動終了・手動終了など）から二重に呼ばれても、
+  // 結果が二重保存されないようにガードする
+  if (state.resultSaved) return;
   state.ended = true;
+  state.resultSaved = true;
   btnDay1.disabled = true;
   btnDay10.disabled = true;
   btnFinish.disabled = true;
@@ -1312,6 +1365,10 @@ function saveExperimentRecord(type){
     mode: state.mode === 'experiment' ? '🧪実験' : '🌦自然',
     watering: inputs.watering,
     fertilizer: inputs.fertilizer,
+    sun: state.recordMeta.sun,
+    temp: state.recordMeta.temp,
+    weather: state.recordMeta.weather,
+    randomness: state.recordMeta.randomness,
     startSoilWater: Math.round(experimentStartSoilWater),
     startSoilNutrients: Math.round(experimentStartSoilNutrients),
     days: state.day,
@@ -1327,12 +1384,13 @@ function saveExperimentRecord(type){
 
 function renderRecordsTable(){
   if (savedExperiments.length === 0){
-    recordsTableBody.innerHTML = '<tr><td colspan="11" style="color:#9aab93;">まだ記録がありません。実験を行うとここに追加されます。</td></tr>';
+    recordsTableBody.innerHTML = '<tr><td colspan="15" style="color:#9aab93;">まだ記録がありません。実験を行うとここに追加されます。</td></tr>';
     return;
   }
   recordsTableBody.innerHTML = savedExperiments.map(r => `
     <tr>
       <td>${r.id}</td><td>${r.mode}</td><td>${r.watering}%</td><td>${r.fertilizer}%</td>
+      <td>${r.sun}</td><td>${r.temp}</td><td>${r.weather}</td><td>${r.randomness}</td>
       <td>${r.startSoilWater}%</td><td>${r.startSoilNutrients}%</td><td>${r.days}日</td>
       <td>${r.endType}</td><td>${r.finalGrowth}%</td><td>${r.finalSoilWater}%</td><td>${r.finalSoilNutrients}%</td>
     </tr>`).join('');
@@ -1503,23 +1561,42 @@ function switchMode(newMode){
 // 13) ボタン操作
 // ============================================================
 function handleStart(){
-  experimentStartSoilWater = state.soilWater;
-  experimentStartSoilNutrients = state.soilNutrients;
-
+  // ---- 実験に影響する状態を、必ずここで完全に初期化する ----
+  // （前回の実験の日数・成長度・土の状態・履歴などが一切残らないようにする）
   state.started = true;
   state.ended = false;
+  state.resultSaved = false;
   state.day = 0;
   state.growth = 0;
+  state.soilWater = INITIAL_SOIL_WATER;
+  state.soilNutrients = INITIAL_SOIL_NUTRIENTS;
   state.poorStreak = 0;
   state.dailyLog = [];
   state.season = state.mode === 'natural' ? 'spring' : null;
   state.weather = state.mode === 'experiment' ? expWeatherSelect.value : null;
 
+  experimentStartSoilWater = state.soilWater;
+  experimentStartSoilNutrients = state.soilNutrients;
+
+  // 記録表に残す「今回固定した条件」を確定する
+  if (state.mode === 'experiment'){
+    state.recordMeta = {
+      sun: Number(expSunSlider.value) + '%',
+      temp: Number(expTempSlider.value) + '℃',
+      weather: WEATHER_TYPES[expWeatherSelect.value].label,
+      randomness: noiseToggle.checked ? 'ON' : 'OFF',
+    };
+  } else {
+    state.recordMeta = { sun:'自動(季節)', temp:'自動(季節)', weather:'自動(変化)', randomness:'自然変動' };
+  }
+
   logBox.innerHTML = '';
   resultOverlay.classList.remove('show');
 
+  // 実験中は、比較実験の条件をそろえるため、条件の入力を一切変更できないようにする
   modeExperimentBtn.disabled = true;
   modeNaturalBtn.disabled = true;
+  setInputsLocked(true);
   btnStart.disabled = true;
   btnDay1.disabled = false;
   btnDay10.disabled = false;
@@ -1534,7 +1611,7 @@ function handleStart(){
   renderCharts();
 
   reasonBox.innerHTML = state.mode === 'experiment'
-    ? '実験を開始しました。「1日進める」または「10日進める」を押して、水分・養分の変化と成長のようすを観察しましょう。'
+    ? '実験を開始しました。条件は固定され、実験中は変更できません。「1日進める」または「10日進める」を押して、水分・養分の変化と成長のようすを観察しましょう。'
     : '栽培を開始しました。季節は春から始まり、天気・日光・気温は自動で変化します。';
   addLog(`🌰 ${state.mode === 'experiment' ? '実験' : '栽培'}を開始しました。（水やり${getManagedInputs().watering}%・肥料${getManagedInputs().fertilizer}%）`);
 }
@@ -1547,11 +1624,12 @@ function handleFinishManually(){
 function handleReset(){
   state = {
     mode: state.mode,
-    started:false, ended:false, day:0, growth:0,
-    soilWater: 50, soilNutrients: 20,
+    started:false, ended:false, resultSaved:false, day:0, growth:0,
+    soilWater: INITIAL_SOIL_WATER, soilNutrients: INITIAL_SOIL_NUTRIENTS,
     season:null, weather:null,
     currentSun: 75, currentTemp: 25,
     poorStreak:0, dailyLog: [],
+    recordMeta: { sun:'-', temp:'-', weather:'-', randomness:'-' },
   };
   waterSlider.value = 30;
   fertSlider.value = 15;
@@ -1562,6 +1640,7 @@ function handleReset(){
 
   modeExperimentBtn.disabled = false;
   modeNaturalBtn.disabled = false;
+  setInputsLocked(false); // 条件を再び変更できるようにする
   btnStart.disabled = false;
   btnDay1.disabled = true;
   btnDay10.disabled = true;
