@@ -118,7 +118,8 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 #insp-body::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:2px; }
 .insp-empty { color:var(--text-muted); font-size:12px; text-align:center; margin-top:40px; line-height:1.8; }
 .insp-sec { margin-bottom:13px; }
-.insp-lbl { font-size:9px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:6px; }
+.insp-lbl { font-size:13px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-muted); margin-bottom:2px; }
+.insp-lbl-desc { font-size:10px; color:var(--text-muted); text-transform:none; letter-spacing:normal; font-weight:400; margin-bottom:6px; line-height:1.4; }
 .insp-axis-badge {
   position:absolute; top:7px; left:8px; display:none;
   font-size:11px; font-weight:700; padding:2px 8px; border-radius:4px;
@@ -279,9 +280,9 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 	<span class="tb-label">材料を追加</span>
   </button>
   <div class="sep"></div>
-  <button class="tb-btn" id="btn-undo" onclick="undo()" disabled title="元に戻す">
+  <button class="tb-btn" id="btn-undo" onclick="undo()" disabled title="1つ戻す">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7A5 5 0 1 0 3.4 3.4"/><path d="M2 3v4h4"/></svg>
-	<span class="tb-label">元に戻す</span>
+	<span class="tb-label">1つ戻す</span>
   </button>
   <button class="tb-btn" id="btn-redo" onclick="redo()" disabled title="やり直す">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 7A5 5 0 1 1 10.6 3.4"/><path d="M12 3v4h-4"/></svg>
@@ -319,16 +320,16 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 
 <div id="main">
   <div id="side">
-	<div class="panel-hd">部材パネル</div>
+	<div class="panel-hd">材料一覧</div>
 	<div id="mat-list"></div>
   </div>
   <div id="canvas-wrap">
 	<canvas id="scene"></canvas>
 	<div id="measure-readout" class="measure-readout" style="display:none;"></div>
-	<div class="hint">左ドラッグ: 視点回転 ／ スクロール: ズーム ／ m: 移動 ／ r: 回転 ／ s: 選択</div>
+	<div class="hint">左ドラッグ: 見る方向を変える ／ スクロール: ズーム ／ m: 移動 ／ r: 回転 ／ s: 選択</div>
   </div>
   <div id="inspector">
-	<div class="panel-hd">プロパティ</div>
+	<div class="panel-hd">材料の編集・加工</div>
 	<div id="insp-body"><p class="insp-empty">部材を選択すると<br>詳細を編集できます</p></div>
   </div>
 </div>
@@ -1241,7 +1242,7 @@ function setHighlight(p, on) {
 function addPiece(name, len, wid, dep, x, z) {
   const p = {
 	id:++mc, name:name||`部材${mc}`,
-	len:+len, wid:+wid, dep:+dep,
+	len:+len, wid:+wid, dep:+dep, origWid:+wid,
 	x: x!==undefined?x:(Math.random()-.5)*3,
 	y:0,
 	z: z!==undefined?z:(Math.random()-.5)*3,
@@ -1258,7 +1259,7 @@ function addPiece(name, len, wid, dep, x, z) {
 function addPieceStock(name, len, wid, dep, parentSeed) {
   const p = {
 	id:++mc, name:name||`残材${mc}`,
-	len:+len, wid:+wid, dep:+dep,
+	len:+len, wid:+wid, dep:+dep, origWid:+wid,
 	x:0, y:0, z:0, rx:0, ry:0, rz:0,
 	seed: parentSeed !== undefined ? parentSeed : mc,
 	stock: true, childRemnantId: null, cornerCuts: [null,null,null,null]
@@ -1358,7 +1359,7 @@ function refreshSide() {
 	const PW=176, PH=36;
 	const stockTag = p.stock ? `<span class="stock-badge">在庫</span>` : '';
 	const wc = woodCSS(p.seed);
-	d.innerHTML=`<div class="mat-name"><span class="color-dot" style="background:${wc.css}"></span>${p.name}<span class="mat-badge">#${p.id}</span>${stockTag}</div><div class="mat-dim">長さ ${p.len} × 奥行 ${p.wid} × 厚み ${p.dep} mm</div><div class="mat-preview-wrap"><canvas width="${PW}" height="${PH}"></canvas></div>`;
+	d.innerHTML=`<div class="mat-name"><span class="color-dot" style="background:${wc.css}"></span>${p.name}<span class="mat-badge">#${p.id}</span>${stockTag}</div><div class="mat-dim">厚み ${p.dep} × 奥行 ${p.wid} × 長さ ${p.len} mm</div><div class="mat-preview-wrap"><canvas width="${PW}" height="${PH}"></canvas></div>`;
 	d.onclick=()=>selectPiece(p);
 	d.ondblclick=()=>{ selectPiece(p); if (p.stock) placeStockPiece(); };
 	if (p.stock) d.title = 'ダブルクリックで配置';
@@ -1401,17 +1402,20 @@ function showInspector(p) {
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">名前</div>
+	  <div class="insp-lbl-desc">部材リストに表示される名称を編集します</div>
 	  <div class="insp-row"><input type="text" id="i-name" value="${p.name}" style="flex:1"></div>
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">サイズ</div>
+	  <div class="insp-lbl-desc">部材の寸法を編集します</div>
+	  <div class="insp-row"><label>厚み</label><input type="number" id="i-dep" value="${p.dep}" min="3" max="100" readonly title="厚みは変更できません"><span class="unit">mm</span></div>
+	  <div class="insp-row"><label>奥行</label><input type="number" id="i-wid" value="${p.wid}" min="10" max="${p.origWid||p.wid}"><span class="unit">mm</span></div>
 	  <div class="insp-row"><label>長さ</label><input type="number" id="i-len" value="${p.len}" min="10" max="3000"><span class="unit">mm</span></div>
 	  <input type="range" id="i-len-slider" min="10" max="${initSliderMax}" step="1" value="${p.len}" class="len-slider">
-	  <div class="insp-row"><label>奥行</label><input type="number" id="i-wid" value="${p.wid}" min="10" max="1000"><span class="unit">mm</span></div>
-	  <div class="insp-row"><label>厚み</label><input type="number" id="i-dep" value="${p.dep}" min="3" max="100" readonly title="厚みは変更できません"><span class="unit">mm</span></div>
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">角の切り取り</div>
+      <div class="insp-lbl-desc">選んだ角を四角く切り欠く加工をします</div>
 	  <div class="corner-picker">
 		<button class="corner-btn" id="cc-btn-3" data-corner="3" title="長さ−側／幅−側"></button>
 		<button class="corner-btn" id="cc-btn-1" data-corner="1" title="長さ＋側／幅−側"></button>
@@ -1424,6 +1428,7 @@ function showInspector(p) {
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">位置</div>
+      <div class="insp-lbl-desc">3D空間内でのこの部材の配置場所を編集します</div>
 	  <div class="insp-row"><label>X</label><input type="number" id="i-x" value="${p.x.toFixed(2)}" step="0.05"><span class="unit">m</span></div>
 	  <input type="range" id="i-x-slider" min="-4" max="4" step="0.01" value="${p.x.toFixed(2)}" class="len-slider">
 	  <div class="insp-row"><label>Y</label><input type="number" id="i-z" value="${p.z.toFixed(2)}" step="0.05"><span class="unit">m</span></div>
@@ -1433,6 +1438,7 @@ function showInspector(p) {
 	</div>
 	<div class="insp-sec">
 	  <div class="insp-lbl">回転（90°単位）</div>
+      <div class="insp-lbl-desc">部材の向きを90°単位で回転させます</div>
 	  <div class="rot-grid">
 		<span class="rot-axis-lbl">X軸</span>
 		<button class="rot-btn" onclick="rotateAxis('x',-90)">−90°</button>
@@ -1454,8 +1460,25 @@ function showInspector(p) {
   const bind = (id, fn) => { const el=document.getElementById(id); if(el) el.addEventListener('input', fn); };
   bind('i-name', ()=>{ if(!sel) return; sel.name=document.getElementById('i-name').value||sel.name; refreshSide(); document.getElementById('st-sel').textContent=sel.name; });
   bind('i-len',  ()=>{ if(!sel) return; sel.len=Math.max(10,+document.getElementById('i-len').value||10); rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); syncLenSlider(); });
-  bind('i-wid',  ()=>{ if(!sel) return; sel.wid=Math.max(10,+document.getElementById('i-wid').value||10); rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide(); });
-  // 厚み(i-dep)は読み取り専用にしたため、変更を反映するバインドは意図的に設けていない。
+  bind('i-wid',  ()=>{
+	if(!sel) return;
+	const widEl = document.getElementById('i-wid');
+	const raw = +widEl.value;
+	if (!raw) return;
+	const maxWid = sel.origWid || sel.wid;
+	const v = Math.min(Math.max(10, raw), maxWid);
+	sel.wid = v;
+	rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide();
+  });
+  document.getElementById('i-wid').addEventListener('change', ()=>{
+	if(!sel) return;
+	const widEl = document.getElementById('i-wid');
+	const maxWid = sel.origWid || sel.wid;
+	const v = Math.min(Math.max(10, +widEl.value || 10), maxWid);
+	widEl.value = v;
+	sel.wid = v;
+	rebuildGeom(sel); applyTransform(sel); setHighlight(sel,true); refreshSide();
+  });
 
   const lenSlider = document.getElementById('i-len-slider');
   function syncLenSlider() {
@@ -2024,12 +2047,31 @@ function toggleHide() {
 }
 
 function setMode(m) {
-  mode=m;
-  document.getElementById('btn-move').classList.toggle('active',m==='move');
-  document.getElementById('btn-rotate').classList.toggle('active',m==='rotate');
-  document.getElementById('st-mode').textContent={select:'選択',move:'移動',rotate:'回転'}[m]||'選択';
-  if (m==='rotate' && sel) createGizmo(sel);
-  else removeGizmo();
+  mode = m;
+
+  const moveBtn = document.getElementById('btn-move');
+  const rotateBtn = document.getElementById('btn-rotate');
+
+  if (moveBtn) {
+    moveBtn.classList.toggle('active', m === 'move');
+  }
+
+  if (rotateBtn) {
+    rotateBtn.classList.toggle('active', m === 'rotate');
+  }
+
+  document.getElementById('st-mode').textContent =
+    {
+      select: '選択',
+      move: '移動',
+      rotate: '回転'
+    }[m] || '選択';
+
+  if (m === 'rotate' && sel) {
+    createGizmo(sel);
+  } else {
+    removeGizmo();
+  }
 }
 function resetCamera() { camTh=0.5; camPh=1.05; camD=7.5; camTgt.set(0,0,0); refreshCam(); }
 
@@ -2150,13 +2192,43 @@ function openAddModal() {
 }
 function closeOv(id) { document.getElementById(id).classList.remove('show'); }
 function submitAdd() {
-  addPiece(
-	document.getElementById('m-name').value,
-	document.getElementById('m-len').value,
-	document.getElementById('m-wid').value,
-	document.getElementById('m-dep').value
-  );
+
+  const name =
+    document.getElementById('m-name').value.trim()
+    || `部材${mc + 1}`;
+
+  const len =
+    Number(document.getElementById('m-len').value);
+
+  const wid =
+    Number(document.getElementById('m-wid').value);
+
+  const dep =
+    Number(document.getElementById('m-dep').value);
+
+  if (
+    !Number.isFinite(len) ||
+    len < 10 ||
+    len > 3000 ||
+
+    !Number.isFinite(wid) ||
+    wid < 10 ||
+    wid > 1000 ||
+
+    !Number.isFinite(dep) ||
+    dep < 3 ||
+    dep > 100
+  ) {
+    showSaveToast(
+      '⚠ サイズを正しい範囲で入力してください'
+    );
+    return;
+  }
+
+  addPiece(name, len, wid, dep);
+
   closeOv('ov-add');
+
   snapshot();
 }
 function showExport() {
