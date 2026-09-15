@@ -107,6 +107,37 @@
   /* ---------- tilt bowl ---------- */
   .tilt-wrap{ text-align:center; }
   .tilt-wrap svg{ width:100%; max-width:200px; }
+
+  /* ---------- 3D tilt / orientation stage ---------- */
+  .scene3d{ position:relative; height:210px; margin:4px auto 2px; perspective:640px; }
+  .floor3d{
+    position:absolute; left:50%; top:76%; width:190px; height:190px; margin:-95px 0 0 -95px;
+    background-image:
+      repeating-linear-gradient(0deg, var(--accent) 0 1px, transparent 1px 20px),
+      repeating-linear-gradient(90deg, var(--accent) 0 1px, transparent 1px 20px);
+    opacity:.16; border-radius:14px; transform:rotateX(78deg);
+  }
+  .glow3d{
+    position:absolute; left:50%; top:76%; width:96px; height:24px; margin:-12px 0 0 -48px;
+    background:radial-gradient(ellipse at center, var(--accent) 0%, transparent 72%);
+    opacity:.4; border-radius:50%; transition:opacity .12s linear, transform .12s linear;
+  }
+  .phone3d{
+    position:absolute; left:50%; top:48%; width:84px; height:150px; margin:-75px 0 0 -42px;
+    transform-style:preserve-3d; transition:transform .12s linear;
+  }
+  .phone3d .face{ position:absolute; border-radius:14px; display:flex; align-items:flex-start; justify-content:center; padding-top:10px; box-sizing:border-box; }
+  .phone3d .front{ width:84px; height:150px; left:0; top:0; background:var(--accent-soft); border:3px solid var(--accent); transform:translateZ(7px); }
+  .phone3d .back{ width:84px; height:150px; left:0; top:0; background:var(--accent); opacity:.9; transform:rotateY(180deg) translateZ(7px); }
+  .phone3d .left, .phone3d .right{ width:14px; height:150px; top:0; background:var(--accent); filter:brightness(.82); }
+  .phone3d .left{ left:35px; transform:rotateY(-90deg) translateZ(42px); }
+  .phone3d .right{ left:35px; transform:rotateY(90deg) translateZ(42px); }
+  .phone3d .top, .phone3d .bottom{ width:84px; height:14px; left:0; background:var(--accent); filter:brightness(.68); }
+  .phone3d .top{ top:68px; transform:rotateX(90deg) translateZ(75px); }
+  .phone3d .bottom{ top:68px; transform:rotateX(-90deg) translateZ(75px); }
+  .face-hint, .compass-n{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:700; color:var(--accent); }
+  .scene-caption{ font-size:12px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6; }
+
   .accel-readouts{ display:flex; justify-content:center; gap:14px; font-family:'JetBrains Mono', monospace; font-size:13px; margin-top:10px; }
   .accel-readouts span b{ color:var(--ink-soft); font-weight:500; }
   .accel-sliders{ margin-top:16px; text-align:left; }
@@ -265,12 +296,19 @@
         <p class="status-line" id="accelStatus">まだセンサーは動いていません</p>
 
         <div class="tilt-wrap">
-          <svg viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" fill="var(--blue-soft)" stroke="var(--blue)" stroke-width="3"/>
-            <line x1="12" y1="100" x2="188" y2="100" stroke="var(--paper-line)" stroke-width="1"/>
-            <line x1="100" y1="12" x2="100" y2="188" stroke="var(--paper-line)" stroke-width="1"/>
-            <circle id="tiltBall" cx="100" cy="100" r="14" fill="var(--blue)"/>
-          </svg>
+          <div class="scene3d" aria-hidden="true">
+            <div class="floor3d"></div>
+            <div class="glow3d" id="accelGlow"></div>
+            <div class="phone3d" id="accelPhone">
+              <div class="face front"><span class="face-hint">画面</span></div>
+              <div class="face back"></div>
+              <div class="face left"></div>
+              <div class="face right"></div>
+              <div class="face top"></div>
+              <div class="face bottom"></div>
+            </div>
+          </div>
+          <p class="scene-caption">スマホを立体的に見たイメージです。x（左右）・y（前後）でかたむき、zの大きさで下の光の広がりが変わります。</p>
           <div class="accel-readouts">
             <span><b>x</b> <span id="accelReadoutX" class="mono">0</span></span>
             <span><b>y</b> <span id="accelReadoutY" class="mono">0</span></span>
@@ -393,17 +431,18 @@
         <p class="status-line" id="orientStatus">まだセンサーは動いていません</p>
 
         <div class="tilt-wrap">
-          <svg viewBox="0 0 200 200">
-            <circle cx="100" cy="100" r="90" fill="var(--indigo-soft)" stroke="var(--indigo)" stroke-width="3"/>
-            <text x="100" y="24" text-anchor="middle" font-size="14" fill="var(--ink-soft)">N</text>
-            <text x="100" y="186" text-anchor="middle" font-size="14" fill="var(--ink-soft)">S</text>
-            <text x="14" y="105" text-anchor="middle" font-size="14" fill="var(--ink-soft)">W</text>
-            <text x="186" y="105" text-anchor="middle" font-size="14" fill="var(--ink-soft)">E</text>
-            <g id="compassNeedle">
-              <line x1="100" y1="100" x2="100" y2="30" stroke="var(--rust)" stroke-width="4" stroke-linecap="round"/>
-              <circle cx="100" cy="100" r="6" fill="var(--ink)"/>
-            </g>
-          </svg>
+          <div class="scene3d" aria-hidden="true">
+            <div class="floor3d"></div>
+            <div class="phone3d" id="orientPhone">
+              <div class="face front"><span class="compass-n">N</span></div>
+              <div class="face back"></div>
+              <div class="face left"></div>
+              <div class="face right"></div>
+              <div class="face top"></div>
+              <div class="face bottom"></div>
+            </div>
+          </div>
+          <p class="scene-caption">alphaで回転（どちらを向いているか）、betaで前後、gammaで左右にスマホがかたむきます。</p>
           <div class="accel-readouts">
             <span><b>alpha</b> <span id="orientReadoutAlpha" class="mono">0</span></span>
             <span><b>beta</b> <span id="orientReadoutBeta" class="mono">0</span></span>
@@ -642,9 +681,21 @@ function showAccelFallback(message){
 function updateAccelVisuals(){
   const cx2 = Math.max(-10, Math.min(10, state.accel.x));
   const cy2 = Math.max(-10, Math.min(10, state.accel.y));
-  const ball = document.getElementById('tiltBall');
-  ball.setAttribute('cx', 100 + (cx2/10) * 76);
-  ball.setAttribute('cy', 100 - (cy2/10) * 76);
+  const cz2 = Math.max(-10, Math.min(10, state.accel.z));
+
+  const phone = document.getElementById('accelPhone');
+  if (phone){
+    const rotY = (cx2 / 10) * 42;   // xが大きいほど左右に大きくかたむく
+    const rotX = -(cy2 / 10) * 42;  // yが大きいほど前後に大きくかたむく
+    phone.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+  }
+  const glow = document.getElementById('accelGlow');
+  if (glow){
+    const t = (cz2 + 10) / 20; // 0〜1に正規化
+    glow.style.opacity = 0.22 + t * 0.55;
+    glow.style.transform = 'scale(' + (0.7 + t * 0.5) + ')';
+  }
+
   document.getElementById('accelReadoutX').textContent = round1(state.accel.x);
   document.getElementById('accelReadoutY').textContent = round1(state.accel.y);
   document.getElementById('accelReadoutZ').textContent = round1(state.accel.z);
@@ -1005,8 +1056,14 @@ function showOrientFallback(message){
 }
 
 function updateOrientVisuals(){
-  const needle = document.getElementById('compassNeedle');
-  if (needle) needle.setAttribute('transform', 'rotate(' + state.orient.alpha + ' 100 100)');
+  const phone = document.getElementById('orientPhone');
+  if (phone){
+    // alpha=回転(Z軸)・beta=前後のかたむき(X軸)・gamma=左右のかたむき(Y軸)
+    phone.style.transform =
+      'rotateZ(' + state.orient.alpha + 'deg) ' +
+      'rotateX(' + state.orient.beta + 'deg) ' +
+      'rotateY(' + state.orient.gamma + 'deg)';
+  }
   document.getElementById('orientReadoutAlpha').textContent = round1(state.orient.alpha);
   document.getElementById('orientReadoutBeta').textContent = round1(state.orient.beta);
   document.getElementById('orientReadoutGamma').textContent = round1(state.orient.gamma);
