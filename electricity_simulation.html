@@ -1,0 +1,1433 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>電力供給シミュレーション</title>
+<style>
+  /* ===== 全体の基本設定 ===== */
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
+    background: linear-gradient(135deg, #e0f7fa 0%, #fff9c4 100%);
+    color: #333;
+    line-height: 1.5;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 12px; }
+
+  /* ===== 2カラムレイアウト（パソコン画面用） ===== */
+  .layout {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .col-left, .col-right {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    width: 100%;
+  }
+  @media (min-width: 860px) {
+    .container { max-width: 1180px; }
+    .layout { flex-direction: row; }
+    .col-left, .col-right { flex: 1 1 0; }
+    .col-right { flex: 1.1 1 0; }
+    .panel { margin-bottom: 12px; }
+  }
+  header { text-align: center; padding: 16px 8px 8px; }
+  header h1 { margin: 0; font-size: 1.7em; color: #f57c00; text-shadow: 1px 1px 0 #fff; }
+  header p.subtitle { margin: 8px 0 0; font-size: 0.95em; color: #555; }
+
+  /* ===== ステップ表示バッジ ===== */
+  .step-badge {
+    display: inline-block;
+    margin: 10px auto 0;
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #fff;
+    background: #29b6f6;
+  }
+  .step-badge.result { background: #ab47bc; }
+  .step-desc { font-size: 0.85em; color: #666; margin-top: 4px; }
+
+  /* ===== パネル共通デザイン ===== */
+  .panel {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+  }
+  .panel h2 {
+    margin: 0 0 10px;
+    font-size: 1.05em;
+    color: #00838f;
+    border-left: 6px solid #00acc1;
+    padding-left: 8px;
+  }
+  .panel.hidden { display: none; }
+
+  /* ===== ミッションパネル ===== */
+  .mission-panel { background: #fff8e1; border: 2px dashed #ffb300; }
+  .mission-panel h2 { color: #e65100; border-left-color: #ffb300; }
+  .mission-list { list-style: none; padding: 0; margin: 0; font-size: 0.92em; }
+  .mission-list li { padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+  .mission-status {
+    display: inline-block; min-width: 22px; text-align: center; font-weight: bold;
+  }
+  .mission-note { font-size: 0.8em; color: #8d6e00; margin-top: 6px; }
+
+  /* ===== 現在の状況 ===== */
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 12px;
+    font-size: 0.95em;
+  }
+  .status-grid div span { font-weight: bold; color: #d84315; }
+  .status-message {
+    margin-top: 10px; padding: 10px; border-radius: 10px;
+    text-align: center; font-weight: bold; font-size: 1.05em;
+  }
+  .msg-danger { background: #ffcdd2; color: #b71c1c; }
+  .msg-warning { background: #ffe0b2; color: #e65100; }
+  .msg-good { background: #c8e6c9; color: #1b5e20; }
+  .msg-excess { background: #d1c4e9; color: #4527a0; }
+
+  /* ===== 発電方法の特徴（折りたたみ） ===== */
+  .feature-details {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    background: #fafafa;
+  }
+  .feature-details summary {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.92em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .feature-details[open] summary { margin-bottom: 6px; }
+  .feature-tag {
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: #fff;
+    margin-left: 6px;
+  }
+  .tag-auto { background: #78909c; }
+  .tag-fixed { background: #5c6bc0; }
+  .tag-manual { background: #43a047; }
+  .feature-list { margin: 0; padding-left: 18px; font-size: 0.85em; color: #555; }
+  .real-share-note { margin: 6px 0 0; font-size: 0.8em; color: #00695c; background: #e0f2f1; border-radius: 6px; padding: 4px 8px; }
+
+  /* ===== お知らせ ===== */
+  #eventText {
+    font-size: 0.95em; padding: 10px 12px; border-radius: 10px;
+    background: #f5f5f5; border: 2px solid #e0e0e0; transition: all 0.3s ease;
+  }
+  #eventText.event-active {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border: 2px solid #ff9800;
+    box-shadow: 0 2px 10px rgba(255, 152, 0, 0.35);
+    animation: eventPop 0.5s ease;
+  }
+  #eventText .event-badge {
+    display: inline-block; background: #ff9800; color: #fff; font-weight: bold;
+    font-size: 0.85em; padding: 2px 10px; border-radius: 12px; margin-bottom: 6px;
+  }
+  @keyframes eventPop {
+    0%   { transform: scale(0.96); opacity: 0.4; }
+    60%  { transform: scale(1.02); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* ===== 予測需要 → 実際の需要 ===== */
+  .actual-demand-block {
+    margin-top: 8px; padding: 8px 10px; background: #ffebee; border-left: 4px solid #e53935;
+    border-radius: 6px; font-size: 0.88em; color: #c62828;
+  }
+  .actual-demand-block.hidden { display: none; }
+
+  /* ===== 発電状況カード ===== */
+  .gen-total-line {
+    font-size: 1em; font-weight: bold; color: #00695c; background: #e0f2f1;
+    border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; text-align: center;
+  }
+  .gen-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .gen-card { border-radius: 12px; padding: 8px 10px; background: #fafafa; border: 2px solid #eee; }
+  .gen-card.auto-card { border-color: #cfd8dc; }
+  .gen-card.manual-card { border-color: #a5d6a7; }
+  .gen-card .gen-title {
+    font-size: 0.92em; font-weight: bold; margin-bottom: 4px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .gen-bar-bg { background: #e0e0e0; border-radius: 8px; height: 14px; overflow: hidden; }
+  .gen-bar-fill { height: 100%; border-radius: 8px; transition: width 0.4s ease; }
+  .gen-value { font-size: 0.85em; color: #555; margin-top: 2px; text-align: right; }
+
+  /* ===== スライダー操作 ===== */
+  .control { margin-bottom: 14px; }
+  .control label { display: block; font-size: 0.95em; margin-bottom: 4px; font-weight: bold; }
+  .control input[type="range"] { width: 100%; height: 26px; }
+  .control input[type="range"]:disabled { opacity: 0.4; }
+  .control .hint { font-size: 0.78em; color: #888; }
+
+  /* ===== 決定ボタン・次へボタン ===== */
+  .action-btn-wrap { text-align: center; margin: 16px 0; }
+  #decideBtn, #nextBtn {
+    background: linear-gradient(135deg, #66bb6a, #43a047);
+    color: white; border: none; padding: 14px 30px; border-radius: 30px;
+    font-size: 1.05em; font-weight: bold; cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  #decideBtn { background: linear-gradient(135deg, #ffa726, #fb8c00); }
+  #nextBtn:active, #decideBtn:active { transform: translateY(2px); }
+  #nextBtn:disabled { background: #bdbdbd; cursor: not-allowed; }
+  #reopenResultBtn {
+    display: inline-block; margin: 0; background: #ab47bc; color: #fff;
+    border: none; padding: 10px 20px; border-radius: 24px; font-size: 0.9em;
+    font-weight: bold; cursor: pointer;
+  }
+  #reopenResultBtn.hidden { display: none; }
+  .post-game-btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+  #restartBtnOutside {
+    display: inline-block; margin: 0; background: #29b6f6; color: #fff;
+    border: none; padding: 10px 20px; border-radius: 24px; font-size: 0.9em;
+    font-weight: bold; cursor: pointer;
+  }
+  #restartBtnOutside.hidden { display: none; }
+
+  /* ===== 評価パネル ===== */
+  .eval-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; font-size: 0.95em; }
+  .eval-grid span { font-weight: bold; color: #6a1b9a; }
+  .total-score {
+    margin-top: 12px; text-align: center; font-size: 1.15em; font-weight: bold;
+    color: #e65100; background: #fff3e0; border-radius: 10px; padding: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .grade-badge {
+    display: inline-block; width: 40px; height: 40px; line-height: 40px;
+    border-radius: 50%; background: #ff7043; color: #fff; font-size: 1.3em; font-weight: bold;
+  }
+  .grade-S { background: #ffd700; color: #7a5c00; }
+  .grade-A { background: #4caf50; }
+  .grade-B { background: #29b6f6; }
+  .grade-C { background: #9e9e9e; }
+
+  /* ===== アドバイス ===== */
+  .advice-list { margin: 8px 0 0; padding-left: 18px; font-size: 0.9em; }
+
+  /* ===== グラフ ===== */
+  .chart {
+    display: flex; align-items: flex-end; justify-content: center; gap: 10px;
+    height: 250px; padding: 10px 6px 0; border-bottom: 2px solid #999; overflow-x: auto;
+  }
+  .chart-column { display: flex; flex-direction: column; align-items: center; min-width: 50px; position: relative; }
+  .bar-wrap {
+    position: relative; width: 30px; height: 220px;
+    display: flex; flex-direction: column-reverse; background: transparent;
+  }
+  .bar-segment { width: 100%; }
+  .demand-line { position: absolute; left: -8px; right: -8px; border-top: 3px dashed #d32f2f; }
+  .chart-label { font-size: 0.75em; margin-top: 4px; text-align: center; color: #555; }
+  .chart-diff { font-size: 0.72em; font-weight: bold; }
+  .diff-pos { color: #2e7d32; }
+  .diff-neg { color: #c62828; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; font-size: 0.8em; }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-color { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .legend-demand { display: inline-block; width: 16px; border-top: 3px dashed #d32f2f; }
+
+  /* ===== 終了モーダル ===== */
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100; }
+  .modal.hidden { display: none; }
+  .modal-content { background: #fff; border-radius: 16px; padding: 20px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal-content h2 { margin-top: 0; color: #f57c00; text-align: center; }
+  #endSummary p { line-height: 1.6; font-size: 0.94em; }
+  #endSummary h3 { font-size: 1em; color: #00838f; margin: 14px 0 4px; }
+  #endSummary ul { margin: 4px 0; padding-left: 20px; font-size: 0.92em; }
+  .end-btn-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
+  #restartBtn, #viewResultBtn {
+    background: #29b6f6; color: white; border: none; padding: 12px 22px;
+    border-radius: 24px; font-size: 0.95em; font-weight: bold; cursor: pointer;
+  }
+  #viewResultBtn { background: #66bb6a; }
+
+  /* ===== スマホ対応 ===== */
+  @media (max-width: 480px) {
+    .status-grid, .eval-grid, .gen-grid { grid-template-columns: 1fr; }
+    header h1 { font-size: 1.35em; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>電力供給シミュレーション</h1>
+    <p class="subtitle">
+      あなたは地域の電力会社の担当者です。<br>
+      「予測 → 計画 → 決定 → 結果 → 振り返り」の流れで、安定性・環境性・経済性のバランスを学びましょう。
+    </p>
+    <div id="stepBadge" class="step-badge">STEP1〜2：状況確認と発電計画</div>
+    <div id="stepDesc" class="step-desc">現在の状況を確認しながら、水力・バイオマス・火力の発電量を計画しましょう。</div>
+  </header>
+
+  <!-- ミッション -->
+  <section class="panel mission-panel">
+    <h2>🎯 今日のミッション</h2>
+    <ul class="mission-list" id="missionList"></ul>
+    <div class="mission-note">※ 「安定供給・環境・経済」の3つをバランスよく高め、S〜Cの評価を目指そう（固定の合格ラインはありません。ランダムイベントが起きても、対応の柔軟さ次第で高評価をねらえます）</div>
+  </section>
+
+  <!-- 説明・用語 -->
+  <section class="panel">
+    <details class="feature-details">
+      <summary>ℹ️ このシミュレーションについて（現実との違い）</summary>
+      <ul class="feature-list">
+        <li>実際の電力需要や発電量はもっと複雑に変化しますが、ここでは学習しやすいように簡単な仕組みにしています。</li>
+        <li>地熱発電・原子力発電は、本当は出力の調整や建設に多くの制約がありますが、このシミュレーションでは「常に一定量を安定して発電するもの」として扱っています。</li>
+        <li>バイオマス発電の燃料は、実際にはもっと複雑な管理が必要ですが、ここでは「使うと減っていく資源」として簡単に表現しています。水力発電の「貯水率」も同じ考え方で、ダムの水を使いすぎると発電できなくなる様子を簡単に表現しています。</li>
+        <li>発電コストやCO2排出量も、実際の発電所ごとの細かい違いを簡略化した「重み」を使って計算しています。</li>
+        <li>水力・バイオマス・火力をすべて0にしても、地熱・原子力（一定量）や太陽光・風力（天候まかせ）だけで需要を上回ってしまうことがあります。これは操作では避けられない「供給過多」で、現実の電力網でも実際に起こる問題です。このような場合、経済性スコアでは「無駄」として減点しないようにしています。</li>
+        <li>各発電方法の「日本の実際の発電量に占める割合」は、資源エネルギー庁が公表している2024年度の実績データをもとにしています。このシミュレーション内の発電量の規模（最大出力）も、この実際の割合に近づけるよう調整しています。</li>
+      </ul>
+    </details>
+    <details class="feature-details">
+      <summary>📖 使われている言葉の説明</summary>
+      <ul class="feature-list">
+        <li><b>電力需要</b>：いま社会全体で必要とされている電力の量。</li>
+        <li><b>総発電量</b>：すべての発電方法の発電量を合計した値。</li>
+        <li><b>電力の過不足</b>：総発電量から電力需要を引いた値。プラスなら発電しすぎ、マイナスなら発電不足。</li>
+        <li><b>再生可能エネルギー</b>：太陽光・風力・水力・地熱・バイオマスなど、自然の力から繰り返し得られるエネルギー。</li>
+        <li><b>CO2排出量</b>：発電するときに出る二酸化炭素の量。地球温暖化に関係する。</li>
+        <li><b>発電コスト</b>：発電にかかる費用。</li>
+        <li><b>安定性</b>：発電量が電力需要にちょうど良く合っているかを表すスコア。</li>
+        <li><b>環境性</b>：CO2排出量や再生可能エネルギーの利用状況から見た、環境への優しさを表すスコア。</li>
+        <li><b>経済性</b>：無駄なく効率よく発電できているかを表すスコア。</li>
+        <li><b>火力発電への依存度</b>：総発電量のうち、火力発電が占める割合。</li>
+        <li><b>貯水率</b>：水力発電に使えるダムの水がどれくらい残っているかを表す割合。発電に使うと減り、0になるとその時間帯は水力発電ができなくなる。</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- 2カラムレイアウト -->
+  <div class="layout">
+    <div class="col-left">
+
+      <!-- STEP1：状況確認 -->
+      <section class="panel">
+        <h2>【STEP1 状況確認】現在の状況</h2>
+        <div class="status-grid">
+          <div>現在の時間：<span id="timeLabel">-</span></div>
+          <div>天気：<span id="weatherLabel">-</span></div>
+          <div>予測需要：<span id="demandLabel">0</span> 万kWh</div>
+          <div>バイオマス燃料残量：<span id="fuelInline">100</span> ％</div>
+          <div>水力の貯水率：<span id="reservoirInline">100</span> ％</div>
+        </div>
+        <div class="gen-bar-bg" style="margin-top:6px;">
+          <div id="fuelBarFill" class="gen-bar-fill" style="width:100%; background:#8BC34A;"></div>
+        </div>
+        <div class="gen-bar-bg" style="margin-top:4px;">
+          <div id="reservoirBarFill" class="gen-bar-fill" style="width:100%; background:#42a5f5;"></div>
+        </div>
+        <div id="eventText" style="margin-top:8px;">今日1日の電力供給が始まります。</div>
+        <div id="actualDemandBlock" class="actual-demand-block hidden">
+          ⚡ イベントの影響で需要が変化 → <b>実際の需要：<span id="actualDemandLabel">0</span> 万kWh</b>
+        </div>
+      </section>
+
+      <!-- 発電方法の特徴 -->
+      <section class="panel">
+        <h2>発電方法の特徴（タップで詳細）</h2>
+        <div id="featureAccordion"></div>
+      </section>
+
+      <!-- 発電状況 -->
+      <section class="panel">
+        <h2>発電状況</h2>
+        <div class="gen-total-line">現在の総発電量：<span id="genTotalLabel">0</span> 万kWh</div>
+        <div class="gen-grid" id="genGrid"></div>
+      </section>
+
+    </div>
+    <div class="col-right">
+
+      <!-- STEP2：発電計画 -->
+      <section class="panel">
+        <h2>【STEP2 発電計画】発電量を調整しよう</h2>
+        <div class="control">
+          <label>💧 水力発電：<span id="hydroVal">0</span> 万kWh</label>
+          <input type="range" id="hydroSlider" min="0" max="20" value="8" step="1">
+          <div class="hint">発電量を調整しやすい電源ですが、使いすぎると貯水率が下がり発電できなくなります。</div>
+        </div>
+        <div class="control">
+          <label>🌳 バイオマス発電：<span id="biomassVal">0</span> 万kWh</label>
+          <input type="range" id="biomassSlider" min="0" max="12" value="5" step="1">
+          <div class="hint">燃料には限りがあります。使いすぎに注意しましょう。</div>
+        </div>
+        <div class="control">
+          <label>🔥 火力発電：<span id="thermalVal">0</span> 万kWh</label>
+          <input type="range" id="thermalSlider" min="0" max="110" value="15" step="1">
+          <div class="hint">調整しやすい反面、CO2排出量とコストが多くなります。</div>
+        </div>
+      </section>
+
+      <!-- STEP3：決定ボタン -->
+      <div class="action-btn-wrap">
+        <div style="font-size:0.8em; color:#888; margin-bottom:6px;">
+          ⚠️ 「決定する」を押すと、この時間帯の発電量は変更できません。よく確認してから押しましょう。
+        </div>
+        <button id="decideBtn">✅ この発電計画で決定する</button>
+        <button id="nextBtn" style="display:none;">▶ 次の時間へ</button>
+        <div class="post-game-btn-row">
+          <button id="reopenResultBtn" class="hidden">🏁 最終結果をもう一度見る</button>
+          <button id="restartBtnOutside" class="hidden">🔄 もう一度プレイする</button>
+        </div>
+      </div>
+
+      <!-- STEP4：結果発表 -->
+      <section class="panel hidden" id="resultPanel">
+        <h2>【STEP4 結果発表】</h2>
+        <div class="status-grid">
+          <div>総発電量：<span id="totalLabel">0</span> 万kWh</div>
+          <div>電力の過不足：<span id="balanceLabel">0</span> 万kWh</div>
+          <div>CO2排出量：<span id="co2Label">0</span></div>
+          <div>発電コスト：<span id="costLabel">0</span></div>
+          <div>再エネ割合：<span id="renewableLabel">0</span>%</div>
+          <div>火力の割合：<span id="thermalShareLabel">0</span>%</div>
+        </div>
+        <div id="statusMessage" class="status-message">-</div>
+
+        <div class="eval-grid" style="margin-top:12px;">
+          <div>安定性：<span id="stabilityScore">0</span> 点</div>
+          <div>環境性：<span id="envScore">0</span> 点</div>
+          <div>経済性：<span id="econScore">0</span> 点</div>
+        </div>
+        <div class="total-score">
+          総合スコア：<span id="totalScore">0</span> 点
+          <span class="grade-badge" id="gradeBadge">-</span>
+        </div>
+      </section>
+
+      <!-- STEP5：振り返り -->
+      <section class="panel hidden" id="advicePanel">
+        <h2>【STEP5 振り返り】このコマから学べること</h2>
+        <ul class="advice-list" id="adviceList"></ul>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- グラフ -->
+  <section class="panel">
+    <h2>【電力供給の記録】</h2>
+    <div class="chart" id="chart"></div>
+    <div class="legend" id="legend"></div>
+  </section>
+
+</div>
+
+<!-- 終了モーダル -->
+<div class="modal hidden" id="endModal">
+  <div class="modal-content">
+    <h2>🌙 1日の電力供給、お疲れさまでした！</h2>
+    <div id="endSummary"></div>
+    <div class="end-btn-row">
+      <button id="viewResultBtn">📊 結果を見る</button>
+      <button id="restartBtn">もう一度プレイする</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================
+   電力供給シミュレーション（改善版）
+   すべて日本語コメント付きで、初心者にも分かりやすく書いています。
+
+   【学習の流れ】
+   STEP1 状況確認 → STEP2 発電計画 → STEP3 計画決定 →
+   STEP4 結果発表 → STEP5 振り返り
+   という流れで、生徒が「予測 → 計画 → 決定 → 結果 → 振り返り」を
+   体験できるように設計しています。
+   ========================================================== */
+
+/* ---------------------------------------------------------
+   1．発電方法の設定データ
+   co2  : 1万kWhあたりのCO2排出の重み（大きいほどCO2が多い）
+   cost : 1万kWhあたりの発電コストの重み（大きいほどコストが高い）
+--------------------------------------------------------- */
+const SOURCES = [
+  {
+    key: "hydro", name: "水力発電", icon: "💧", color: "#2196F3",
+    renewable: true, co2: 0.05, cost: 1.0, controllable: true, variesWithWeather: false, maxCapacity: 20,
+    realShare: "約7.6%",
+    features: ["発電量を人の手である程度調整できる", "ダムの貯水量には限りがあり、使いすぎると発電できなくなる", "日本では再エネの中でも歴史が長く一定の規模がある"]
+  },
+  {
+    key: "biomass", name: "バイオマス発電", icon: "🌳", color: "#8BC34A",
+    renewable: true, co2: 0.15, cost: 1.2, controllable: true, variesWithWeather: false, maxCapacity: 12,
+    realShare: "約4.1%",
+    features: ["木材や植物などの資源を燃料にする", "燃料には限りがある", "日本ではまだ規模の小さい発電方法"]
+  },
+  {
+    key: "thermal", name: "火力発電", icon: "🔥", color: "#E57373",
+    renewable: false, co2: 0.80, cost: 2.0, controllable: true, variesWithWeather: false, maxCapacity: 110,
+    realShare: "約67.5%",
+    features: ["発電量を素早く調整しやすい", "電力が足りない時の調整役になりやすい", "日本の電力の半分以上を占めるが、CO2排出量が多くコストも高い"]
+  },
+  {
+    key: "solar", name: "太陽光発電", icon: "☀️", color: "#FFC107",
+    renewable: true, co2: 0.02, cost: 0.5, controllable: false, variesWithWeather: true, maxCapacity: 28,
+    realShare: "約9.8%",
+    features: ["天気や時間帯の影響を強く受ける", "夜間は発電量が0になる", "近年、日本の再エネの中で最も導入が進んでいる"]
+  },
+  {
+    key: "wind", name: "風力発電", icon: "🌬️", color: "#4FC3F7",
+    renewable: true, co2: 0.02, cost: 0.5, controllable: false, variesWithWeather: true, maxCapacity: 6,
+    realShare: "約1.1%",
+    features: ["風の強さによって発電量が変わる", "強風の日は発電量が多い", "日本ではまだ導入量が少ない発電方法"]
+  },
+  {
+    key: "geo", name: "地熱発電", icon: "🌋", color: "#FF7043",
+    renewable: true, co2: 0.06, cost: 1.0, controllable: false, variesWithWeather: false, maxCapacity: 3,
+    realShare: "約0.3%",
+    features: ["天気や時間帯に影響されにくい", "昼夜を問わず安定して発電できる（このシミュレーションでは常に一定量）", "資源はあるが、日本ではごくわずかな規模にとどまっている"]
+  },
+  {
+    key: "nuclear", name: "原子力発電", icon: "⚛️", color: "#BA68C8",
+    renewable: false, co2: 0.10, cost: 1.3, controllable: false, variesWithWeather: false, maxCapacity: 12,
+    realShare: "約9.4%",
+    features: ["少ないCO2で大量の電力を安定供給できる", "発電量を急に変えるのは難しい", "震災後、稼働する発電所が減り、以前より小さな割合になっている"]
+  }
+];
+
+/* ---------------------------------------------------------
+   2．時間帯・電力需要の設定
+--------------------------------------------------------- */
+// バイオマス燃料の「満タン量」。バイオマスの最大出力（12）に合わせて比例調整している
+const BIOMASS_FUEL_MAX = 29;
+
+// 水力発電の「貯水率」の満タン量。ダムの貯水量には限りがあり、使いすぎると
+// 水位が下がって発電できなくなることを表現している。水力の最大出力（20）の
+// 3倍にしており、毎時間帯フルに使い続けると3コマ分でちょうど空になる計算。
+const HYDRO_RESERVOIR_MAX = 60;
+
+const TIME_LABELS = ["朝", "昼", "夕方", "夜"];
+// 時間帯ごとの電力需要の基本値：朝→昼→夕方と増加し、夕方にピークを迎え、夜間に低下する
+// という、日本の典型的な1日の需要カーブを意識している。
+const DEMAND_BASE = [70, 100, 120, 55];
+
+/* ---------------------------------------------------------
+   3．天気の設定
+   1日の天気には「連続性」を持たせるため、
+   あらかじめ4つのパターンを用意し、そこからランダムに1つを選ぶ。
+--------------------------------------------------------- */
+const WEATHER_FACTOR = {
+  "晴れ":     { solar: 1.0, wind: 0.35 },
+  "くもり":   { solar: 0.5, wind: 0.55 },
+  "雨":       { solar: 0.2, wind: 0.6 },
+  "風が弱い": { solar: 0.7, wind: 0.2 },
+  "強風":     { solar: 0.6, wind: 1.0 }
+};
+const WEATHER_PATTERNS = [
+  { name: "晴れの日",   sequence: ["晴れ", "晴れ", "くもり", "くもり"] },
+  { name: "雨の日",     sequence: ["くもり", "雨", "雨", "雨"] },
+  { name: "風の強い日", sequence: ["風が弱い", "強風", "強風", "風が弱い"] },
+  { name: "穏やかな日", sequence: ["くもり", "晴れ", "晴れ", "くもり"] }
+];
+/* 太陽光の「時間帯による発電しやすさ」（0〜1）：朝・昼・夕方・夜 */
+const SOLAR_TIME_FACTOR = [0.4, 1.0, 0.35, 0.0];
+
+/* ---------------------------------------------------------
+   4．ランダムイベントの設定
+   ※天気と矛盾しないように、それぞれ「発生条件」を持たせている。
+--------------------------------------------------------- */
+const EVENTS = [
+  {
+    id: "cloud",
+    condition: (s) => s.weather === "晴れ",
+    text: "☁️ 空に雲が増えてきました。天気が「くもり」に変わり、太陽光発電量が減少します。",
+    effect: (s) => { s.weather = "くもり"; }
+  },
+  {
+    id: "heatwave",
+    condition: (s) => s.timeIndex === 1 || s.timeIndex === 2,
+    text: "🥵 猛暑のため、冷房の利用が増えて電力需要が急増しました！",
+    effect: (s) => { s.demand += 18; }
+  },
+  {
+    id: "coldwave",
+    condition: (s) => s.timeIndex === 0 || s.timeIndex === 3,
+    text: "🥶 冷え込みが厳しく、暖房の利用で電力需要が増加しました！",
+    effect: (s) => { s.demand += 14; }
+  },
+  {
+    id: "biomassDelay",
+    condition: (s) => s.biomassFuel > 15,
+    text: "⚠️ バイオマス燃料の運搬が遅れています。燃料を大切に使いましょう。",
+    effect: (s) => { s.biomassFuel = Math.max(0, s.biomassFuel - 5); }
+  }
+];
+
+/* ---------------------------------------------------------
+   5．安定性スコアの基準点
+   0〜10％の余裕（適切な予備力）を中心に最も高くなるように設計。
+--------------------------------------------------------- */
+const STABILITY_ANCHORS = [
+  [-1.00, 0], [-0.50, 8], [-0.20, 25], [-0.05, 70],
+  [0.00, 92], [0.05, 100], [0.10, 92], [0.25, 65], [0.50, 35], [1.00, 10]
+];
+
+/* ---------------------------------------------------------
+   6．ミッション（評価軸）の設定
+   ---------------------------------------------------------
+   修正前は「再エネ50％以上」「火力30％以下」のような固定の
+   数値ラインで○×判定していた。しかし、この方式だと、
+   　・雨の日パターンに当たった（太陽光が少ない）
+   　・ランダムイベントで需要が増えた
+   など、生徒の判断とは関係のない「運」によって判定が
+   ひっくり返ってしまう問題があった。
+
+   そこで、○×の二択ではなく、calculateStats()で時間帯ごとに
+   計算している「安定性・環境性・経済性」スコア（0〜100点、
+   なだらかに変化する）の1日平均を使い、S・A・B・Cの
+   4段階で評価する方式に変更した。
+   なだらかなスコアなので、1回のイベントだけで評価が
+   大きく跳ね上がったり落ちたりすることはなく、
+   「1日を通してどれだけ適切に対応できたか」が反映される。
+--------------------------------------------------------- */
+const MISSIONS = [
+  {
+    id: "stability", icon: "⚡", label: "安定供給",
+    text: "需要に対して発電量を過不足なく供給できたか",
+    getScore: (s) => s.avgStability
+  },
+  {
+    id: "env", icon: "🌱", label: "環境",
+    text: "再生可能エネルギーを活用し、CO2排出を抑えられたか",
+    getScore: (s) => s.avgEnv
+  },
+  {
+    id: "econ", icon: "💰", label: "経済",
+    text: "発電しすぎず、燃料や資源を無駄なく使えたか",
+    getScore: (s) => s.avgEcon
+  }
+];
+
+/* ---------------------------------------------------------
+   7．ゲーム全体の状態
+--------------------------------------------------------- */
+const state = {
+  timeIndex: 0,
+  weather: "晴れ",
+  weatherPatternName: "",
+  _weatherSequence: null,
+  demand: 0,
+  output: { solar: 0, wind: 0, hydro: 15, geo: 3, biomass: 10, thermal: 10, nuclear: 12 },
+  biomassFuel: BIOMASS_FUEL_MAX,
+  hydroReservoir: HYDRO_RESERVOIR_MAX,
+  pendingEventResult: null, // 決定するまで隠しておくイベント結果
+  history: [],
+  outageCount: 0,
+  phase: "planning", // "planning" / "result" / "ended"
+  gameOver: false
+};
+
+/* ---------------------------------------------------------
+   8．DOM要素の取得
+--------------------------------------------------------- */
+const el = (id) => document.getElementById(id);
+const timeLabel = el("timeLabel");
+const weatherLabel = el("weatherLabel");
+const demandLabel = el("demandLabel");
+const actualDemandBlock = el("actualDemandBlock");
+const actualDemandLabel = el("actualDemandLabel");
+const fuelInline = el("fuelInline");
+const fuelBarFill = el("fuelBarFill");
+const reservoirInline = el("reservoirInline");
+const reservoirBarFill = el("reservoirBarFill");
+const eventText = el("eventText");
+const featureAccordion = el("featureAccordion");
+const genGrid = el("genGrid");
+const genTotalLabel = el("genTotalLabel");
+const missionList = el("missionList");
+const hydroSlider = el("hydroSlider");
+const biomassSlider = el("biomassSlider");
+const thermalSlider = el("thermalSlider");
+const hydroVal = el("hydroVal");
+const biomassVal = el("biomassVal");
+const thermalVal = el("thermalVal");
+const decideBtn = el("decideBtn");
+const nextBtn = el("nextBtn");
+const reopenResultBtn = el("reopenResultBtn");
+const restartBtnOutside = el("restartBtnOutside");
+const resultPanel = el("resultPanel");
+const advicePanel = el("advicePanel");
+const totalLabel = el("totalLabel");
+const balanceLabel = el("balanceLabel");
+const co2LabelEl = el("co2Label");
+const costLabelEl = el("costLabel");
+const renewableLabelEl = el("renewableLabel");
+const thermalShareLabelEl = el("thermalShareLabel");
+const statusMessage = el("statusMessage");
+const stabilityScoreEl = el("stabilityScore");
+const envScoreEl = el("envScore");
+const econScoreEl = el("econScore");
+const totalScoreEl = el("totalScore");
+const gradeBadgeEl = el("gradeBadge");
+const adviceList = el("adviceList");
+const chartEl = el("chart");
+const legendEl = el("legend");
+const stepBadge = el("stepBadge");
+const stepDesc = el("stepDesc");
+const endModal = el("endModal");
+const endSummary = el("endSummary");
+const restartBtn = el("restartBtn");
+const viewResultBtn = el("viewResultBtn");
+
+/* ---------------------------------------------------------
+   9．便利関数
+--------------------------------------------------------- */
+function clamp(value, min, max) { return Math.min(Math.max(value, min), max); }
+function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pickRandom(arr) { return arr[randomInt(0, arr.length - 1)]; }
+
+function interpolateAnchors(anchors, x) {
+  if (x <= anchors[0][0]) return anchors[0][1];
+  const last = anchors[anchors.length - 1];
+  if (x >= last[0]) return last[1];
+  for (let i = 0; i < anchors.length - 1; i++) {
+    const [x1, y1] = anchors[i];
+    const [x2, y2] = anchors[i + 1];
+    if (x >= x1 && x <= x2) {
+      const t = (x - x1) / (x2 - x1);
+      return y1 + (y2 - y1) * t;
+    }
+  }
+  return last[1];
+}
+function scoreToGrade(score) {
+  if (score >= 90) return "S";
+  if (score >= 75) return "A";
+  if (score >= 55) return "B";
+  return "C";
+}
+
+/* ---------------------------------------------------------
+   10．天気・需要・自動発電の計算
+--------------------------------------------------------- */
+function chooseWeatherPattern() {
+  const pattern = pickRandom(WEATHER_PATTERNS);
+  state.weatherPatternName = pattern.name;
+  state._weatherSequence = pattern.sequence;
+  state.weather = pattern.sequence[0];
+}
+function applyWeatherForCurrentPeriod() {
+  state.weather = state._weatherSequence[state.timeIndex];
+}
+function computeDemandForPeriod() {
+  state.demand = DEMAND_BASE[state.timeIndex] + randomInt(-5, 5);
+  // イベント発生前の「予測値」として別に保持しておく。
+  // ランダムイベント（猛暑・寒波など）でstate.demandが変化しても、
+  // forecastDemandは変えないことで「予測」と「実際」を区別できるようにする。
+  state.forecastDemand = state.demand;
+}
+function computeAutoOutputs() {
+  const factor = WEATHER_FACTOR[state.weather];
+  const solarTime = SOLAR_TIME_FACTOR[state.timeIndex];
+  const solarSrc = SOURCES.find((s) => s.key === "solar");
+  const windSrc = SOURCES.find((s) => s.key === "wind");
+
+  if (solarTime <= 0) {
+    state.output.solar = 0; // 夜は必ず0
+  } else {
+    const solarBase = solarSrc.maxCapacity * solarTime * factor.solar;
+    state.output.solar = Math.round(clamp(solarBase * (0.9 + Math.random() * 0.2), 0, solarSrc.maxCapacity));
+  }
+  const windBase = windSrc.maxCapacity * factor.wind;
+  state.output.wind = Math.round(clamp(windBase * (0.85 + Math.random() * 0.3), 0, windSrc.maxCapacity));
+}
+function computeStableOutputs() {
+  // 修正：以前はここが15・30に固定されており、SOURCESのmaxCapacityを
+  // 日本の実際の割合に合わせて変更しても、実際の出力（発電状況の表示）には
+  // 反映されないというバグがあった。SOURCESの値を直接参照するように修正。
+  state.output.geo = SOURCES.find((s) => s.key === "geo").maxCapacity;
+  state.output.nuclear = SOURCES.find((s) => s.key === "nuclear").maxCapacity;
+}
+
+/* ---------------------------------------------------------
+   11．バイオマス燃料とスライダーの整合性を保つ
+--------------------------------------------------------- */
+const BIOMASS_MAX_CAPACITY = SOURCES.find((s) => s.key === "biomass").maxCapacity;
+function syncBiomassLimit() {
+  // 修正：以前はここが25に固定されており、SOURCESのmaxCapacityを
+  // 10に変更しても、実際にはバイオマスが最大24（燃料残量による上限）まで
+  // 出力できてしまうバグがあった。SOURCESの値を上限として使うように修正。
+  const maxByFuel = Math.max(0, Math.min(BIOMASS_MAX_CAPACITY, Math.floor(state.biomassFuel)));
+  biomassSlider.max = maxByFuel;
+  biomassSlider.disabled = maxByFuel <= 0;
+  if (Number(biomassSlider.value) > maxByFuel) {
+    biomassSlider.value = maxByFuel;
+  }
+  state.output.biomass = clamp(Number(biomassSlider.value), 0, maxByFuel);
+}
+const HYDRO_MAX_CAPACITY = SOURCES.find((s) => s.key === "hydro").maxCapacity;
+const THERMAL_MAX_CAPACITY = SOURCES.find((s) => s.key === "thermal").maxCapacity;
+function syncHydroLimit() {
+  // バイオマスの燃料残量と同じ考え方で、水力も「貯水率」による上限を設ける。
+  // 使いすぎるとダムの水位が下がり、それ以上は発電できなくなる。
+  const maxByReservoir = Math.max(0, Math.min(HYDRO_MAX_CAPACITY, Math.floor(state.hydroReservoir)));
+  hydroSlider.max = maxByReservoir;
+  hydroSlider.disabled = maxByReservoir <= 0;
+  if (Number(hydroSlider.value) > maxByReservoir) {
+    hydroSlider.value = maxByReservoir;
+  }
+  state.output.hydro = clamp(Number(hydroSlider.value), 0, maxByReservoir);
+}
+function readSlidersIntoState() {
+  syncHydroLimit();
+  syncBiomassLimit();
+  state.output.thermal = clamp(Number(thermalSlider.value), 0, THERMAL_MAX_CAPACITY);
+}
+
+/* ---------------------------------------------------------
+   12．結果の計算
+--------------------------------------------------------- */
+function calculateStats() {
+  const output = state.output;
+  let total = 0, co2Total = 0, costTotal = 0, renewableTotal = 0;
+
+  SOURCES.forEach((src) => {
+    const val = output[src.key] || 0;
+    total += val;
+    co2Total += val * src.co2;
+    costTotal += val * src.cost;
+    if (src.renewable) renewableTotal += val;
+  });
+
+  const balance = total - state.demand;
+  const renewablePercent = total > 0 ? Math.round((renewableTotal / total) * 100) : 0;
+  const thermalPercent = total > 0 ? Math.round((output.thermal / total) * 100) : 0;
+  const ratio = state.demand > 0 ? balance / state.demand : 0;
+
+  const stability = Math.round(clamp(interpolateAnchors(STABILITY_ANCHORS, ratio), 0, 100));
+  let status;
+  // 「適切な予備力」は、需要をきちんと満たせている場合（ratio >= 0）のみとする。
+  // 需要を1％でも下回っていれば、それは「不足」として扱う（電力不足を「適切」と表示しないため）。
+  // 「停電」の判定ラインは、従来は-20%（かなり大きな不足）だったが、
+  // それでは現実の停電（電力不足による計画停電・大規模停電）よりずっと厳しい基準になってしまうため、
+  // -10%（需要の1割を満たせない）に引き下げている。
+  if (ratio <= -0.10) status = "outage";
+  else if (ratio < 0) status = "shortage";
+  else if (ratio <= 0.10) status = "optimal";
+  else if (ratio <= 0.25) status = "surplus";
+  else status = "overproduction";
+  const isOutage = status === "outage";
+
+  const co2PerUnit = total > 0 ? co2Total / total : 0;
+  const envBase = 100 - co2PerUnit * 90 - thermalPercent * 0.3;
+  const env = Math.round(clamp(envBase * 0.6 + renewablePercent * 0.4, 0, 100));
+
+  const costPerUnit = total > 0 ? costTotal / total : 0;
+  // 水力・バイオマス・火力をすべて0にしても、地熱・原子力（一定量）や
+  // 太陽光・風力（天候まかせ）だけで需要を上回ってしまうことがある。
+  // これは生徒の判断では避けられない「供給過多」なので、経済性スコアの
+  // 「無駄」のペナルティは、生徒が操作できる発電量（controllableTotal）が
+  // 0より大きい場合に限って適用する（0の場合は、無駄ではなく避けられない過多として扱う）。
+  const controllableTotal = (output.hydro || 0) + (output.biomass || 0) + (output.thermal || 0);
+  const isUnavoidableSurplus = controllableTotal === 0 && balance > 0;
+  const wasteRatio = (!isUnavoidableSurplus && state.demand > 0)
+    ? Math.max(0, total - state.demand) / state.demand
+    : 0;
+  const econ = Math.round(clamp(100 - (costPerUnit - 0.5) * 40 - wasteRatio * 60, 0, 100));
+
+  let totalScore = Math.round(stability * 0.4 + env * 0.3 + econ * 0.3);
+  // 電力不足（特に停電）は、CO2やコストの数値がどれだけ良くても
+  // 「電力を安定して届けられなかった」という重大な問題であるため、
+  // 総合スコアに上限を設けて、安定供給の大切さが正しく伝わるようにする。
+  if (status === "outage") {
+    totalScore = Math.min(totalScore, 20);
+  } else if (status === "shortage") {
+    totalScore = Math.min(totalScore, 50);
+  }
+  const grade = scoreToGrade(totalScore);
+
+  return {
+    total, co2Total, costTotal, renewablePercent, thermalPercent,
+    balance, ratio, status, isOutage, isUnavoidableSurplus, stability, env, econ, totalScore, grade
+  };
+}
+
+/* ---------------------------------------------------------
+   13．状況メッセージ
+--------------------------------------------------------- */
+const STATUS_MESSAGE_MAP = {
+  outage:         { text: "🚨 停電発生！ 発電量が大きく足りていません！", cls: "msg-danger" },
+  shortage:       { text: "⚡ 電力不足！ もう少し発電量を増やす必要があります。", cls: "msg-warning" },
+  optimal:        { text: "✅ 適切な予備力！ 安定した供給ができています。", cls: "msg-good" },
+  surplus:        { text: "🙂 少し余裕があります。無駄がないか確認しましょう。", cls: "msg-excess" },
+  overproduction: { text: "🌀 電力を作りすぎています。コストの無駄が発生しています。", cls: "msg-excess" }
+};
+const UNAVOIDABLE_SURPLUS_MESSAGE = {
+  text: "🌤️ 水力・バイオマス・火力を0にしても、地熱・原子力や天候まかせの太陽光・風力だけで需要を上回りました。これは操作では避けられない供給過多です（現実の電力網でも起こりうる問題です）。",
+  cls: "msg-excess"
+};
+function getStatusMessage(stats) {
+  if (stats.isUnavoidableSurplus) return UNAVOIDABLE_SURPLUS_MESSAGE;
+  return STATUS_MESSAGE_MAP[stats.status];
+}
+
+/* ---------------------------------------------------------
+   14．振り返りアドバイス
+--------------------------------------------------------- */
+function getAdviceMessages(stats) {
+  const messages = [];
+  const output = state.output;
+  const shortageAmount = Math.abs(Math.min(0, stats.balance));
+  const excessAmount = Math.max(0, stats.balance);
+
+  if (stats.status === "outage" || stats.status === "shortage") {
+    messages.push(`発電量が電力需要より ${shortageAmount} 万kWh 足りませんでした（総発電量 ${stats.total} 万kWh／電力需要 ${state.demand} 万kWh）。水力・バイオマス・火力など、発電量を調整できる電源をもう少し増やす必要がありそうです。`);
+  }
+  if (output.thermal > 0 && stats.thermalPercent >= 45) {
+    messages.push(`火力発電への依存度が ${stats.thermalPercent}％ と高くなっています。CO2排出量やコストが増える原因になるため、他の電源との組み合わせを見直してみましょう。`);
+  }
+  if (stats.isUnavoidableSurplus) {
+    messages.push(`水力・バイオマス・火力をすべて0にしても、発電量が電力需要より ${excessAmount} 万kWh 多くなりました。これは地熱・原子力・太陽光・風力だけで起きた、操作では避けられない供給過多です。次の時間帯の天気や需要の変化に注目してみましょう。`);
+  } else if (stats.status === "overproduction") {
+    messages.push(`電力不足はありませんでしたが、発電量が電力需要より ${excessAmount} 万kWh 多くなっています。使われない電力にも発電コストがかかるため、次はもう少し発電量を減らせないか考えてみましょう。`);
+  } else if (stats.status === "surplus") {
+    messages.push(`発電量が電力需要より ${excessAmount} 万kWh 多く、少し発電しすぎているようです。次はもう少し発電量を減らせないか考えてみましょう。`);
+  }
+  if (stats.renewablePercent >= 60) {
+    messages.push(`再生可能エネルギーを ${stats.renewablePercent}％ 利用できました。しかし太陽光・風力は天候によって発電量が変化するため、安定供給の方法もあわせて考える必要があります。`);
+  }
+  if (state.biomassFuel <= 0) {
+    messages.push("バイオマス燃料が尽きてしまいました。燃料には限りがあることを覚えておきましょう。");
+  }
+  if (state.hydroReservoir <= 0) {
+    messages.push("水力発電の貯水率が0になり、発電できなくなりました。ダムの水にも限りがあることを覚えておきましょう。");
+  }
+  if (stats.status === "optimal" && stats.thermalPercent < 45) {
+    messages.push(`電力需要（${state.demand} 万kWh）に対してちょうど良い量（${stats.total} 万kWh）の電力を、火力に頼りすぎずバランスよく発電できました。`);
+  }
+  if (messages.length === 0) {
+    messages.push("発電方法の特徴を思い出しながら、次の時間帯の計画を立ててみましょう。");
+  }
+  return messages;
+}
+
+/* ---------------------------------------------------------
+   15．CO2・コストのラベル変換
+--------------------------------------------------------- */
+function co2ToLabel(v) {
+  if (v < 0.08) return "非常に少ない 🌱";
+  if (v < 0.20) return "少ない 🍃";
+  if (v < 0.40) return "やや多い ⚠️";
+  return "多い 😥";
+}
+function costToLabel(v) {
+  if (v < 0.8) return "低い 💰";
+  if (v < 1.4) return "中程度 💰💰";
+  return "高い 💰💰💰";
+}
+
+/* ---------------------------------------------------------
+   16．ランダムイベント発生
+--------------------------------------------------------- */
+function maybeTriggerEvent() {
+  const applicable = EVENTS.filter((ev) => ev.condition(state));
+  if (applicable.length > 0 && Math.random() < 0.45) {
+    const ev = pickRandom(applicable);
+    ev.effect(state);
+    computeAutoOutputs(); // 天気が変わった場合に備えて再計算
+    return { occurred: true, text: ev.text };
+  }
+  return { occurred: false, text: "今回は特に大きな出来事はありませんでした。" };
+}
+
+/* ---- 決定後に「実際の需要」を明らかにする（計画中は隠しておく） ---- */
+function revealActualDemand() {
+  if (state.demand !== state.forecastDemand) {
+    actualDemandLabel.textContent = state.demand;
+    actualDemandBlock.classList.remove("hidden");
+  } else {
+    actualDemandBlock.classList.add("hidden");
+  }
+}
+function renderEventText(result) {
+  if (result.occurred) {
+    eventText.innerHTML = `<span class="event-badge">📢 イベント発生！</span><br>${result.text}`;
+    eventText.classList.add("event-active");
+    // アニメーションを毎回再生させるため、一度クラスを外してから付け直す
+    eventText.classList.remove("event-active");
+    void eventText.offsetWidth; // 強制的に再描画させる
+    eventText.classList.add("event-active");
+  } else {
+    eventText.textContent = result.text;
+    eventText.classList.remove("event-active");
+  }
+}
+
+/* ---------------------------------------------------------
+   17．1日の集計
+--------------------------------------------------------- */
+function summarizeDay() {
+  const h = state.history;
+  const avg = (arr) => Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+  let thermalTotal = 0, allTotal = 0, renewableTotal = 0;
+  h.forEach((r) => {
+    thermalTotal += r.output.thermal;
+    allTotal += r.total;
+    // 再エネ割合は「発電量に応じた重み付き平均」で計算する。
+    // 時間帯ごとの発電量の大小を無視した単純平均だと、
+    // 発電量が少ない時間帯の割合が過大に評価されてしまい、
+    // ミッション判定（再エネ50％以上）が不公平になるため。
+    SOURCES.forEach((src) => {
+      if (src.renewable) renewableTotal += (r.output[src.key] || 0);
+    });
+  });
+  return {
+    avgTotalScore: avg(h.map((r) => r.totalScore)),
+    avgStability: avg(h.map((r) => r.stability)),
+    avgEnv: avg(h.map((r) => r.env)),
+    avgEcon: avg(h.map((r) => r.econ)),
+    avgRenewable: allTotal > 0 ? Math.round((renewableTotal / allTotal) * 100) : 0,
+    thermalShare: allTotal > 0 ? Math.round((thermalTotal / allTotal) * 100) : 0,
+    outageCount: state.outageCount
+  };
+}
+
+/* ===========================================================
+   ここから画面表示（DOM操作）
+=========================================================== */
+
+/* ---- 発電方法の特徴パネルを1度だけ作る ---- */
+function renderFeatureAccordion() {
+  featureAccordion.innerHTML = "";
+  SOURCES.forEach((src) => {
+    const details = document.createElement("details");
+    details.className = "feature-details";
+    let tag;
+    if (src.controllable) {
+      tag = '<span class="feature-tag tag-manual">操作できる</span>';
+    } else if (src.variesWithWeather) {
+      tag = '<span class="feature-tag tag-auto">天気で変化</span>';
+    } else {
+      tag = '<span class="feature-tag tag-fixed">常に一定</span>';
+    }
+    details.innerHTML = `
+      <summary>${src.icon} ${src.name} ${tag}</summary>
+      <ul class="feature-list">${src.features.map((f) => `<li>${f}</li>`).join("")}</ul>
+      <p class="real-share-note">📊 日本の実際の発電量に占める割合（2024年度）：${src.realShare}</p>
+    `;
+    featureAccordion.appendChild(details);
+  });
+}
+
+/* ---- ミッションパネルを描画する（現在の進み具合を表示） ---- */
+function renderMissions() {
+  missionList.innerHTML = "";
+  // 途中経過を仮の summary で確認できるようにする（historyが空でもエラーにならないように）
+  const provisional = state.history.length > 0 ? summarizeDay() : null;
+
+  MISSIONS.forEach((m) => {
+    const li = document.createElement("li");
+    let badgeHtml;
+    if (provisional) {
+      const score = m.getScore(provisional);
+      const grade = scoreToGrade(score);
+      // 固定の合否ラインではなく、S〜Cの4段階のグレードバッジで表示する
+      badgeHtml = `<span class="mission-status grade-badge grade-${grade}" style="width:26px;height:26px;line-height:26px;font-size:0.8em;">${grade}</span>`;
+    } else {
+      badgeHtml = `<span class="mission-status">⬜</span>`; // まだ判定できない（ゲーム開始直後）
+    }
+    li.innerHTML = `${badgeHtml}${m.icon} <b>${m.label}</b>：${m.text}`;
+    missionList.appendChild(li);
+  });
+}
+
+/* ---- STEP1〜2の状況・発電状況を描画する ---- */
+function renderPlanningView() {
+  timeLabel.textContent = TIME_LABELS[state.timeIndex];
+  weatherLabel.textContent = state.weather;
+  demandLabel.textContent = state.forecastDemand;
+  // 計画中は「予測」だけを見せ、実際の値（イベントで変化した後の値）は
+  // 決定するまで隠しておく（revealActualDemand()で決定後に表示する）。
+  actualDemandBlock.classList.add("hidden");
+  const fuelPercent = Math.round((state.biomassFuel / BIOMASS_FUEL_MAX) * 100);
+  fuelInline.textContent = fuelPercent;
+  fuelBarFill.style.width = clamp(fuelPercent, 0, 100) + "%";
+  const reservoirPercent = Math.round((state.hydroReservoir / HYDRO_RESERVOIR_MAX) * 100);
+  reservoirInline.textContent = reservoirPercent;
+  reservoirBarFill.style.width = clamp(reservoirPercent, 0, 100) + "%";
+
+  // 発電状況カード（自動発電と操作できる発電を区別する）
+  let genTotal = 0;
+  SOURCES.forEach((src) => {
+    genTotal += state.output[src.key] || 0;
+  });
+  genTotalLabel.textContent = genTotal;
+
+  genGrid.innerHTML = "";
+  SOURCES.forEach((src) => {
+    const val = state.output[src.key] || 0;
+    const card = document.createElement("div");
+    card.className = "gen-card " + (src.controllable ? "manual-card" : "auto-card");
+    const percent = clamp((val / src.maxCapacity) * 100, 0, 100);
+    let tag;
+    if (src.controllable) {
+      tag = "🎛️ 操作中";
+    } else if (src.variesWithWeather) {
+      tag = "🌤️ 天気で変化";
+    } else {
+      tag = "🔒 常に一定";
+    }
+    card.innerHTML = `
+      <div class="gen-title"><span>${src.icon} ${src.name}</span><span style="font-size:0.75em;color:#888;">${tag}</span></div>
+      <div class="gen-bar-bg"><div class="gen-bar-fill" style="width:${percent}%; background:${src.color};"></div></div>
+      <div class="gen-value">${val} 万kWh</div>
+    `;
+    genGrid.appendChild(card);
+  });
+
+  hydroVal.textContent = state.output.hydro;
+  biomassVal.textContent = state.output.biomass;
+  thermalVal.textContent = state.output.thermal;
+
+  renderMissions();
+}
+
+/* ---- STEP4〜5の結果・アドバイスを描画する ---- */
+function renderResultView(stats) {
+  totalLabel.textContent = stats.total;
+  balanceLabel.textContent = (stats.balance >= 0 ? "+" : "") + stats.balance;
+
+  const msg = getStatusMessage(stats);
+  statusMessage.textContent = msg.text;
+  statusMessage.className = "status-message " + msg.cls;
+
+  const co2PerTotal = stats.total > 0 ? stats.co2Total / stats.total : 0;
+  const costPerTotal = stats.total > 0 ? stats.costTotal / stats.total : 0;
+  co2LabelEl.textContent = co2ToLabel(co2PerTotal);
+  costLabelEl.textContent = costToLabel(costPerTotal);
+  renewableLabelEl.textContent = stats.renewablePercent;
+  thermalShareLabelEl.textContent = stats.thermalPercent;
+
+  stabilityScoreEl.textContent = stats.stability;
+  envScoreEl.textContent = stats.env;
+  econScoreEl.textContent = stats.econ;
+  totalScoreEl.textContent = stats.totalScore;
+  gradeBadgeEl.textContent = stats.grade;
+  gradeBadgeEl.className = "grade-badge grade-" + stats.grade;
+
+  adviceList.innerHTML = "";
+  getAdviceMessages(stats).forEach((m) => {
+    const li = document.createElement("li");
+    li.textContent = m;
+    adviceList.appendChild(li);
+  });
+}
+
+/* ---- グラフを描画する ---- */
+function renderChart() {
+  chartEl.innerHTML = "";
+  if (state.history.length === 0) {
+    chartEl.innerHTML = "<p style='font-size:0.85em; color:#888;'>発電計画を決定すると、ここに記録が表示されます。</p>";
+  } else {
+    let maxVal = 100;
+    state.history.forEach((rec) => { maxVal = Math.max(maxVal, rec.demand, rec.total); });
+    maxVal = Math.ceil(maxVal * 1.15);
+    const BAR_HEIGHT = 220;
+
+    state.history.forEach((rec) => {
+      const column = document.createElement("div");
+      column.className = "chart-column";
+      const barWrap = document.createElement("div");
+      barWrap.className = "bar-wrap";
+
+      SOURCES.forEach((src) => {
+        const val = rec.output[src.key] || 0;
+        if (val <= 0) return;
+        const seg = document.createElement("div");
+        seg.className = "bar-segment";
+        seg.style.height = (val / maxVal) * BAR_HEIGHT + "px";
+        seg.style.background = src.color;
+        seg.title = `${src.name}: ${val}万kWh`;
+        barWrap.appendChild(seg);
+      });
+
+      const demandLine = document.createElement("div");
+      demandLine.className = "demand-line";
+      demandLine.style.bottom = (rec.demand / maxVal) * BAR_HEIGHT + "px";
+      barWrap.appendChild(demandLine);
+
+      column.appendChild(barWrap);
+
+      const label = document.createElement("div");
+      label.className = "chart-label";
+      label.textContent = rec.timeLabel;
+      column.appendChild(label);
+
+      const diff = rec.total - rec.demand;
+      const diffEl = document.createElement("div");
+      diffEl.className = "chart-diff " + (diff >= 0 ? "diff-pos" : "diff-neg");
+      diffEl.textContent = (diff >= 0 ? "+" : "") + diff;
+      column.appendChild(diffEl);
+
+      chartEl.appendChild(column);
+    });
+  }
+
+  legendEl.innerHTML = "";
+  SOURCES.forEach((src) => {
+    const item = document.createElement("div");
+    item.className = "legend-item";
+    item.innerHTML = `<span class="legend-color" style="background:${src.color};"></span>${src.icon}${src.name}`;
+    legendEl.appendChild(item);
+  });
+  const demandItem = document.createElement("div");
+  demandItem.className = "legend-item";
+  demandItem.innerHTML = `<span class="legend-demand"></span>電力需要ライン`;
+  legendEl.appendChild(demandItem);
+}
+
+/* ---------------------------------------------------------
+   18．画面の状態（フェーズ）を切り替える
+--------------------------------------------------------- */
+function showPlanningPhase() {
+  state.phase = "planning";
+  resultPanel.classList.add("hidden");
+  advicePanel.classList.add("hidden");
+  decideBtn.style.display = "inline-block";
+  decideBtn.disabled = false; // 連打防止で無効化していたボタンを再度有効にする
+  nextBtn.style.display = "none";
+  thermalSlider.disabled = false;
+  syncHydroLimit();   // 水力のdisabledは貯水率に応じて内部で決まる
+  syncBiomassLimit(); // バイオマスのdisabledは燃料状況に応じて内部で決まる
+  stepBadge.textContent = "STEP1〜2：状況確認と発電計画";
+  stepBadge.classList.remove("result");
+  stepDesc.textContent = "現在の状況を確認しながら、水力・バイオマス・火力の発電量を計画しましょう。";
+  renderPlanningView();
+}
+
+function showResultPhase(stats) {
+  state.phase = "result";
+  resultPanel.classList.remove("hidden");
+  advicePanel.classList.remove("hidden");
+  decideBtn.style.display = "none";
+  nextBtn.style.display = state.gameOver ? "none" : "inline-block";
+  nextBtn.disabled = false; // 連打防止で無効化していたボタンを再度有効にする
+  hydroSlider.disabled = true;
+  biomassSlider.disabled = true;
+  thermalSlider.disabled = true;
+  stepBadge.textContent = "STEP4〜5：結果発表と振り返り";
+  stepBadge.classList.add("result");
+  stepDesc.textContent = "結果を確認して、次の時間帯にどう活かすか考えましょう。";
+  renderResultView(stats);
+}
+
+/* ---------------------------------------------------------
+   19．「この発電計画で決定する」ボタン
+--------------------------------------------------------- */
+function decidePlan() {
+  // state.phase のチェックに加えて、ボタンをすぐに無効化することで、
+  // 連打（ダブルタップ・高速連打）によって同じ時間帯を2回決定できてしまう問題を防ぐ。
+  if (state.phase !== "planning" || decideBtn.disabled) return;
+  decideBtn.disabled = true;
+
+  readSlidersIntoState();
+  const stats = calculateStats();
+
+  // 予測だけを見て計画した後、ここで初めて「実際は何が起きたか」を明らかにする。
+  renderEventText(state.pendingEventResult || { occurred: false, text: "" });
+  revealActualDemand();
+
+  state.history.push({
+    timeLabel: TIME_LABELS[state.timeIndex],
+    weather: state.weather,
+    demand: state.demand,
+    total: stats.total,
+    output: Object.assign({}, state.output),
+    stability: stats.stability,
+    env: stats.env,
+    econ: stats.econ,
+    totalScore: stats.totalScore,
+    renewablePercent: stats.renewablePercent
+  });
+
+  // 燃料消費量を発電量と同じ比率にすることで、1日（4コマ）フルに使い続けると
+  // ちょうど燃料が尽きるように調整している（「資源には限りがある」ことを体験できるようにするため）。
+  state.biomassFuel = Math.max(0, state.biomassFuel - state.output.biomass * 1.0);
+  // 水力も同じ考え方で、使った分だけ貯水率が減る（ダムの水を使いすぎない工夫が必要になる）。
+  state.hydroReservoir = Math.max(0, state.hydroReservoir - state.output.hydro * 1.0);
+  if (stats.isOutage) state.outageCount++;
+
+  if (state.timeIndex >= TIME_LABELS.length - 1) {
+    state.gameOver = true;
+  }
+
+  showResultPhase(stats);
+  renderChart();
+  renderMissions();
+
+  if (state.gameOver) {
+    showEnding();
+    reopenResultBtn.classList.remove("hidden");
+    restartBtnOutside.classList.remove("hidden");
+  }
+}
+
+/* ---------------------------------------------------------
+   20．「次の時間へ」ボタン
+--------------------------------------------------------- */
+function goToNextPeriod() {
+  // state.phase のチェックとボタンの即時無効化により、
+  // 連打で時間帯が2回以上進んでしまう問題を防ぐ。
+  if (state.gameOver || state.phase !== "result" || nextBtn.disabled) return;
+  nextBtn.disabled = true;
+
+  state.timeIndex++;
+  applyWeatherForCurrentPeriod();
+  computeDemandForPeriod();
+  computeStableOutputs();
+  computeAutoOutputs();
+  // イベントの内容と実際の需要への影響は、この時点ではまだ生徒に見せない。
+  // 「予測需要」だけを見て発電計画を立ててもらい、決定した後で
+  // 「実際は何が起きたか」を明らかにする（本物の天気予報・電力予測に近い体験にするため）。
+  state.pendingEventResult = maybeTriggerEvent();
+  eventText.textContent = "❓ この時間帯に何が起こるかは、まだ分かりません。発電計画を決定すると分かります。";
+  eventText.classList.remove("event-active");
+  actualDemandBlock.classList.add("hidden");
+  showPlanningPhase();
+}
+
+/* ---------------------------------------------------------
+   21．ゲーム終了時の振り返り画面
+--------------------------------------------------------- */
+function showEnding() {
+  const summary = summarizeDay();
+
+  // 各評価軸（安定供給・環境・経済）を、固定の合格ラインではなく
+  // 1日を通した平均点からS〜Cの4段階で評価する（「運」による一発判定を避けるため）。
+  const axisResults = MISSIONS.map((m) => {
+    const score = m.getScore(summary);
+    return { icon: m.icon, label: m.label, text: m.text, score, grade: scoreToGrade(score) };
+  });
+
+  const good = [];
+  const improve = [];
+
+  // 「なぜこの評価になったのか」を、生徒の判断と結果の因果関係が分かるように、
+  // 具体的な数値（平均点・平均割合など）を添えて説明する。
+  if (summary.outageCount === 0) {
+    good.push("需要を大きく下回る発電量になる時間帯（停電）が1回もなく、電力を安定して供給できました。");
+  } else {
+    improve.push(`需要に対して発電量が大きく不足した時間帯（停電扱い）が${summary.outageCount}回ありました。イベントで需要が急に増えることもあるため、次はもう少し余裕を持った発電量を計画してみましょう。`);
+  }
+
+  if (summary.avgStability >= 75) {
+    good.push(`安定供給の平均点は${summary.avgStability}点でした。発電量を需要にうまく合わせられていました。`);
+  } else if (summary.avgStability < 55) {
+    improve.push(`安定供給の平均点は${summary.avgStability}点でした。発電しすぎ・少なすぎになった時間帯がなかったか振り返ってみましょう。`);
+  }
+
+  if (summary.avgEnv >= 75) {
+    good.push(`環境の平均点は${summary.avgEnv}点でした（再エネ利用率 平均${summary.avgRenewable}％／火力依存度 平均${summary.thermalShare}％）。天候に応じて再生可能エネルギーをうまく活用できました。`);
+  } else {
+    improve.push(`環境の平均点は${summary.avgEnv}点でした（再エネ利用率 平均${summary.avgRenewable}％／火力依存度 平均${summary.thermalShare}％）。太陽光・風力が期待できる時間帯に、火力をもう少し減らせないか考えてみましょう。`);
+  }
+
+  if (summary.avgEcon >= 75) {
+    good.push(`経済の平均点は${summary.avgEcon}点でした。発電しすぎを抑え、資源を無駄なく使えました。`);
+  } else {
+    improve.push(`経済の平均点は${summary.avgEcon}点でした。発電量が需要より大きく上回った（無駄が出た）時間帯がなかったか確認してみましょう。`);
+  }
+
+  const overallGrade = scoreToGrade(summary.avgTotalScore);
+
+  let html = "";
+  html += `<p>1日を通じての総合スコアは平均 <b>${summary.avgTotalScore}点</b>（総合評価：<b>${overallGrade}</b>）でした。</p>`;
+
+  html += `<h3>🎯 評価（S・A・B・Cの4段階）</h3><ul>`;
+  axisResults.forEach((a) => {
+    html += `<li><span class="grade-badge grade-${a.grade}" style="width:28px;height:28px;line-height:28px;font-size:0.8em;display:inline-block;vertical-align:middle;margin-right:6px;">${a.grade}</span>${a.icon} <b>${a.label}</b>：${a.text}（平均${a.score}点）</li>`;
+  });
+  html += `</ul>`;
+  html += `<p style="font-size:0.82em;color:#777;">※ 固定の合格ラインではなく、1日の平均点でS〜Cを判定しています。ランダムイベント1回だけで評価が大きく変わることはありません。大切なのは、想定外の出来事にどれだけ柔軟に対応できたかです。</p>`;
+
+  html += `<h3>👍 良かった点</h3><ul>${good.length ? good.map((g) => `<li>${g}</li>`).join("") : "<li>特になし</li>"}</ul>`;
+  html += `<h3>🔧 改善できる点</h3><ul>${improve.length ? improve.map((g) => `<li>${g}</li>`).join("") : "<li>特になし</li>"}</ul>`;
+
+  html += `<h3>💡 今回の電力供給から学べること</h3><ul>
+    <li>地熱発電は天候や時間帯に影響されず、安定した電力を供給できる再生可能エネルギーです。</li>
+    <li>バイオマス発電は木材や植物などの資源を燃料として利用するため、燃料が減ると発電できなくなります。</li>
+    <li>太陽光発電と風力発電は天候や時間帯によって発電量が大きく変わるため、他の発電方法と組み合わせることが大切です。</li>
+    <li>電力を多く作りすぎると、需要に対して無駄なコストが発生してしまいます。</li>
+  </ul>`;
+
+  html += `<p><b>電力供給では、安定性・環境性・経済性のすべてを同時に考えることが大切です。</b></p>`;
+
+  endSummary.innerHTML = html;
+  endModal.classList.remove("hidden");
+}
+
+function closeEndingModal() {
+  endModal.classList.add("hidden");
+}
+function restartGame() { window.location.reload(); }
+
+/* ---------------------------------------------------------
+   22．初期化処理
+--------------------------------------------------------- */
+function init() {
+  // スライダーの上限をSOURCESの設定値から自動で合わせる（設定のズレを防ぐ）
+  hydroSlider.max = SOURCES.find((s) => s.key === "hydro").maxCapacity;
+  thermalSlider.max = SOURCES.find((s) => s.key === "thermal").maxCapacity;
+
+  state.timeIndex = 0;
+  chooseWeatherPattern();
+  applyWeatherForCurrentPeriod();
+  computeDemandForPeriod();
+  computeStableOutputs();
+  computeAutoOutputs();
+
+  hydroSlider.value = 8;
+  biomassSlider.value = 5;
+  thermalSlider.value = 15;
+
+  renderFeatureAccordion();
+  eventText.textContent = "今日1日の電力供給が始まります。発電方法の特徴を確認しながら計画を立てましょう。";
+
+  showPlanningPhase();
+  renderChart();
+}
+
+/* ---------------------------------------------------------
+   23．イベントリスナー
+--------------------------------------------------------- */
+hydroSlider.addEventListener("input", () => { readSlidersIntoState(); renderPlanningView(); });
+biomassSlider.addEventListener("input", () => { readSlidersIntoState(); renderPlanningView(); });
+thermalSlider.addEventListener("input", () => { readSlidersIntoState(); renderPlanningView(); });
+decideBtn.addEventListener("click", decidePlan);
+nextBtn.addEventListener("click", goToNextPeriod);
+restartBtn.addEventListener("click", restartGame);
+restartBtnOutside.addEventListener("click", restartGame);
+viewResultBtn.addEventListener("click", closeEndingModal);
+reopenResultBtn.addEventListener("click", () => { endModal.classList.remove("hidden"); });
+
+/* ---- ゲーム開始 ---- */
+init();
+</script>
+</body>
+</html>
