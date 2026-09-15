@@ -656,9 +656,13 @@ let savedExperiments = [];
 let experimentCounter = 0;
 
 // 実験中は変更できない入力（水やり・肥料・日光・気温・天気・ランダム要素）
-const lockableInputs = [waterSlider, fertSlider, expSunSlider, expTempSlider, expWeatherSelect, noiseToggle];
+const managedInputs = [waterSlider, fertSlider];
+const experimentOnlyInputs = [expSunSlider, expTempSlider, expWeatherSelect, noiseToggle];
 function setInputsLocked(locked){
-  lockableInputs.forEach(elm => { elm.disabled = locked; });
+  // 日光・気温・天気・ランダム要素（実験モード専用の条件）は、開始後は常にロックする
+  experimentOnlyInputs.forEach(elm => { elm.disabled = locked; });
+  // 水やり・肥料は、自然モードでは開始後も手動で調整できるようにする（実験モードのみロック）
+  managedInputs.forEach(elm => { elm.disabled = locked && state.mode === 'experiment'; });
 }
 
 // ============================================================
