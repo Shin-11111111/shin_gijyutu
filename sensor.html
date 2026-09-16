@@ -138,7 +138,8 @@
   .face-hint, .compass-n{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:700; color:var(--accent); }
   .scene-caption{ font-size:12px; color:var(--ink-soft); margin:0 0 8px; line-height:1.6; }
 
-  .accel-readouts{ display:flex; justify-content:center; gap:14px; font-family:'JetBrains Mono', monospace; font-size:13px; margin-top:10px; }
+  .accel-readouts{ display:flex; flex-wrap:wrap; justify-content:center; gap:6px 14px; font-family:'JetBrains Mono', monospace; font-size:13px; margin-top:10px; }
+  .accel-readouts span{ white-space:nowrap; }
   .accel-readouts span b{ color:var(--ink-soft); font-weight:500; }
   .accel-sliders{ margin-top:16px; text-align:left; }
   .accel-sliders[hidden]{ display:none; }
@@ -686,8 +687,9 @@ function updateAccelVisuals(){
   const phone = document.getElementById('accelPhone');
   if (phone){
     const rotY = (cx2 / 10) * 42;   // xが大きいほど左右に大きくかたむく
-    const rotX = -(cy2 / 10) * 42;  // yが大きいほど前後に大きくかたむく
-    phone.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
+    const rotX = (cy2 / 10) * 42;   // yが大きいほど前後に大きくかたむく
+    const rotZ = (cz2 / 10) * 180;  // zが大きいほど画面を時計回り/反時計回りに回転させる
+    phone.style.transform = 'rotateZ(' + rotZ + 'deg) rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg)';
   }
   const glow = document.getElementById('accelGlow');
   if (glow){
