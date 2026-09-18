@@ -351,17 +351,17 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
           <div class="slider-item">
             <div class="row1">
               <span class="icon-label">💧 水やりの量</span>
-              <span class="value-tag" id="waterValue">30%</span>
+              <span class="value-tag" id="waterValue">0%</span>
             </div>
-            <input type="range" id="waterSlider" min="0" max="100" step="1" value="30">
+            <input type="range" id="waterSlider" min="0" max="100" step="1" value="0">
             <div class="range-scale"><span>少ない</span><span>多い</span></div>
           </div>
           <div class="slider-item">
             <div class="row1">
               <span class="icon-label">🌿 肥料の量</span>
-              <span class="value-tag" id="fertValue">15%</span>
+              <span class="value-tag" id="fertValue">0%</span>
             </div>
-            <input type="range" id="fertSlider" min="0" max="100" step="1" value="15">
+            <input type="range" id="fertSlider" min="0" max="100" step="1" value="0">
             <div class="range-scale"><span>少ない</span><span>多い</span></div>
           </div>
         </div>
@@ -424,8 +424,8 @@ footer.note{ text-align:center; font-size:11px; color:#8a9a85; margin-top:18px; 
       <div>
         <h2>📋 現在の状態</h2>
         <div class="env-summary">
-          <div class="item">水やりの量<b id="envWater">30%</b></div>
-          <div class="item">肥料の量<b id="envFert">15%</b></div>
+          <div class="item">水やりの量<b id="envWater">0%</b></div>
+          <div class="item">肥料の量<b id="envFert">0%</b></div>
           <div class="item">日光の量<b id="envSun">75%</b></div>
           <div class="item">気温<b id="envTemp">25℃</b></div>
           <div class="item">土の水分量<b id="envSoilWater">50%</b></div>
@@ -1299,7 +1299,12 @@ function finishSimulation(type){
       sun: (d)=>calcScore(d.sunlight, IDEAL.sun),
       temp: (d)=>calcScore(d.temperature, IDEAL.temp),
     };
-    const values = state.dailyLog.map(map[key]);
+    let values = state.dailyLog.map(map[key]);
+
+    if (key === 'water' || key === 'nutrient'){
+      const firstIdeal = values.findIndex(v => v >= 1.0);
+      if (firstIdeal > 0) values = values.slice(firstIdeal);
+    }
     return values.reduce((a,b)=>a+b,0) / values.length;
   };
   const avgScores = { water: scoreAvg('water'), nutrient: scoreAvg('nutrient'), sun: scoreAvg('sun'), temp: scoreAvg('temp') };
@@ -1635,8 +1640,8 @@ function handleReset(){
     poorStreak:0, dailyLog: [],
     recordMeta: { sun:'-', temp:'-', weather:'-', randomness:'-' },
   };
-  waterSlider.value = 30;
-  fertSlider.value = 15;
+  waterSlider.value = 0;
+  fertSlider.value = 0;
   expSunSlider.value = 75;
   expTempSlider.value = 25;
   expWeatherSelect.value = 'sunny';
