@@ -132,6 +132,7 @@
             opacity: 0;
             position: absolute;
             z-index: -1;
+            ime-mode: disabled;
         }
         
         .btn-neon {
@@ -293,10 +294,11 @@
             flex: 0 0 auto;
             margin-top: clamp(0.5rem, 2vh, 2rem) !important;
         }
-        .theme-purple { filter: hue-rotate(40deg); }
-        .theme-red    { filter: hue-rotate(160deg); }
-        .theme-gold   { filter: hue-rotate(200deg) saturate(1.5); }
-        #hidden-input { user-select: text; -webkit-user-select: text; }
+        #main-game-panel { transition: box-shadow 0.8s ease, border-color 0.8s ease; }
+        .theme-purple #main-game-panel { border-color: #b46bff; box-shadow: 0 0 25px rgba(180,107,255,.6); }
+        .theme-red    #main-game-panel { border-color: #ff7a3d; box-shadow: 0 0 30px rgba(255,122,61,.7); }
+        .theme-gold   #main-game-panel { border-color: #ffd700; box-shadow: 0 0 35px rgba(255,215,0,.8); }
+        #hidden-input { user-select: text; -webkit-user-select: text; font-size: 16px; }
         .level-btn, .mini-btn {
             border: 2px solid rgba(255,255,255,0.35); color: #fff; background: transparent;
             border-radius: 9999px; font-weight: 700; cursor: pointer; transition: all 0.2s;
@@ -436,20 +438,19 @@
                         <p class="font-bold text-green-400 mb-1">遊び方</p>
                         <ul class="list-disc pl-5 space-y-0.5">
                             <li>画面に出る<b>技術科に関する単語</b>を、キーボードで打ってウイルスを倒せ！</li>
-                            <li>制限時間は60秒間</li>
-                            <li>間違えるとHPが5減る。HPが0になると強制終了</li>
-                            <li>「ー」（のばす音）は <b>- （ハイフン）キー</b></li>
+                            <li>制限時間は<b>60秒間</b>。最大HPは100。間違えるとHPが5減り、0になると強制終了。</li>
+                            <li>「ー」（のばす音）は <b>- （ハイフン）キー</b>で入力。</li>
                             <li>「si / shi」など、打ち方が2つある文字はどちらでもOK</li>
-                            <li>「ん」は、あとに「あいうえお」や「な行」が続くときと、言葉の最後では <b>nn</b> と打つ</li>
-                            <li><b>スコア</b>は正解1文字100点+コンボボーナス。ミスするとコンボがリセットされます。</li>
-                            <li>コンボボーナスは、100点 → 110点 → 120点 → 130点…と、<b>10点ずつアップ</b>します。</li>
+                            <li>「ん」は、次が「あいうえお」「な行」のときと、言葉の最後だけ <b>nn</b>と入力。</li>
+                            <li><b>スコア</b>は正解1文字100点。コンボボーナスを加算。ミスするとコンボがリセット。</li>
+                            <li>コンボボーナスは、100点 → 110点 → 120点 → 130点…と、<b>10点ずつアップ</b>！</li>
                         </ul>
                     </div>
                     <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
                         <span class="text-sm text-white/70">むずかしさ：</span>
-                        <button type="button" class="level-btn" data-level="easy">やさしい</button>
-                        <button type="button" class="level-btn active" data-level="normal">ふつう</button>
-                        <button type="button" class="level-btn" data-level="hard">むずかしい</button>
+                        <button type="button" class="level-btn" data-level="easy">短い言葉</button>
+                        <button type="button" class="level-btn active" data-level="normal">全ての言葉</button>
+                        <button type="button" class="level-btn" data-level="hard">長い言葉</button>
                     </div>
                 </div>
                 
@@ -471,7 +472,7 @@
             </div>
         </div>
 
-        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" inputmode="text" autocorrect="off" autocapitalize="off" />
+        <input type="password" id="hidden-input" autocomplete="new-password" spellcheck="false" inputmode="text" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore aria-label="タイピング入力用（画面には表示されません）" />
 
         <div class="start-controls flex flex-col items-center gap-4" style="margin-top: clamp(0.5rem, 2vh, 2rem)">
             <button id="start-btn" class="btn-neon px-12 py-3 rounded-full text-lg font-bold orbitron tracking-widest">START MISSION</button>
@@ -483,24 +484,24 @@
         </div>
     </div>
 
-    <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 items-center justify-center z-[100] p-6" style="display:none;">
-        <div class="max-w-md w-full text-center space-y-4 fade-in">
+    <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 overflow-y-auto z-[100] p-6" style="display:none;">
+        <div class="max-w-md w-full m-auto text-center space-y-4 fade-in">
             <h2 class="text-4xl md:text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white/5 p-4 rounded-2xl border border-red-500/30">
-                    <p class="text-red-400 text-[10px] uppercase mb-1">倒した数</p>
+                    <p class="text-red-400 text-sm mb-1">倒した数</p>
                     <p id="final-slayed" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-pink-500/30">
-                    <p class="text-pink-400 text-[10px] uppercase mb-1">正しく打てたキー数</p>
+                    <p class="text-pink-400 text-sm mb-1">正しく打てたキー数</p>
                     <p id="final-keys" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-blue-500/30">
-                    <p class="text-blue-400 text-[10px] uppercase mb-1">スコア</p>
+                    <p class="text-blue-400 text-sm mb-1">スコア</p>
                     <p id="final-score" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-green-500/30">
-                    <p class="text-green-400 text-[10px] uppercase mb-1">正確さ</p>
+                    <p class="text-green-400 text-sm mb-1">正確さ</p>
                     <p id="final-accuracy" class="text-4xl font-bold">0%</p>
                 </div>
             </div>
@@ -1108,11 +1109,12 @@
         hiddenInput.addEventListener('keydown', (e) => {
             if (!isPlaying) return;
 
-            // 長押しによる連続入力（キーリピート）を無視
             if (e.repeat) {
                 e.preventDefault();
                 return;
             }
+
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
 
             let ch = e.key;
 
@@ -1147,10 +1149,16 @@
                 processChar(ch);
             }
         });
-
+        hiddenInput.addEventListener('input', (e) => {
+            if (!isPlaying || e.isComposing) return;
+            const text = hiddenInput.value;
+            hiddenInput.value = '';
+            for (const c of text) {
+                const ch = c.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (x) => String.fromCharCode(x.charCodeAt(0) - 0xFEE0));
+                if (/^[\x20-\x7E]$/.test(ch)) processChar(ch);
+            }
+        });
         // ---- 小さい文字を l / x で打つ（ltu, xtu, kilya, fula, texi など）----
-        // 配列 currentRomaArray を「l / x を使う打ち方」に書き換えて、
-        // 今打った1文字を正解にできたら true を返す
         function tryLxAlternative(typedChar) {
             const arr = currentRomaArray;
             const i = charIndex;
@@ -1309,13 +1317,13 @@
                     }
                 }
 
-                // 「ず」: zu -> du
-                if (!isCorrect) {
-                    const nextForZu = currentRomaArray[charIndex + 1];
-                    if (expected === 'z' && typedChar === 'd' && nextForZu === 'u') {
-                        currentRomaArray[charIndex] = 'd'; isCorrect = true;
-                    }
-                }
+                // // 「ず」: zu -> du
+                // if (!isCorrect) {
+                //     const nextForZu = currentRomaArray[charIndex + 1];
+                //     if (expected === 'z' && typedChar === 'd' && nextForZu === 'u') {
+                //         currentRomaArray[charIndex] = 'd'; isCorrect = true;
+                //     }
+                // }
 
                 //「しゃ・しゅ・しょ」: sya/syu/syo <-> sha/shu/sho
                 if (!isCorrect) {
@@ -1432,10 +1440,12 @@
                     nextWordTimer = setTimeout(nextWord, 400);
                 }
             } else {
-                missByKey[typedChar] = (missByKey[typedChar] || 0) + 1;
+                const targetKey = currentRomaArray[charIndex];
+                missByKey[targetKey] = (missByKey[targetKey] || 0) + 1;
 
                 missCount++;
                 combo = 0;
+                renderRoma();
                 triggerMiss();
                 updateStats();
 
@@ -1448,9 +1458,9 @@
 
         // ---- むずかしさ ----
         const LEVELS = {
-            easy:   (w) => w.roma.length <= 9,    // やさしい：短い言葉
-            normal: ()  => true,                  // ふつう：全部（これまでと同じ）
-            hard:   (w) => w.roma.length >= 12    // むずかしい：長い言葉
+            easy:   (w) => w.roma.length <= 9,
+            normal: ()  => true,
+            hard:   (w) => w.roma.length >= 12
         };
         function pickWord() {
             const pool = words.filter(LEVELS[level]);
