@@ -24,8 +24,7 @@
         .orbitron { font-family: 'Orbitron', sans-serif; }
         
         .glass-panel {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
         }
@@ -34,7 +33,7 @@
             display: inline-block;
             transition: all 0.1s ease;
             position: relative;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.6);
         }
         .char.done { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); animation: char-done-glow 0.15s ease-out; }
         @keyframes char-done-glow {
@@ -73,7 +72,7 @@
             50% { transform: scale(1.15); filter: brightness(2); }
             100% { transform: scale(1); filter: brightness(1); }
         }
-        .monster-death {
+        #monster-container.monster-death {
             animation: monster-death-anim 0.5s ease-out forwards;
         }
         @keyframes monster-death-anim {
@@ -166,12 +165,12 @@
         }
 
         @keyframes monster-shake-anim {
-            0% { transform: translate(0, 0) rotate(0deg); filter: brightness(1) sepia(0); }
-            20% { transform: translate(-8px, 4px) rotate(-6deg); filter: brightness(2) sepia(1) saturate(5) hue-rotate(-50deg); }
-            40% { transform: translate(8px, -4px) rotate(6deg); }
-            60% { transform: translate(-8px, -2px) rotate(-3deg); }
-            80% { transform: translate(8px, 2px) rotate(3deg); }
-            100% { transform: translate(0, 0) rotate(0deg); filter: brightness(1) sepia(0); }
+            0%   { transform: translate(0, 0) rotate(0deg); }
+            20%  { transform: translate(-8px, 4px) rotate(-6deg); }
+            40%  { transform: translate(8px, -4px) rotate(6deg); }
+            60%  { transform: translate(-8px, -2px) rotate(-3deg); }
+            80%  { transform: translate(8px, 2px) rotate(3deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
         }
         .particle {
             position: fixed;
@@ -185,30 +184,32 @@
             100% { transform: translate(var(--dx),var(--dy)) scale(0); opacity: 0; }
         }
         #bg-grid {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            position: fixed; inset: -40px; pointer-events: none; z-index: 0;
             background-image:
                 linear-gradient(rgba(0,243,255,0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0,243,255,0.03) 1px, transparent 1px);
             background-size: 40px 40px;
+            will-change: transform;
             animation: grid-scroll 20s linear infinite;
         }
         @keyframes grid-scroll {
-            0%   { background-position: 0 0; }
-            100% { background-position: 40px 40px; }
+            0%   { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
         }
         #bg-scanline {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
         }
         #bg-scan-sweep {
-            position: fixed; left: 0; right: 0; height: 120px;
+            position: fixed; left: 0; right: 0; top: 0; height: 120px;
             pointer-events: none; z-index: 1;
             background: linear-gradient(to bottom, transparent, rgba(0,243,255,0.04), transparent);
+            will-change: transform;
             animation: scan-sweep 4s linear infinite;
         }
         @keyframes scan-sweep {
-            0%   { top: -120px; }
-            100% { top: 100vh; }
+            0%   { transform: translateY(-120px); }
+            100% { transform: translateY(100vh); }
         }
         #screen-flash { position: fixed; inset: 0; pointer-events: none; z-index: 200; opacity: 0; }
         .flash-hit  { animation: flash-hit-anim  0.15s ease-out forwards; }
@@ -259,10 +260,58 @@
             70%  { opacity: 1; }
             100% { opacity: 0; }
         }
-        #game-container { transition: filter 0.8s ease; }
+        #game-container {
+            transition: filter 0.8s ease;
+        }
+
+        #display-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+        #main-game-panel.start-screen {
+            justify-content: center;
+        }
+        #main-game-panel.start-screen #battle-stage,
+        #main-game-panel.start-screen #player-hp-container {
+            display: none !important;
+        }
+        #main-game-panel.start-screen #display-area {
+            flex: 0 0 auto;
+            justify-content: center;
+        }
+        #main-game-panel.start-screen #jp-display,
+        #main-game-panel.start-screen #desc-display,
+        #main-game-panel.start-screen #roma-display {
+            display: none;
+        }
+        #main-game-panel.start-screen #title-container {
+            margin-bottom: 0 !important;
+        }
+        #main-game-panel.start-screen > .start-controls {
+            flex: 0 0 auto;
+            margin-top: clamp(0.5rem, 2vh, 2rem) !important;
+        }
         .theme-purple { filter: hue-rotate(40deg); }
         .theme-red    { filter: hue-rotate(160deg); }
         .theme-gold   { filter: hue-rotate(200deg) saturate(1.5); }
+        #hidden-input { user-select: text; -webkit-user-select: text; }
+        .level-btn, .mini-btn {
+            border: 2px solid rgba(255,255,255,0.35); color: #fff; background: transparent;
+            border-radius: 9999px; font-weight: 700; cursor: pointer; transition: all 0.2s;
+        }
+        .level-btn { padding: 0.35rem 1rem; font-size: 0.95rem; }
+        .mini-btn  { padding: 0.25rem 0.9rem; font-size: 0.8rem; }
+        .level-btn:hover, .mini-btn:hover { border-color: var(--neon-blue); }
+        .level-btn.active { border-color: var(--neon-green); color: var(--neon-green); box-shadow: 0 0 10px var(--neon-green); }
+        body.calm #screen-flash, body.calm .energy-wave, body.calm #bg-scan-sweep,
+        body.calm .particle, body.calm #cutin-overlay { display: none !important; }
+        body.calm .screen-shake, body.calm #bg-grid { animation: none; }
+        @media (prefers-reduced-motion: reduce) {
+            #screen-flash, .energy-wave, #bg-scan-sweep, .particle, #cutin-overlay { display: none !important; }
+            .screen-shake, #bg-grid, #monster-container { animation: none; }
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -286,26 +335,26 @@
         
         <div class="grid grid-cols-4 gap-4 mb-3 md:mb-6 orbitron text-sm">
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-blue-400">
-                <p class="text-[10px] uppercase text-blue-400">Time</p>
+                <p class="text-xs text-blue-400">残り時間</p>
                 <p id="timer-display" class="text-xl font-bold">60s</p>
             </div>
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-green-400">
-                <p class="text-[10px] uppercase text-green-400">Score</p>
+                <p class="text-xs text-green-400">スコア</p>
                 <p id="score-display" class="text-xl font-bold text-green-400">0</p>
                 <p id="highscore-display" class="text-[15px] text-green-400/50 mt-0.5" style="display:none;">BEST: <span id="highscore-value">0</span></p>
             </div>
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-purple-400">
-                <p class="text-[10px] uppercase text-purple-400">Accuracy</p>
+                <p class="text-xs text-purple-400">正確さ</p>
                 <p id="accuracy-display" class="text-xl font-bold">0%</p>
             </div>
             <div class="glass-panel p-3 rounded-xl text-center border-l-2 border-l-red-400">
-                <p class="text-[10px] uppercase text-red-400">Slayed</p>
+                <p class="text-xs text-red-400">倒した数</p>
                 <p id="slayed-display" class="text-xl font-bold">0</p>
             </div>
         </div>
 
-        <div class="relative glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center" style="padding: clamp(0.75rem, 2.5vh, 2rem); min-height: clamp(200px, 48vh, 420px);">
-            <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center" style="margin-bottom: clamp(0.25rem, 1.5vh, 1.5rem);">
+        <div id="main-game-panel" class="start-screen relative glass-panel rounded-3xl overflow-hidden flex flex-col items-center justify-center" style="padding: clamp(0.75rem, 2.5vh, 2rem); min-height: clamp(200px, 48vh, 420px);">
+            <div id="battle-stage" class="relative w-full flex flex-col items-center justify-center" style="display:none; margin-bottom: clamp(0.25rem, 1.5vh, 1.5rem);">
                 <div id="combo-display" class="absolute top-0 combo-text orbitron">0 COMBO!</div>
                 
                 <div id="monster-container" class="w-32 h-32 mb-4 opacity-0 transition-opacity duration-500">
@@ -370,7 +419,7 @@
                 </div>
                 
                 <div id="enemy-hp-container" class="w-64 opacity-0 transition-opacity">
-                    <p class="orbitron text-[8px] text-pink-500 uppercase tracking-widest text-center mb-1">Target HP</p>
+                    <p class="orbitron text-[10px] text-pink-500 uppercase tracking-widest text-center mb-1">敵のHP</p>
                     <div class="hp-bar-container">
                         <div id="enemy-hp-fill" class="hp-bar-fill w-full"></div>
                     </div>
@@ -383,17 +432,37 @@
                         TECH<span class="text-pink-500">-</span>STRIKE
                     </h1>
                     <p class="text-blue-400 font-bold tracking-[0.5em] mt-1 md:mt-2 text-xs md:text-sm ml-2">久保田の技術部屋<span class="text-pink-500">ー</span>タイピング戦線</p>
+                    <div class="mt-4 text-sm md:text-base text-white/85 leading-relaxed text-left inline-block bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                        <p class="font-bold text-green-400 mb-1">遊び方</p>
+                        <ul class="list-disc pl-5 space-y-0.5">
+                            <li>画面に出る<b>技術科に関する単語</b>を、キーボードで打ってウイルスを倒せ！</li>
+                            <li>制限時間は60秒間</li>
+                            <li>間違えるとHPが5減る。HPが0になると強制終了</li>
+                            <li>「ー」（のばす音）は <b>- （ハイフン）キー</b></li>
+                            <li>「si / shi」など、打ち方が2つある文字はどちらでもOK</li>
+                            <li>「ん」は、あとに「あいうえお」や「な行」が続くときと、言葉の最後では <b>nn</b> と打つ</li>
+                            <li><b>スコア</b>は正解1文字100点+コンボボーナス。ミスするとコンボがリセットされます。</li>
+                            <li>コンボボーナスは、100点 → 110点 → 120点 → 130点…と、<b>10点ずつアップ</b>します。</li>
+                        </ul>
+                    </div>
+                    <div class="mt-3 flex items-center justify-center gap-2 flex-wrap">
+                        <span class="text-sm text-white/70">むずかしさ：</span>
+                        <button type="button" class="level-btn" data-level="easy">やさしい</button>
+                        <button type="button" class="level-btn active" data-level="normal">ふつう</button>
+                        <button type="button" class="level-btn" data-level="hard">むずかしい</button>
+                    </div>
                 </div>
                 
                 <div id="ready-msg" class="orbitron text-4xl font-black italic tracking-widest text-white mb-4" style="display: none;">READY?</div>
                 
-                <div id="jp-display" class="text-xl md:text-2xl text-white/50 mb-2 h-8"></div>
+                <div id="jp-display" class="text-xl md:text-2xl text-white/80 mb-1 min-h-[2rem]"></div>
+                <div id="desc-display" class="text-sm text-blue-300/90 mb-2 min-h-[1.25rem]"></div>
                 <div id="roma-display" class="text-3xl md:text-4xl font-bold tracking-[0.1em] orbitron min-h-[3rem]"></div>
             </div>
 
             <div id="player-hp-container" class="w-full" style="margin-top: clamp(0.5rem, 2vh, 3rem); opacity: 0; transition: opacity 0.3s;">
                 <div class="flex justify-between items-end mb-1">
-                    <p class="orbitron text-[10px] text-blue-400 font-bold tracking-widest uppercase">Player HP</p>
+                    <p class="text-xs text-blue-400 font-bold tracking-widest">あなたのHP</p>
                     <p id="player-hp-text" class="orbitron text-[10px] text-blue-400">100%</p>
                 </div>
                 <div class="hp-bar-container">
@@ -402,34 +471,43 @@
             </div>
         </div>
 
-        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" inputmode="latin" />
+        <input type="text" id="hidden-input" autocomplete="off" spellcheck="false" inputmode="text" autocorrect="off" autocapitalize="off" />
 
-        <div class="flex flex-col items-center gap-4" style="margin-top: clamp(0.5rem, 2vh, 2rem)">
+        <div class="start-controls flex flex-col items-center gap-4" style="margin-top: clamp(0.5rem, 2vh, 2rem)">
             <button id="start-btn" class="btn-neon px-12 py-3 rounded-full text-lg font-bold orbitron tracking-widest">START MISSION</button>
-            <p id="hint-text" class="text-gray-500 text-xs animate-pulse font-mono uppercase tracking-widest">Press Space or Enter to begin</p>
+            <p id="hint-text" class="text-gray-300 text-sm animate-pulse">スペースキー か Enterキー でスタート</p>
+            <div class="flex gap-3">
+                <button type="button" id="sound-btn" class="mini-btn" aria-pressed="true">音：ON</button>
+                <button type="button" id="fx-btn" class="mini-btn">エフェクト：通常</button>
+            </div>
         </div>
     </div>
 
     <div id="result-modal" class="fixed inset-0 glass-panel bg-black/95 items-center justify-center z-[100] p-6" style="display:none;">
-        <div class="max-w-md w-full text-center space-y-8 fade-in">
-            <h2 class="text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
+        <div class="max-w-md w-full text-center space-y-4 fade-in">
+            <h2 class="text-4xl md:text-5xl font-black orbitron text-white italic tracking-tighter">MISSION COMPLETE</h2>
             <div class="grid grid-cols-2 gap-4">
                 <div class="bg-white/5 p-4 rounded-2xl border border-red-500/30">
-                    <p class="text-red-400 text-[10px] uppercase mb-1">Slayed</p>
+                    <p class="text-red-400 text-[10px] uppercase mb-1">倒した数</p>
                     <p id="final-slayed" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-pink-500/30">
-                    <p class="text-pink-400 text-[10px] uppercase mb-1">Total Slayed</p>
+                    <p class="text-pink-400 text-[10px] uppercase mb-1">正しく打てたキー数</p>
                     <p id="final-keys" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-blue-500/30">
-                    <p class="text-blue-400 text-[10px] uppercase mb-1">Score</p>
+                    <p class="text-blue-400 text-[10px] uppercase mb-1">スコア</p>
                     <p id="final-score" class="text-4xl font-bold">0</p>
                 </div>
                 <div class="bg-white/5 p-4 rounded-2xl border border-green-500/30">
-                    <p class="text-green-400 text-[10px] uppercase mb-1">Accuracy</p>
+                    <p class="text-green-400 text-[10px] uppercase mb-1">正確さ</p>
                     <p id="final-accuracy" class="text-4xl font-bold">0%</p>
                 </div>
+            </div>
+            <div class="text-left space-y-1 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <p id="result-record" class="orbitron text-yellow-300 text-sm" style="display:none;">NEW RECORD!</p>
+                <p id="result-advice" class="text-base leading-relaxed"></p>
+                <p id="result-miss" class="text-sm text-white/75 whitespace-pre-line"></p>
             </div>
             <button id="retry-btn" class="w-full btn-neon py-5 rounded-2xl text-xl font-bold orbitron">RETRY</button>
         </div>
@@ -440,14 +518,16 @@
             { jp: "コンピュータ", roma: "konpyu-ta" },
             { jp: "インターネット", roma: "inta-netto" },
             { jp: "プログラミング", roma: "puroguramingu" },
-            { jp: "アルゴリズム", roma: "arugorizumu" },
+            { jp: "アルゴリズム", roma: "arugorizumu", desc: "問題を解決するための手順" },
             { jp: "データ", roma: "de-ta" },
-            { jp: "デジタル", roma: "dejitaru" },
-            { jp: "アナログ", roma: "anarogu" },
-            { jp: "ソフトウェア", roma: "sofutowea" },
-            { jp: "ハードウェア", roma: "ha-dowea" },
+            { jp: "デジタル", roma: "dejitaru" ,desc: "段階的(0と1)な数値"},
+            { jp: "アナログ", roma: "anarogu" ,desc: "連続した変化"},
+            { jp: "ソフトウェア", roma: "sofutowea" ,desc: "コンピュータを動かすためのプログラムやデータ"},
+            { jp: "ハードウェア", roma: "ha-dowea" ,desc: "コンピュータの物理的な部品"},
             { jp: "ネットワーク", roma: "nettowa-ku" },
             { jp: "セキュリティ", roma: "sekyurithi" },
+            { jp: "ウイルス", roma: "uirusu" ,desc: "悪意のあるプログラム"},
+            { jp: "マルウェア", roma: "maruwea" ,desc: "悪意のあるソフトウェア"},
             { jp: "ログインパスワード", roma: "roguinpasuwa-do" },
             { jp: "アカウント", roma: "akaunto" },
             { jp: "ログイン", roma: "roguin" },
@@ -457,42 +537,78 @@
             { jp: "ウィンドウ", roma: "windou" },
             { jp: "ビット", roma: "bitto" },
             { jp: "バイト", roma: "baito" },
-            { jp: "バグとデバッグ", roma: "bagutodebaggu" },
             { jp: "キロバイト", roma: "kirobaito" },
             { jp: "メガバイト", roma: "megabaito" },
             { jp: "ギガバイト", roma: "gigabaito" },
             { jp: "テラバイト", roma: "terabaito" },
             { jp: "ファイル", roma: "fairu" },
             { jp: "フォルダ", roma: "foruda" },
-            { jp: "クラウド", roma: "kuraudo" },
-            { jp: "データベース", roma: "de-tabe-su" },
+            { jp: "バグとデバッグ", roma: "bagutodebaggu", desc: "プログラムの誤り（バグ）を見つけて直すこと（デバッグ）" },
+            { jp: "クラウド", roma: "kuraudo" ,desc: "インターネット上のサーバーにデータを保存する技術" },
+            { jp: "データベース", roma: "de-tabe-su" ,desc: "データを効率的に保存・管理するためのシステム" },
             { jp: "シミュレーション", roma: "simyure-syon" },
-            { jp: "フローチャート", roma: "furo-cha-to" },
-            { jp: "条件分岐", roma: "zyoukenbunki" },
+            { jp: "フローチャート", roma: "furo-cha-to", desc: "処理の流れを、図形と矢印で表したもの" },
+            { jp: "ディープフェイク", roma: "dhi-pufeiku", desc: "AIで作られた、本物そっくりのにせの画像や動画" },
+            { jp: "ファクトチェック", roma: "fakutotyekku", desc: "情報が正しいかどうかを確かめること" },
+            { jp: "アテンションエコノミー", roma: "atensyonnekonomi-", desc: "人の関心（注目）が、お金のような価値を持つという考え方" },
+            { jp: "フィルターバブル", roma: "firuta-baburu", desc: "見たい情報ばかりが表示され、考えがかたよってしまうこと" },
+            { jp: "デジタルタトゥー", roma: "dejitarutatwu-", desc: "ネットに出した情報は、消したくても消せないこと" },
+            { jp: "条件分岐", roma: "zyoukenbunki", desc: "「もし〜なら」で、処理を分けること" },
+            { jp: "偽情報", roma: "nisezyouhou" },
+            { jp: "誤情報", roma: "gozyouhou" },
             { jp: "入力", roma: "nyuuryoku" },
             { jp: "出力", roma: "shutsuryoku" },
             { jp: "処理", roma: "shori" },
-            { jp: "変数", roma: "hensuu" },
-            { jp: "著作権", roma: "tyosakuken" },
-            { jp: "肖像権", roma: "shouzouken" },
-            { jp: "特許権", roma: "tokkyoken" },
-            { jp: "商標権", roma: "syouhyouken" },
-            { jp: "意匠権", roma: "isyouken" },
-            { jp: "実用新案権", roma: "zituyousinnanken" },
-            { jp: "知的財産権", roma: "titekizaisanken" },
-            { jp: "産業財産権", roma: "sangyouzaisanken" },
+            { jp: "変数", roma: "hensuu", desc: "数や文字を入れておく「入れ物」" },
+            { jp: "著作権", roma: "tyosakuken" , desc: "作品を作った人が持つ、作品を守る権利" },
+            { jp: "肖像権", roma: "shouzouken", desc: "自分の顔や姿を、勝手に撮影・公開されない権利" },
+            { jp: "特許権", roma: "tokkyoken" , desc: "発明や創作したものを独占的に使用する権利" },
+            { jp: "商標権", roma: "syouhyouken" , desc: "商品やサービスの識別を目的とした権利" },
+            { jp: "意匠権", roma: "isyouken" , desc: "工業製品の外観や形状に与える権利" },
+            { jp: "実用新案権", roma: "zituyousinnanken" , desc: "新しい発明や創作に与える権利" },
+            { jp: "知的財産権", roma: "titekizaisanken", desc: "人が考え出したもの（アイデアや作品）を守る権利" },
+            { jp: "産業財産権", roma: "sangyouzaisanken", desc: "産業活動に関係する知的財産の権利" },
+            { jp: "個人情報", roma: "kojinzyouhou" },
             { jp: "情報モラル", roma: "zyouhoumoraru" },
             { jp: "ネット依存", roma: "nettoizon" },
-            { jp: "デジタルタトゥー", roma: "dejitarutatwu-" },
-            { jp: "個人情報", roma: "kojinzyouhou" },
             { jp: "不正アクセス", roma: "fuseiakusesu" },
-            { jp: "ウイルス", roma: "uirusu" },
-            { jp: "マルウェア", roma: "maruwea" },
-
-            { jp: "AIはハルシネーションに注意", roma: "aihaharusine-syonnnityuui" },
+            { jp: "偽情報には気をつけよう", roma: "nisezyouhounihakiwotukeyou" },
+            { jp: "AIはハルシネーションに注意", roma: "aihaharusine-syonnnityuui", desc: "AIが、もっともらしいまちがいを答えてしまうことに注意する" },
             { jp: "ネットの使い方には注意が必要だ!", roma: "nettonotukaikatanihatyuuigahituyouda!" },
-            { jp: "タイピングはやりすぎていませんか?", roma: "taipinguhayarisugiteimasenka?" }
+            { jp: "タイピングはやりすぎていませんか?", roma: "taipinguhayarisugiteimasenka?" },
+            { jp: "情報は正しいか確認しよう", roma: "zyouhouhatadasiikakakuninsiyou" },
+            { jp: "ニュースを見たら情報源を確認しよう", roma: "nyu-suwomitarazyouhougenwokakuninsiyou" },
+            { jp: "うわさをそのまま信じないようにしよう", roma: "uwasawosonomamasinjinaiyounisiyou" },
+            { jp: "偽情報を広めない", roma: "nisezyouhouwohiromenai" },
+            { jp: "写真を投稿する前に必ず確認!", roma: "syasinwotoukousurumaenikanarazukakunin!" },
+            { jp: "個人情報を大切にしよう", roma: "kozinzyouhouwotaisetunisiyou" },
+            { jp: "知らない人からの連絡には反応しない", roma: "siranaihitokaranorenrakunihahannnousinai" },
+            { jp: "パスワードは人に教えないように!", roma: "pasuwa-dohahitoniosienaiyouni!" },
+            { jp: "同じパスワードを使い回さないように注意", roma: "onazipasuwa-dowotukaimawasanaiyounityuui" },
+            { jp: "ネットに書いたことは残ることがある", roma: "nettonikaitakotohanokorukotogaaru" },
+            { jp: "送信する前にもう一度考えよう", roma: "sousinsurumaenimouitidokangaeyou" },
+            { jp: "相手の気持ちを考えて投稿しよう", roma: "aitenokimotiwokangaetetoukousiyou" },
+            { jp: "人の写真を勝手に使わないようにしよう", roma: "hitonosyasinwokattenitukawanaiyounisiyou" },
+            { jp: "著作権を守って作品を利用しよう", roma: "tyosakukenwomamottesakuhinworiyousiyou" },
+            { jp: "AIの答えも正しいとは限らない", roma: "ainokotaemotadasiitohakagiranai" },
+            { jp: "AIの情報は自分でも確かめよう", roma: "ainozyouhouhazibundemotasikameyou" },
+            { jp: "AIが作った画像にも注意しよう", roma: "aigatukuttagazounityuuisiyou" },
+            { jp: "便利なAIも使い方が大切だ", roma: "benrinaaimotukaikatagataisetuda" },
+            { jp: "ネットの情報を比べてみよう", roma: "nettonozyouhouwokurabetemiyou" },
+            { jp: "困ったときは大人に相談しよう", roma: "komattatokihaotonanisoudansiyou" },
+            { jp: "知らない人から送られたリンクは開かない", roma: "siranaihitokaraokuraretarinkuhahirakanai" },
+            { jp: "スマートフォンは適切に使えていますか?", roma: "suma-tofonhatekisetunitukaeteimasuka?" },
+            { jp: "長時間の利用には気をつけよう", roma: "tyouzikannnoriyounihakiwotukeyou" },
+            { jp: "ネットと上手につき合おう", roma: "nettotozyouzunitukiaou" }
         ];
+
+        function loadHighScore() {
+            try { return parseInt(localStorage.getItem('typingHighScore') || '0') || 0; } catch (e) { return 0; }
+        }
+        function saveHighScore(v) {
+            try { localStorage.setItem('typingHighScore', v); } catch (e) { /* 保存できない環境では何もしない */ }
+        }
+        let highScore = loadHighScore();
 
         let currentWord = {};
         let currentRomaArray = [];
@@ -506,9 +622,14 @@
         let missCount = 0;
         let combo = 0;
         let playerHp = 100;
-        let highScore = parseInt(localStorage.getItem('typingHighScore') || '0');
         let totalSlayedCount = 0;
-        let isComposing = false;
+        let isStarting = false;
+        let nextWordTimer = null;
+        let resultLockUntil = 0;
+        let missByKey = {};
+        let optionalNIndex = -1;
+        let soundOn = true;
+        let level = 'normal';
 
         const timerEl = document.getElementById('timer-display');
         const scoreEl = document.getElementById('score-display');
@@ -527,10 +648,12 @@
         const enemyHpContainer = document.getElementById('enemy-hp-container');
         const playerHpContainer = document.getElementById('player-hp-container');
         const readyMsg = document.getElementById('ready-msg');
-
+        const battleStage = document.getElementById('battle-stage');
+        const descEl = document.getElementById('desc-display');
         const neonColors = ['#00f3ff', '#ff00ff', '#00ff88', '#ffff00', '#ff3131'];
 
         const gameContainer = document.getElementById('game-container');
+        const mainGamePanel = document.getElementById('main-game-panel');
 
         function updateComboTheme(c) {
             gameContainer.classList.remove('theme-purple','theme-red','theme-gold');
@@ -553,7 +676,7 @@
         }
 
         function spawnParticles(x, y, color) {
-            const count = 8;
+            const count = 4;
             for (let i = 0; i < count; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
@@ -564,7 +687,6 @@
                     left:${x}px; top:${y}px;
                     width:${size}px; height:${size}px;
                     background:${color};
-                    box-shadow: 0 0 6px ${color};
                     --dx:${Math.cos(angle)*dist}px;
                     --dy:${Math.sin(angle)*dist}px;
                 `;
@@ -575,6 +697,13 @@
 
         const cutinText = document.getElementById('cutin-text');
         const cutinLines = document.querySelectorAll('.cutin-line');
+        let cutinClearTimer = null;
+        function clearCutin() {
+            clearTimeout(cutinClearTimer);
+            cutinText.className = 'cutin-text';
+            cutinText.textContent = '';
+            cutinLines.forEach(l => l.classList.remove('cutin-line-anim'));
+        }
         function showCutin(text, color = '#00f3ff') {
             cutinText.textContent = text;
             cutinText.style.color = color;
@@ -584,6 +713,8 @@
             void cutinText.offsetWidth;
             cutinText.classList.add('cutin-enter');
             cutinLines.forEach(l => l.classList.add('cutin-line-anim'));
+            clearTimeout(cutinClearTimer);            // ★追加：アニメ終了後に自動で片付ける
+            cutinClearTimer = setTimeout(clearCutin, 1500);
         }
 
         const monsterTypes = 5;
@@ -601,8 +732,9 @@
         let _audioCtx = null;
         function getAudioContext() {
             if (!_audioCtx || _audioCtx.state === 'closed') {
-                _audioCtx = new AudioContext();
+                _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
+            if (_audioCtx.state === 'suspended') _audioCtx.resume();
             return _audioCtx;
         }
 
@@ -621,6 +753,7 @@
         }
 
         function playHitSound() {
+            if (!soundOn) return;
             const audioCtx = getAudioContext();
             const oscillator = audioCtx.createOscillator();
             const gainNode = audioCtx.createGain();
@@ -640,7 +773,14 @@
         }
 
         function initGame() {
+            if (isStarting || isPlaying) return;
+            isStarting = true;
+            const playStartCutin = !document.body.classList.contains('calm');
+            getAudioContext();
+            mainGamePanel.classList.remove('start-screen');
             titleContainer.style.display = 'none';
+            battleStage.style.display = 'flex';
+            fitToScreen();
             startBtn.style.display = 'none';
             document.getElementById('hint-text').style.display = 'none';
 
@@ -649,11 +789,15 @@
             
             score = 0;
             slayed = 0;
+            missByKey = {};
             timeLeft = 60;
             totalTyped = 0;
             missCount = 0;
             combo = 0;
             playerHp = 100;
+            comboDisplay.textContent = '0 COMBO!';
+            comboDisplay.classList.remove('combo-animate');
+            updateComboTheme(0);
             updateStats();
             updatePlayerHp();
             
@@ -661,7 +805,11 @@
             readyMsg.classList.remove('hidden');
 
             setTimeout(() => {
-                showCutin('MISSION START!!', '#00f3ff');
+                isStarting = false;
+                if (playStartCutin) {
+                    showCutin('MISSION START!!', '#00f3ff');
+                }
+
                 readyMsg.style.display = 'none';
                 
                 enemyHpContainer.style.display = 'block';
@@ -686,10 +834,15 @@
         }
 
         function nextWord() {
-            currentWord = words[Math.floor(Math.random() * words.length)];
+            currentWord = pickWord();
             currentRomaArray = currentWord.roma.split("");
+            const last = currentRomaArray.length - 1;
+            if (currentRomaArray[last] === 'n' && currentRomaArray[last - 1] !== 'n') currentRomaArray.push('n');
             charIndex = 0;
+            optionalNIndex = -1;
             jpEl.textContent = currentWord.jp;
+            descEl.textContent = currentWord.desc || '';
+            fitRoma();
             renderRoma();
             updateEnemyHp();
             spawnMonster();
@@ -704,7 +857,8 @@
                     let statusClass = "";
                     if (i < charIndex) statusClass = "done";
                     else if (i === charIndex) statusClass = "next";
-                    html += `<span class="char ${statusClass}">${currentRomaArray[i]}</span>`;
+                    const still = (i < charIndex - 1) ? ' style="animation:none"' : '';
+                    html += `<span class="char ${statusClass}"${still}>${currentRomaArray[i]}</span>`;
                 }
                 romaEl.innerHTML = html;
                 return;
@@ -728,15 +882,22 @@
             const type = Math.floor(Math.random() * monsterTypes);
             setMonsterType(type);
             const color = neonColors[Math.floor(Math.random() * neonColors.length)];
-            const mb = document.getElementById('monster-body');
-            if (mb) { mb.setAttribute('stroke', color); mb.setAttribute('fill', color + '33'); }
-            document.querySelectorAll('#monster-svg circle').forEach(c => c.setAttribute('fill', color));
-            document.querySelectorAll('#monster-svg path:not(#monster-body), #monster-svg polygon, #monster-svg ellipse, #monster-svg rect:not(#monster-body), #monster-svg line, #monster-svg polyline').forEach(el => {
-                if (el.getAttribute('stroke')) el.setAttribute('stroke', color);
-                if (el.getAttribute('fill') && el.getAttribute('fill') !== '#000' && el.getAttribute('fill') !== 'none') {
-                    el.setAttribute('fill', el.getAttribute('fill').includes('rgba') ? color + '26' : color);
-                }
+            document.querySelectorAll('#monster-svg *').forEach(el => {
+                const f = el.getAttribute('fill'), s = el.getAttribute('stroke');
+                if (f !== null && el.dataset.origFill === undefined) el.dataset.origFill = f;
+                if (s !== null && el.dataset.origStroke === undefined) el.dataset.origStroke = s;
             });
+            function recolorMonster(color) {
+                document.querySelectorAll('#monster-svg [data-orig-fill], #monster-svg [data-orig-stroke]').forEach(el => {
+                    const f = el.dataset.origFill, s = el.dataset.origStroke;
+                    if (s && s !== 'none') el.setAttribute('stroke', color);
+                    if (f && f !== 'none' && f !== '#000') {
+                        const alpha = f.startsWith('rgba') ? (el.id === 'monster-body' ? '33' : '26') : '';
+                        el.setAttribute('fill', color + alpha);
+                    }
+                });
+            }
+            recolorMonster(color);
         }
 
         function updateEnemyHp() {
@@ -822,44 +983,136 @@
             isPlaying = false;
             clearInterval(timer);
             hiddenInput.blur();
+            clearTimeout(nextWordTimer);
 
-            if (score > highScore) {
+            const KEY_HINTS = {
+                '-': '「ー」（のばす音）は - キーで打つ',
+                'n': '「ん」は n を2回（nn）打つ場面がある',
+                'y': '「しょ」などは syo / sho のように y や h が入る',
+                'h': '「しょ」などは syo / sho のように y や h が入る'
+            };
+
+            function buildAdvice(acc, isGameOver) {
+                if (totalTyped === 0) {
+                    return '表示されている単語をキーボードで入力しよう。';
+                }
+
+                if (isGameOver) {
+                    return 'HPが0になった。まずは「ゆっくり・正確に」打つことを意識してみよう。';
+                }
+
+                if (acc >= 95) {
+                    return 'すばらしい！ほとんどミスがない！次はスピードに挑戦してみよう。';
+                }
+
+                if (acc >= 85) {
+                    return 'いい調子！ミスをへらすと、コンボが続いてスコアが伸びるよ。';
+                }
+
+                return 'まずは「ゆっくり・正確に」入力してみよう。ミスした文字をチェックしてみよう。';
+            }
+
+            function buildMissText() {
+                const list = Object.entries(missByKey)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 3);
+
+                if (list.length === 0) {
+                    return 'ミスしたキー：なし';
+                }
+
+                const keys = list
+                    .map(([k, c]) =>
+                        (k === '-' ? '-（ー）' : k) + '（' + c + '回）'
+                    )
+                    .join('、');
+
+                const hint = KEY_HINTS[list[0][0]];
+
+                return 'ミスが多かったキー：' + keys +
+                    (hint ? '\n' + hint : '');
+            }
+
+            const isNewRecord = score > highScore;
+
+            if (isNewRecord) {
                 highScore = score;
-                localStorage.setItem('typingHighScore', highScore);
+                saveHighScore(highScore);
             }
 
             const resultTitle = resultModal.querySelector('h2');
 
-            if (slayed === 0) {
+            if (isGameOver) {
+                showCutin('GAME OVER', '#ff3131');
+                resultTitle.textContent = "GAME OVER";
+                resultTitle.style.color = "var(--neon-red)";
+                resultTitle.classList.add('animate-pulse');
+
+            } else if (slayed === 0) {
                 showCutin('MISSION FAILED', '#ff3131');
                 resultTitle.textContent = "MISSION FAILED";
                 resultTitle.style.color = "var(--neon-red)";
                 resultTitle.classList.add('animate-pulse');
+
             } else {
                 showCutin('MISSION COMPLETE', '#00f3ff');
                 resultTitle.textContent = "MISSION COMPLETE";
                 resultTitle.style.color = "#fff";
                 resultTitle.classList.remove('animate-pulse');
-                confetti({ 
-                    particleCount: 150, 
-                    spread: 70, 
-                    origin: { y: 0.6 }, 
-                    colors: neonColors 
-                });
+
+                if (typeof confetti === 'function') {
+                    try {
+                        confetti({
+                            particleCount: 150,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: neonColors
+                        });
+                    } catch (e) {}
+                }
             }
 
+            // 結果を表示
             document.getElementById('final-slayed').textContent = slayed;
             document.getElementById('final-score').textContent = score;
-            document.getElementById('final-accuracy').textContent = accuracyEl.textContent;
-            document.getElementById('final-keys').textContent = totalSlayedCount;
-            
-            resultModal.style.display = 'flex';
+            document.getElementById('final-accuracy').textContent =
+                accuracyEl.textContent;
 
-            gameContainer.classList.remove('theme-purple','theme-red','theme-gold');
+            // 正しく打てたキー数
+            document.getElementById('final-keys').textContent =
+                totalTyped - missCount;
+
+            const acc = totalTyped > 0
+                ? Math.round(((totalTyped - missCount) / totalTyped) * 100)
+                : 0;
+
+            document.getElementById('result-record').style.display =
+                (isNewRecord && score > 0) ? 'block' : 'none';
+
+            document.getElementById('result-advice').textContent =
+                buildAdvice(acc, isGameOver);
+
+            document.getElementById('result-miss').textContent =
+                buildMissText();
+
+            resultModal.style.display = 'flex';
+            resultLockUntil = Date.now() + 1200;
+
+            gameContainer.classList.remove(
+                'theme-purple',
+                'theme-red',
+                'theme-gold'
+            );
         }
 
         hiddenInput.addEventListener('keydown', (e) => {
             if (!isPlaying) return;
+
+            // 長押しによる連続入力（キーリピート）を無視
+            if (e.repeat) {
+                e.preventDefault();
+                return;
+            }
 
             let ch = e.key;
 
@@ -869,7 +1122,10 @@
                     Backslash: '\\', Semicolon: ';', Quote: "'", Comma: ',',
                     Period: '.', Slash: '/',
                 };
-                if (e.code.startsWith('Key')) {
+                const shiftMap = { Digit1: '!', Slash: '?' };
+                if (e.shiftKey && shiftMap[e.code]) {
+                    ch = shiftMap[e.code];
+                } else if (e.code.startsWith('Key')) {
                     ch = e.shiftKey
                         ? e.code.slice(3).toUpperCase()
                         : e.code.slice(3).toLowerCase();
@@ -892,9 +1148,80 @@
             }
         });
 
-        document.addEventListener('click', () => { if (isPlaying) hiddenInput.focus(); });
+        // ---- 小さい文字を l / x で打つ（ltu, xtu, kilya, fula, texi など）----
+        // 配列 currentRomaArray を「l / x を使う打ち方」に書き換えて、
+        // 今打った1文字を正解にできたら true を返す
+        function tryLxAlternative(typedChar) {
+            const arr = currentRomaArray;
+            const i = charIndex;
+            const ex = arr[i], prev = arr[i - 1], prev2 = arr[i - 2], next = arr[i + 1];
+            const has = (c, set) => c !== undefined && set.includes(c);   // c が set に含まれるか
+            const isLx = (typedChar === 'l' || typedChar === 'x');
+
+            // 0) l と x はどちらでもOK（すでに l / x の位置を打っているとき）
+            if (isLx && (ex === 'l' || ex === 'x')) {
+                arr[i] = typedChar;
+                return true;
+            }
+
+            // 1) 「っ」: 同じ子音が2つ並ぶところを ltu / xtu に置き換える
+            //    bitto → bi + ltu + to（ltsu / xtsu は既存の tu⇔tsu 判定が受け持つ）
+            if (isLx && next === ex && has(ex, 'bcdfghjkmpqrstvwyz')) {
+                arr.splice(i, 1, typedChar, 't', 'u');
+                return true;
+            }
+
+            // 2) 「ゃゅょ」「ぇ」: 子音 + i + l/x + (y) + 母音    kyu → ki + lyu,  tye → ti + le
+            if (typedChar === 'i' && ex === 'y' && has(prev, 'kgsztdnhbpmrj')) {
+                if (has(next, 'auo')) { arr.splice(i, 1, 'i', 'l', 'y'); return true; }
+                if (next === 'e')     { arr.splice(i, 1, 'i', 'l');      return true; }
+            }
+            //    sh を打つ前に i を打つ形:  shu → si + lyu（し + ゅ）
+            if (typedChar === 'i' && ex === 'h' && prev === 's' && has(next, 'auo')) {
+                arr.splice(i, 1, 'i', 'l', 'y');
+                return true;
+            }
+            //    sh / ch / j から始まる形:  sha → shi + lya,  cho → chi + lyo,  ja → ji + lya
+            if (typedChar === 'i' && has(ex, 'auoe') &&
+                ((prev === 'h' && has(prev2, 'sc')) || prev === 'j')) {
+                if (ex === 'e') arr.splice(i, 0, 'i', 'l');
+                else            arr.splice(i, 0, 'i', 'l', 'y');
+                return true;
+            }
+
+            // 3) 「ぁぃぅぇぉ」
+            //    ふぁ・ふぃ・ふぇ・ふぉ:  fa → fu + la
+            if (typedChar === 'u' && prev === 'f' && has(ex, 'aieo')) {
+                arr.splice(i, 0, 'u', 'l');
+                return true;
+            }
+            //    ふ を hu と打つ:  fa → hu + la
+            if (typedChar === 'h' && ex === 'f' && has(next, 'aieo')) {
+                arr.splice(i, 1, 'h', 'u', 'l');
+                return true;
+            }
+            //    うぃ・うぇ:  wi → u + li
+            if (typedChar === 'u' && ex === 'w' && has(next, 'ie')) {
+                arr.splice(i, 1, 'u', 'l');
+                return true;
+            }
+            //    てぃ・でぃ:  thi → te + li,  dhi → de + li
+            if (typedChar === 'e' && ex === 'h' && has(prev, 'td') && next === 'i') {
+                arr.splice(i, 1, 'e', 'l');
+                return true;
+            }
+            //    とぅ・どぅ:  twu → to + lu
+            if (typedChar === 'o' && ex === 'w' && has(prev, 'td') && next === 'u') {
+                arr.splice(i, 1, 'o', 'l');
+                return true;
+            }
+
+            return false;
+        }
 
         function processChar(typedChar) {
+            if (charIndex >= currentRomaArray.length) return;
+
             typedChar = typedChar.toLowerCase();
             totalTyped++;
 
@@ -913,6 +1240,7 @@
                     } else {
                         if (currentRomaArray[charIndex - 1] !== 'n' && currentRomaArray[charIndex + 1] !== 'n') {
                             currentRomaArray.splice(charIndex + 1, 0, 'n');
+                            optionalNIndex = charIndex + 1;
                         }
                     }
                 }
@@ -950,12 +1278,21 @@
                     currentRomaArray[charIndex] = 't';
                     currentRomaArray.splice(charIndex + 1, 1);
                     isCorrect = true;
+                } else if (!isCorrect && expected === 'c' && typedChar === 't' && currentRomaArray[charIndex + 1] === 'h' && currentRomaArray[charIndex + 2] === 'i') {
+                    currentRomaArray[charIndex] = 't';
+                    currentRomaArray.splice(charIndex + 1, 1);
+                    isCorrect = true;
+                } else if (!isCorrect && expected === 't' && typedChar === 'c' && currentRomaArray[charIndex + 1] === 'i') {
+                    currentRomaArray[charIndex] = 'c';
+                    currentRomaArray.splice(charIndex + 1, 0, 'h');
+                    isCorrect = true;
                 }
 
                 // 「ふ」: hu <-> fu
                 if (!isCorrect) {
                     const nextForFu = currentRomaArray[charIndex + 1];
-                    if (expected === 'h' && typedChar === 'f' && nextForFu === 'u') {
+                    const prevForFu = currentRomaArray[charIndex - 1];
+                    if (expected === 'h' && typedChar === 'f' && nextForFu === 'u' && prevForFu !== 's' && prevForFu !== 'c') {
                         currentRomaArray[charIndex] = 'f'; isCorrect = true;
                     } else if (expected === 'f' && typedChar === 'h' && nextForFu === 'u') {
                         currentRomaArray[charIndex] = 'h'; isCorrect = true;
@@ -1027,11 +1364,11 @@
                 if (!isCorrect) {
                     const prev = currentRomaArray[charIndex - 1];
                     const next = currentRomaArray[charIndex + 1];
-                    const nextIsYouonVowel = (next === 'a' || next === 'u' || next === 'o');
+                    const nextIsYouonVowel = (next === 'a' || next === 'u' || next === 'o' || next === 'e');
 
                     if ((expected === 'c' && typedChar === 't') || (expected === 't' && typedChar === 'c')) {
                         const afterNext = currentRomaArray[charIndex + 2];
-                        if (afterNext === 'a' || afterNext === 'u' || afterNext === 'o') {
+                        if (afterNext === 'a' || afterNext === 'u' || afterNext === 'o' || afterNext === 'e') {
                             if (next === 'y' || next === 'h') {
                                 currentRomaArray[charIndex] = typedChar;
                                 if (expected === 'c' && next === 'h') currentRomaArray[charIndex + 1] = 'y';
@@ -1052,17 +1389,23 @@
                             currentRomaArray[charIndex] = 'y';
                             isCorrect = true;
                         }
-                        else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o') && typedChar === 'y') {
+                        else if ((prev === 't' || prev === 'c') && (expected === 'a' || expected === 'u' || expected === 'o' || expected === 'e') && typedChar === 'y') {
                             currentRomaArray.splice(charIndex, 0, 'y');
                             isCorrect = true;
                         }
                     }
                 }
+                // 小さい文字を l / x で打つ
+                if (!isCorrect && tryLxAlternative(typedChar)) {
+                    isCorrect = true;
+                }
 
-                if (!isCorrect && charIndex > 0 && currentRomaArray[charIndex] === 'n' && currentRomaArray[charIndex - 1] === 'n') {
+                if (!isCorrect && charIndex > 0 && charIndex === optionalNIndex && currentRomaArray[charIndex] === 'n' && currentRomaArray[charIndex - 1] === 'n') {
                     currentRomaArray.splice(charIndex, 1);
-                    expected = currentRomaArray[charIndex]; 
-                    if (typedChar === expected) isCorrect = true;
+                    optionalNIndex = -1;
+                    totalTyped--;
+                    processChar(typedChar);
+                    return;
                 }
             }
 
@@ -1085,9 +1428,12 @@
                     monsterContainer.classList.remove('monster-shake', 'monster-hit');
                     void monsterContainer.offsetWidth;
                     monsterContainer.classList.add('monster-death');
-                    setTimeout(nextWord, 400);
+
+                    nextWordTimer = setTimeout(nextWord, 400);
                 }
             } else {
+                missByKey[typedChar] = (missByKey[typedChar] || 0) + 1;
+
                 missCount++;
                 combo = 0;
                 triggerMiss();
@@ -1100,6 +1446,57 @@
             }
         }
 
+        // ---- むずかしさ ----
+        const LEVELS = {
+            easy:   (w) => w.roma.length <= 9,    // やさしい：短い言葉
+            normal: ()  => true,                  // ふつう：全部（これまでと同じ）
+            hard:   (w) => w.roma.length >= 12    // むずかしい：長い言葉
+        };
+        function pickWord() {
+            const pool = words.filter(LEVELS[level]);
+            let w;
+            do { w = pool[Math.floor(Math.random() * pool.length)]; } while (pool.length > 1 && w === currentWord);   // 同じ単語が続かない
+            return w;
+        }
+        document.querySelectorAll('.level-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                level = btn.dataset.level;
+                document.querySelectorAll('.level-btn').forEach(b => b.classList.toggle('active', b === btn));
+            });
+        });
+
+        // ---- 長いローマ字でも1行に収まるよう、文字サイズを調整 ----
+        function fitRoma() {
+            const width = romaEl.parentElement.clientWidth || 600;
+            const size = Math.max(14, Math.min(36, width / (currentRomaArray.length * 0.95)));
+            romaEl.style.fontSize = size + 'px';
+        }
+
+        // ---- 音・エフェクトの切り替え ----
+        const soundBtn = document.getElementById('sound-btn');
+        const fxBtn = document.getElementById('fx-btn');
+        soundBtn.addEventListener('click', () => {
+            soundOn = !soundOn;
+            soundBtn.textContent = soundOn ? '音：ON' : '音：OFF';
+            soundBtn.setAttribute('aria-pressed', soundOn);
+        });
+        function resetEffects() {
+            screenFlash.className = '';
+            document.querySelectorAll('.energy-wave, .particle').forEach(el => el.remove());
+            clearCutin();
+        }
+        fxBtn.addEventListener('click', () => {
+            const calm = document.body.classList.toggle('calm');
+            resetEffects();
+            fxBtn.textContent = calm ? 'エフェクト：弱め' : 'エフェクト：通常';
+        });
+        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.body.classList.add('calm');
+            fxBtn.textContent = 'エフェクト：弱め';
+        }
+
+        hiddenInput.addEventListener('blur', () => { if (isPlaying) setTimeout(() => hiddenInput.focus(), 0); });
+
         startBtn.addEventListener('click', initGame);
         document.getElementById('retry-btn').addEventListener('click', () => {
             retryGame();
@@ -1109,7 +1506,9 @@
             if (e.code === 'Space' || e.code === 'Enter') {
                 if (!isPlaying) {
                     e.preventDefault();
+                    if (e.repeat) return;
                     if (resultModal.style.display === 'flex') {
+                        if (Date.now() < resultLockUntil) return;
                         retryGame(); 
                     } else {
                         initGame();
@@ -1120,6 +1519,7 @@
         });
 
         function retryGame() {
+            clearTimeout(nextWordTimer);
             enemyHpContainer.style.transition = 'none';
             playerHpContainer.style.transition = 'none';
             monsterContainer.style.transition = 'none';
@@ -1136,13 +1536,30 @@
             monsterContainer.style.transition = '';
 
             jpEl.textContent = "";
+            descEl.textContent = "";
             romaEl.innerHTML = "";
+
+            cutinText.className = 'cutin-text';
+            cutinLines.forEach(l => {
+                l.classList.remove('cutin-line-anim');
+            });
+            cutinText.textContent = '';
 
             resultModal.style.display = 'none';
             startBtn.style.display = 'block';
             document.getElementById('hint-text').style.display = 'block';
             titleContainer.style.display = 'block';
+
+            battleStage.style.display = 'none';
+            playerHpContainer.style.display = 'none';
+            enemyHpContainer.style.display = 'none';
+            monsterContainer.style.display = 'none';
+
             readyMsg.style.display = 'none';
+
+            mainGamePanel.classList.add('start-screen');
+
+            fitToScreen();
 
             totalSlayedCount = 0;
             charIndex = 0;
@@ -1162,7 +1579,9 @@
             missCount = 0;
             combo = 0;
             playerHp = 100;
-            
+            comboDisplay.textContent = '0 COMBO!';
+            comboDisplay.classList.remove('combo-animate');
+            updateComboTheme(0);
             updatePlayerHp();
         }
 
@@ -1173,12 +1592,13 @@
             document.getElementById('highscore-display').style.display = 'block';
         }
 
+        const SCREEN_MARGIN_Y = 24;
         function fitToScreen() {
             const container = document.getElementById('game-container');
             container.style.transform = '';
             container.style.marginTop = '';
             container.style.marginBottom = '';
-            const availH = window.innerHeight;
+            const availH = window.innerHeight - SCREEN_MARGIN_Y * 2;
             const availW = window.innerWidth;
             const contH = container.scrollHeight;
             const contW = container.scrollWidth;
@@ -1194,6 +1614,8 @@
         }
         fitToScreen();
         window.addEventListener('resize', fitToScreen);
+        window.addEventListener('load', fitToScreen);
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitToScreen);
     </script>
 </body>
 </html>
