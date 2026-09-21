@@ -310,10 +310,6 @@
         body.calm #screen-flash, body.calm .energy-wave, body.calm #bg-scan-sweep,
         body.calm .particle, body.calm #cutin-overlay { display: none !important; }
         body.calm .screen-shake, body.calm #bg-grid { animation: none; }
-        @media (prefers-reduced-motion: reduce) {
-            #screen-flash, .energy-wave, #bg-scan-sweep, .particle, #cutin-overlay { display: none !important; }
-            .screen-shake, #bg-grid, #monster-container { animation: none; }
-        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -1500,10 +1496,6 @@
             resetEffects();
             fxBtn.textContent = calm ? 'エフェクト：弱め' : 'エフェクト：通常';
         });
-        if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            document.body.classList.add('calm');
-            fxBtn.textContent = 'エフェクト：弱め';
-        }
 
         hiddenInput.addEventListener('blur', () => { if (isPlaying) setTimeout(() => hiddenInput.focus(), 0); });
 
