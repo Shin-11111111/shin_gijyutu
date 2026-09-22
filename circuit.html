@@ -32,6 +32,8 @@
     padding:10px 20px;
     display:flex;
     align-items:center;
+    flex-wrap:wrap;
+    row-gap:8px;
     gap:16px;
     border-bottom:3px solid var(--accent);
     flex-shrink:0;
@@ -112,18 +114,17 @@
     height:100%;
     display:block;
     cursor:default;
+    touch-action:none;
     background-image:
-      linear-gradient(to right, var(--grid) 1px, transparent 1px),
-      linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
+        linear-gradient(to right, var(--grid) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid) 1px, transparent 1px);
     background-size:20px 20px;
   }
   .toolbar{
-    position:absolute;
-    top:12px;
-    left:12px;
     display:flex;
+    flex-wrap:wrap;
     gap:8px;
-    z-index:5;
+    margin-left:auto;
   }
   .toolbar button{
     font-family:var(--mono);
@@ -162,6 +163,13 @@
     line-height:1.6;
     z-index:5;
   }
+  .hint summary{
+    cursor:pointer;
+    font-weight:700;
+    color:var(--accent);
+    list-style:none;
+  }
+.hint summary::-webkit-details-marker{ display:none; }
   .zoom-panel{
     position:absolute;
     bottom:12px;
@@ -236,7 +244,7 @@
   }
   .wire-mode-banner{
     position:absolute;
-    top:58px;
+    top:12px;
     left:50%;
     transform:translateX(-50%);
     background:var(--accent);
@@ -255,6 +263,35 @@
   .canvas-wrap.wire-active .wire-mode-banner{
     display:block;
   }
+  @media (max-width: 700px){
+    .layout{
+      flex-direction: column;
+    }
+    .sidebar{
+      width: 100%;
+      height: 96px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      display: flex;
+      align-items: center;
+      padding: 8px;
+    }
+    .sidebar h2{ display:none; }
+    .symbol-btn{
+      width: auto;
+      flex-shrink: 0;
+      margin: 0 6px 0 0;
+    }
+    .hint{ max-width: calc(100% - 24px); }
+    .toolbar{
+      width:100%;
+      margin-left:0;
+    }
+    .toolbar button{
+      font-size:10px;
+      padding:5px 8px;
+    }
+  }
 </style>
 </head>
 <body>
@@ -262,6 +299,18 @@
 <header>
   <h1>回路図エディタ</h1>
   <span class="sub">CIRCUIT SCHEMATIC</span>
+  <div class="toolbar">
+    <button id="btn-select" class="active">選択 / 移動</button>
+    <button id="btn-rotate">90°回転</button>
+    <button id="btn-wire-turn">配線の向き切替</button>
+    <button id="btn-delete">削除</button>
+    <button id="btn-undo">元に戻す</button>
+    <button id="btn-clear">全消去</button>
+    <button id="btn-save">保存(.csv)</button>
+    <button id="btn-load">読み込み(.csv)</button>
+    <button id="btn-export">SVGダウンロード</button>
+    <button id="btn-screenshot">スクリーンショット</button>
+  </div>
 </header>
 
 <div class="layout">
@@ -270,6 +319,12 @@
     <button class="symbol-btn" data-type="wire">
       <svg viewBox="0 0 40 40"><line x1="4" y1="20" x2="36" y2="20" stroke="currentColor" stroke-width="2"/></svg>
       <span class="label">配線</span>
+    </button>
+    <button class="symbol-btn" data-type="junction">
+      <svg viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r="5" fill="currentColor"/>
+      </svg>
+      <span class="label">接続点</span>
     </button>
 
     <h2>電源・接地</h2>
@@ -421,12 +476,6 @@
     </button>
 
     <h2>その他</h2>
-    <button class="symbol-btn" data-type="junction">
-      <svg viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r="5" fill="currentColor"/>
-      </svg>
-      <span class="label">接続点</span>
-    </button>
     <button class="symbol-btn" data-type="text">
       <svg viewBox="0 0 40 40"><text x="6" y="26" font-size="16" fill="currentColor" font-family="monospace">Aa</text></svg>
       <span class="label">テキスト注記</span>
@@ -434,16 +483,6 @@
   </aside>
 
   <div class="canvas-wrap">
-    <div class="toolbar">
-      <button id="btn-select" class="active">選択 / 移動</button>
-      <button id="btn-rotate">90°回転</button>
-      <button id="btn-delete">削除モード</button>
-      <button id="btn-clear">全消去</button>
-      <button id="btn-save">保存(.csv)</button>
-      <button id="btn-load">読み込み(.csv)</button>
-      <button id="btn-export">SVGダウンロード</button>
-      <button id="btn-screenshot">スクリーンショット</button>
-    </div>
     <input id="file-loader" type="file" accept=".csv" style="display:none"/>
     <svg id="canvas" tabindex="0"></svg>
     <div class="wire-mode-banner">配線モード — 始点をクリック / Escでキャンセル</div>
@@ -456,11 +495,13 @@
         <button id="btn-zoom-out">－</button>
       </div>
     </div>
-    <div class="hint">
-      左の部品をクリックして配置 → クリックでキャンバスに置く<br>
-      配線: 始点→終点クリックでL字接続<br><b>R</b>キーで折れ方向切替<br><b>Esc</b>・右クリックでキャンセル<br>
-      ホイールでズーム、中ボタンまたはSpaceドラッグで移動<br>Delキーで選択削除
-    </div>
+    <details class="hint">
+      <summary>使い方（タップで開閉）</summary>
+      左の部品ボタンをタップ → キャンバスをタップして置く<br>
+      配線は、始点をクリック → 終点をタップでつながる<br>
+      指1本でドラッグ（移動）、指2本でピンチ（拡大・縮小）<br>
+      Delキー、Back Space、または「削除」ボタンで消せる
+    </details>
   </div>
 </div>
 
@@ -473,12 +514,37 @@ let elements = [];
 let wires = [];
 let nextId = 1;
 let mode = 'select';
-let selectedId = null;
+let selectedIds = new Set();
 let placingType = null;
+
+function isSelected(id){ return selectedIds.has(id); }
+function selectOnly(id){ selectedIds.clear(); selectedIds.add(id); }
+function clearSelection(){ selectedIds.clear(); }
 
 let dragging = null;
 let wireStart = null;
+let history = [];
+function snapshot(){
+  history.push(JSON.stringify({elements, wires, nextId}));
+  if(history.length > 50) history.shift();
+}
+function undo(){
+  if(history.length === 0) return;
+  const prev = JSON.parse(history.pop());
+  elements = prev.elements;
+  wires    = prev.wires;
+  nextId   = prev.nextId;
+  clearSelection();
+  render();
+}
+document.getElementById('btn-undo').addEventListener('click', undo);
 
+window.addEventListener('keydown', (e)=>{
+  if((e.ctrlKey || e.metaKey) && e.key === 'z'){
+    e.preventDefault();
+    undo();
+  }
+});
 function symbolBody(type){
   switch(type){
     case 'battery':
@@ -550,8 +616,8 @@ function symbolBody(type){
         <line x1="-6" y1="-7" x2="-6" y2="7" stroke-width="2.5"/>
         <line x1="-6" y1="-5" x2="4" y2="-9"/>
         <line x1="-6" y1="5" x2="4" y2="9"/>
-        <line x1="4" y1="-9" x2="4" y2="-17"/>
-        <line x1="4" y1="9" x2="4" y2="17"/>
+        <polyline points="4,-9 4,-17 0,-20" fill="none"/>
+        <polyline points="4,9 4,17 0,20" fill="none"/>
         <polygon points="0,4 4,9 -3,8" fill="currentColor" stroke="none"/>
       `;
     case 'varresistor':
@@ -662,6 +728,63 @@ function setWireMode(active, hasStart){
 let wireMousePos = null;
 let wireCornerMode = 'H';
 
+let selecting = null;
+let selectLongPressTimer = null;
+let selectPressStart = null;
+const LONG_PRESS_MS = 450;
+const LONG_PRESS_MOVE_CANCEL_PX = 8;
+
+function clearSelectLongPress(){
+  if(selectLongPressTimer){ clearTimeout(selectLongPressTimer); selectLongPressTimer = null; }
+  selectPressStart = null;
+}
+
+function startSelectLongPress(clientX, clientY){
+  clearSelectLongPress();
+  selectPressStart = {x: clientX, y: clientY};
+  selectLongPressTimer = setTimeout(()=>{
+    selectLongPressTimer = null;
+    beginRectSelect(clientX, clientY);
+  }, LONG_PRESS_MS);
+}
+
+function beginRectSelect(clientX, clientY){
+  dragging = null;
+  touchDrag = null;
+  panning = false;
+  const {x, y} = screenToWorld(clientX, clientY);
+  selecting = {wx0: x, wy0: y, wx1: x, wy1: y};
+  if(navigator.vibrate) navigator.vibrate(15);
+  render();
+}
+
+function updateRectSelect(clientX, clientY){
+  if(!selecting) return;
+  const {x, y} = screenToWorld(clientX, clientY);
+  selecting.wx1 = x;
+  selecting.wy1 = y;
+  render();
+}
+
+function finishRectSelect(){
+  if(!selecting) return;
+  const x0 = Math.min(selecting.wx0, selecting.wx1);
+  const x1 = Math.max(selecting.wx0, selecting.wx1);
+  const y0 = Math.min(selecting.wy0, selecting.wy1);
+  const y1 = Math.max(selecting.wy0, selecting.wy1);
+  selecting = null;
+  suppressNextClick = true;
+
+  clearSelection();
+  elements.forEach(el=>{
+    if(el.x >= x0 && el.x <= x1 && el.y >= y0 && el.y <= y1) selectedIds.add('e'+el.id);
+  });
+  wires.forEach(w=>{
+    if(w.pts.every(p => p.x >= x0 && p.x <= x1 && p.y >= y0 && p.y <= y1)) selectedIds.add('w'+w.id);
+  });
+  render();
+}
+
 function routeWire(start, end){
   if(start.x === end.x || start.y === end.y){
     return [start, end];
@@ -691,7 +814,7 @@ function render(){
 
     const pl = document.createElementNS(NS,'polyline');
     pl.setAttribute('points', pts);
-    pl.setAttribute('class', 'elem-wire' + (selectedId===('w'+w.id) ? ' elem-selected':''));
+    pl.setAttribute('class', 'elem-wire' + (isSelected('w'+w.id) ? ' elem-selected':''));
     pl.setAttribute('fill','none');
     pl.dataset.id = 'w'+w.id;
     pl.dataset.kind = 'wire';
@@ -721,17 +844,18 @@ function render(){
     g.dataset.kind = 'elem';
     g.style.cursor = 'pointer';
 
+    const hitSize = (el.type === 'junction') ? 20 : 48;
     const hit = document.createElementNS(NS,'rect');
-    hit.setAttribute('x', '-24');
-    hit.setAttribute('y', '-24');
-    hit.setAttribute('width', '48');
-    hit.setAttribute('height', '48');
+    hit.setAttribute('x', -hitSize/2);
+    hit.setAttribute('y', -hitSize/2);
+    hit.setAttribute('width', hitSize);
+    hit.setAttribute('height', hitSize);
     hit.setAttribute('fill', 'transparent');
     hit.setAttribute('stroke', 'none');
     g.appendChild(hit);
 
     const body = document.createElementNS(NS,'g');
-    body.setAttribute('class','elem-symbol' + (selectedId===('e'+el.id) ? ' elem-selected':''));
+    body.setAttribute('class','elem-symbol' + (isSelected('e'+el.id) ? ' elem-selected':''));
     body.innerHTML = symbolBody(el.type);
     if(el.type === 'text'){
       const tb = body.querySelector('[data-text-body]');
@@ -773,7 +897,7 @@ function render(){
     }
 
     if(el.type === 'transistor'){
-      [[-20,0],[4,-17],[4,17]].forEach(addDot(g));
+      [[-20,0],[0,-20],[0,20]].forEach(addDot(g));
     } else if(el.type === 'ground' || el.type === 'gnd'){
       addDot(g)([0,-20]);
     } else if(el.type === 'varresistor'){
@@ -785,6 +909,22 @@ function render(){
     svg.appendChild(g);
   });
 
+  if(selecting){
+    const x = Math.min(selecting.wx0, selecting.wx1);
+    const y = Math.min(selecting.wy0, selecting.wy1);
+    const w = Math.abs(selecting.wx1 - selecting.wx0);
+    const h = Math.abs(selecting.wy1 - selecting.wy0);
+    const r = document.createElementNS(NS,'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', w); r.setAttribute('height', h);
+    r.setAttribute('fill', 'rgba(37,99,235,0.12)');
+    r.setAttribute('stroke', 'var(--accent)');
+    r.setAttribute('stroke-width', 1.5 / viewScale);
+    r.setAttribute('stroke-dasharray', `${5/viewScale} ${3/viewScale}`);
+    r.setAttribute('pointer-events', 'none');
+    svg.appendChild(r);
+  }
+
   document.getElementById('status').textContent =
     `部品: ${elements.length} ／ 配線: ${wires.length} ／ ズーム: ${Math.round(viewScale / BASE_SCALE * 100)}%`;
 }
@@ -795,10 +935,12 @@ svg.addEventListener('click', (e)=>{
   const sx = snap(x), sy = snap(y);
 
   if(mode === 'place'){
+    snapshot();
     elements.push({id: nextId++, type: placingType, x: sx, y: sy, rot:0, label: undefined});
     mode = 'select';
     placingType = null;
     setActiveTool('btn-select');
+    document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
     render();
     return;
   }
@@ -810,6 +952,7 @@ svg.addEventListener('click', (e)=>{
       setWireMode(true, true);
     } else {
       if(wireStart.x !== sx || wireStart.y !== sy){
+        snapshot();
         const pts = routeWire(wireStart, {x:sx, y:sy});
         wires.push({id: nextId++, pts});
       }
@@ -824,6 +967,7 @@ svg.addEventListener('click', (e)=>{
   if(mode === 'delete'){
     const target = e.target.closest('[data-id]');
     if(target){
+      snapshot();
       const id = target.dataset.id;
       if(id.startsWith('e')) elements = elements.filter(el=>'e'+el.id !== id);
       else wires = wires.filter(w=>'w'+w.id !== id);
@@ -833,13 +977,15 @@ svg.addEventListener('click', (e)=>{
   }
 
   if(e.target === svg){
-    selectedId = null;
-    render();
-  }
+  if(suppressNextClick){ suppressNextClick = false; return; }
+  clearSelection();
+  render();
+}
 });
 
 let panning = false;
 let panStart = null;
+let suppressNextClick = false;
 
 svg.addEventListener('mousedown', (e)=>{
   if(e.button === 1 || (e.button === 0 && spaceDown)){
@@ -850,23 +996,48 @@ svg.addEventListener('mousedown', (e)=>{
   }
   if(mode !== 'select') return;
   const target = e.target.closest('[data-id]');
-  if(!target) return;
+  if(!target){
+    beginRectSelect(e.clientX, e.clientY);
+    return;
+  }
   const id = target.dataset.id;
-  selectedId = id;
 
-  if(id.startsWith('e')){
-    const el = elements.find(x=>'e'+x.id === id);
-    const {x, y} = screenToWorld(e.clientX, e.clientY);
+  if(!(selectedIds.size > 1 && isSelected(id))){
+    selectOnly(id);
+  }
+
+  const {x, y} = screenToWorld(e.clientX, e.clientY);
+  const elemTargets = [...selectedIds]
+    .filter(sid => sid.startsWith('e'))
+    .map(sid => elements.find(el => 'e'+el.id === sid))
+    .filter(Boolean);
+  const wireTargets = [...selectedIds]
+    .filter(sid => sid.startsWith('w'))
+    .map(sid => wires.find(w => 'w'+w.id === sid))
+    .filter(Boolean);
+
+  if(elemTargets.length > 0 || wireTargets.length > 0){
+    snapshot();
     dragging = {
-      id: el.id,
-      offsetX: x - el.x,
-      offsetY: y - el.y
+      elemOffsets: elemTargets.map(el => ({ el, offsetX: x - el.x, offsetY: y - el.y })),
+      wireOffsets: wireTargets.map(w => ({
+        w,
+        offsets: w.pts.map(p => ({ offsetX: x - p.x, offsetY: y - p.y }))
+      }))
     };
   }
   render();
 });
 
 svg.addEventListener('mousemove', (e)=>{
+  if(selectLongPressTimer && selectPressStart){
+    const dist = Math.hypot(e.clientX - selectPressStart.x, e.clientY - selectPressStart.y);
+    if(dist > LONG_PRESS_MOVE_CANCEL_PX) clearSelectLongPress();
+  }
+  if(selecting){
+    updateRectSelect(e.clientX, e.clientY);
+    return;
+  }
   if(panning && panStart){
     const dx = (e.clientX - panStart.cx) / viewScale;
     const dy = (e.clientY - panStart.cy) / viewScale;
@@ -883,14 +1054,22 @@ svg.addEventListener('mousemove', (e)=>{
   }
   if(!dragging) return;
   const {x, y} = screenToWorld(e.clientX, e.clientY);
-  const el = elements.find(x=>x.id === dragging.id);
-  if(!el) return;
-  el.x = snap(x - dragging.offsetX);
-  el.y = snap(y - dragging.offsetY);
+  dragging.elemOffsets.forEach(({ el, offsetX, offsetY }) => {
+    el.x = snap(x - offsetX);
+    el.y = snap(y - offsetY);
+  });
+  dragging.wireOffsets.forEach(({ w, offsets }) => {
+    w.pts.forEach((p, i) => {
+      p.x = snap(x - offsets[i].offsetX);
+      p.y = snap(y - offsets[i].offsetY);
+    });
+  });
   render();
 });
 
 window.addEventListener('mouseup', ()=>{
+  clearSelectLongPress();
+  if(selecting) finishRectSelect();
   panning = false;
   panStart = null;
   dragging = null;
@@ -952,13 +1131,105 @@ svg.addEventListener('contextmenu', (e)=>{
     e.preventDefault();
   }
 });
+let touchDrag = null;
+let pinch = null;
+
+svg.addEventListener('touchstart', (e)=>{
+  if(e.touches.length === 2){
+    clearSelectLongPress();
+    selecting = null;
+    touchDrag = null;
+    const [a,b] = e.touches;
+    pinch = {
+      dist: Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY),
+      scale: viewScale,
+      cx: (a.clientX+b.clientX)/2,
+      cy: (a.clientY+b.clientY)/2
+    };
+    return;
+  }
+  if(e.touches.length !== 1 || mode !== 'select') return;
+  const t = e.touches[0];
+  const el = document.elementFromPoint(t.clientX, t.clientY);
+  const hit = el && el.closest('[data-id]');
+  if(hit){
+    // 部品・配線・接続点にタッチ：長押しは発生させず、そのままドラッグできるようにする
+    const id = hit.dataset.id;
+    selectOnly(id);
+    if(id.startsWith('e')){
+      const data = elements.find(x=>'e'+x.id === id);
+      const {x, y} = screenToWorld(t.clientX, t.clientY);
+      snapshot();
+      touchDrag = {kind:'elem', id:data.id, offsetX:x-data.x, offsetY:y-data.y};
+    }
+    render();
+  } else {
+    touchDrag = {kind:'pan', cx:t.clientX, cy:t.clientY, vx:viewX, vy:viewY};
+    startSelectLongPress(t.clientX, t.clientY);
+  }
+}, {passive:true});
+
+svg.addEventListener('touchmove', (e)=>{
+  if(selectLongPressTimer && selectPressStart && e.touches.length === 1){
+    const t = e.touches[0];
+    const dist = Math.hypot(t.clientX - selectPressStart.x, t.clientY - selectPressStart.y);
+    if(dist > LONG_PRESS_MOVE_CANCEL_PX) clearSelectLongPress();
+  }
+  if(e.touches.length === 2 && pinch){
+    e.preventDefault();
+    const [a,b] = e.touches;
+    const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+    const newScale = Math.min(BASE_SCALE*8, Math.max(BASE_SCALE*0.2, pinch.scale*(dist/pinch.dist)));
+    const {x:wx, y:wy} = screenToWorld(pinch.cx, pinch.cy);
+    viewScale = newScale;
+    const rect = svg.getBoundingClientRect();
+    viewX = wx - (pinch.cx-rect.left)/viewScale;
+    viewY = wy - (pinch.cy-rect.top)/viewScale;
+    applyViewport();
+    updateZoomStatus();
+    return;
+  }
+  if(selecting){
+    const t = e.touches[0];
+    if(t){ e.preventDefault(); updateRectSelect(t.clientX, t.clientY); }
+    return;
+  }
+  if(!touchDrag || e.touches.length !== 1) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  if(touchDrag.kind === 'pan'){
+    const dx = (t.clientX - touchDrag.cx) / viewScale;
+    const dy = (t.clientY - touchDrag.cy) / viewScale;
+    viewX = touchDrag.vx - dx;
+    viewY = touchDrag.vy - dy;
+    applyViewport();
+  } else if(touchDrag.kind === 'elem'){
+    const {x, y} = screenToWorld(t.clientX, t.clientY);
+    const el = elements.find(x=>x.id === touchDrag.id);
+    if(el){
+      el.x = snap(x - touchDrag.offsetX);
+      el.y = snap(y - touchDrag.offsetY);
+      render();
+    }
+  }
+}, {passive:false});
+
+svg.addEventListener('touchend', (e)=>{
+  clearSelectLongPress();
+  if(e.touches.length < 2) pinch = null;
+  if(e.touches.length === 0){
+    touchDrag = null;
+    if(selecting) finishRectSelect();
+  }
+});
 
 window.addEventListener('keydown', (e)=>{
   if(e.key === 'Delete' || e.key === 'Backspace'){
-    if(selectedId){
-      if(selectedId.startsWith('e')) elements = elements.filter(el=>'e'+el.id !== selectedId);
-      else wires = wires.filter(w=>'w'+w.id !== selectedId);
-      selectedId = null;
+    if(selectedIds.size > 0){
+      snapshot();
+      elements = elements.filter(el=>!selectedIds.has('e'+el.id));
+      wires    = wires.filter(w=>!selectedIds.has('w'+w.id));
+      clearSelection();
       render();
     }
   }
@@ -1010,33 +1281,38 @@ labelEditor.addEventListener('keydown', (e)=>{
 });
 labelEditor.addEventListener('blur', commitLabel);
 
-
 document.querySelectorAll('.symbol-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     const type = btn.dataset.type;
-    if(type === 'wire'){
-      if(mode === 'wire'){
-        mode = 'select';
-        wireStart = null;
-        wireMousePos = null;
-        setActiveTool('btn-select');
-        document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
-        setWireMode(false);
-      } else {
-        mode = 'wire';
-        wireStart = null;
-        setActiveTool(null);
-        document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
-        btn.style.borderColor = 'var(--accent)';
-        btn.style.background = 'var(--accent)';
-        setWireMode(true, false);
-      }
+    const isWire = type === 'wire';
+    const alreadyActive =
+      (isWire && mode === 'wire') || (!isWire && mode === 'place' && placingType === type);
+
+    if(alreadyActive){
+      mode = 'select';
+      placingType = null;
+      wireStart = null;
+      wireMousePos = null;
+      setWireMode(false);
+      setActiveTool('btn-select');
+      document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
+      render();
+      return;
+    }
+
+    document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background  = 'var(--accent)';
+    setActiveTool(null);
+
+    if(isWire){
+      mode = 'wire';
+      wireStart = null;
+      setWireMode(true, false);
     } else {
       mode = 'place';
       placingType = type;
-      setActiveTool(null);
-      document.querySelectorAll('.symbol-btn').forEach(b=>{ b.style.borderColor=''; b.style.background=''; });
-      btn.style.borderColor = 'var(--accent)';
+      setWireMode(false);
     }
   });
 });
@@ -1075,17 +1351,26 @@ document.getElementById('btn-delete').addEventListener('click', ()=>{
 });
 
 document.getElementById('btn-rotate').addEventListener('click', ()=>{
-  if(selectedId && selectedId.startsWith('e')){
-    const el = elements.find(x=>'e'+x.id === selectedId);
-    if(el){
-      el.rot = (el.rot + 90) % 360;
-      render();
-    }
+  const targets = [...selectedIds].filter(id => id.startsWith('e'));
+  if(targets.length === 0) return;
+  snapshot();
+  targets.forEach(id=>{
+    const el = elements.find(x=>'e'+x.id === id);
+    if(el) el.rot = (el.rot + 90) % 360;
+  });
+  render();
+});
+document.getElementById('btn-wire-turn').addEventListener('click', ()=>{
+  if(mode === 'wire' && wireStart){
+    wireCornerMode = wireCornerMode === 'H' ? 'V' : 'H';
+    render();
+  } else {
+    alert('配線を引いている途中（始点をクリックした後）に使えます。');
   }
 });
-
 document.getElementById('btn-clear').addEventListener('click', ()=>{
   if(confirm('全ての部品と配線を削除しますか？')){
+    snapshot();
     elements = [];
     wires = [];
     selectedId = null;
@@ -1228,8 +1513,8 @@ document.getElementById('btn-export').addEventListener('click', ()=>{
 });
 
 document.getElementById('btn-screenshot').addEventListener('click', ()=>{
-  const prevSelected = selectedId;
-  selectedId = null;
+  const prevSelected = new Set(selectedIds);
+  clearSelection();
   const prevWireStart = wireStart;
   wireStart = null;
   render();
@@ -1294,11 +1579,10 @@ document.getElementById('btn-screenshot').addEventListener('click', ()=>{
   };
   img.src = url;
 
-  selectedId = prevSelected;
+  selectedIds = prevSelected;
   wireStart = prevWireStart;
   render();
 });
-
 
 function resizeCanvas(){
   const wrap = svg.parentElement;
