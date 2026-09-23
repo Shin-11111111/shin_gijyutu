@@ -2432,12 +2432,29 @@ function initARReticle() {
 }
 
 async function checkARSupport() {
-  if (navigator.xr && navigator.xr.isSessionSupported) {
-    try {
-      if (await navigator.xr.isSessionSupported('immersive-ar')) {
-        document.getElementById('btn-ar').style.display = '';
-      }
-    } catch (e) {}
+  const arBtn = document.getElementById('btn-ar');
+
+  if (!window.isSecureContext) {
+    console.warn('[AR] HTTPS（安全なコンテキスト）で開いてください。現在:', location.protocol);
+    return;
+  }
+
+  if (!navigator.xr || !navigator.xr.isSessionSupported) {
+    console.warn('[AR] このブラウザはWebXRに未対応です。iPhone/iPadのSafariは非対応です。Androidの場合はChromeでお試しください。');
+    return;
+  }
+
+  try {
+    const supported = await navigator.xr.isSessionSupported('immersive-ar');
+    if (supported) {
+      arBtn.style.display = '';
+    } else {
+      console.warn('[AR] この端末はimmersive-arに非対応です。Google Play開発者サービス for AR（ARCore）が必要です。');
+      showSaveToast('⚠ この端末はAR機能に対応していません（Android Chrome + ARCore対応機種が必要です）');
+    }
+  } catch (e) {
+    console.error('[AR] AR対応チェックでエラー:', e);
+    showSaveToast('⚠ AR対応チェックに失敗しました: ' + e.message);
   }
 }
 
