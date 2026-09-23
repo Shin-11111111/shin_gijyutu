@@ -16,7 +16,7 @@
   --border: rgba(255,255,255,0.1);
   --border-strong: rgba(255,255,255,0.2);
   --text: #e8e8e8;
-  --text-muted: #666;
+  --text-muted: #999;
   --accent: #e8a84c;
   --accent-dim: rgba(232,168,76,0.12);
   --danger: #e85c4c;
@@ -268,8 +268,21 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 .cutdiag-seg-len { font-family:monospace; font-size:9px; opacity:.85; }
 .cutdiag-kerf { width:5px; flex-shrink:0; background:repeating-linear-gradient(45deg,#000 0,#000 2px,#1a1a1a 2px,#1a1a1a 4px); }
 .close-btn:hover { border-color:var(--text-muted); }
-</style>
-</head>
+.ar-overlay { display:none; position:fixed; inset:0; z-index:200; pointer-events:none; }
+.ar-overlay.show { display:block; }
+.ar-hint {
+  position:absolute; top:18px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,.65); border:1px solid rgba(255,255,255,.25);
+  border-radius:8px; padding:8px 16px; font-size:12px; color:#fff;
+  max-width:88vw; text-align:center; line-height:1.5;
+}
+.ar-exit-btn {
+  position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+  height:38px; padding:0 18px; background:rgba(0,0,0,.7);
+  border:1px solid rgba(255,255,255,.4); border-radius:19px;
+  color:#fff; font-size:13px; cursor:pointer; pointer-events:auto;
+}
+</style></head>
 <body>
 
 <div id="toolbar">
@@ -315,6 +328,11 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
   <button class="tb-btn" id="btn-measure" onclick="toggleMeasureMode()" title="計測">
 	<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="5" width="12" height="4" rx="0.5"/><line x1="3.5" y1="5" x2="3.5" y2="7"/><line x1="6" y1="5" x2="6" y2="7.5"/><line x1="8.5" y1="5" x2="8.5" y2="7"/><line x1="11" y1="5" x2="11" y2="7.5"/></svg>
 	<span class="tb-label">計測</span>
+  </button>
+  <div class="sep"></div>
+  <button class="tb-btn" id="btn-ar" onclick="startAR()" title="ARで部屋に置く" style="display:none;">
+    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1.2 12.3 4v6L7 12.8 1.7 10V4z"/><path d="M1.7 4 7 6.8l5.3-2.8M7 6.8v6"/></svg>
+    <span class="tb-label">ARで置く</span>
   </button>
 </div>
 
@@ -377,7 +395,10 @@ canvas#scene { position:absolute; inset:0; display:block; touch-action:none; }
 	<button class="close-btn" onclick="closeOv('ov-cutdiagram')">閉じる</button>
   </div>
 </div>
-
+<div id="ar-overlay" class="ar-overlay">
+  <div class="ar-hint" id="ar-hint">床や机など平らな面にカメラを向けて、タップして作品を置いてください</div>
+  <button class="ar-exit-btn" onclick="endARSession()">✕ ARを終了</button>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const SCALE = 0.004;
@@ -447,6 +468,9 @@ let snapGuides = [];
 let camTh = 0.5, camPh = 1.05, camD = 7.5;
 let camTgt = new THREE.Vector3(0,0,0);
 let rotSt = 0;
+let arRoot = null, reticle = null, arSession = null, arController = null;
+let hitTestSource = null, hitTestSourceRequested = false, arSavedState = null;
+const AR_REAL_SCALE = 0.001 / SCALE;
 
 function init() {
   const wrap = document.getElementById('canvas-wrap');
@@ -458,10 +482,15 @@ function init() {
   camera = new THREE.PerspectiveCamera(45, W/H, 0.01, 200);
   refreshCam();
 
-  renderer = new THREE.WebGLRenderer({canvas: document.getElementById('scene'), antialias:true});
+  renderer = new THREE.WebGLRenderer({canvas: document.getElementById('scene'), antialias:true, alpha:true});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(W, H);
   renderer.shadowMap.enabled = true;
+  renderer.xr.enabled = true;
+
+  arRoot = new THREE.Group();
+  scene.add(arRoot);
+  initARReticle();
 
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
   const sun = new THREE.DirectionalLight(0xfff5e0, 1.2);
@@ -487,12 +516,36 @@ function init() {
   cv.addEventListener('touchcancel', onTouchEnd, {passive:false});
   window.addEventListener('resize', onResize);
 
-  (function loop(){ requestAnimationFrame(loop); renderer.render(scene,camera); })();
+  renderer.setAnimationLoop(renderLoop);
+
+  function renderLoop(timestamp, frame) {
+    if (frame) {
+      const refSpace = renderer.xr.getReferenceSpace();
+      const session = renderer.xr.getSession();
+      if (!hitTestSourceRequested) {
+        hitTestSourceRequested = true;
+        session.requestReferenceSpace('viewer').then(viewerSpace => {
+          session.requestHitTestSource({ space: viewerSpace }).then(source => { hitTestSource = source; });
+        }).catch(()=>{});
+      }
+      if (hitTestSource) {
+        const results = frame.getHitTestResults(hitTestSource);
+        if (results.length) {
+          reticle.visible = true;
+          reticle.matrix.fromArray(results[0].getPose(refSpace).transform.matrix);
+        } else {
+          reticle.visible = false;
+        }
+      }
+    }
+    renderer.render(scene, camera);
+  }
 
   addPiece('板①', 600, 150, 12, 0, 1.25);
   addPiece('板②', 600, 150, 12,  0.9, 0.2);
   addPiece('板③', 600, 60, 12, -0.5, -0.8);
   snapshot();
+  checkARSupport();
 }
 
 function refreshCam() {
@@ -2367,6 +2420,97 @@ document.addEventListener('keydown',e=>{
   if(e.key==='s') setMode('select');
   if(e.key==='a') openAddModal();
 });
+
+function initARReticle() {
+  reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.06, 0.075, 32).rotateX(-Math.PI/2),
+    new THREE.MeshBasicMaterial({ color: 0xe8a84c })
+  );
+  reticle.matrixAutoUpdate = false;
+  reticle.visible = false;
+  scene.add(reticle);
+}
+
+async function checkARSupport() {
+  if (navigator.xr && navigator.xr.isSessionSupported) {
+    try {
+      if (await navigator.xr.isSessionSupported('immersive-ar')) {
+        document.getElementById('btn-ar').style.display = '';
+      }
+    } catch (e) {}
+  }
+}
+
+async function startAR() {
+  if (!navigator.xr) {
+    showSaveToast('⚠ この端末・ブラウザはAR表示に対応していません');
+    return;
+  }
+  if (arSession) return;
+
+  try {
+    const session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['hit-test'],
+      optionalFeatures: ['dom-overlay'],
+      domOverlay: { root: document.getElementById('ar-overlay') }
+    });
+    arSession = session;
+    session.addEventListener('end', onARSessionEnded);
+
+    arSavedState = {
+      bg: scene.background,
+      pos: arRoot.position.clone(), quat: arRoot.quaternion.clone(), scale: arRoot.scale.clone()
+    };
+    pieces.forEach(p => { if (p.grp.parent === scene) arRoot.add(p.grp); });
+    arRoot.visible = false;
+    scene.background = null;
+    hitTestSource = null;
+    hitTestSourceRequested = false;
+    document.getElementById('ar-hint').textContent = '床や机など平らな面にカメラを向けて、タップして作品を置いてください';
+
+    await renderer.xr.setSession(session);
+    arController = renderer.xr.getController(0);
+    arController.addEventListener('select', onARSelect);
+    scene.add(arController);
+
+    document.getElementById('ar-overlay').classList.add('show');
+  } catch (err) {
+    showSaveToast('⚠ ARを開始できませんでした');
+    if (arSession) { try { arSession.end(); } catch (e) {} }
+  }
+}
+
+function onARSelect() {
+  if (!reticle.visible) return;
+  const pos = new THREE.Vector3(), quat = new THREE.Quaternion(), scl = new THREE.Vector3();
+  reticle.matrix.decompose(pos, quat, scl);
+  arRoot.position.copy(pos);
+  arRoot.quaternion.copy(quat);
+  arRoot.scale.setScalar(AR_REAL_SCALE);
+  arRoot.visible = true;
+  document.getElementById('ar-hint').textContent = 'もう一度タップすると置き直せます';
+}
+
+function endARSession() {
+  if (arSession) { try { arSession.end(); } catch (e) {} }
+}
+
+function onARSessionEnded() {
+  if (arController) arController.removeEventListener('select', onARSelect);
+  if (arSavedState) {
+    arRoot.position.copy(arSavedState.pos);
+    arRoot.quaternion.copy(arSavedState.quat);
+    arRoot.scale.copy(arSavedState.scale);
+    scene.background = arSavedState.bg;
+  }
+  pieces.forEach(p => { if (p.grp.parent === arRoot) scene.add(p.grp); });
+  arRoot.visible = true;
+  reticle.visible = false;
+  hitTestSource = null;
+  hitTestSourceRequested = false;
+  arSession = null;
+  document.getElementById('ar-overlay').classList.remove('show');
+}
 
 init();
 </script>
