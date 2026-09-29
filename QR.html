@@ -7,12 +7,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: "Hiragino Sans", "Yu Gothic UI", "Meiryo", sans-serif;
             background-color: #f7f9fb;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            min-height: 100dvh;
         }
         #video, #canvas {
             max-width: 100%;
@@ -54,29 +51,34 @@
             padding: 1rem;
             border-radius: 0.5rem;
         }
+        .result-box.result-error {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
-<body class="p-4 sm:p-6 md:p-8 min-h-screen h-screen flex flex-col overflow-hidden">
+<body class="p-4 sm:p-6 md:p-8 min-h-screen flex flex-col">
 
-    <div class="w-full max-w-6xl mx-auto flex flex-col flex-1 overflow-hidden">
+    <div class="w-full max-w-6xl mx-auto flex flex-col flex-1">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">二次元コードリーダー＆ジェネレーター</h1>
 
         <div class="flex border-b border-gray-200 mb-6">
             <button id="tabReader" class="tab-button flex-1 py-2 px-4 text-center text-sm font-medium border-b-2 border-transparent hover:border-emerald-400 text-gray-600 transition duration-150 ease-in-out tab-active" data-tab="reader">
-                リーダー
+                リーダー（読み取り）
             </button>
             <button id="tabGenerator" class="tab-button flex-1 py-2 px-4 text-center text-sm font-medium border-b-2 border-transparent hover:border-emerald-400 text-gray-600 transition duration-150 ease-in-out" data-tab="generator">
-                ジェネレーター
+                ジェネレーター（作成）
             </button>
         </div>
 
-        <div id="readerView" class="tab-content flex flex-col flex-1 overflow-y-auto">
+        <div id="readerView" class="tab-content flex flex-col flex-1">
             <div class="flex flex-col md:flex-row md:gap-6 flex-1">
                 <div class="md:w-3/5 flex flex-col">
                     <div class="relative w-full bg-gray-900 rounded-xl shadow-xl overflow-hidden mb-4 flex-1" style="min-height: 14rem;">
-                        <video id="video" class="w-full h-full object-contain" style="min-height: 14rem;"></video>
+                        <video id="video" class="w-full h-full object-contain" style="min-height: 14rem;" playsinline muted autoplay></video>
                         <canvas id="canvas" class="hidden w-full h-full object-contain" style="min-height: 14rem;"></canvas>
                         <div id="highlightContainer" class="absolute inset-0"></div>
                         <div id="videoOverlay" class="absolute inset-0 flex items-center justify-center bg-gray-900/50 transition-opacity duration-300">
@@ -97,22 +99,22 @@
                         画像をアップロード
                     </button>
                     <button id="pasteButton" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
-                        クリップボードから貼り付け
+                        クリップボード（コピーした画像）から貼り付け
                     </button>
                     <input type="file" id="fileInput" accept="image/*" class="hidden">
-                    <input type="file" id="fileInput" accept="image/*" class="hidden">
-                    <div id="resultBox" class="result-box mt-2 flex-1">
-                        ここに読み取り結果が表示されます。
+                    <div id="resultBox" class="result-box mt-2 flex-1" aria-live="polite">
+                        ①「カメラを起動」を押す　②QRコードを画面に映す　③ここに結果が出ます
                     </div>
                 </div>
             </div>
         </div>
 
-        <div id="generatorView" class="tab-content hidden flex flex-col flex-1 overflow-y-auto">
+        <div id="generatorView" class="tab-content hidden flex flex-col flex-1">
             <div class="flex flex-col md:flex-row md:gap-6 flex-1">
                 <div class="md:w-1/2 bg-white p-6 rounded-xl shadow-xl flex flex-col">
                     <label for="qrText" class="block text-sm font-medium text-gray-700 mb-2">QRコードに含めるURLまたはテキスト:</label>
                     <textarea id="qrText" rows="6" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-emerald-500 focus:border-emerald-500 mb-4 flex-1" placeholder="サイトのURL または テキスト"></textarea>
+                    <p class="text-xs text-gray-500 mb-3">※ 長すぎると作成できません（英語は200文字、日本語は約70文字まで）</p>
 
                     <div class="flex flex-col gap-3">
                         <button id="generateQrBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out">
@@ -121,6 +123,7 @@
                         <button id="downloadJpgBtn" disabled class="w-full bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out disabled:opacity-50" title="生成後にダウンロード可能になります">
                             JPEGでダウンロード
                         </button>
+                        <p id="genMessage" class="text-sm font-semibold min-h-[1.5rem]" role="status"></p>
                     </div>
                 </div>
 
@@ -156,6 +159,13 @@
         const generateQrBtn = document.getElementById('generateQrBtn');
         const downloadJpgBtn = document.getElementById('downloadJpgBtn');
         const qrcodeContainer = document.getElementById('qrcodeContainer');
+        const genMessage = document.getElementById('genMessage');
+
+        function showGenMessage(text, isError = false) {
+            genMessage.textContent = text;
+            genMessage.className = 'text-sm font-semibold min-h-[1.5rem] ' +
+                (isError ? 'text-red-600' : 'text-emerald-700');
+        }
         
         let isCameraActive = false;
         let animationFrameId = null;
@@ -185,17 +195,11 @@
         });
 
         const scanCanvas = document.createElement('canvas');
-        const scanContext = scanCanvas.getContext('2d');
+        const scanContext = scanCanvas.getContext('2d', { willReadFrequently: true });
 
         function displayResult(text, isError = false) {
             resultBox.textContent = text;
-            if (isError) {
-                resultBox.classList.remove('bg-emerald-50', 'border-emerald-200', 'text-emerald-700');
-                resultBox.classList.add('bg-red-50', 'border-red-200', 'text-red-700');
-            } else {
-                resultBox.classList.add('bg-emerald-50', 'border-emerald-200', 'text-emerald-700');
-                resultBox.classList.remove('bg-red-50', 'border-red-200', 'text-red-700');
-            }
+            resultBox.classList.toggle('result-error', isError);
         }
 
         function clearHighlight() {
@@ -279,6 +283,10 @@
                 stopCamera();
                 return;
             }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                displayResult('このページではカメラが使えません。「画像をアップロード」なら使えます。', true);
+                return;
+            }
 
             displayResult('カメラを起動中...');
             clearHighlight();
@@ -325,6 +333,8 @@
                     errorMessage = 'カメラへのアクセスが拒否されました。ブラウザのアドレスバー横にある🔒アイコンからカメラの許可を「許可」に変更してください。';
                 } else if (err.name === 'NotFoundError') {
                     errorMessage = '利用可能なカメラが見つかりませんでした。';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage = 'カメラを使えませんでした。ほかのアプリがカメラを使っていないか確認してください。';
                 }
                 overlayMessage.textContent = 'カメラの起動に失敗しました。';
                 displayResult(errorMessage, true);
@@ -346,7 +356,7 @@
             await startCamera();
         }
 
-        function stopCamera() {
+        function stopCamera(silent = false) {
             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
@@ -356,48 +366,55 @@
                 video.srcObject = null;
             }
             isCameraActive = false;
-            
+
             startStopText.textContent = 'カメラを起動';
             startButton.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
             startButton.classList.remove('bg-yellow-600', 'hover:bg-yellow-700');
-            videoOverlay.classList.remove('hidden');
-            overlayMessage.textContent = 'カメラを起動するか、画像またはPDFをアップロードしてください。';
-            displayResult('スキャンを停止しました。');
-            clearHighlight();
+
+            if (!silent) {
+                videoOverlay.classList.remove('hidden');
+                overlayMessage.textContent = 'カメラを起動するか、画像をアップロードしてください。';
+                displayResult('スキャンを停止しました。');
+                clearHighlight();
+            }
         }
 
         function handleScanResult(data, location, isFromCamera = false) {
+            if (isFromCamera) {
+                canvas.width = scanCanvas.width;
+                canvas.height = scanCanvas.height;
+                canvas.getContext('2d').drawImage(scanCanvas, 0, 0);
+                canvas.classList.remove('hidden');
+                video.classList.add('hidden');
+                stopCamera(true);
+            }
+
             displayResult(`読み取り結果: ${data}`);
-            
+
             if (location && location.topLeft) {
                 const points = [
                     location.topLeft, location.topRight, location.bottomRight, location.bottomLeft,
                 ];
-                
                 const minX = Math.min(...points.map(p => p.x));
                 const minY = Math.min(...points.map(p => p.y));
                 const maxX = Math.max(...points.map(p => p.x));
                 const maxY = Math.max(...points.map(p => p.y));
-
-                const targetElement = isFromCamera ? video : canvas;
-                showHighlight(minX, minY, maxX, maxY, targetElement);
+                showHighlight(minX, minY, maxX, maxY, canvas);
             }
 
-            const urlPattern = /^https?:\/\//i;
-            const isUrl = urlPattern.test(data);
+            if (/^https?:\/\//i.test(data)) {
+                const note = document.createElement('p');
+                note.className = 'mt-3 text-sm';
+                note.textContent = '⚠️ 知らない人からもらったQRコードは、開く前に先生や家の人に確認しましょう。';
 
-            if (isUrl) {
-                const a = document.createElement('a');
-                a.href = data;
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
+                const link = document.createElement('a');
+                link.href = data;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.textContent = '🔗 このサイトを開く';
+                link.className = 'mt-3 block text-center bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-4 rounded-lg';
 
-            if (isFromCamera) {
-                stopCamera();
+                resultBox.append(note, link);
             }
         }
 
@@ -421,7 +438,8 @@
 
             try {
                 if (file.type === 'application/pdf') {
-                    displayResult('PDFファイルは直接スキャンできません。PDF内のQRコードを画像として保存してからアップロードしてください。', true);
+                    showEmptyViewer();
+                    displayResult('PDFは読み取れません。PDFの中のQRコードを画像として保存してから、もう一度アップロードしてください。', true);
                     return;
                 }
                 
@@ -457,14 +475,12 @@
 
             } catch (err) {
                 let errorMessage = 'スキャン中にエラーが発生しました。ファイルが破損しているか、ライブラリの読み込みに問題があります。';
+                showEmptyViewer();
                 displayResult(errorMessage, true);
                 console.error('ファイルスキャンエラー:', err);
             } finally {
                 e.target.value = null;
                 startButton.classList.remove('hidden');
-                if (!isCameraActive) {
-                    videoOverlay.classList.remove('hidden');
-                }
             }
         });
 
@@ -472,17 +488,20 @@
             clearHighlight();
 
             const rect = element.getBoundingClientRect();
-            const naturalWidth = element.videoWidth || element.width || rect.width;
-            const naturalHeight = element.videoHeight || element.height || rect.height;
+            const parentRect = highlightContainer.getBoundingClientRect();
+            const naturalWidth = element.videoWidth || element.width;
+            const naturalHeight = element.videoHeight || element.height;
+            if (!naturalWidth || !naturalHeight) return;
 
-            const ratioX = rect.width / naturalWidth;
-            const ratioY = rect.height / naturalHeight;
+            const scale = Math.min(rect.width / naturalWidth, rect.height / naturalHeight);
+            const offsetX = (rect.left - parentRect.left) + (rect.width - naturalWidth * scale) / 2;
+            const offsetY = (rect.top - parentRect.top) + (rect.height - naturalHeight * scale) / 2;
 
             const padding = 10;
-            const left = (minX * ratioX) - padding;
-            const top = (minY * ratioY) - padding;
-            const width = ((maxX - minX) * ratioX) + (2 * padding);
-            const height = ((maxY - minY) * ratioY) + (2 * padding);
+            const left = (minX * scale) + offsetX - padding;
+            const top = (minY * scale) + offsetY - padding;
+            const width = ((maxX - minX) * scale) + (2 * padding);
+            const height = ((maxY - minY) * scale) + (2 * padding);
 
             const highlight = document.createElement('div');
             highlight.classList.add('highlight-box');
@@ -497,7 +516,7 @@
         generateQrBtn.addEventListener('click', () => {
             const text = qrText.value;
             if (!text) {
-                displayResult('QRコードに含めるURLまたはテキストを入力してください。', true);
+                showGenMessage('URLまたは文字を入力してください。', true);
                 return;
             }
 
@@ -520,7 +539,7 @@
                 downloadJpgBtn.disabled = false;
                 downloadJpgBtn.classList.remove('bg-gray-400', 'disabled:opacity-50');
                 downloadJpgBtn.classList.add('bg-purple-500', 'hover:bg-purple-600');
-                displayResult('QRコードが正常に生成されました。');
+                showGenMessage('QRコードができました！ 「JPEGでダウンロード」ボタンで保存できます。');
                 
             } catch(e) {
                 console.error('QR生成に失敗しました:', e);
@@ -528,7 +547,7 @@
                 downloadJpgBtn.disabled = true;
                 downloadJpgBtn.classList.add('bg-gray-400', 'disabled:opacity-50');
                 downloadJpgBtn.classList.remove('bg-purple-500', 'hover:bg-purple-600');
-                displayResult('QRコードの生成に失敗しました。', true);
+                showGenMessage('QRコードを作成できませんでした。文字数が多すぎるかもしれません。短くしてもう一度試してください。', true);
             }
         });
 
@@ -536,7 +555,7 @@
             const canvas = qrcodeContainer.querySelector('canvas');
             
             if (!canvas) {
-                 displayResult('ダウンロードするQRコードが見つかりません。', true);
+                 showGenMessage('先にQRコードを作成してください。', true);
                  return;
             }
 
@@ -570,7 +589,7 @@
                     canvas.classList.add('hidden');
                     videoOverlay.classList.remove('hidden');
                     overlayMessage.textContent = 'カメラを起動するか、画像をアップロードしてください。';
-                    displayResult('カメラを起動するか、画像をアップロードしてください。');
+                    displayResult('①「カメラを起動」を押す　②QRコードを画面に映す　③ここに結果が出ます');
                 }
             } else if (tabName === 'generator') {
                 readerView.classList.add('hidden');
@@ -584,7 +603,11 @@
                 startButton.classList.add('hidden'); 
             }
         }
-        
+        function showEmptyViewer() {
+            canvas.classList.add('hidden');
+            video.classList.remove('hidden');
+            videoOverlay.classList.remove('hidden');
+        }
         startButton.addEventListener('click', startCamera);
         tabReader.addEventListener('click', () => switchTab('reader'));
         tabGenerator.addEventListener('click', () => switchTab('generator'));
@@ -629,7 +652,6 @@
                 }
                 URL.revokeObjectURL(url);
                 startButton.classList.remove('hidden');
-                if (!isCameraActive) videoOverlay.classList.remove('hidden');
             } catch (err) {
                 displayResult('クリップボードへのアクセスに失敗しました。ブラウザの許可が必要です。', true);
                 console.error('クリップボード貼り付けエラー:', err);
