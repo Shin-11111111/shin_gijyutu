@@ -235,6 +235,45 @@
             animationFrameId = requestAnimationFrame(scanLoop);
         }
 
+        async function getCameraStream(facingMode) {
+            try {
+                return await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: facingMode } },
+                    audio: false
+                });
+            } catch (e) {
+                if (!['OverconstrainedError', 'ConstraintNotSatisfiedError', 'NotFoundError'].includes(e.name)) {
+                    throw e;
+                }
+            }
+
+            try {
+                const devices = (await navigator.mediaDevices.enumerateDevices())
+                    .filter(d => d.kind === 'videoinput');
+                if (devices.length >= 2) {
+                    const backRe = /back|rear|environment|背面|外/i;
+                    const frontRe = /front|user|face|前面|内/i;
+                    let target;
+                    if (facingMode === 'environment') {
+                        target = devices.find(d => backRe.test(d.label)) || devices[devices.length - 1];
+                    } else {
+                        target = devices.find(d => frontRe.test(d.label)) || devices[0];
+                    }
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: { deviceId: { exact: target.deviceId } },
+                        audio: false
+                    });
+                }
+            } catch (e) {
+                console.warn('デバイス指定での取得に失敗:', e);
+            }
+
+            return await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: facingMode },
+                audio: false
+            });
+        }
+
         async function startCamera() {
             if (isCameraActive) {
                 stopCamera();
@@ -250,16 +289,18 @@
             startButton.disabled = true;
 
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
+                const stream = await getCameraStream(currentFacingMode);
                 video.srcObject = stream;
                 video.setAttribute("playsinline", true);
-                video.play();
-                
+
                 await new Promise((resolve) => {
-                    video.onloadedmetadata = () => {
+                    if (video.readyState >= 1) {
                         resolve();
-                    };
+                    } else {
+                        video.onloadedmetadata = () => resolve();
+                    }
                 });
+                await video.play();
                 
                 isCameraActive = true;
                 startButton.disabled = false;
@@ -301,7 +342,7 @@
                 video.srcObject = null;
             }
             isCameraActive = false;
-            // 新しいカメラで再起動
+            await new Promise(resolve => setTimeout(resolve, 300));
             await startCamera();
         }
 
