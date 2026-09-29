@@ -48,6 +48,9 @@
                               linear-gradient(to bottom, #f0f0f0 1px, transparent 1px);
             background-size: 20px 20px;
         }
+        #flowchartCanvas {
+            touch-action: none;
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen">
@@ -61,10 +64,11 @@
         <aside class="w-64 bg-white p-4 rounded-xl shadow-lg flex flex-col space-y-4 mr-4 overflow-y-auto">
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2">図形の追加</h2>
             <div class="flex items-center space-x-2">
-                <label class="text-sm text-gray-700 whitespace-nowrap">文字サイズ:</label>
+                <label for="fontSizeSlider" class="text-sm text-gray-700 whitespace-nowrap">文字サイズ:</label>
                 <input type="range" id="fontSizeSlider" min="10" max="28" value="14" class="w-20">
                 <span id="fontSizeValue" class="text-sm text-gray-700 w-8">14</span>
             </div>
+            <p class="text-xs text-gray-400 -mt-2">図形を選んでから動かすと、その図形の文字サイズだけが変わります</p>
             
             <button id="addOval" class="btn bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
                 ● 楕円 (開始/終了)
@@ -103,8 +107,8 @@
 
 
             <h2 class="text-lg font-semibold text-gray-700 border-b pb-2 mt-4">保存・クリア</h2>
-            <button id="loadHtmlBtn" class="btn bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" title="前回の続き"></path></svg>
+            <button id="loadHtmlBtn" title="前回保存したCSVファイルを読み込みます" class="btn bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                 CSVから読み込み
             </button>
             <button id="saveHtmlBtn" class="btn bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center">
@@ -379,7 +383,7 @@
                 let labelX, labelY;
                 const p1 = startPoint;
                 const p2 = (connection.waypoints && connection.waypoints.length > 0) ? connection.waypoints[0] : endPoint;
-                const labelPositionRatio = (fromShape.type === 'diamond' && connection.label === 'Yes') ? 0.08 : 0.25;
+                const labelPositionRatio = (fromShape.type === 'diamond' && connection.label === 'はい') ? 0.08 : 0.25;
                 labelX = p1.x * (1 - labelPositionRatio) + p2.x * labelPositionRatio;
                 labelY = p1.y * (1 - labelPositionRatio) + p2.y * labelPositionRatio;
 
@@ -392,7 +396,7 @@
                 const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x);
                 let offset = 15;
 
-                if (fromShape.type === 'diamond' && connection.exitPoint === 'right' && connection.label === 'No') {
+                if (fromShape.type === 'diamond' && connection.exitPoint === 'right' && connection.label === 'いいえ') {
                     ctx.fillText(connection.label, p1.x + 18, p1.y + 14);
                     ctx.restore();
                 } else {
@@ -520,12 +524,16 @@
         document.getElementById('fontSizeSlider').addEventListener('input', (e) => {
             const size = parseInt(e.target.value);
             document.getElementById('fontSizeValue').textContent = size;
-            SHAPE_DEFAULTS.fontSize = size;
-            selectedShapes.forEach(id => {
-                const s = shapes.find(sh => sh.id === id);
-                if (s) s.fontSize = size;
-            });
-            if (selectedShapes.length > 0) { saveShapes(); draw(); }
+
+            if (selectedShapes.length > 0) {
+                selectedShapes.forEach(id => {
+                    const s = shapes.find(sh => sh.id === id);
+                    if (s) s.fontSize = size;
+                });
+                saveShapes(); draw();
+            } else {
+                SHAPE_DEFAULTS.fontSize = size;
+            }
         });
 
         function getNewShapeY() {
@@ -663,7 +671,8 @@
         textEditInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') hideTextEditor(); });
         textEditInput.addEventListener('blur', hideTextEditor);
 
-        canvas.addEventListener('mousedown', (e) => {
+        canvas.addEventListener('pointerdown', (e) => {
+            canvas.setPointerCapture(e.pointerId);
             e.preventDefault();
             if (e.button === 2) return; 
 
@@ -754,7 +763,7 @@
                 } else {
                     const sourceShape = shapes.find(s => s.id === currentDrawing.fromId);
                     let label = '';
-                    if (sourceShape.type === 'diamond') { label = currentDrawing.exitPoint === 'bottom' ? 'Yes' : 'No'; }
+                    if (sourceShape.type === 'diamond') { label = currentDrawing.exitPoint === 'bottom' ? 'はい' : 'いいえ'; }
                     let autoWaypoints = currentDrawing.waypoints.slice();
                     if (currentDrawing.exitPoint === 'right' && autoWaypoints.length === 0) {
                         const sourceShape = shapes.find(s => s.id === currentDrawing.fromId);
@@ -800,7 +809,7 @@
             }
         });
 
-        canvas.addEventListener('mousemove', (e) => {
+        canvas.addEventListener('pointermove', (e) => {
             const rect = canvas.getBoundingClientRect();
             lastMouseX = e.clientX - rect.left; lastMouseY = e.clientY - rect.top;
             
@@ -899,7 +908,7 @@
             if (highlightedWaypoint || waypoint) draw();
         });
 
-        canvas.addEventListener('mouseup', () => {
+        canvas.addEventListener('pointerup', () => {
             if (resizingShape) {
                 resizingShape = null;
                 resizeHandle = null;
@@ -954,7 +963,7 @@
             }
         });
 
-        canvas.addEventListener('mouseleave', () => {
+        canvas.addEventListener('pointerleave', () => {
             if (resizingShape) { resizingShape = null; resizeHandle = null; saveShapes(); }
             if (draggingShape) { draggingShape = null; saveShapes(); }
             if (draggingWaypoint) { draggingWaypoint = null; saveShapes(); }
