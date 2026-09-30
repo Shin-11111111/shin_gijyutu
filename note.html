@@ -6,7 +6,7 @@
     <title>Web ノート</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         html, body { 
@@ -49,7 +49,7 @@
             overflow: auto;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
             padding: 20px;
             gap: 20px;
             touch-action: none;
@@ -102,6 +102,8 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             background-color: white;
             flex-shrink: 0;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .tool-btn {
@@ -255,8 +257,8 @@
             user-select: none;
         }
         .sidebar-toggle:hover { background: #d1d5db; }
-        #left-toggle  { left: 0; border-radius: 0 4px 4px 0; }
-        #right-toggle { right: 0; border-radius: 4px 0 0 4px; }
+        #left-toggle  { left: 110px; border-radius: 0 4px 4px 0; }
+        #right-toggle { right: 200px; border-radius: 4px 0 0 4px; }
 
         .header-row1 {
             display: flex;
@@ -350,6 +352,20 @@
             cursor: pointer;
         }
         #custom-modal-ok:hover { background: #dc2626; }
+        .tool-btn { min-width: 44px; min-height: 44px; }
+        .color-swatch { width: 28px; height: 28px; }
+        input[type="file"] { display: none; }
+        .tool-label { font-size: 12px; line-height: 1; margin-top: 2px; }
+        #font-panel label { font-size: 13px; }
+        #font-panel select, #font-panel input[type=number] { font-size: 14px; }
+        .font-toggle-btn { font-size: 14px; min-height: 40px; }
+        .sidebar-toggle { width: 28px; }
+        #color-picker, #fp-color-picker { width: 32px !important; height: 32px !important; }
+        #toast {
+            position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%);
+            background: #111827; color: #fff; padding: 10px 18px; border-radius: 999px;
+            font-size: 15px; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 9998;
+        }
     </style>
 </head>
 <body>
@@ -369,17 +385,21 @@
             <h1 class="font-bold text-base text-gray-800 mr-2 hidden lg:block">Web ノート</h1>
             <div class="toolbar-sep"></div>
 
-            <button onclick="setMode('select')" id="btn-select" class="tool-btn active" title="選択">
+            <button onclick="setMode('select')" id="btn-select" class="tool-btn active" title="選択" aria-label="選択">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
+                <span class="tool-label">選択</span>
             </button>
-            <button onclick="setMode('draw')" id="btn-draw" class="tool-btn" title="ペン">
+            <button onclick="setMode('draw')" id="btn-draw" class="tool-btn" title="ペン" aria-label="ペン">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="m2 2 5 5"/><path d="m11 11 5 5"/></svg>
+                <span class="tool-label">ペン</span>
             </button>
-            <button onclick="setMode('highlighter')" id="btn-highlighter" class="tool-btn" title="蛍光ペン">
+            <button onclick="setMode('highlighter')" id="btn-highlighter" class="tool-btn" title="蛍光ペン" aria-label="蛍光ペン">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/><path d="m5 15 3 3"/></svg>
+                <span class="tool-label">蛍光ペン</span>
             </button>
-            <button id="btn-erase" class="tool-btn" title="消しゴム" onclick="setMode('erase')">
+            <button id="btn-erase" class="tool-btn" title="消しゴム" onclick="setMode('erase')" aria-label="消しゴム">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+                <span class="tool-label">消しゴム</span>
             </button>
             <div class="toolbar-sep"></div>
 
@@ -394,31 +414,36 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="7"/></svg>
             <div class="toolbar-sep"></div>
 
-            <button onclick="undo()" class="tool-btn" title="元に戻す (Ctrl+Z)">
+            <button onclick="undo()" class="tool-btn" title="元に戻す (Ctrl+Z)" aria-label="元に戻す">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+                <span class="tool-label">元に戻す</span>
             </button>
-            <button onclick="redo()" class="tool-btn" title="やり直し (Ctrl+Y)">
+            <button onclick="redo()" class="tool-btn" title="やり直し (Ctrl+Y)" aria-label="やり直し">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13"/></svg>
+                <span class="tool-label">やり直し</span>
             </button>
             <div class="toolbar-sep"></div>
 
-            <button onclick="zoomOut()" class="tool-btn" title="縮小">
+            <button onclick="zoomOut()" class="tool-btn" title="縮小" aria-label="縮小">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                <span class="tool-label">縮小</span>
             </button>
             <span id="zoom-level" class="text-xs font-mono w-10 text-center">100%</span>
-            <button onclick="zoomIn()" class="tool-btn" title="拡大">
+            <button onclick="zoomIn()" class="tool-btn" title="拡大" aria-label="拡大">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+                <span class="tool-label">拡大</span>
             </button>
             <div class="toolbar-sep"></div>
 
             <input type="file" id="upload-image" accept="image/*" class="hidden">
-                <label for="upload-image" class="tool-btn" title="画像を挿入">
+                <label for="upload-image" class="tool-btn" title="画像を挿入" aria-label="画像を挿入">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                    <span class="tool-label">画像を挿入</span>
                 </label>
             <input type="file" id="upload-pdf" accept="application/pdf" class="hidden">
-            <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg cursor-pointer border text-xs whitespace-nowrap">PDF読込</label>
-            <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg text-xs border border-red-200">全クリア</button>
-            <button onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-bold shadow-md text-xs">保存</button>
+            <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg cursor-pointer border text-xs whitespace-nowrap" aria-label="PDFを開く" title="PDFファイルを開きます">PDFを開く</label>
+            <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg text-xs border border-red-200" aria-label="全クリア">全クリア</button>
+            <button id="btn-save" onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-bold shadow-md text-xs" aria-label="PDFで保存">PDFで保存</button>
         </div>
     </header>
 
@@ -426,7 +451,7 @@
         <aside id="thumbnail-sidebar" style="width:110px; flex-shrink:0; background:#e5e7eb; border-right:1px solid #d1d5db; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding:8px; z-index:50;">
         </aside>
         <div id="left-toggle" class="sidebar-toggle" onclick="toggleSidebar('left')" title="サムネイル表示/非表示">&#9664;</div>
-        <main id="canvas-container" style="flex:1; overflow:auto; display:flex; flex-direction:column; align-items:center; padding:20px; gap:20px; position:relative;">
+        <main id="canvas-container" style="flex:1; overflow:auto; display:flex; flex-direction:column; align-items:flex-start; padding:20px; gap:20px; position:relative;">
             <div id="inline-input-overlay"></div>
         </main>
         <div id="right-toggle" class="sidebar-toggle" onclick="toggleSidebar('right')" title="テキスト設定表示/非表示">&#9654;</div>
@@ -435,8 +460,8 @@
             <div>
                 <label>入力モード</label>
                 <div class="font-btn-row">
-                    <button class="font-toggle-btn" id="btn-text-inline" onclick="setMode('text-inline')" title="罫線に直接入力" style="font-size:10px;">罫線入力</button>
-                    <button class="font-toggle-btn" id="btn-text" onclick="addTextBox()" title="テキストボックス" style="font-size:10px;">ボックス</button>
+                    <button class="font-toggle-btn" id="btn-text-inline" onclick="setMode('text-inline')" title="横線（罫線）に合わせて文字を書きます">行に書く</button>
+                    <button class="font-toggle-btn" id="btn-text" onclick="addTextBox()" title="好きな場所に文字の箱を置きます">自由に書く</button>
                 </div>
             </div>
             <div>
@@ -476,9 +501,9 @@
             <div>
                 <label>行揃え</label>
                 <div class="font-btn-row">
-                    <button class="font-toggle-btn active" id="fp-align-left" onclick="setTextAlign('left')" title="左揃え">≡</button>
-                    <button class="font-toggle-btn" id="fp-align-center" onclick="setTextAlign('center')" title="中央">≡</button>
-                    <button class="font-toggle-btn" id="fp-align-right" onclick="setTextAlign('right')" title="右揃え">≡</button>
+                    <button class="font-toggle-btn active" id="fp-align-left" onclick="setTextAlign('left')" title="左揃え">左</button>
+                    <button class="font-toggle-btn" id="fp-align-center" onclick="setTextAlign('center')" title="中央">中央</button>
+                    <button class="font-toggle-btn" id="fp-align-right" onclick="setTextAlign('right')" title="右揃え">右</button>
                 </div>
             </div>
         </div>
@@ -486,9 +511,12 @@
 
     <footer>
         <div class="max-w-4xl mx-auto flex justify-between items-center px-4">
-            <p id="page-counter" class="text-gray-700 font-bold text-xs">ページ: 1 / 1</p>
+            <p id="page-counter" class="text-gray-700 font-bold text-sm">ページ: 1 / 1</p>
+            <button onclick="addNewPage(); scrollToPage(pages.length - 1);"
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border text-sm">＋ ページを足す</button>
         </div>
     </footer>
+    <div id="toast"></div>
 
     <script>
         let pages = [];
@@ -500,6 +528,9 @@
         let lastDistance = null;
         let startScale = 1.0;
         let _clipboard = null;
+        let lastTouchedCanvas = null;
+        let touchOnObject = false;
+        let _thumbTimer = null;
 
         function showConfirmModal(title, message, onOk) {
             const overlay = document.getElementById('custom-modal-overlay');
@@ -509,9 +540,8 @@
             const okBtn = document.getElementById('custom-modal-ok');
             const cancelBtn = document.getElementById('custom-modal-cancel');
             const close = () => overlay.classList.remove('visible');
-            const handleOk = () => { close(); onOk(); okBtn.removeEventListener('click', handleOk); cancelBtn.removeEventListener('click', close); };
-            okBtn.addEventListener('click', handleOk);
-            cancelBtn.addEventListener('click', () => { close(); okBtn.removeEventListener('click', handleOk); });
+            okBtn.onclick = () => { close(); onOk(); };
+            cancelBtn.onclick = close;
         }
 
         function hasContent() {
@@ -521,9 +551,22 @@
         }
 
         function initApp() {
+            if (typeof fabric === 'undefined') {
+                document.body.innerHTML =
+                    '<div style="padding:24px;font-size:18px;line-height:1.8;">' +
+                    '<p><b>ノートを開けませんでした。</b></p>' +
+                    '<p>インターネットにつながっているか確認して、ページを開き直してください。</p></div>';
+                return;
+            }
             if (typeof pdfjsLib !== 'undefined') {
                 pdfjsLib.GlobalWorkerOptions.workerSrc =
                     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+            }
+            if (window.innerWidth < 900) {
+                toggleSidebar('left');
+                toggleSidebar('right');
+                canvasScale = Math.min(1.0, (window.innerWidth - 40) / baseWidth);
+                document.getElementById('zoom-level').textContent = Math.round(canvasScale * 100) + '%';
             }
             addNewPage();
             setupGestures();
@@ -537,7 +580,7 @@
             }, { passive: false });
 
             const container = document.getElementById('canvas-container');
-            container.addEventListener('scroll', () => { updatePageCounter(); updateThumbnails(); });
+            container.addEventListener('scroll', () => { updatePageCounter(); highlightActiveThumb(); });
 
             document.getElementById('color-picker').addEventListener('input', (e) => {
                 clearSwatchSelection();
@@ -555,47 +598,70 @@
             document.getElementById('upload-image').addEventListener('change', handleImageInsert);
 
             document.getElementById('fp-font').addEventListener('change', applyFontPanel);
-            document.getElementById('fp-size').addEventListener('change', applyFontPanel);
+            document.getElementById('fp-size').addEventListener('input', applyFontPanel);
             document.getElementById('fp-color-picker').addEventListener('input', (e) => setTextColor(e.target.value));
 
             initKeyboardShortcuts();
             updateThumbnails();
+            window.addEventListener('beforeunload', (e) => {
+                if (hasContent()) { e.preventDefault(); e.returnValue = ''; }
+            });
         }
 
         function setupGestures() {
             const container = document.getElementById('canvas-container');
-            let startY = 0;
-            let startScrollTop = 0;
+            let startX = 0, startY = 0, startScrollLeft = 0, startScrollTop = 0;
+            let lastMid = null;
+
+            const midpoint = (t) => ({
+                x: (t[0].pageX + t[1].pageX) / 2,
+                y: (t[0].pageY + t[1].pageY) / 2
+            });
+            const rebase = (touch) => {
+                startX = touch.pageX;
+                startY = touch.pageY;
+                startScrollLeft = container.scrollLeft;
+                startScrollTop  = container.scrollTop;
+            };
 
             container.addEventListener('touchstart', (e) => {
                 if (e.touches.length === 2) {
                     lastDistance = getDistance(e.touches);
                     startScale = canvasScale;
+                    lastMid = midpoint(e.touches);
                 } else if (e.touches.length === 1) {
-                    startY = e.touches[0].pageY;
-                    startScrollTop = container.scrollTop;
+                    rebase(e.touches[0]);
                 }
             }, { passive: false });
 
             container.addEventListener('touchmove', (e) => {
                 e.preventDefault();
                 if (e.touches.length === 2 && lastDistance) {
-                    const newDistance = getDistance(e.touches);
-                    const ratio = newDistance / lastDistance;
-                    let newScale = startScale * ratio;
+                    const newScale = startScale * (getDistance(e.touches) / lastDistance);
                     if (newScale >= 0.3 && newScale <= 4.0) {
                         canvasScale = newScale;
                         updateAllCanvasSizes();
                     }
-                } else if (e.touches.length === 1 && currentMode === 'select') {
-                    const deltaY = startY - e.touches[0].pageY;
-                    container.scrollTop = startScrollTop + deltaY;
+                    const m = midpoint(e.touches);
+                    if (lastMid) {
+                        container.scrollLeft += lastMid.x - m.x;
+                        container.scrollTop  += lastMid.y - m.y;
+                    }
+                    lastMid = m;
+                } else if (e.touches.length === 1 && currentMode === 'select' && !touchOnObject) {
+                    container.scrollLeft = startScrollLeft + (startX - e.touches[0].pageX);
+                    container.scrollTop  = startScrollTop  + (startY - e.touches[0].pageY);
                 }
             }, { passive: false });
 
-            container.addEventListener('touchend', () => {
+            const onTouchEnd = (e) => {
                 lastDistance = null;
-            });
+                lastMid = null;
+                if (e.touches.length === 1) rebase(e.touches[0]);   // ★2本→1本で画面が飛ばないように
+                if (e.touches.length === 0) touchOnObject = false;
+            };
+            container.addEventListener('touchend', onTouchEnd);
+            container.addEventListener('touchcancel', onTouchEnd);
         }
 
         function getDistance(touches) {
@@ -603,9 +669,10 @@
         }
 
         function isPointerOnStroke(obj, pointer) {
+            const R = 6;
             const tmpCanvas = document.createElement('canvas');
-            const bound = obj.getBoundingRect(false);
-            const pad = (obj.strokeWidth || 1) + 2;
+            const bound = obj.getBoundingRect(true);
+            const pad = (obj.strokeWidth || 1) + 2 + R;
             tmpCanvas.width  = Math.ceil(bound.width)  + pad * 2;
             tmpCanvas.height = Math.ceil(bound.height) + pad * 2;
             const ctx = tmpCanvas.getContext('2d');
@@ -613,8 +680,13 @@
             obj.render(ctx);
             const lx = Math.round(pointer.x - bound.left + pad);
             const ly = Math.round(pointer.y - bound.top  + pad);
-            if (lx < 0 || ly < 0 || lx >= tmpCanvas.width || ly >= tmpCanvas.height) return false;
-            return ctx.getImageData(lx, ly, 1, 1).data[3] > 0;
+            const x0 = Math.max(0, lx - R), y0 = Math.max(0, ly - R);
+            const x1 = Math.min(tmpCanvas.width,  lx + R + 1);
+            const y1 = Math.min(tmpCanvas.height, ly + R + 1);
+            if (x1 <= x0 || y1 <= y0) return false;
+            const data = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+            for (let i = 3; i < data.length; i += 4) if (data[i] > 0) return true;
+            return false;
         }
 
         function createPageCanvas() {
@@ -641,34 +713,35 @@
                 }
             };
 
-            fCanvas.on('mouse:move', (options) => {
-                if (currentMode === 'erase' && options.e.buttons === 1) {
-                    const pointer = fCanvas.getPointer(options.e);
-                    const target = fCanvas.getObjects().find(obj => {
-                        if (obj._isBackground) return false;
-                        if (!obj.containsPoint(pointer)) return false;
-                        return isPointerOnStroke(obj, pointer);
-                    });
-                    removeObjectWithUndo(target);
-                }
-            });
+            fCanvas.removeWithUndo = removeObjectWithUndo;
 
-            fCanvas.on('mouse:down', (options) => {
-                if (currentMode === 'erase') {
-                    const pointer = fCanvas.getPointer(options.e);
-                    const target = fCanvas.getObjects().find(obj => {
-                        if (obj._isBackground) return false;
-                        if (!obj.containsPoint(pointer)) return false;
-                        return isPointerOnStroke(obj, pointer);
-                    });
-                    removeObjectWithUndo(target);
-                }
+            let erasing = false;
+            const eraseAt = (options) => {
+                const pointer = fCanvas.getPointer(options.e);
+                const target = fCanvas.getObjects().find(obj => {
+                    if (obj._isBackground) return false;
+                    const b = obj.getBoundingRect(true), m = 8;
+                    if (pointer.x < b.left - m || pointer.x > b.left + b.width  + m ||
+                        pointer.y < b.top  - m || pointer.y > b.top  + b.height + m) return false;
+                    return isPointerOnStroke(obj, pointer);
+                });
+                removeObjectWithUndo(target);
+            };
+
+            fCanvas.on('mouse:down', (options) => { if (currentMode === 'erase') { erasing = true; eraseAt(options); } });
+            fCanvas.on('mouse:move', (options) => { if (currentMode === 'erase' && erasing) eraseAt(options); });
+            fCanvas.on('mouse:up',   () => { erasing = false; });
+
+            fCanvas.on('mouse:down', (opt) => {
+                lastTouchedCanvas = fCanvas;
+                touchOnObject = !!(opt.target && !opt.target._isBackground);
             });
 
             fCanvas.on('object:added', (e) => {
                 if (!e.target._isHistoryAction && !e.target._isBackground) {
                     fCanvas.undoStack.push({ type: 'add', obj: e.target });
                     fCanvas.redoStack = [];
+                    lastTouchedCanvas = fCanvas;
                 }
             });
 
@@ -685,10 +758,7 @@
                 }
             });
 
-            const scheduleThumbUpdate = () => {
-                clearTimeout(fCanvas._thumbTimer);
-                fCanvas._thumbTimer = setTimeout(updateThumbnails, 400);
-            };
+            const scheduleThumbUpdate = () => scheduleThumbnails(400);
             fCanvas.on('path:created', scheduleThumbUpdate);
             fCanvas.on('object:modified', scheduleThumbUpdate);
             fCanvas.on('object:removed', scheduleThumbUpdate);
@@ -719,7 +789,10 @@
                         selectable: false, evented: false,
                         _isBackground: true
                     });
-                    fCanvas.setBackgroundImage(img, fCanvas.renderAll.bind(fCanvas));
+                    fCanvas.setBackgroundImage(img, () => {
+                        fCanvas.renderAll();
+                        scheduleThumbnails();
+                    });
                 });
             } else {
                 fCanvas.backgroundColor = '#ffffff';
@@ -735,7 +808,7 @@
                 fCanvas.renderAll();
             }
 
-            updatePageMode(fCanvas);
+            setMode(currentMode);
             updatePageCounter();
             updateThumbnails();
         }
@@ -798,12 +871,17 @@
                 const el = document.getElementById('thumbnail-sidebar');
                 const toggle = document.getElementById('left-toggle');
                 const collapsed = el.classList.toggle('collapsed');
+
                 toggle.innerHTML = collapsed ? '&#9654;' : '&#9664;';
+                toggle.style.left = collapsed ? '0px' : '110px';
+
             } else {
                 const el = document.getElementById('font-panel');
                 const toggle = document.getElementById('right-toggle');
                 const collapsed = el.classList.toggle('collapsed');
+
                 toggle.innerHTML = collapsed ? '&#9664;' : '&#9654;';
+                toggle.style.right = collapsed ? '0px' : '200px';
             }
         }
 
@@ -827,9 +905,9 @@
 
             const maxWidth = (baseWidth - 20) * zoom;
 
-            ta.addEventListener('input', () => {
+            ta.addEventListener('input', (e) => {
                 const naturalWidth = ta.scrollWidth;
-                if (naturalWidth + 20 > maxWidth) {
+                if (!e.isComposing && naturalWidth + 20 > maxWidth) {
                     const cursorPos = ta.selectionStart;
                     const fullText  = ta.value;
                     const before   = fullText.slice(0, cursorPos);
@@ -866,7 +944,10 @@
                 commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color);
             };
 
+            ta.addEventListener('compositionend', () => ta.dispatchEvent(new Event('input')));
+
             ta.addEventListener('keydown', (e) => {
+                if (e.isComposing || e.keyCode === 229) return;
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     commit();
@@ -887,6 +968,7 @@
             ta.addEventListener('blur', () => {
                 if (!ta._wrapCommitted) commit();
             });
+            return ta;
         }
 
         function commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color) {
@@ -899,13 +981,13 @@
                 : document.getElementById('fp-align-center')?.classList.contains('active') ? 'center'
                 : document.getElementById('fp-align-right')?.classList.contains('active') ? 'right'
                 : 'left';
+            const on = (id) => !!document.getElementById(id)?.classList.contains('active');
             const text = new fabric.IText(val, {
-                left: 10,
-                top: lineY,
-                fontFamily,
-                fontSize,
-                fill: color,
-                textAlign,
+                left: 10, top: lineY, fontFamily, fontSize, fill: color, textAlign,
+                fontWeight: on('fp-bold') ? 'bold' : 'normal',
+                fontStyle:  on('fp-italic') ? 'italic' : 'normal',
+                underline:  on('fp-underline'),
+                linethrough: on('fp-linethrough'),
                 selectable: true,
                 evented: true,
                 hasControls: false,
@@ -920,15 +1002,20 @@
         }
 
         function setMode(mode) {
+            const prevMode = currentMode;
             currentMode = mode;
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-text-inline')?.classList.remove('active');
             const activeBtn = document.getElementById(`btn-${mode}`);
             if (activeBtn) activeBtn.classList.add('active');
 
-            if (mode === 'highlighter') {
-                setColor('#ffff00');
-            } else if (mode === 'draw' || mode === 'text-inline') {
-                setColor('#000000');
+            if (mode !== prevMode) {
+                if (mode === 'highlighter') {
+                    setColor('#ffff00');
+                } else if (mode === 'draw' &&
+                        document.getElementById('color-picker').value.toLowerCase() === '#ffff00') {
+                    setColor('#000000');
+                }
             }
 
             if (mode === 'erase') {
@@ -947,29 +1034,37 @@
                     fCanvas.isDrawingMode = false;
                     fCanvas.selection = false;
                     fCanvas.forEachObject(obj => {
-                        obj.selectable = false;
-                        obj.evented = false;
-                    });
+                    obj.selectable = false;
+                    obj.evented = !!obj._isInlineText;
+                });
 
-                    fCanvas._textInlineHandler = (opt) => {
-                    if (opt.target && opt.target._isInlineText && opt.e.detail >= 2) {
-                        fCanvas.setActiveObject(opt.target);
-                        opt.target.enterEditing();
-                        opt.target.selectAll();
-                        fCanvas.renderAll();
+                fCanvas._textInlineHandler = (opt) => {
+                    const activeEl = document.activeElement;
+                    if (activeEl && activeEl.classList.contains('inline-textarea')) activeEl.blur();
+
+                    const pointer     = fCanvas.getPointer(opt.e);
+                    const lineSpacing = 30;
+                    const firstLine   = 50;
+                    const maxLine     = Math.floor((baseHeight - firstLine) / lineSpacing);
+                    const lineIndex   = Math.max(0, Math.min(maxLine, Math.round((pointer.y - firstLine) / lineSpacing)));
+                    const snappedY    = firstLine + lineIndex * lineSpacing;
+
+                    const existing = fCanvas.getObjects().find(o =>
+                        o._isInlineText && Math.abs(o.top + o.fontSize - snappedY) < lineSpacing / 2);
+                    if (existing) {
+                        if (!existing.isEditing) {
+                            fCanvas.setActiveObject(existing);
+                            existing.enterEditing();
+                            existing.selectAll();
+                            fCanvas.renderAll();
+                        }
                         return;
                     }
                     if (opt.target && !opt.target._isBackground) return;
 
-                    const pointer   = fCanvas.getPointer(opt.e);
-                        const lineSpacing = 30;
-                        const firstLine   = 50;
-                        const lineIndex   = Math.round((pointer.y - firstLine) / lineSpacing);
-                        const snappedY    = firstLine + lineIndex * lineSpacing;
-
                         const fontSize   = parseInt(document.getElementById('fp-size').value) || 18;
                         const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
-                        const color      = document.getElementById('color-picker').value;
+                        const color      = document.getElementById('fp-color-picker').value;
 
                         const zoom     = fCanvas.getZoom();
                         const upperCanvas = fCanvas.upperCanvasEl;
@@ -1022,8 +1117,7 @@
             const pageH = baseHeight * canvasScale + 20;
             const idx = Math.min(pages.length - 1, Math.floor((scrollTop + pageH / 2) / pageH));
             const target = pages[idx];
-            setColor('#000000');
-            const color = document.getElementById('color-picker').value;
+            const color = document.getElementById('fp-color-picker').value;
             const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
             const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
 
@@ -1040,12 +1134,18 @@
             target.add(text);
             target.setActiveObject(text);
             text.enterEditing();
+            text.selectAll();
             target.renderAll();
             setMode('select');
         }
 
         function getCurrentCanvas() {
             return pages[getCurrentPageIndex()];
+        }
+
+        function getActiveCanvas() {
+            if (lastTouchedCanvas && pages.includes(lastTouchedCanvas)) return lastTouchedCanvas;
+            return getCurrentCanvas();
         }
 
         function undo() {
@@ -1082,6 +1182,7 @@
                 '描画内容と追加したページはすべて削除されます。よろしいですか？',
                 () => {
                     const container = document.getElementById('canvas-container');
+                    pages.forEach(p => p.dispose());
                     container.innerHTML = '';
                     pages = [];
                     addNewPage();
@@ -1092,17 +1193,30 @@
         }
 
         async function downloadPDF() {
+            const btn = document.getElementById('btn-save');
+            if (btn.disabled) return;                 // 保存中に二重で押されないように
+            btn.disabled = true;
+            btn.textContent = '保存中…';
+            try {
+                if (await exportPDF()) showToast('PDFを保存しました');
+            } catch (err) {
+                console.error(err);
+                alert('保存できませんでした。もう一度ためしてください。');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'PDFで保存';
+            }
+        }
+
+        async function exportPDF() {
+            if (typeof PDFLib === 'undefined') {
+                alert('PDFを作る部品が読み込めませんでした。…');
+                return false;
+            }
             const { PDFDocument } = PDFLib;
             const pdfDoc = await PDFDocument.create();
             for (const fCanvas of pages) {
-                const oldZoom = fCanvas.getZoom();
-                fCanvas.setZoom(1.0);
-                fCanvas.setDimensions({ width: baseWidth, height: baseHeight });
-                const dataUrl = fCanvas.toDataURL({ format: 'png', multiplier: 2 });
-                
-                fCanvas.setZoom(oldZoom);
-                fCanvas.setDimensions({ width: baseWidth * oldZoom, height: baseHeight * oldZoom });
-                fCanvas.renderAll();
+                const dataUrl = fCanvas.toDataURL({ format: 'png', multiplier: 2 / fCanvas.getZoom() });
 
                 const pngImage = await pdfDoc.embedPng(dataUrl);
                 const page = pdfDoc.addPage([baseWidth, baseHeight]);
@@ -1119,20 +1233,17 @@
                 + String(now.getHours()).padStart(2,'0')
                 + String(now.getMinutes()).padStart(2,'0');
             link.download = `notebook_${ts}.pdf`;
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 10000);
+            return true;
         }
 
         function getCurrentPageIndex() {
             const container = document.getElementById('canvas-container');
             const pageH = baseHeight * canvasScale + 20;
             return Math.min(pages.length - 1, Math.floor((container.scrollTop + pageH / 2) / pageH));
-        }
-
-        function scrollToPage(i) {
-            const container = document.getElementById('canvas-container');
-            const pageH = baseHeight * canvasScale + 20;
-            container.scrollTop = i * pageH;
-            updateThumbnails();
         }
 
         function deletePage(i) {
@@ -1171,9 +1282,10 @@
                         if (img.width > maxW) img.scaleToWidth(maxW);
                         img.set({ left: 80, top: 80, selectable: true });
                         fCanvas.add(img);
+                        setMode('select');
                         fCanvas.setActiveObject(img);
                         fCanvas.renderAll();
-                        updateThumbnails();
+                        scheduleThumbnails();
                     });
                 };
                 reader.readAsDataURL(file);
@@ -1229,10 +1341,15 @@
         }
 
         function toggleFontStyle(prop) {
-            const fCanvas = getCurrentCanvas();
+            const fCanvas = getActiveCanvas();
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
-            if (!obj || obj.type !== 'i-text') return;
+            if (!obj || obj.type !== 'i-text') {
+                const ids = { bold: 'fp-bold', italic: 'fp-italic', underline: 'fp-underline', linethrough: 'fp-linethrough' };
+                document.getElementById(ids[prop]).classList.toggle('active');
+                showToast('次に書く文字に反映されます');
+                return;
+            }
             if (prop === 'bold') {
                 obj.set('fontWeight', obj.fontWeight === 'bold' ? 'normal' : 'bold');
                 document.getElementById('fp-bold').classList.toggle('active', obj.fontWeight === 'bold');
@@ -1264,6 +1381,7 @@
         }
 
         function repositionTextByAlign(obj, align, fCanvas) {
+            if (!obj._isInlineText) return;
             const canvasWidth = baseWidth;
             const margin = 10;
             if (align === 'left') {
@@ -1297,18 +1415,22 @@
         async function handlePDFUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
+            e.target.value = '';
 
             const doLoad = async () => {
-                const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            const container = document.getElementById('canvas-container');
-            container.innerHTML = '';
-            pages = [];
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    const container = document.getElementById('canvas-container');
+                    pages.forEach(p => p.dispose());
+                    container.innerHTML = '';
+                    container.scrollTop = 0;
+                    pages = [];
             for (let i = 1; i <= pdf.numPages; i++) {
                 const pdfPage = await pdf.getPage(i);
                 const dpr = window.devicePixelRatio || 2;
                 const baseViewport = pdfPage.getViewport({ scale: 1.0 });
-                const scale = (baseWidth / baseViewport.width) * dpr * 2;
+                const scale = (baseWidth / baseViewport.width) * Math.min(dpr, 2);
                 const viewport = pdfPage.getViewport({ scale });
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = viewport.width;
@@ -1318,7 +1440,10 @@
                 addNewPage(tempCanvas.toDataURL('image/png'));
             }
             updateThumbnails();
-                e.target.value = '';
+                } catch (err) {
+                    console.error(err);
+                    alert('PDFを読み込めませんでした。別のPDFファイルで試してください。');
+                }
             };
 
             if (hasContent()) {
@@ -1352,6 +1477,11 @@
             e.target.value = '';
         }
 
+        function scheduleThumbnails(delay = 150) {
+            clearTimeout(_thumbTimer);
+            _thumbTimer = setTimeout(updateThumbnails, delay);
+        }
+
         function updateThumbnails() {
             const sidebar = document.getElementById('thumbnail-sidebar');
             if (!sidebar) return;
@@ -1370,13 +1500,7 @@
                 thumbCanvas.height = Math.round(baseHeight * scale);
                 thumbCanvas.style.cssText = 'width:100%; display:block;';
                 const ctx = thumbCanvas.getContext('2d');
-                const oz = fCanvas.getZoom();
-                fCanvas.setZoom(1.0);
-                fCanvas.setDimensions({ width: baseWidth, height: baseHeight });
-                const dataUrl = fCanvas.toDataURL({ format: 'png' });
-                fCanvas.setZoom(oz);
-                fCanvas.setDimensions({ width: baseWidth * oz, height: baseHeight * oz });
-                fCanvas.renderAll();
+                const dataUrl = fCanvas.toDataURL({ format: 'png', multiplier: thumbW / fCanvas.getWidth() });
                 const img = new Image();
                 img.onload = () => ctx.drawImage(img, 0, 0, thumbW, thumbCanvas.height);
                 img.src = dataUrl;
@@ -1387,14 +1511,21 @@
                 label.textContent = `${i + 1}`;
                 item.appendChild(label);
 
+                const noHover = window.matchMedia('(hover: none)').matches;
                 const delBtn = document.createElement('div');
-                delBtn.style.cssText = 'position:absolute; top:2px; right:2px; width:16px; height:16px; background:#ef4444; color:white; border-radius:50%; font-size:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:0; transition:opacity 0.2s;';
+                delBtn.style.cssText = 'position:absolute; top:2px; right:2px; width:24px; height:24px; background:#ef4444; color:white; border-radius:50%; font-size:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:opacity 0.2s; opacity:' + (noHover ? '1' : '0') + ';';
                 delBtn.textContent = '×';
-                delBtn.onmouseenter = () => delBtn.style.opacity = '1';
-                delBtn.onmouseleave = () => delBtn.style.opacity = '0';
-                item.onmouseenter = () => delBtn.style.opacity = '1';
-                item.onmouseleave = () => delBtn.style.opacity = '0';
-                delBtn.onclick = (ev) => { ev.stopPropagation(); deletePage(i); };
+                if (!noHover) {
+                    delBtn.onmouseenter = () => delBtn.style.opacity = '1';
+                    delBtn.onmouseleave = () => delBtn.style.opacity = '0';
+                    item.onmouseenter = () => delBtn.style.opacity = '1';
+                    item.onmouseleave = () => delBtn.style.opacity = '0';
+                }
+                delBtn.onclick = (ev) => {
+                    ev.stopPropagation();
+                    if (pages.length <= 1) { alert('最後の1ページは削除できません'); return; }
+                    showConfirmModal('ページを削除', `${i + 1}ページ目を削除します。元に戻せません。よろしいですか？`, () => deletePage(i));
+                };
                 item.appendChild(delBtn);
 
                 item.addEventListener('click', () => scrollToPage(i));
@@ -1428,15 +1559,22 @@
             addBtn.textContent = '+';
             addBtn.onmouseenter = () => { addBtn.style.background = '#d1d5db'; };
             addBtn.onmouseleave = () => { addBtn.style.background = 'transparent'; };
-            addBtn.onclick = () => addNewPage();
+            addBtn.onclick = () => { addNewPage(); scrollToPage(pages.length - 1); };
             sidebar.appendChild(addBtn);
+        }
+
+        function highlightActiveThumb() {
+            const cur = getCurrentPageIndex();
+            document.querySelectorAll('#thumbnail-sidebar [data-index]').forEach(el => {
+                el.style.borderColor = (Number(el.dataset.index) === cur) ? '#3b82f6' : 'transparent';
+            });
         }
 
         function scrollToPage(i) {
             const container = document.getElementById('canvas-container');
             const pageH = baseHeight * canvasScale + 20;
             container.scrollTop = i * pageH;
-            setTimeout(updateThumbnails, 100);
+            highlightActiveThumb();
         }
 
         function initKeyboardShortcuts() {
@@ -1460,8 +1598,7 @@
                     e.preventDefault();
                     if (obj && !obj._isBackground) {
                         obj.clone(c => { _clipboard = c; });
-                        fCanvas.remove(obj);
-                        fCanvas.renderAll();
+                        fCanvas.removeWithUndo(obj);
                     }
                 }
                 if (ctrl && e.key === 'v') {
@@ -1477,10 +1614,17 @@
                 }
                 if ((e.key === 'Delete' || e.key === 'Backspace') && obj && !obj._isBackground) {
                     e.preventDefault();
-                    fCanvas.remove(obj);
-                    fCanvas.renderAll();
+                    fCanvas.removeWithUndo(obj);
                 }
             });
+        }
+
+        function showToast(msg, ms = 2500) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.style.opacity = '1';
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => { t.style.opacity = '0'; }, ms);
         }
 
         window.onload = initApp;
