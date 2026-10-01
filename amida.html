@@ -52,44 +52,32 @@
                 overflow-y: auto;
             }
             .amida-display {
-                flex-grow: 1;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-            }
-            .canvas-container {
-                max-width: 100%;
-                max-height: 100%;
+                flex: 1 1 0%;
+                min-width: 0;
+                overflow: auto;
+                display: block;
             }
         }
 
         .canvas-container { 
             position: relative; 
-            width: 100%; 
-            max-width: 600px;
             margin: 0 auto; 
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
         }
-        canvas { display: block; border-radius: 0.75rem; background-color: #ffffff; }
+        canvas { display: block; border-radius: 0.75rem; background-color: #ffffff; cursor: pointer; touch-action: manipulation; }
 
         @media (max-width: 767px) {
-            body {
-                overflow: auto;
-            }
-            .main-container {
-                height: auto;
-                min-height: 100vh;
-            }
-            .content-wrapper {
-                overflow: visible;
-            }
             .amida-display {
                 width: 100%;
+                overflow-x: auto;
             }
         }
-    </style>
+
+        @media (min-width: 768px) {
+            #settingsBody {
+                display: block !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -111,19 +99,19 @@
             <div id="settingsBody">
 
                 <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                        選択肢（列）の数: <span id="columnCountDisplay" class="font-bold text-indigo-600">5</span>
+                    <label for="columnCount" class="block text-sm font-medium text-gray-700 mb-1">
+                        人数（あみだの本数）: <span id="columnCountDisplay" class="font-bold text-indigo-600">5</span> 本
                     </label>
                     <input type="range" id="columnCount" value="5" min="3" max="10" step="1"
                         class="w-full accent-indigo-600 cursor-pointer">
                 </div>
 
-                <div id="goalInputs" class="mb-4 space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">ゴール結果 (5個)</label>
-                </div>
-                
                 <div id="startInputs" class="mb-4 space-y-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">スタートの選択 (5個)</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">スタート (5個)</label>
+                </div>
+
+                <div id="goalInputs" class="mb-4 space-y-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ゴール (5個)</label>
                 </div>
 
                 <button id="generateButton"
@@ -131,7 +119,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
-                    あみだを生成 / リセット
+                    あみだを再生成
                 </button>
                             
             <div id="guideBanner" class="w-full mt-3 flex-shrink-0 flex items-center justify-center gap-2 bg-indigo-50 border border-indigo-200 rounded-xl py-2 px-4 text-indigo-700 text-sm font-medium select-none">
@@ -152,13 +140,14 @@
 </div>
 
 <script type="module">
-    const CANVAS_WIDTH = 600;
-    const CANVAS_HEIGHT = 800;
+    let CANVAS_WIDTH = 600;
+    let CANVAS_HEIGHT = 800;
     const MARGIN_X = 50;
     const MARGIN_Y = 100;
     const RUNG_COUNT = 15;
     const ANIMATION_DURATION = 2500;
     const HORIZONTAL_STEP_COUNT = 10;
+    const MIN_COLUMN_SPACING = 64;
 
     const canvas = document.getElementById('amidaCanvas');
     const ctx = canvas.getContext('2d');
@@ -185,40 +174,51 @@
         endCol: -1 
     };
 
-    function setupCanvas() {
+    function resizeCanvas() {
+        const isMobile = window.matchMedia('(max-width: 767px)').matches;
+        const availWidth = amidaDisplay.clientWidth;
+        const availHeight = isMobile ? Infinity : amidaDisplay.clientHeight;
+
+        const minWidth = numColumns * MIN_COLUMN_SPACING;
+        const newWidth = Math.floor(Math.max(availWidth, minWidth));
+        const needsScrollX = newWidth > availWidth;
+
+        let newHeight;
+        if (isMobile) {
+            newHeight = Math.floor(Math.min(Math.max(newWidth * 1.5, 600), 800));
+        } else {
+            newHeight = Math.floor(Math.max(availHeight - (needsScrollX ? 20 : 0), 480));
+        }
+
+        canvas.style.width = newWidth + 'px';
+        canvas.style.height = newHeight + 'px';
+        canvasContainer.style.width = newWidth + 'px';
+        canvasContainer.style.height = newHeight + 'px';
+
+        if (newWidth === canvas.width && newHeight === canvas.height) return;
+
+        CANVAS_WIDTH = newWidth;
+        CANVAS_HEIGHT = newHeight;
         canvas.width = CANVAS_WIDTH;
         canvas.height = CANVAS_HEIGHT;
-        
-        const resize = () => {
-            const containerWidth = amidaDisplay.clientWidth;
-            const containerHeight = amidaDisplay.clientHeight; 
-            
-            const aspectRatio = CANVAS_HEIGHT / CANVAS_WIDTH;
 
-            let cssWidth;
-            let cssHeight;
+        layoutRungs();
+        hideMessageBoxAndClearPath();
+    }
 
-            const heightBasedOnWidth = containerWidth * aspectRatio;
-            
-            if (heightBasedOnWidth <= containerHeight) {
-                cssWidth = containerWidth;
-                cssHeight = heightBasedOnWidth;
-            } else {
-                cssHeight = containerHeight;
-                cssWidth = containerHeight / aspectRatio;
-            }
-
-            canvas.style.width = cssWidth + 'px';
-            canvas.style.height = cssHeight + 'px';
-            
-            canvasContainer.style.width = cssWidth + 'px';
-            canvasContainer.style.height = cssHeight + 'px';
-        };
-        
-        window.addEventListener('resize', resize);
-        resize();
-        
+    function setupCanvas() {
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
         updateLadder();
+    }
+
+    function escapeHTML(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     function generateDynamicInputs() {
@@ -226,7 +226,7 @@
         if (isNaN(count) || count < 3 || count > 10) return;
         numColumns = count;
 
-        goalInputsContainer.querySelector('label').textContent = `ゴール結果 (${numColumns}個)`;
+        goalInputsContainer.querySelector('label').textContent = `結果 (${numColumns}個)`;
         const currentGoalLabels = Array.from(goalInputsContainer.querySelectorAll('input')).map(input => input.value);
         goalLabels = currentGoalLabels.slice(0, numColumns);
         
@@ -234,7 +234,7 @@
             const val = goalLabels[i] || (i < currentGoalLabels.length ? currentGoalLabels[i] : `ゴール ${i + 1}`);
             return `<div class="flex items-center gap-2">
                 <span class="flex-shrink-0 w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center justify-center">${i + 1}</span>
-                <input type="text" id="goalInput${i}" value="${val}" placeholder="ゴール ${i + 1}"
+                <input type="text" id="goalInput${i}" value="${escapeHTML(val)}" placeholder="ゴール ${i + 1}" maxlength="8"
                        class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500">
             </div>`;
         }).join('');
@@ -249,7 +249,7 @@
             const val = startLabels[i] || (i < currentStartLabels.length ? currentStartLabels[i] : `ユーザー ${i + 1}`);
             return `<div class="flex items-center gap-2">
                 <span class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 text-xs font-bold flex items-center justify-center">${i + 1}</span>
-                <input type="text" id="startInput${i}" value="${val}" placeholder="スタート ${i + 1}"
+                <input type="text" id="startInput${i}" value="${escapeHTML(val)}" placeholder="スタート ${i + 1}" maxlength="8"
                        class="w-full p-2 border border-gray-300 rounded-lg text-sm transition duration-150 focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500">
             </div>`;
         }).join('');
@@ -271,7 +271,6 @@
 
     function generateRungs() {
         rungs = [];
-        const rungHeight = (CANVAS_HEIGHT - 2 * MARGIN_Y) / RUNG_COUNT;
         
         const rungsMap = Array(numColumns - 1).fill(0).map(() => Array(RUNG_COUNT).fill(false));
 
@@ -282,31 +281,50 @@
                         continue;
                     }
                     rungsMap[col][i] = true;
-                    const y = MARGIN_Y + (i + 0.5) * rungHeight; 
-                    rungs.push({ col, y });
+                    const ratio = (i + 0.5) / RUNG_COUNT;
+                    const y = MARGIN_Y + ratio * (CANVAS_HEIGHT - 2 * MARGIN_Y);
+                    rungs.push({ col, ratio, y });
                 }
             }
         }
     }
 
-    function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
-        if (ctx.measureText(text).width <= maxWidth) {
-            ctx.fillText(text, x, y);
-            return;
+    function layoutRungs() {
+        rungs.forEach(rung => {
+            rung.y = MARGIN_Y + rung.ratio * (CANVAS_HEIGHT - 2 * MARGIN_Y);
+        });
+    }
+
+    function wrapLines(ctx, text, maxWidth, maxLines = 3) {
+        const lines = [];
+        let line = '';
+        for (const ch of text) {
+            if (ctx.measureText(line + ch).width > maxWidth && line !== '') {
+                lines.push(line);
+                line = ch;
+            } else {
+                line += ch;
+            }
         }
-        const mid = Math.ceil(text.length / 2);
-        const line1 = text.slice(0, mid);
-        const line2 = text.slice(mid);
-        ctx.fillText(line1, x, y, maxWidth);
-        ctx.fillText(line2, x, y + lineHeight, maxWidth);
+        lines.push(line);
+        if (lines.length > maxLines) {
+            lines.length = maxLines;
+            lines[maxLines - 1] = lines[maxLines - 1].slice(0, -1) + '…';
+        }
+        return lines;
+    }
+
+    function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight, anchor = 'top') {
+        const lines = wrapLines(ctx, text, maxWidth);
+        const startY = anchor === 'bottom' ? y - (lines.length - 1) * lineHeight : y;
+        lines.forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight));
     }
 
     function drawStaticLadder() {
         ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-        const dynamicMarginX = Math.max(MARGIN_X, Math.min(80, CANVAS_WIDTH / (numColumns + 1)));
-        const availableWidth = CANVAS_WIDTH - 2 * dynamicMarginX;
-        const columnSpacing = availableWidth / (numColumns - 1);
+        const columnSpacing = CANVAS_WIDTH / numColumns;
+        const dynamicMarginX = columnSpacing / 2;
         columnPositions = [];
 
         for (let i = 0; i < numColumns; i++) {
@@ -320,17 +338,17 @@
             ctx.lineWidth = 4;
             ctx.stroke();
 
-            const fontSize = Math.max(10, Math.min(20, Math.floor((CANVAS_WIDTH - 2 * MARGIN_X) / numColumns / 2.2)));
+            const fontSize = Math.max(12, Math.min(24, Math.floor(columnSpacing / 3.2)));
             
             ctx.textAlign = 'center';
             ctx.font = `${fontSize}px Inter, sans-serif`;
             ctx.fillStyle = '#1f2937';
             const maxLabelWidth = columnSpacing * 0.95;
-            drawWrappedText(ctx, startLabels[i], x, MARGIN_Y - 45, maxLabelWidth, fontSize + 4);
+            drawWrappedText(ctx, startLabels[i], x, MARGIN_Y - 20, maxLabelWidth, fontSize + 4, 'bottom');
             
             ctx.font = `${Math.max(10, fontSize - 2)}px Inter, sans-serif`;
-            ctx.fillStyle = '#10b981';
-            drawWrappedText(ctx, goalLabels[i], x, CANVAS_HEIGHT - MARGIN_Y + 30, maxLabelWidth, Math.max(10, fontSize - 2) + 4);
+            ctx.fillStyle = '#047857';
+            drawWrappedText(ctx, goalLabels[i], x, CANVAS_HEIGHT - MARGIN_Y + 30, maxLabelWidth, Math.max(12, fontSize - 2) + 4, 'top');
         }
 
         rungs.forEach(rung => {
@@ -578,7 +596,7 @@
             resultText = `
                 <div class="text-center">
                     <p class="text-3xl mb-2 text-green-400">${goalLabels[endCol]}</p>
-                    <p class="text-5xl font-extrabold text-yellow-300">に対応するのは...</p>
+                    <p class="text-5xl font-extrabold text-yellow-300">にたどり着くのは...</p>
                     <p class="text-6xl mt-4 text-white animate-pulse">${startLabels[startCol]}</p>
                     <p class="text-xl mt-4 text-gray-200">もう一度タップしてリセット</p>
                 </div>
@@ -588,6 +606,11 @@
         }
         
         messageBox.innerHTML = resultText;
+
+        messageBox.style.right = 'auto';
+        messageBox.style.left = amidaDisplay.scrollLeft + 'px';
+        messageBox.style.width = Math.min(amidaDisplay.clientWidth, canvasContainer.clientWidth) + 'px';
+
         messageBox.classList.remove('hidden');
     }
 
@@ -633,7 +656,7 @@
             return;
         }
 
-        if (clickY >= MARGIN_Y - 50 && clickY <= MARGIN_Y + 50) {
+        if (clickY >= MARGIN_Y - 80 && clickY <= MARGIN_Y + 50) {
             cancelAnimation(); 
 
             const { finalCol, path } = calculatePathForward(clickedCol);
@@ -647,7 +670,7 @@
             animationFrameId = requestAnimationFrame(animatePath);
 
         } 
-        else if (clickY >= CANVAS_HEIGHT - MARGIN_Y - 50 && clickY <= CANVAS_HEIGHT - MARGIN_Y + 50) {
+        else if (clickY >= CANVAS_HEIGHT - MARGIN_Y - 50 && clickY <= CANVAS_HEIGHT - MARGIN_Y + 80) {
             cancelAnimation(); 
             
             const { startCol, path } = calculatePathBackward(clickedCol);
@@ -675,6 +698,7 @@
         generateDynamicInputs();
         updateLabelsFromInputs(); 
 
+        resizeCanvas();
         generateRungs();
         drawLadder();
     }
@@ -704,28 +728,17 @@
         const columnCountDisplay = document.getElementById('columnCountDisplay');
         columnCountInput.addEventListener('input', () => {
             columnCountDisplay.textContent = columnCountInput.value;
-            generateDynamicInputs();
+            updateLadder();
         });
-        generateButton.addEventListener('click', updateLadder); 
-        
-        canvas.addEventListener('click', handleCanvasClick);
-        canvas.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                e.preventDefault(); 
-                handleCanvasClick({
-                    touches: e.touches,
-                    preventDefault: () => e.preventDefault(),
-                    target: e.target
-                });
+        generateButton.addEventListener('click', () => {
+            updateLadder();
+            if (window.matchMedia('(max-width: 767px)').matches) {
+                canvasContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
 
+        canvas.addEventListener('click', handleCanvasClick);
         messageBox.addEventListener('click', hideMessageBoxAndClearPath);
-        
-        messageBox.addEventListener('touchstart', (e) => {
-            e.preventDefault(); 
-            hideMessageBoxAndClearPath();
-        });
     });
 
 </script>
