@@ -145,7 +145,7 @@
         }
 
         body.eraser-mode canvas {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="12" rx="2" fill="%23fff" stroke="%23888" stroke-width="2"/><rect x="2" y="10" width="9" height="12" rx="1" fill="%23fca5a5"/><line x1="2" y1="16" x2="22" y2="16" stroke="%23888" stroke-width="1"/></svg>') 4 20, cell;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="12" rx="2" fill="%23fff" stroke="%23888" stroke-width="2"/><rect x="2" y="10" width="9" height="12" rx="1" fill="%23fca5a5"/><line x1="2" y1="16" x2="22" y2="16" stroke="%23888" stroke-width="1"/></svg>') 4 20, cell !important;
         }
 
         #font-panel {
@@ -260,6 +260,15 @@
         #left-toggle  { left: 110px; border-radius: 0 4px 4px 0; }
         #right-toggle { right: 200px; border-radius: 4px 0 0 4px; }
 
+        @media (max-width: 899px) {
+            #font-panel {
+                position: absolute;
+                top: 0; right: 0; bottom: 0;
+                box-shadow: -4px 0 12px rgba(0,0,0,0.12);
+            }
+            #font-panel.collapsed { box-shadow: none; border-left: none; }
+        }
+
         .header-row1 {
             display: flex;
             align-items: center;
@@ -363,7 +372,8 @@
         #color-picker, #fp-color-picker { width: 32px !important; height: 32px !important; }
         #toast {
             position: fixed; left: 50%; bottom: 64px; transform: translateX(-50%);
-            background: #111827; color: #fff; padding: 10px 18px; border-radius: 999px;
+            background: #111827; color: #fff; padding: 10px 18px; border-radius: 16px;
+            width: max-content; max-width: 90vw; text-align: center; line-height: 1.5;
             font-size: 15px; opacity: 0; pointer-events: none; transition: opacity .3s; z-index: 9998;
         }
     </style>
@@ -400,6 +410,10 @@
             <button id="btn-erase" class="tool-btn" title="消しゴム" onclick="setMode('erase')" aria-label="消しゴム">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
                 <span class="tool-label">消しゴム</span>
+            </button>
+            <button id="btn-text-tool" onclick="openTextTool()" class="tool-btn" title="文字を書く" aria-label="文字を書く">
+                <span style="font-size:18px; font-weight:bold; line-height:18px; height:18px;">あ</span>
+                <span class="tool-label">文字</span>
             </button>
             <div class="toolbar-sep"></div>
 
@@ -441,9 +455,9 @@
                     <span class="tool-label">画像を挿入</span>
                 </label>
             <input type="file" id="upload-pdf" accept="application/pdf" class="hidden">
-            <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-lg cursor-pointer border text-xs whitespace-nowrap" aria-label="PDFを開く" title="PDFファイルを開きます">PDFを開く</label>
-            <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-2 py-1 rounded-lg text-xs border border-red-200" aria-label="全クリア">全クリア</button>
-            <button id="btn-save" onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg font-bold shadow-md text-xs" aria-label="PDFで保存">PDFで保存</button>
+            <label for="upload-pdf" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg cursor-pointer border text-sm whitespace-nowrap" style="min-height:44px; display:inline-flex; align-items:center;" aria-label="PDFを読み込む" title="PDFの上にノートを書き足せます">PDFを読み込む</label>
+            <button onclick="clearAll()" class="text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg text-sm border border-red-200" style="min-height:44px;" aria-label="全て消す" title="すべて消して白紙にもどします">全て消す</button>
+            <button id="btn-save" onclick="downloadPDF()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-bold shadow-md text-sm" style="min-height:44px;" aria-label="PDFで保存" title="ノートをPDFファイルとして保存します">PDFで保存</button>
         </div>
     </header>
 
@@ -532,10 +546,19 @@
         let touchOnObject = false;
         let _thumbTimer = null;
 
-        function showConfirmModal(title, message, onOk) {
+        const MODE_HINTS = {
+            'select':      '選ぶ：文字や画像をタップすると、動かしたり大きさを変えたりできます',
+            'draw':        'ペン：なぞると線が書けます',
+            'highlighter': '蛍光ペン：文字の上をなぞると、マーカーのように色をつけられます',
+            'erase':       '消しゴム：消したい線をなぞると、その線が1本まるごと消えます',
+            'text-inline': '文字：書きたい行をタップして入力。Enterキーで次の行に進みます'
+        };
+
+        function showConfirmModal(title, message, onOk, okLabel = '削除して続ける') {
             const overlay = document.getElementById('custom-modal-overlay');
             document.getElementById('custom-modal-title').textContent = title;
             document.getElementById('custom-modal-message').textContent = message;
+            document.getElementById('custom-modal-ok').textContent = okLabel;
             overlay.classList.add('visible');
             const okBtn = document.getElementById('custom-modal-ok');
             const cancelBtn = document.getElementById('custom-modal-cancel');
@@ -558,6 +581,10 @@
                     '<p>インターネットにつながっているか確認して、ページを開き直してください。</p></div>';
                 return;
             }
+            fabric.Object.prototype.set({
+                cornerSize: 14, touchCornerSize: 36,
+                transparentCorners: false, cornerColor: '#3b82f6', borderColor: '#3b82f6'
+            });
             if (typeof pdfjsLib !== 'undefined') {
                 pdfjsLib.GlobalWorkerOptions.workerSrc =
                     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -705,10 +732,11 @@
             fCanvas.redoStack = [];
 
             const removeObjectWithUndo = (target) => {
-                if (target && !target._isBackground) {
-                    target._isRemovedAction = true; 
+                if (target && !target._isBackground && fCanvas.contains(target)) {
+                    target._isRemovedAction = true;
                     fCanvas.remove(target);
                     fCanvas.undoStack.push({ type: 'remove', obj: target });
+                    fCanvas.redoStack = [];
                     fCanvas.renderAll();
                 }
             };
@@ -768,7 +796,7 @@
             return fCanvas;
         }
 
-        function addNewPage(bgImage = null) {
+        function addNewPage(bgImage = null, deferUI = false) {
             const fCanvas = createPageCanvas();
             
             fCanvas.setDimensions({
@@ -798,7 +826,7 @@
                 fCanvas.backgroundColor = '#ffffff';
                 for(let i = 50; i < baseHeight; i += 30) {
                     const line = new fabric.Line([0, i, baseWidth, i], {
-                        stroke: '#f1f5f9',
+                        stroke: '#cbd5e1',
                         selectable: false,
                         evented: false,
                         _isBackground: true 
@@ -808,10 +836,12 @@
                 fCanvas.renderAll();
             }
 
-            setMode(currentMode);
-            updatePageCounter();
-            updateThumbnails();
-        }
+                setMode(currentMode);
+                if (!deferUI) {
+                    updatePageCounter();
+                    updateThumbnails();
+                }
+            }
 
         function updateAllCanvasSizes() {
             pages.forEach(fCanvas => {
@@ -832,12 +862,8 @@
         }
 
         function updatePageCounter() {
-            const container = document.getElementById('canvas-container');
-            const scrollTop = container.scrollTop;
-            const pageH = baseHeight * canvasScale + 20; 
-            const currentPage = Math.min(pages.length, Math.floor((scrollTop + (pageH / 2)) / pageH) + 1);
-            
-            document.getElementById('page-counter').textContent = `ページ: ${currentPage || 1} / ${pages.length}`;
+            const currentPage = getCurrentPageIndex() + 1;
+            document.getElementById('page-counter').textContent = `ページ: ${currentPage} / ${pages.length}`;
         }
 
         function zoomIn() {
@@ -1008,6 +1034,8 @@
             document.getElementById('btn-text-inline')?.classList.remove('active');
             const activeBtn = document.getElementById(`btn-${mode}`);
             if (activeBtn) activeBtn.classList.add('active');
+            if (mode === 'text-inline') document.getElementById('btn-text-tool')?.classList.add('active');
+            if (mode !== prevMode && MODE_HINTS[mode]) showToast(MODE_HINTS[mode], 3500);
 
             if (mode !== prevMode) {
                 if (mode === 'highlighter') {
@@ -1111,12 +1139,12 @@
             }
         }
 
+        function openTextTool() {
+            setMode('text-inline');
+        }
+
         function addTextBox() {
-            const container = document.getElementById('canvas-container');
-            const scrollTop = container.scrollTop;
-            const pageH = baseHeight * canvasScale + 20;
-            const idx = Math.min(pages.length - 1, Math.floor((scrollTop + pageH / 2) / pageH));
-            const target = pages[idx];
+            const target = pages[getCurrentPageIndex()];
             const color = document.getElementById('fp-color-picker').value;
             const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
             const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
@@ -1140,17 +1168,18 @@
         }
 
         function getCurrentCanvas() {
-            return pages[getCurrentPageIndex()];
+            return getActiveCanvas();
         }
 
         function getActiveCanvas() {
             if (lastTouchedCanvas && pages.includes(lastTouchedCanvas)) return lastTouchedCanvas;
-            return getCurrentCanvas();
+            return pages[getCurrentPageIndex()];
         }
 
         function undo() {
             const fCanvas = getCurrentCanvas();
-            if (!fCanvas || fCanvas.undoStack.length === 0) return;
+            if (!fCanvas) return;
+            if (fCanvas.undoStack.length === 0) { showToast('これ以上、元に戻せません'); return; }
             const action = fCanvas.undoStack.pop();
             action.obj._isHistoryAction = true;
             if (action.type === 'add') {
@@ -1164,7 +1193,8 @@
 
         function redo() {
             const fCanvas = getCurrentCanvas();
-            if (!fCanvas || fCanvas.redoStack.length === 0) return;
+            if (!fCanvas) return;
+            if (fCanvas.redoStack.length === 0) { showToast('やり直せる操作がありません'); return; }
             const action = fCanvas.redoStack.pop();
             action.obj._isHistoryAction = true;
             if (action.type === 'add') {
@@ -1201,7 +1231,7 @@
                 if (await exportPDF()) showToast('PDFを保存しました');
             } catch (err) {
                 console.error(err);
-                alert('保存できませんでした。もう一度ためしてください。');
+                alert('保存できませんでした。インターネットにつながっているか確認して、ページを開き直してください。');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'PDFで保存';
@@ -1210,7 +1240,7 @@
 
         async function exportPDF() {
             if (typeof PDFLib === 'undefined') {
-                alert('PDFを作る部品が読み込めませんでした。…');
+                alert('PDFを作る部品が読み込めませんでした。インターネットにつながっているか確認して、ページを開き直してください。');
                 return false;
             }
             const { PDFDocument } = PDFLib;
@@ -1242,8 +1272,14 @@
 
         function getCurrentPageIndex() {
             const container = document.getElementById('canvas-container');
-            const pageH = baseHeight * canvasScale + 20;
-            return Math.min(pages.length - 1, Math.floor((container.scrollTop + pageH / 2) / pageH));
+            const cRect = container.getBoundingClientRect();
+            let best = 0, bestVisible = -Infinity;
+            container.querySelectorAll('.canvas-wrapper').forEach((w, i) => {
+                const r = w.getBoundingClientRect();
+                const visible = Math.min(r.bottom, cRect.bottom) - Math.max(r.top, cRect.top);
+                if (visible > bestVisible + 1) { bestVisible = visible; best = i; }
+            });
+            return Math.max(0, Math.min(best, pages.length - 1));
         }
 
         function deletePage(i) {
@@ -1426,20 +1462,23 @@
                     container.innerHTML = '';
                     container.scrollTop = 0;
                     pages = [];
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const pdfPage = await pdf.getPage(i);
-                const dpr = window.devicePixelRatio || 2;
-                const baseViewport = pdfPage.getViewport({ scale: 1.0 });
-                const scale = (baseWidth / baseViewport.width) * Math.min(dpr, 2);
-                const viewport = pdfPage.getViewport({ scale });
-                const tempCanvas = document.createElement('canvas');
-                tempCanvas.width = viewport.width;
-                tempCanvas.height = viewport.height;
-                const ctx = tempCanvas.getContext('2d');
-                await pdfPage.render({ canvasContext: ctx, viewport }).promise;
-                addNewPage(tempCanvas.toDataURL('image/png'));
-            }
-            updateThumbnails();
+                    for (let i = 1; i <= pdf.numPages; i++) {
+                        const pdfPage = await pdf.getPage(i);
+                        const dpr = window.devicePixelRatio || 2;
+                        const baseViewport = pdfPage.getViewport({ scale: 1.0 });
+                        const scale = (baseWidth / baseViewport.width) * Math.min(dpr, 2);
+                        const viewport = pdfPage.getViewport({ scale });
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = viewport.width;
+                        tempCanvas.height = viewport.height;
+                        const ctx = tempCanvas.getContext('2d');
+                        await pdfPage.render({ canvasContext: ctx, viewport }).promise;
+                        addNewPage(tempCanvas.toDataURL('image/png'), true);
+                        showToast(`PDFを読み込んでいます… ${i} / ${pdf.numPages} ページ`, 8000);
+                    }
+                    updatePageCounter();
+                    updateThumbnails();
+                    showToast('PDFを読み込みました');
                 } catch (err) {
                     console.error(err);
                     alert('PDFを読み込めませんでした。別のPDFファイルで試してください。');
@@ -1462,12 +1501,13 @@
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
-                const fCanvas = getCurrentCanvas();
+                const fCanvas = pages[getCurrentPageIndex()];
                 fabric.Image.fromURL(ev.target.result, (img) => {
                     const maxW = baseWidth * 0.6;
                     if (img.width > maxW) img.scaleToWidth(maxW);
                     img.set({ left: 80, top: 80, selectable: true });
                     fCanvas.add(img);
+                    setMode('select');
                     fCanvas.setActiveObject(img);
                     fCanvas.renderAll();
                     updateThumbnails();
@@ -1590,13 +1630,14 @@
                 if (ctrl && e.key === 'z') { e.preventDefault(); undo(); }
                 if (ctrl && (e.key === 'y' || (e.shiftKey && e.key === 'Z'))) { e.preventDefault(); redo(); }
                 if (ctrl && e.key === 's') { e.preventDefault(); downloadPDF(); }
+                const isSingle = obj && !obj._isBackground && obj.type !== 'activeSelection';
                 if (ctrl && e.key === 'c') {
                     e.preventDefault();
-                    if (obj && !obj._isBackground) obj.clone(c => { _clipboard = c; });
+                    if (isSingle) obj.clone(c => { _clipboard = c; });
                 }
                 if (ctrl && e.key === 'x') {
                     e.preventDefault();
-                    if (obj && !obj._isBackground) {
+                    if (isSingle) {
                         obj.clone(c => { _clipboard = c; });
                         fCanvas.removeWithUndo(obj);
                     }
@@ -1614,9 +1655,16 @@
                 }
                 if ((e.key === 'Delete' || e.key === 'Backspace') && obj && !obj._isBackground) {
                     e.preventDefault();
-                    fCanvas.removeWithUndo(obj);
+                    deleteSelected(fCanvas);
                 }
             });
+        }
+
+        function deleteSelected(fCanvas) {
+            const targets = fCanvas.getActiveObjects().filter(o => !o._isBackground);
+            if (targets.length === 0) return;
+            fCanvas.discardActiveObject();
+            targets.forEach(t => fCanvas.removeWithUndo(t));
         }
 
         function showToast(msg, ms = 2500) {
