@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>アンケート集約結果</title>
+<style>
+:root{
+  --bg:#0d0a52; --pink:#ff1a8c; --cyan:#17d3ff; --green:#14e0a0;
+  --violet:#7a4cf0; --lav:#a58bff; --plum:#5b1a7a; --ink:#fff; --dark:#0a0a3a;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; background:var(--bg);
+  background-image:radial-gradient(rgba(120,110,255,.18) 2px,transparent 2.5px);
+  background-size:26px 26px;
+  font-family:"Noto Sans JP","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+  color:var(--ink);
+}
+main{
+  max-width:1280px; margin:0 auto; padding:24px 16px 48px;
+  display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:22px 20px;
+}
+.b{
+  position:relative; font-weight:900; line-height:1.4; letter-spacing:.02em;
+  padding:.55em .8em; border:3px solid transparent; max-width:100%;
+}
+.b::after{content:"";position:absolute;width:0;height:0;border:12px solid transparent}
+.xl{font-size:clamp(24px,3.6vw,44px);padding:.5em .9em}
+.l{font-size:clamp(19px,2.4vw,30px)}
+.m{font-size:clamp(15px,1.7vw,22px)}
+.s{font-size:clamp(12px,1.25vw,16px);font-weight:700}
+.pink{background:var(--pink);border-color:#ffd0e8}
+.pink::after{border-top-color:var(--pink)}
+.cyan{background:var(--cyan);color:var(--dark);border-color:#d6f6ff}
+.green{background:var(--green);color:var(--dark);border-color:#c9ffe9}
+.violet{background:var(--violet);border-color:#c9b8ff}
+.lav{background:var(--lav);color:var(--dark);border-color:#e4dbff}
+.plum{background:var(--plum);border-color:#ff7fd0}
+.line{background:var(--dark);border-color:var(--cyan);color:var(--ink)}
+.linegreen{background:var(--dark);border-color:var(--green);color:var(--green)}
+.dim{background:transparent;border-color:transparent;color:#b9b2ff;font-weight:500}
+.b{--c:var(--violet)}
+.pink{--c:var(--pink)}.cyan{--c:var(--cyan)}.green{--c:var(--green)}
+.violet{--c:var(--violet)}.lav{--c:var(--lav)}.plum{--c:var(--plum)}
+.line{--c:var(--cyan)}.linegreen{--c:var(--green)}.dim{--c:transparent}
+.bl::after{left:18px;top:100%;border-top-color:var(--c);border-bottom:0;margin-top:3px;border-right-width:4px}
+.br::after{right:18px;top:100%;border-top-color:var(--c);border-bottom:0;margin-top:3px;border-left-width:4px}
+.tl::after{left:18px;bottom:100%;border-bottom-color:var(--c);border-top:0;margin-bottom:3px;border-right-width:4px}
+.tr::after{right:18px;bottom:100%;border-bottom-color:var(--c);border-top:0;margin-bottom:3px;border-left-width:4px}
+.n::after{display:none}
+.b:nth-child(3n){border-radius:2px}
+.b:nth-child(3n+1){border-radius:8px}
+.b:nth-child(3n+2){border-radius:0 14px 0 14px}
+.dim{border-radius:0!important}
+h1{width:100%;margin:8px 0 6px;text-align:center;font-size:clamp(34px,6vw,72px);font-weight:900;letter-spacing:.2em;text-indent:.2em;color:#fff;text-shadow:3px 3px 0 var(--pink),6px 6px 0 var(--violet)}
+h2{width:100%;margin:28px 0 4px;font-size:clamp(22px,3.2vw,38px);font-weight:900;color:var(--green);border-bottom:3px dashed var(--violet);padding-bottom:6px}
+.foot{width:100%;text-align:right;font-size:12px;color:#8f89d8;margin-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  .b{animation:pop .45s cubic-bezier(.2,1.4,.4,1) both;animation-delay:calc(var(--i)*35ms)}
+  @keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+}
+</style>
+</head>
+<body>
+<main id="wall" aria-label="メッセージ一覧"><h1>技術科【アンケート集約結果】</h1></main>
+
+<script>
+/* 書式: ["テキスト", "色", "サイズ", "しっぽの向き"]
+   色: pink / cyan / green / violet / lav / plum / line / linegreen / dim(なし)
+   サイズ: xl / l / m / s
+   しっぽ: bl / br / tl / tr / n(なし)
+   文字列だけでも可能(色・サイズ・向きは自動)。改行は \n */
+const ITEMS = [
+  ["技術科は\n「つくる」が一番の思い出!","pink","xl","br"],
+  ["本棚も、ライトも、\n最後にできあがった瞬間が忘れられない","cyan","l","bl"],
+  ["はんだ付けは難しい。\nでも、やっぱり楽しい!","pink","xl","bl"],
+  ["班で協力して\n高く積み上げるタワー対決、\nまたやりたい!","green","l","tl"],
+  ["「みんなが助けてくれたから\nできました」","line","l","br"],
+  ["部屋を暗くして\nみんなの作品を見た時間が好き","violet","m","tr"],
+  ["自分の作品が\n公美展に選ばれた!","plum","l","bl"],
+  ["失敗も、思い出。\n倒れたタワー、つかなかったライト…","dim","m","n"],
+  ["図面も、Wordも、Excelも、\nやってみると意外と役に立つ","lav","m","tl"],
+  ["回数を重ねるごとに\n早く、きれいにできるようになった","linegreen","m","br"],
+  ["電気・ネットワーク・ギヤ…\n頭を使う内容は、正直むずかしい","line","m","bl"],
+  ["すごろくやタイピングで\n遊びながら学べるのがいい","green","m","tr"],
+  ["もっと作りたい!\nいす、ラジオ、\n…","pink","l","tl"],
+  ["プログラミングで\nゲームを作って大会をしたい","violet","m","br"],
+  ["動画編集も\nやってみたい","lav","s","bl"],
+  ["ダイコン、生きものの飼育…\n育てる技術も気になる","linegreen","s","tl"],
+  ["技術の時間は楽しみ。\n終わってしまうのが悲しいくらい…","plum","l","bl"],
+  ["テストは、もうちょっとやさしく…","dim","s","n"]
+];
+
+const COLORS=["pink","cyan","green","violet","lav","line"],SIZES=["l","m","m","s"],TAILS=["bl","br","tl","tr"];
+const wall=document.getElementById("wall");
+ITEMS.forEach((it,i)=>{
+  const [t,c,s,tail]=Array.isArray(it)?it:[it];
+  if(t.startsWith("#")){const h=document.createElement("h2");h.textContent=t.slice(1).trim();wall.appendChild(h);return;}
+  const d=document.createElement("div");
+  d.className=["b",c||COLORS[i%COLORS.length],s||SIZES[i%SIZES.length],tail||TAILS[i%TAILS.length]].join(" ");
+  d.style.setProperty("--i",i);
+  d.textContent=t.replace(/\\n/g,"\n");
+  d.style.whiteSpace="pre-line";
+  wall.appendChild(d);
+});
+</script>
+</body>
+</html>
