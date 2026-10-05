@@ -10,7 +10,7 @@
         html, body {
             height: 100%;
             margin: 0;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans JP', sans-serif;
             background-color: #1e293b;
             color: #f8fafc;
             display: flex;
@@ -19,7 +19,6 @@
             width: 100vw;
             transition: background-color 0.3s, color 0.3s;
         }
-
         #tabs {
             background: #334155;
             color: white;
@@ -31,7 +30,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
             flex-shrink: 0;
         }
-
         #tabs button {
             background: #334155;
             border: none;
@@ -42,54 +40,44 @@
             flex-grow: 1;
             transition: background-color 0.2s, color 0.2s;
         }
-
-        #tabs button:hover {
-            background: #475569;
-            color: #f8fafc;
-        }
-
-        #tabs button.active {
-            background: #0ea5e9;
-            color: white;
-            font-weight: 600;
-        }
-
+        #tabs button:hover { background: #475569; color: #f8fafc; }
+        #tabs button.active { background: #0ea5e9; color: white; font-weight: 600; }
         @media (min-width: 768px) {
-            body {
-                flex-direction: row;
-            }
+            body { flex-direction: row; }
             #tabs {
                 width: 200px;
                 flex-direction: column;
                 height: 100%;
                 box-shadow: 4px 0 6px -1px rgba(0, 0, 0, 0.1);
             }
-            #tabs button {
-                flex-grow: 0;
-            }
+            #tabs button { flex-grow: 0; }
         }
-
+        @media (max-width: 767px) {
+            #tabs { display: grid; grid-template-columns: repeat(3, 1fr); }
+            #tabs button { padding: 0.8rem 0.3rem; font-size: 0.85rem; }
+        }
+        @media (max-width: 767px) and (orientation: landscape) {
+            #tabs { grid-template-columns: repeat(6, 1fr); }
+            #tabs button { padding: 0.8rem 0.2rem; font-size: 0.8rem; }
+        }
         #content-container {
             flex: 1 1 auto;
             display: flex;
-            justify-content: center;
-            align-items: center;
             min-width: 0;
             overflow: auto;
         }
-
         #content {
             display: flex;
             justify-content: center;
             align-items: stretch;
             flex-direction: column;
             position: relative;
+            margin: auto;
             max-width: 90%;
             width: 100%;
             padding: 2rem;
             box-sizing: border-box;
         }
-
         .time-display {
             font-size: 15vw;
             font-weight: 700;
@@ -104,13 +92,9 @@
             width: 100%;
             display: block;
         }
-
         @media (min-width: 768px) {
-            .time-display {
-                font-size: 8vw;
-            }
+            .time-display { font-size: 8vw; }
         }
-
         .controls {
             position: relative;
             width: 100%;
@@ -122,8 +106,7 @@
             padding: 1rem;
             margin: 1rem auto 0;
         }
-    
-        button.control, input[type="time"], input[type="number"] {
+        button.control, input[type="time"] {
             padding: 12px 24px;
             font-size: 1.1rem;
             border-radius: 8px;
@@ -134,25 +117,51 @@
             box-shadow: 0 4px #00000030;
             color: white;
         }
-
-        button.control:active {
-            transform: translateY(2px);
-            box-shadow: 0 2px #00000030;
+        button.control:active { transform: translateY(2px); box-shadow: 0 2px #00000030; }
+        .start-btn { background-color: #047857; }
+        .start-btn:hover { background-color: #065f46; }
+        .pause-btn { background-color: #f59e0b; color: #1e293b; }
+        .pause-btn:hover { background-color: #d97706; color: #fff; }
+        .time-display { font-variant-numeric: tabular-nums; }
+        .time-display.is-message {
+            overflow-wrap: anywhere;
+            line-height: 1.2;
         }
-    
-        .start-btn { background-color: #10b981; }
-        .start-btn:hover { background-color: #059669; }
-
-        .pause-btn { background-color: #f59e0b; }
-        .pause-btn:hover { background-color: #d97706; }
-
+        .message-setting {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            max-width: 600px;
+            margin: 0.5rem auto 0;
+            padding: 0 1rem;
+            box-sizing: border-box;
+        }
+        .message-setting label { font-size: 0.95rem; opacity: 0.85; }
+        .message-setting input {
+            width: 100%;
+            max-width: 360px;
+            padding: 12px 16px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 2px solid #64748b;
+            background-color: #475569;
+            color: white;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .message-setting input::placeholder { color: #cbd5e1; }
+        body.light .message-setting input { background-color: #e2e8f0; color: #0f172a; border-color: #94a3b8; }
+        body.light .message-setting input::placeholder { color: #64748b; }
+        body.fullscreen .message-setting { display: none !important; }
+        body.light .time-display { color: #0369a1; text-shadow: none; }
+        #repeatTimerSettings .timer-box .control { min-width: 44px; min-height: 44px; }
         .reset-btn { background-color: #ef4444; }
         .reset-btn:hover { background-color: #dc2626; }
-
         .fullscreen-btn { background-color: #3b82f6; }
         .fullscreen-btn:hover { background-color: #2563eb; }
-
-        input[type="time"], input[type="number"] {
+        input[type="time"] {
             background-color: #475569;
             color: white;
             border: 2px solid #64748b;
@@ -162,7 +171,6 @@
             text-align: center;
             width: 150px;
         }
-
         #repeatTimerSettings {
             display: flex;
             justify-content: center;
@@ -183,11 +191,14 @@
             transition: box-shadow 0.3s, border-color 0.3s, transform 0.1s;
             flex-grow: 1;
             max-width: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
-        .timer-box:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-        }
+        .timer-box:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); }
+        .timer-box.static { cursor: default; }
+        .timer-box.static:hover { transform: none; box-shadow: none; }
         .timer-box.selected {
             box-shadow: 0 0 15px 4px rgba(14, 165, 233, 0.5);
             border-color: #0ea5e9;
@@ -199,19 +210,16 @@
             font-weight: 700;
             display: block;
         }
-    
         body.fullscreen {
             width: 100vw; 
             height: 100vh;
             flex-direction: column !important;
         }
-
         body.fullscreen #content-container {
             width: 100%;
             height: 100%;
             flex: none;
         }
-    
         body.fullscreen #content {
             width: 100%;
             height: 100%;
@@ -225,17 +233,10 @@
             margin: 0;
             padding: 0;
         }
-    
+        body.fullscreen #content > div { width: 100%; }
         body.fullscreen #tabs,
-        body.fullscreen .controls {
-            display: none !important;
-        }
-    
-        body.fullscreen .time-display {
-            font-size: 20vw;
-            margin-bottom: 0;
-        }
-
+        body.fullscreen .controls { display: none !important; }
+        body.fullscreen .time-display { font-size: 20vw; margin-bottom: 0; }
         .custom-message {
             position: fixed;
             bottom: 20px;
@@ -252,38 +253,16 @@
             transition: opacity 0.3s, transform 0.3s;
             min-width: 250px;
             text-align: center;
+            pointer-events: none;
         }
-        .custom-message.info {
-            background-color: rgba(14, 165, 233, 0.9);
-        }
-        .custom-message.success {
-            background-color: rgba(16, 185, 129, 0.9);
-        }
-    
-        .custom-message.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-        body.light {
-            background-color: #f1f5f9;
-            color: #0f172a;
-        }
-        body.light #tabs {
-            background: #e2e8f0;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08);
-        }
-        body.light #tabs button {
-            background: #e2e8f0;
-            color: #475569;
-        }
-        body.light #tabs button:hover {
-            background: #cbd5e1;
-            color: #0f172a;
-        }
-        body.light #tabs button.active {
-            background: #0ea5e9;
-            color: white;
-        }
+        .custom-message.info { background-color: rgba(14, 165, 233, 0.9); }
+        .custom-message.success { background-color: rgba(16, 185, 129, 0.9); }
+        .custom-message.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        body.light { background-color: #f1f5f9; color: #0f172a; }
+        body.light #tabs { background: #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.08); }
+        body.light #tabs button { background: #e2e8f0; color: #475569; }
+        body.light #tabs button:hover { background: #cbd5e1; color: #0f172a; }
+        body.light #tabs button.active { background: #0ea5e9; color: white; }
         body.light .timer-box {
             background-color: #e2e8f0;
             border-color: #cbd5e1;
@@ -308,22 +287,8 @@
         body.light button.control:not(.start-btn):not(.pause-btn):not(.reset-btn):not(.fullscreen-btn):hover {
             background-color: #94a3b8;
         }
-        body.light input[type="time"],
-        body.light input[type="number"] {
-            background-color: #e2e8f0;
-            color: #0f172a;
-            border-color: #94a3b8;
-        }
-        body.light input[type="number"]::placeholder {
-            color: #94a3b8;
-        }
-        input[type="number"]::placeholder {
-            color: #64748b;
-        }
-        body.light.fullscreen #content {
-            background-color: #f1f5f9;
-        }
-
+        body.light input[type="time"] { background-color: #e2e8f0; color: #0f172a; border-color: #94a3b8; }
+        body.light.fullscreen #content { background-color: #f1f5f9; }
         #theme-toggle {
             border: none;
             background: transparent;
@@ -335,20 +300,11 @@
             transition: color 0.2s;
             flex-shrink: 0;
         }
-        #theme-toggle:hover {
-            color: #f8fafc;
-        }
-        body.light #theme-toggle {
-            color: #475569;
-        }
-        body.light #theme-toggle:hover {
-            color: #0f172a;
-        }
-
+        #theme-toggle:hover { color: #f8fafc; }
+        body.light #theme-toggle { color: #475569; }
+        body.light #theme-toggle:hover { color: #0f172a; }
         @media (min-width: 768px) {
-            #tabs {
-                position: relative;
-            }
+            #tabs { position: relative; }
             #theme-toggle {
                 position: absolute;
                 bottom: 0;
@@ -365,21 +321,10 @@
             letter-spacing: 0.12em;
             font-family: 'Noto Sans JP', sans-serif;
         }
-        body.light #clock-date {
-            color: #64748b;
-        }
-
-        body.fullscreen #clockDisplay {
-            font-size: 18vw;
-            margin-bottom: 0.5rem;
-        }
-        body.fullscreen #clock-date {
-            font-size: 2.5vw;
-            color: #94a3b8;
-        }
-        body.light.fullscreen #clock-date {
-            color: #64748b;
-        }
+        body.light #clock-date { color: #64748b; }
+        body.fullscreen #clockDisplay { font-size: 18vw; margin-bottom: 0.5rem; }
+        body.fullscreen #clock-date { font-size: 2.5vw; color: #94a3b8; }
+        body.light.fullscreen #clock-date { color: #64748b; }
     </style>
 </head>
 <body>
@@ -390,7 +335,7 @@
         <button onclick="showTab('stopwatch')">ストップウォッチ</button>
         <button onclick="showTab('repeatTimer')">繰り返し</button>
         <button onclick="showTab('clock')">現在時刻</button>
-        <button id="theme-toggle" onclick="toggleTheme()" title="ライト/ダーク切り替え">🌙ナイトモード</button>
+        <button id="theme-toggle" onclick="toggleTheme()" title="ライト/ダーク切り替え">☀️ライトモード</button>
     </div>
 
     <div id="content-container">
@@ -402,11 +347,17 @@
                     <button class="control" onclick="addTime(60)">+1分</button>
                     <button class="control" onclick="addTime(10)">+10秒</button>
                     <button class="control" onclick="addTime(1)">+1秒</button>
+                    <button class="control" onclick="addTime(-10)">−10秒</button>
+                    <button class="control" onclick="addTime(-60)">−1分</button>
                     <button class="control start-btn" onclick="startTimer()">開始</button>
                     <button class="control pause-btn" onclick="pauseTimer()">一時停止</button>
                     <button class="control reset-btn" onclick="resetTimer()">リセット</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
                     <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
+                </div>
+                <div class="message-setting">
+                    <label for="endMessageInput">終了メッセージ</label>
+                    <input type="text" id="endMessageInput" maxlength="20" placeholder="時間です！" autocomplete="off">
                 </div>
             </div>
 
@@ -418,6 +369,10 @@
                     <button class="control reset-btn" onclick="clearAlarm()">アラーム解除</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
                     <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
+                </div>
+                <div class="message-setting">
+                    <label for="alarmEndMessageInput">終了メッセージ</label>
+                    <input type="text" id="alarmEndMessageInput" maxlength="20" placeholder="時間です！" autocomplete="off">
                 </div>
             </div>
 
@@ -442,7 +397,7 @@
                     <div id="timer2Box" class="timer-box" onclick="selectTimer('timer2')">
                         タイマー②<br><span id="timer2Value">00:00</span>
                     </div>
-                    <div class="timer-box">
+                    <div class="timer-box static">
                         繰り返し回数<br>
                         <div style="display:flex; align-items:center; justify-content:center; gap:6px; margin-top:4px;">
                             <button class="control" onclick="changeRepeatCount(-1)" style="padding:4px 10px; font-size:0.9rem; box-shadow:none;">▼</button>
@@ -454,15 +409,21 @@
                 </div>
 
                 <div class="controls">
-                    <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
-                    <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
-                    <button class="control" onclick="addTimeToSelected(60)">+1分</button>
                     <button class="control" onclick="addTimeToSelected(300)">+5分</button>
+                    <button class="control" onclick="addTimeToSelected(60)">+1分</button>
+                    <button class="control" onclick="addTimeToSelected(10)">+10秒</button>
+                    <button class="control" onclick="addTimeToSelected(1)">+1秒</button>
+                    <button class="control" onclick="addTimeToSelected(-10)">−10秒</button>
+                    <button class="control" onclick="addTimeToSelected(-60)">−1分</button>
                     <button class="control start-btn" onclick="startRepeatTimer()">開始</button>
                     <button class="control pause-btn" onclick="pauseRepeatTimer(true)">一時停止</button>
                     <button class="control reset-btn" onclick="resetRepeatTimer(true, true)">リセット</button>
                     <button class="control fullscreen-btn" onclick="toggleFullScreen()">全画面</button>
                     <button class="control fullscreen-btn" onclick="togglePiP()">PiP</button>
+                </div>
+                <div class="message-setting">
+                    <label for="repeatEndMessageInput">終了メッセージ</label>
+                    <input type="text" id="repeatEndMessageInput" maxlength="20" placeholder="完了です！" autocomplete="off">
                 </div>
             </div>
             <div id="clock" style="display:none; align-items: center;">
@@ -475,21 +436,12 @@
             </div>
         </div>
     </div>
-
-
-    <audio id="alarmSound" preload="auto">
-        <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg" />
-        <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.mp3" type="audio/mpeg" />
-    </audio>
-
     <script>
     function showMessage(message, type = 'error') {
-        
         const existingMessageBox = document.querySelector('.custom-message');
         if (existingMessageBox) {
             existingMessageBox.remove();
         }
-
         const messageBox = document.createElement('div');
         messageBox.classList.add('custom-message', type);
         messageBox.textContent = message;
@@ -502,7 +454,6 @@
             messageBox.addEventListener('transitionend', () => messageBox.remove());
         }, 3000);
     }
-
     let currentTab = 'timer';
     function showTab(tabName) {
         document.querySelectorAll('#tabs button').forEach(btn => btn.classList.remove('active'));
@@ -521,8 +472,8 @@
         } else {
             stopClock();
         }
+        refitMessages();
     }
-    
     let totalTime = 0;
     let timerId = null;
     function updateTimerDisplay() {
@@ -532,10 +483,63 @@
         const display = h > 0
             ? String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
             : String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
-        document.getElementById('timerDisplay').textContent = display;
+        setDisplay('timerDisplay', display);
     }
+    function getEndMessage(inputId, defaultText = '時間です！') {
+        const input = document.getElementById(inputId);
+        const text = input ? input.value.trim() : '';
+        return text !== '' ? text : defaultText;
+    }
+    function setDisplay(id, text, isMessage = false) {
+        const el = document.getElementById(id);
+        el.textContent = text;
+        el.classList.toggle('is-message', isMessage);
+        if (isMessage) {
+            fitMessage(el);
+            if (el.clientWidth > 0) {
+                document.getElementById('content-container').scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } else {
+            el.style.fontSize = '';
+            el.style.whiteSpace = '';
+        }
+    }
+    function fitMessage(el) {
+        if (el.clientWidth === 0) return;
+        el.style.transition = 'none';
+        el.style.fontSize = '';
+        el.style.whiteSpace = 'nowrap';
+        const base = parseFloat(getComputedStyle(el).fontSize);
+        const minSize = 14;
+
+        let size = base;
+        if (el.scrollWidth > el.clientWidth) size = Math.floor(base * el.clientWidth / el.scrollWidth);
+        el.style.fontSize = size + 'px';
+        while (el.scrollWidth > el.clientWidth && size > minSize) {
+            size -= 1;
+            el.style.fontSize = size + 'px';
+        }
+
+        if (size < base * 0.6) {
+            el.style.whiteSpace = 'normal';
+            size = base;
+            el.style.fontSize = size + 'px';
+            while (size > minSize && Math.round(el.scrollHeight / (size * 1.2)) > 2) {
+                size = Math.floor(size * 0.95);
+                el.style.fontSize = size + 'px';
+            }
+        }
+        void el.offsetWidth;
+        el.style.transition = '';
+    }
+    function refitMessages() {
+        document.querySelectorAll('.time-display.is-message').forEach(fitMessage);
+    }
+    window.addEventListener('resize', refitMessages);
+    let timerEndAt = 0;
     function addTime(sec) {
         totalTime = Math.max(0, totalTime + sec);
+        if (timerId !== null) timerEndAt += sec * 1000;
         updateTimerDisplay();
     }
     function startTimer() {
@@ -544,32 +548,36 @@
                 showMessage('時間を設定してください', 'error');
                 return;
             }
+            unlockAudio();
+            document.getElementById('endMessageInput').blur();
+            document.getElementById('content-container').scrollTo({ top: 0, behavior: 'smooth' });
             showMessage('タイマーを開始しました', 'success');
+            timerEndAt = Date.now() + totalTime * 1000;
             timerId = setInterval(() => {
-            if (totalTime > 0) {
-                totalTime--;
-                updateTimerDisplay();
-                if (totalTime === 0) {
-                    document.getElementById('timerDisplay').textContent = '時間です！';
-                    clearInterval(timerId);
-                    timerId = null;
-                    playAlarm();
-                }
+            totalTime = Math.max(0, Math.ceil((timerEndAt - Date.now()) / 1000));
+            updateTimerDisplay();
+            if (totalTime === 0) {
+                const msg = getEndMessage('endMessageInput');
+                setDisplay('timerDisplay', msg, true);
+                clearInterval(timerId);
+                timerId = null;
+                playAlarm(msg);
             }
-        }, 1000);
+        }, 250);
     }
     function pauseTimer(showMsg = true) { 
+        const wasRunning = timerId !== null;
         clearInterval(timerId); 
         timerId = null; 
-        if (showMsg) showMessage('タイマーを一時停止しました', 'info');
+        if (showMsg && wasRunning) showMessage('タイマーを一時停止しました', 'info');
     }
     function resetTimer() { 
-        pauseTimer(false); 
+        pauseTimer(false);
+        stopAlarm();
         totalTime = 0; 
         updateTimerDisplay(); 
         showMessage('タイマーをリセットしました', 'info');
     }
-
     let alarmInterval = null;
     let alarmTargetTime = null;
     function setAlarm() {
@@ -582,43 +590,48 @@
         alarmTargetTime = new Date(); 
         alarmTargetTime.setHours(h, m, 0, 0);
       
+        let isTomorrow = false;
         if (alarmTargetTime <= now) {
             alarmTargetTime.setDate(alarmTargetTime.getDate() + 1);
+            isTomorrow = true;
         }
-      
+        unlockAudio();
+        document.getElementById('alarmEndMessageInput').blur();
         updateAlarmCountdown();
-        showMessage(`アラームを${time}に設定しました`, 'success');
-        alarmInterval = setInterval(updateAlarmCountdown, 1000);
+        showMessage(isTomorrow
+            ? `${time}はすぎているので、明日の${time}に設定しました`
+            : `アラームを${time}に設定しました`, 'success');
+        alarmInterval = setInterval(updateAlarmCountdown, 250);
     }
     function updateAlarmCountdown() {
         const now = new Date();
-        const diff = Math.max(0, Math.floor((alarmTargetTime - now) / 1000));
+        const diff = Math.max(0, Math.ceil((alarmTargetTime - now) / 1000));
         
-        if (diff <= 0 && alarmTargetTime) { 
+        if (diff <= 0 && alarmTargetTime) {
             clearInterval(alarmInterval); 
             alarmInterval = null; 
-            playAlarm(); 
-            document.getElementById('alarmCountdown').textContent = '時間です！';
+            const msg = getEndMessage('alarmEndMessageInput');
+            playAlarm(msg); 
+            setDisplay('alarmCountdown', msg, true);
             alarmTargetTime = null;
             return;
         }
-      
         const h = Math.floor(diff / 3600);
         const m = Math.floor((diff % 3600) / 60);
         const s = diff % 60;
-        document.getElementById('alarmCountdown').textContent = 
-            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        setDisplay('alarmCountdown',
+            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
     }
     function clearAlarm() {
+        stopAlarm();
         if (alarmInterval !== null) {
             clearInterval(alarmInterval);
             showMessage('アラームを解除しました', 'info');
         }
-        document.getElementById('alarmCountdown').textContent = '--:--:--';
+        setDisplay('alarmCountdown', '--:--:--');
         alarmInterval = null;
         alarmTargetTime = null;
     }
-
     let stopwatchTime = 0;
     let stopwatchId = null;
     function updateStopwatchDisplay() {
@@ -631,15 +644,17 @@
     function startStopwatch() {
         if (stopwatchId !== null) return;
         showMessage('ストップウォッチを開始しました', 'success');
+        const startedAt = Date.now() - stopwatchTime * 1000;
         stopwatchId = setInterval(() => {
-            stopwatchTime++;
+            stopwatchTime = Math.floor((Date.now() - startedAt) / 1000);
             updateStopwatchDisplay();
-        }, 1000);
+        }, 250);
     }
     function pauseStopwatch(showMsg = true) { 
+        const wasRunning = stopwatchId !== null;
         clearInterval(stopwatchId); 
         stopwatchId = null; 
-        if (showMsg) showMessage('ストップウォッチを一時停止しました', 'info');
+        if (showMsg && wasRunning) showMessage('ストップウォッチを一時停止しました', 'info');
     }
     function resetStopwatch() { 
         pauseStopwatch(false); 
@@ -656,6 +671,7 @@
     let isTimer1Turn = true;
     let repeatTimeLeft = 0;
     let currentRepeat = 0;
+    let repeatEndAt = 0;
 
     function formatTime(sec) {
         const m = Math.floor(sec / 60);
@@ -691,7 +707,7 @@
         updateRepeatCount();
     }
     function updateRepeatTimerDisplay(running = (repeatTimerId !== null)) {
-        document.getElementById('repeatTimerDisplay').textContent = formatTime(repeatTimeLeft);
+        setDisplay('repeatTimerDisplay', formatTime(repeatTimeLeft));
         document.getElementById('repeatProgress').textContent = `${Math.ceil(currentRepeat / 2)} / ${repeatCount}`;
         
         if (running) {
@@ -708,57 +724,64 @@
             showMessage("タイマー時間と繰り返し回数を設定してください", 'error');
             return;
         }
-        
         if (currentRepeat === 0) {
             isTimer1Turn = true;
             currentRepeat = 1;
         }
-
         document.getElementById('repeatTimesInput').style.color = '#94a3b8';
         document.getElementById('repeatProgress').style.color = '';
-        
-        runNextRepeat();
+
+        const isResume = repeatTimeLeft > 0;
+        unlockAudio();
+        document.getElementById('repeatEndMessageInput').blur();
+        runNextRepeat(isResume);
     }
-    function runNextRepeat() {
+    function runNextRepeat(isResume = false) {
         if (Math.ceil(currentRepeat / 2) > repeatCount) {
-            playAlarm();
             resetRepeatTimer(false, false);
-            document.getElementById('repeatTimerDisplay').textContent = '完了です！';
-            showMessage('繰り返しタイマーが完了しました', 'success');
+            const custom = getEndMessage('repeatEndMessageInput', '');
+            setDisplay('repeatTimerDisplay', custom || '完了です！', true);
+            showMessage(custom || '繰り返しタイマーが完了しました', 'success');
             return;
         }
-      
-        repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
-        updateRepeatTimerDisplay(true);
-        
-        showMessage(isTimer1Turn ? `タイマー① 開始 (${formatTime(timer1Seconds)})` : `タイマー② 開始 (${formatTime(timer2Seconds)})`, 'info');
 
+        if (isResume) {
+            showMessage('繰り返しタイマーを再開しました', 'info');
+        } else {
+            repeatTimeLeft = isTimer1Turn ? timer1Seconds : timer2Seconds;
+            showMessage(isTimer1Turn ? `タイマー① 開始 (${formatTime(timer1Seconds)})` : `タイマー② 開始 (${formatTime(timer2Seconds)})`, 'info');
+        }
+        updateRepeatTimerDisplay(true);
+
+        repeatEndAt = Date.now() + repeatTimeLeft * 1000;
         repeatTimerId = setInterval(() => {
-            if (repeatTimeLeft > 0) {
-                repeatTimeLeft--;
-                updateRepeatTimerDisplay();
-            } else {
-                playAlarm();
+            repeatTimeLeft = Math.max(0, Math.ceil((repeatEndAt - Date.now()) / 1000));
+            updateRepeatTimerDisplay();
+            if (repeatTimeLeft <= 0) {
+                const isLast = currentRepeat >= repeatCount * 2;
+                playAlarm('時間です！', isLast ? 3 : 1);
                 clearInterval(repeatTimerId);
                 repeatTimerId = null;
-                
+
                 isTimer1Turn = !isTimer1Turn;
                 currentRepeat++;
                 runNextRepeat();
             }
-        }, 1000);
+        }, 250);
     }
     
     function pauseRepeatTimer(showMessageOnPause = true) {
+        const wasRunning = repeatTimerId !== null;
         clearInterval(repeatTimerId);
         repeatTimerId = null;
-        if (showMessageOnPause) {
+        if (showMessageOnPause && wasRunning) {
             showMessage('繰り返しタイマーを一時停止しました', 'info');
         }
     }
     
     function resetRepeatTimer(clearAll = true, showMessageOnReset = true) {
-        pauseRepeatTimer(false); 
+        pauseRepeatTimer(false);
+        if (showMessageOnReset) stopAlarm();
         repeatTimeLeft = 0;
         currentRepeat = 0;
         updateRepeatTimerDisplay();
@@ -782,9 +805,14 @@
 
     function toggleFullScreen() {
         const body = document.body;
+        if (!document.documentElement.requestFullscreen) {
+            showMessage('このブラウザでは全画面にできません', 'error');
+            return;
+        }
         if (!document.fullscreenElement) {
             document.documentElement.requestFullscreen().then(() => {
                 body.classList.add('fullscreen');
+                refitMessages();
             }).catch(err => {
                 showMessage(`フルスクリーンモードにできませんでした: ${err.message}`, 'error');
             });
@@ -820,16 +848,23 @@
             ctx.fillStyle = '#0ea5e9';
             ctx.textAlign = 'center';
 
+            const fitFont = (str, size) => {
+                ctx.font = `bold ${size}px Inter, sans-serif`;
+                while (ctx.measureText(str).width > W - 40 && size > 24) {
+                    size -= 4;
+                    ctx.font = `bold ${size}px Inter, sans-serif`;
+                }
+            };
             if (currentTab === 'clock') {
                 const dateText = document.getElementById('clock-date').textContent;
                 ctx.font = '500 52px Inter, sans-serif';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(dateText, W / 2, H / 2 - 100);
-                ctx.font = 'bold 160px Inter, sans-serif';
+                fitFont(text, 160);
                 ctx.fillText(text, W / 2, H / 2 + 60);
             } else {
-                ctx.font = 'bold 160px Inter, sans-serif';
                 ctx.textBaseline = 'middle';
+                fitFont(text, 160);
                 ctx.fillText(text, W / 2, H / 2);
             }
 
@@ -856,28 +891,62 @@
         if (!document.fullscreenElement) {
             document.body.classList.remove('fullscreen');
         }
+        refitMessages();
     });
 
-    function playAlarm() {
-        const sound = document.getElementById('alarmSound');
-        let count = 0, max = 5;
+    let audioCtx = null;
+    let beepNodes = [];
 
-        sound.onended = null;
-        const startPlay = () => {
-            sound.currentTime = 0;
-            sound.onended = () => {
-                if (++count < max) startPlay();
-            };
-            sound.play().catch(e => console.error("Audio play failed:", e));
-        };
+    function getAudioContext() {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return null;
+        if (!audioCtx) audioCtx = new AC();
+        return audioCtx;
+    }
+    function unlockAudio() {
+        const ctx = getAudioContext();
+        if (ctx && ctx.state !== 'running') ctx.resume();
+    }
+    // ===== 音の設定 =====
+    const BEEP_PITCH    = 880;   // 音の高さ（大きいほど高い音）
+    const BEEP_LENGTH   = 0.25;  // 「ピッ」1回の長さ（秒）
+    const BEEP_GAP      = 0.1;   // 「ピッ」と次の「ピッ」の間隔（秒）※BEEP_LENGTH より 0.1 以上大きくする
+    const BEEPS_PER_SET = 3;     // 「ピピピ」の「ピッ」の数
+    const SET_PAUSE     = 0.6;   // 「ピピピ」と次の「ピピピ」の間の休み（秒）
+    const BEEP_VOLUME   = 0.4;   // 音量（0〜1）
 
-        if (sound.paused) {
-            startPlay();
-        } else {
-            sound.addEventListener('pause', startPlay, { once: true });
-            sound.pause();
+    function playBeep(sets = 3) {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state !== 'running') ctx.resume();
+        stopAlarm();
+        const base = ctx.currentTime + 0.05;
+        const setLength = BEEPS_PER_SET * BEEP_GAP + SET_PAUSE;
+        for (let s = 0; s < sets; s++) {
+            for (let n = 0; n < BEEPS_PER_SET; n++) {
+                const start = base + s * setLength + n * BEEP_GAP;
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = BEEP_PITCH;
+                gain.gain.setValueAtTime(0.0001, start);
+                gain.gain.exponentialRampToValueAtTime(BEEP_VOLUME, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + BEEP_LENGTH);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(start);
+                osc.stop(start + BEEP_LENGTH + 0.05);
+                beepNodes.push(osc);
+            }
         }
-        showMessage('時間です！', 'success');
+    }
+    function stopAlarm() {
+        beepNodes.forEach(osc => { try { osc.stop(); } catch (e) {} });
+        beepNodes = [];
+    }
+    function playAlarm(message = '時間です！', sets = 3) {
+        playBeep(sets);
+        showMessage(message, 'success');
     }
     
     window.onload = () => {
@@ -888,10 +957,12 @@
         resetRepeatTimer(false, false); 
         updateRepeatCount();
 
-        if (localStorage.getItem('theme') === 'light') {
-            document.body.classList.add('light');
-            document.getElementById('theme-toggle').textContent = '☀️ライトモード';
-        }
+        try {
+            if (localStorage.getItem('theme') === 'light') {
+                document.body.classList.add('light');
+                document.getElementById('theme-toggle').textContent = '🌙ナイトモード';
+            }
+        } catch (e) { }
     }
 
     let clockIntervalId = null;
@@ -919,11 +990,10 @@
         clearInterval(clockIntervalId);
         clockIntervalId = null;
     }
-
     function toggleTheme() {
         const isLight = document.body.classList.toggle('light');
-        document.getElementById('theme-toggle').textContent = isLight ? '☀️ライトモード' : '🌙ナイトモード';
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        document.getElementById('theme-toggle').textContent = isLight ? '🌙ナイトモード' : '☀️ライトモード';
+        try { localStorage.setItem('theme', isLight ? 'light' : 'dark'); } catch (e) {}
     }
   </script>
 <canvas id="pipCanvas" style="display:none;"></canvas>
