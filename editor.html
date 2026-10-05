@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プログラム開発エディタ</title>
+    <title>プログラムエディタ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
     <style>
@@ -29,6 +29,7 @@
         #resizer {
             width: 8px;
             cursor: col-resize;
+            touch-action: none;
             background-color: #e5e7eb;
             transition: background-color 0.2s;
             z-index: 20;
@@ -53,11 +54,7 @@
             display: flex;
             flex-direction: column;
         }
-        #editor-container {
-            flex: 1;
-            width: 100%;
-            background-color: #1e1e1e;
-        }
+        #editor-container { flex: 1; min-height: 0; overflow: hidden; width: 100%; background-color: #1e1e1e; }
         #result-display {
             flex: 1;
             min-height: 0;
@@ -78,15 +75,20 @@
             background-color: rgba(0, 0, 0, 0.5);
             transition: opacity 0.3s;
         }
+        @media (max-width: 767px) {
+            #main-container { flex-direction: column; }
+            #editor-side, #preview-side { width: 100% !important; height: auto; flex: 1 1 0; min-height: 0; }
+            #resizer { display: none; }
+        }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <header class="bg-slate-800 text-white p-3 flex justify-between items-center shadow-md z-30">
-        <div class="flex items-center gap-4">
+    <header class="bg-slate-800 text-white p-3 flex flex-wrap justify-between items-center gap-2 shadow-md z-30">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4">
             <h1 class="text-lg font-bold flex items-center gap-2 text-nowrap">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 16 4-4-4-4"/><path d="m6 8-4 4 4 4"/><path d="m14.5 4-5 16"/></svg>
-                開発エディタ
+                プログラムエディタ
             </h1>
             <span id="currentFileName" class="text-sm text-slate-400 font-normal truncate max-w-xs"></span>
             <select id="languageSelect" class="bg-slate-700 text-white text-sm rounded border border-slate-600 px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
@@ -106,7 +108,7 @@
             </div>
         </div>
         
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             <input type="file" id="fileInput" class="hidden" accept=".html,.js,.css,.py,.ts,.json,.md,.txt">
             <button id="clearBtn" class="bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
@@ -115,7 +117,7 @@
 
             <button id="uploadBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                開く
+                ファイルを開く
             </button>
             <button id="toggleEditorBtn" class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-2 rounded text-sm font-medium transition-colors flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
@@ -135,7 +137,7 @@
     <main id="main-container">
         <div id="editor-side" style="width: 50%;">
             <div class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider flex justify-between items-center flex-wrap gap-y-1">
-                <span>Editor</span>
+                <span>プログラム編集</span>
                 <div class="flex flex-wrap gap-1 normal-case">
                     <button id="undoBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="元に戻す (Ctrl+Z)">元に戻す</button>
                     <button id="redoBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium transition-colors" title="やり直す (Ctrl+Shift+Z)">やり直す</button>
@@ -153,10 +155,17 @@
         <div id="resizer" title="ドラッグして幅を調整"></div>
 
         <div id="preview-side">
-            <div id="preview-label" class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 uppercase tracking-wider border-b border-gray-300 flex justify-between items-center">
-                <button id="toggleConsoleBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium normal-case transition-colors" title="コンソール表示を切り替え">コンソール</button>
-                <span>Result</span>
+            <div id="preview-label" class="bg-gray-200 px-4 py-1 text-xs font-semibold text-gray-600 tracking-wider border-b border-gray-300 flex flex-wrap justify-between items-center gap-1">
+            <span>結果（プレビュー）</span>
+            <div class="flex flex-wrap items-center gap-2 normal-case">
+                <label class="flex items-center gap-1 cursor-pointer" title="OFFにすると、「実行」を押したときだけ結果が変わります">
+                    <input type="checkbox" id="autoRunCheck" checked> 自動で更新
+                </label>
+                <button id="runBtn" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm font-bold transition-colors" title="結果を更新する (Ctrl+Enter)">▶ 実行</button>
+                <button id="toggleConsoleBtn" class="bg-slate-500 hover:bg-slate-400 text-white px-2 py-1 rounded text-xs font-medium normal-case transition-colors" title="プログラムのメッセージやエラーを表示します">ログ・エラー</button>
             </div>
+        </div>
+        <div id="errorBanner" class="hidden whitespace-pre-wrap bg-red-50 border-b border-red-300 text-red-800 px-3 py-2 text-sm"></div>
             <div class="preview-container flex-1 overflow-auto bg-white p-4" id="result-display">
                 <iframe id="preview" class="w-full h-full border-none"></iframe>
                 <pre id="text-result" class="hidden whitespace-pre-wrap font-mono text-sm"></pre>
@@ -212,6 +221,9 @@
         const consoleLog = document.getElementById('consoleLog');
         const toggleConsoleBtn = document.getElementById('toggleConsoleBtn');
         const clearConsoleBtn = document.getElementById('clearConsoleBtn');
+        const errorBanner = document.getElementById('errorBanner');
+        const autoRunCheck = document.getElementById('autoRunCheck');
+        const runBtn = document.getElementById('runBtn');
 
         let editor;
         let isOnlyPreview = false;
@@ -226,13 +238,39 @@
         const STORAGE_KEY_LANG = 'web_editor_last_lang';
         const STORAGE_KEY_FONTSIZE = 'web_editor_font_size';
         const STORAGE_KEY_HISTORY = 'web_editor_undo_history';
+        const STORAGE_KEY_RUNNING = 'web_editor_running_flag';
         let fontSize = parseInt(localStorage.getItem(STORAGE_KEY_FONTSIZE)) || 14;
         let undoStack = [];
         let redoStack = [];
         let isApplyingHistory = false;
 
         const samples = {
-            html: '',
+            html: `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>わたしのページ</title>
+<style>
+    /* ★ 色や大きさを変えて、右の結果がどうなるか見てみよう */
+    h1 { color: tomato; }
+    button { font-size: 20px; }
+</style>
+</head>
+<body>
+<h1>はじめてのWebページ</h1>
+<p>この文章を、自分の言葉に書きかえてみよう。</p>
+
+<button onclick="hello()">押してみよう</button>
+<p id="message"></p>
+
+<script>
+    // ★ ボタンを押したときに動くプログラム
+    function hello() {
+    document.getElementById('message').textContent = 'こんにちは！';
+    }
+<\/script>
+</body>
+</html>`,
             javascript: '',
             css: '',
             python: '',
@@ -241,19 +279,16 @@
             typescript: ''
         };
 
-        function updateOutput(code, lang) {
-            if (lang === 'html') {
-                preview.classList.remove('hidden');
-                textResult.classList.add('hidden');
-                consoleLog.innerHTML = '';
-                const doc = preview.contentDocument || preview.contentWindow.document;
-                const consoleShim = `
+        const consoleShim = `
 <script>
 (function() {
-    const post = (level, args) => {
+    const post = (level, args, uncaught) => {
         try {
-            window.parent.postMessage({ __editorConsole: true, level: level, args: args.map(function(a) {
-                try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+            window.parent.postMessage({ __editorConsole: true, level: level, uncaught: !!uncaught, args: args.map(function(a) {
+                try {
+                    if (a instanceof Error) return a.name + ': ' + a.message;
+                    return typeof a === 'object' ? JSON.stringify(a) : String(a);
+                }
                 catch (e) { return String(a); }
             }) }, '*');
         } catch (e) {}
@@ -266,21 +301,70 @@
         };
     });
     window.addEventListener('error', function(e) {
-        post('error', [e.message + ' (' + e.filename + ':' + e.lineno + ')']);
+        post('error', ['エラー：' + e.message + (e.lineno ? '（' + e.lineno + '行目）' : '')], true);
     });
     window.addEventListener('load', function() {
-        document.querySelectorAll('a').forEach(function(l) { l.setAttribute('target', '_blank'); });
+        document.querySelectorAll('a').forEach(function(l) {
+            if ((l.getAttribute('href') || '').charAt(0) !== '#') l.setAttribute('target', '_blank');
+        });
     });
 })();
-<\/script>`;
-                doc.open();
-                doc.write(consoleShim + code);
-                doc.close();
+<\/script>`.replace(/\s*\n\s*/g, ' ').trim();
+
+        function insertShim(code) {
+            const head = code.match(/<head(\s[^>]*)?>/i);
+            if (head) {
+                const i = head.index + head[0].length;
+                return code.slice(0, i) + consoleShim + code.slice(i);
+            }
+            const doctype = code.match(/^\s*<!doctype[^>]*>/i);
+            if (doctype) {
+                const i = doctype[0].length;
+                return code.slice(0, i) + consoleShim + code.slice(i);
+            }
+            return consoleShim + code;
+        }
+
+        const markRunning = (on) => {
+            try { on ? localStorage.setItem(STORAGE_KEY_RUNNING, '1') : localStorage.removeItem(STORAGE_KEY_RUNNING); }
+            catch (e) {}
+        };
+
+        function updateOutput(code, lang, force) {
+            if (lang === 'html') {
+                preview.classList.remove('hidden');
+                textResult.classList.add('hidden');
+                if (!force && !autoRunCheck.checked) return;
+                hideErrorBanner();
+                consoleLog.innerHTML = '';
+                const doc = preview.contentDocument || preview.contentWindow.document;
+                markRunning(true);
+                try {
+                    doc.open();
+                    doc.write(insertShim(code));
+                    doc.close();
+                } finally {
+                    markRunning(false);
+                }
             } else {
                 preview.classList.add('hidden');
                 textResult.classList.remove('hidden');
-                textResult.textContent = code;
+                textResult.textContent = '※ ' + lang + ' は実行されず、文字として表示しています。\n'
+                    + '　CSSやJavaScriptを動かすには、HTMLに切りかえて <style> や <script> の中に書きます。\n'
+                    + '------------------------------\n' + code;
             }
+        }
+
+        function hideErrorBanner() { errorBanner.classList.add('hidden'); errorBanner.textContent = ''; }
+        function showErrorBanner(text) { errorBanner.textContent = text; errorBanner.classList.remove('hidden'); }
+
+        function explainError(msg) {
+            if (/is not defined/.test(msg)) return 'ヒント：その名前の変数や関数が見つかりません。つづり・大文字小文字・let/const を書いたかを確認しよう。';
+            if (/is not a function/.test(msg)) return 'ヒント：関数ではないものを「 ( ) 」で呼び出しています。関数の名前のつづりを確認しよう。';
+            if (/Assignment to constant/.test(msg)) return 'ヒント：const で作った値は書きかえられません。変える必要があるなら let を使おう。';
+            if (/of null|of undefined|is null|is undefined/.test(msg)) return 'ヒント：HTMLにない要素を使おうとしています。getElementById の名前と、HTMLの id が同じか確認しよう。';
+            if (/Unexpected|Invalid or unexpected|missing/.test(msg)) return 'ヒント：書き方のまちがいです。( ) { } " \' ; の「つけ忘れ・閉じ忘れ」が、エラーの行やその前の行にないか探そう。';
+            return 'ヒント：エラーの行番号のまわりを見て、つづりや記号をたしかめよう。';
         }
 
         function appendConsoleLog(level, args) {
@@ -295,6 +379,10 @@
         window.addEventListener('message', (e) => {
             if (e.data && e.data.__editorConsole) {
                 appendConsoleLog(e.data.level, e.data.args);
+                if (e.data.uncaught && errorBanner.classList.contains('hidden')) {
+                    const text = e.data.args.join(' ');
+                    showErrorBanner('⚠ ' + text + '\n' + explainError(text));
+                }
             }
         });
 
@@ -339,24 +427,42 @@
             saveHistoryToStorage();
         }
 
+        function flushPendingHistory() {
+            const now = editor.getValue();
+            if (undoStack[undoStack.length - 1] !== now) {
+                undoStack.push(now);
+                redoStack = [];
+            }
+        }
+
+        function setEditorValueKeepingView(value) {
+            const state = editor.saveViewState();
+            editor.setValue(value);
+            if (state) editor.restoreViewState(state);
+        }
+
         function doUndo() {
-            if (!editor || undoStack.length < 2) return;
+            if (!editor) return;
+            flushPendingHistory();
+            if (undoStack.length < 2) return;
             isApplyingHistory = true;
             const current = undoStack.pop();
             redoStack.push(current);
             const prev = undoStack[undoStack.length - 1];
-            editor.setValue(prev);
+            setEditorValueKeepingView(prev);
             saveHistoryToStorage();
             saveToLocalStorage();
             isApplyingHistory = false;
         }
 
         function doRedo() {
-            if (!editor || redoStack.length === 0) return;
+            if (!editor) return;
+            flushPendingHistory();
+            if (redoStack.length === 0) return;
             isApplyingHistory = true;
             const next = redoStack.pop();
             undoStack.push(next);
-            editor.setValue(next);
+            setEditorValueKeepingView(next);
             saveHistoryToStorage();
             saveToLocalStorage();
             isApplyingHistory = false;
@@ -370,10 +476,7 @@
                 downloadBtn.click();
             } else if (e.key === 'Enter') {
                 e.preventDefault();
-                if (editor) {
-                    clearTimeout(debounceTimer);
-                    updateOutput(editor.getValue(), languageSelect.value);
-                }
+                runNow();
             }
         });
 
@@ -382,7 +485,7 @@
             if (!confirm('エディタの内容をすべて削除しますか？')) return;
             editor.setValue('');
             const lang = languageSelect.value;
-            updateOutput('', lang);
+            updateOutput('', lang, true);
             saveToLocalStorage();
         });
 
@@ -401,35 +504,38 @@
             pendingFile = null;
         });
 
-        confirmModalBtn.addEventListener('click', () => {
-            if (pendingFile) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const content = event.target.result;
-                    const fileName = pendingFile.name.toLowerCase();
-                    currentFileName = pendingFile.name;
-                    localStorage.setItem(STORAGE_KEY_FILENAME, currentFileName);
-                    document.getElementById('currentFileName').textContent = currentFileName;
-                    
-                    let detectedLang = 'html';
-                    if (fileName.endsWith('.js')) detectedLang = 'javascript';
-                    else if (fileName.endsWith('.css')) detectedLang = 'css';
-                    else if (fileName.endsWith('.py')) detectedLang = 'python';
-                    else if (fileName.endsWith('.json')) detectedLang = 'json';
-                    else if (fileName.endsWith('.md')) detectedLang = 'markdown';
-                    else if (fileName.endsWith('.ts')) detectedLang = 'typescript';
+        confirmModalBtn.addEventListener('click', async () => {
+            const file = pendingFile;
+            if (!file) return;
+            pendingFile = null;
+            modalOverlay.classList.add('hidden');
+            fileInput.value = '';
+            try {
+                const buffer = await file.arrayBuffer();
+                let content;
+                try { content = new TextDecoder('utf-8', { fatal: true }).decode(buffer); }
+                catch (err) { content = new TextDecoder('shift_jis').decode(buffer); }
 
-                    languageSelect.value = detectedLang;
-                    monaco.editor.setModelLanguage(editor.getModel(), detectedLang);
-                    editor.setValue(content);
-                    updateOutput(content, detectedLang);
-                    saveToLocalStorage();
-                    
-                    modalOverlay.classList.add('hidden');
-                    fileInput.value = '';
-                    pendingFile = null;
-                };
-                reader.readAsText(pendingFile);
+                const fileName = file.name.toLowerCase();
+                currentFileName = file.name;
+                localStorage.setItem(STORAGE_KEY_FILENAME, currentFileName);
+                document.getElementById('currentFileName').textContent = currentFileName;
+
+                let detectedLang = 'html';
+                if (fileName.endsWith('.js')) detectedLang = 'javascript';
+                else if (fileName.endsWith('.css')) detectedLang = 'css';
+                else if (fileName.endsWith('.py')) detectedLang = 'python';
+                else if (fileName.endsWith('.json')) detectedLang = 'json';
+                else if (fileName.endsWith('.md')) detectedLang = 'markdown';
+                else if (fileName.endsWith('.ts')) detectedLang = 'typescript';
+
+                languageSelect.value = detectedLang;
+                monaco.editor.setModelLanguage(editor.getModel(), detectedLang);
+                editor.setValue(content);
+                updateOutput(content, detectedLang);
+                saveToLocalStorage();
+            } catch (err) {
+                alert('ファイルを読み込めませんでした。もう一度ためしてください。');
             }
         });
 
@@ -474,21 +580,21 @@
             } else {
                 previewSide.classList.remove('hidden-mode');
                 resizer.classList.remove('hidden-mode');
-                editorSide.style.width = '50%';
+                editorSide.style.width = lastSplitWidth;
                 btn.querySelector('span').textContent = 'エディタのみ';
             }
             if (editor) editor.layout();
         });
 
         let isResizing = false;
-        resizer.addEventListener('mousedown', (e) => {
+        resizer.addEventListener('pointerdown', (e) => {
             isResizing = true;
             resizer.classList.add('dragging');
             document.getElementById('result-display').classList.add('no-select');
             document.body.style.cursor = 'col-resize';
         });
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('pointermove', (e) => {
             if (!isResizing) return;
             const containerOffsetLeft = mainContainer.offsetLeft;
             const pointerRelativeXpos = e.clientX - containerOffsetLeft;
@@ -500,7 +606,7 @@
             editorSide.style.width = lastSplitWidth;
         });
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('pointerup', () => {
             if (isResizing) {
                 isResizing = false;
                 resizer.classList.remove('dragging');
@@ -510,11 +616,15 @@
             }
         });
 
+        if (typeof require === 'undefined') {
+            document.getElementById('editor-container').innerHTML =
+                '<p style="color:#fff;padding:16px;font-size:16px;line-height:1.7">エディタを読み込めませんでした。<br>インターネットにつながっているか確認して、ページを再読み込みしてください。</p>';
+        } else {
         require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
         require(['vs/editor/editor.main'], function() {
             const saved = loadFromLocalStorage();
             const initialLang = saved.lang || 'html';
-            const initialCode = saved.code || '';
+            const initialCode = (saved.code !== null) ? saved.code : samples[initialLang];
             if (saved.filename) {
                 currentFileName = saved.filename;
                 document.getElementById('currentFileName').textContent = currentFileName;
@@ -539,6 +649,7 @@
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyZ, () => doUndo());
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyZ, () => doRedo());
             editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyY, () => doRedo());
+            editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runNow());
 
             editor.onDidChangeModelContent(() => {
                 const code = editor.getValue();
@@ -561,8 +672,15 @@
                 saveToLocalStorage();
             });
 
+            let crashed = false;
+            try { crashed = localStorage.getItem(STORAGE_KEY_RUNNING) === '1'; localStorage.removeItem(STORAGE_KEY_RUNNING); } catch (e) {}
+            if (crashed) {
+                autoRunCheck.checked = false;
+                showErrorBanner('⚠ 前回、プログラムの実行中にページが固まりました。\n「自動で更新」をOFFにしています。無限ループなどがないか確認して、「▶ 実行」を押してください。');
+            }
             updateOutput(initialCode, initialLang);
         });
+        }
 
         downloadBtn.addEventListener('click', () => {
             if (!editor) return;
@@ -574,7 +692,11 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = currentFileName || `code_export.${ext}`;
+            let saveName = currentFileName || `code_export.${ext}`;
+            if (!saveName.toLowerCase().endsWith('.' + ext)) {
+                saveName = saveName.replace(/\.[^.]*$/, '') + '.' + ext;
+            }
+            a.download = saveName;
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
@@ -605,8 +727,11 @@
             if (!editor) return;
             try {
                 await navigator.clipboard.writeText(editor.getValue());
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = 'コピーしました';
+                setTimeout(() => { btn.textContent = 'コピー'; }, 1500);
             } catch (err) {
-                alert('コピーに失敗しました。ブラウザの権限設定をご確認ください。');
+                alert('コピーできませんでした。コードを選んで、キーボードの Ctrl+C（Macは ⌘+C）でコピーしてください。');
             }
         });
 
@@ -627,7 +752,7 @@
                 }]);
                 editor.focus();
             } catch (err) {
-                alert('クリップボードの読み取りに失敗しました。ブラウザの権限設定をご確認ください。');
+                alert('貼り付けできませんでした。エディタをクリックして、キーボードの Ctrl+V（Macは ⌘+V）で貼り付けてください。');
             }
         });
 
@@ -669,6 +794,14 @@
         clearConsoleBtn.addEventListener('click', () => {
             consoleLog.innerHTML = '';
         });
+
+        function runNow() {
+            if (!editor) return;
+            clearTimeout(debounceTimer);
+            updateOutput(editor.getValue(), languageSelect.value, true);
+        }
+        runBtn.addEventListener('click', runNow);
+        autoRunCheck.addEventListener('change', () => { if (autoRunCheck.checked) runNow(); });
     </script>
 </body>
 </html>
