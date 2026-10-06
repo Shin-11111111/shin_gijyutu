@@ -24,6 +24,19 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
         .page-card:hover .action-overlay {
             opacity: 1;
         }
+        @media (hover: none) {
+            .action-overlay {
+                opacity: 1 !important;
+                background: transparent !important;
+                pointer-events: none;
+                align-items: flex-end !important;
+                justify-content: flex-end !important;
+            }
+            .action-overlay button {
+                pointer-events: auto;
+                padding: 0.5rem !important;
+            }
+        }
         .transition-all-custom {
             transition: all 0.2s ease-in-out;
         }
@@ -138,7 +151,6 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                         <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm mb-3">
                             <i data-lucide="save" class="w-4 h-4 text-blue-600"></i> 保存してダウンロード
                         </h3>
-                        <!-- Tab buttons -->
                         <div class="flex border-b border-slate-200 gap-0 -mx-4 px-2">
                             <button onclick="switchExportTab('pdf')" id="tab-btn-pdf"
                                 class="export-tab-btn flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border-b-2 transition whitespace-nowrap"
@@ -302,7 +314,11 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
     </div>
 
     <script>
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        if (typeof pdfjsLib === 'undefined' || typeof JSZip === 'undefined') {
+            alert('必要なデータを読み込めませんでした。インターネットにつながっているか確認して、ページを開き直してください。');
+        } else {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        }
 
         let loadedFiles = [];
         let workspacePages = [];
@@ -339,11 +355,9 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
         const processingTitle = document.getElementById('processing-title');
         const pdfPasswordInput = document.getElementById('pdf-password');
 
-        // Initialize icons safely
         function initIcons() { if (typeof lucide !== 'undefined') lucide.createIcons(); }
         initIcons();
 
-        // Tab switching for export panel
         const tabAccents = {
             pdf:     { color: '#059669', bg: '#ecfdf5' },  // emerald
             split:   { color: '#2563eb', bg: '#eff6ff' },  // blue
@@ -385,13 +399,21 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
             const files = dt.files;
             handleSelectedFiles(files);
         });
-
+        ['dragover', 'drop'].forEach(eventName => {
+            window.addEventListener(eventName, (e) => {
+                if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+                    e.preventDefault();
+                }
+            });
+        });
         dropzone.addEventListener('click', () => {
             pdfFileInput.click();
         });
 
         pdfFileInput.addEventListener('change', (e) => {
-            handleSelectedFiles(e.target.files);
+            const files = Array.from(e.target.files);
+            e.target.value = '';
+            handleSelectedFiles(files);
         });
 
         window.setCompression = function(level) {
@@ -421,7 +443,7 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
         };
 
         async function handleSelectedFiles(files) {
-            const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf' || file.name.endsWith('.pdf'));
+            const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
             
             if (pdfFiles.length === 0) {
                 showModal('error', 'PDFファイルがありません', '有効なPDFファイル（拡張子 .pdf）をドロップするか選択してください。');
@@ -435,19 +457,27 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                 try {
                     const arrayBuffer = await readFileAsArrayBuffer(file);
                     const fileId = `file-${Date.now()}-${fileCounter++}`;
-                    
+
                     const addedFile = {
                         id: fileId,
                         name: file.name,
                         arrayBuffer: arrayBuffer
                     };
-                    
+
+                    try {
+                        await extractAndRenderPages(addedFile);
+                    } catch (e) {
+                        workspacePages = workspacePages.filter(p => p.fileId !== fileId);
+                        throw e;
+                    }
                     loadedFiles.push(addedFile);
-                    await extractAndRenderPages(addedFile);
                 } catch (error) {
                     console.error("PDF読み込みエラー:", error);
-                    showModal('error', 'ファイルの読み込みに失敗しました', `${file.name} を読み込めませんでした。暗号化されているか、破損している可能性があります。`);
-                } finally {
+                    const needsPassword = error && error.name === 'PasswordException';
+                    showModal('error', 'ファイルを読み込めませんでした',
+                        needsPassword
+                            ? `「${file.name}」にはパスワードがかかっています。パスワードを外したPDFを使ってください。`
+                            : `「${file.name}」を読み込めませんでした。ファイルが破損しているか、PDFではない可能性があります。`);
                 }
             }
 
@@ -563,9 +593,9 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                     card.className = "page-card relative bg-white border border-slate-200 rounded-xl p-3 shadow-sm hover:border-blue-400 transition duration-150 flex flex-col";
                     card.setAttribute('data-page-id', page.id);
                     
-                    const rotationStyle = `transform: rotate(${page.rotation}deg); transition: transform 0.2s ease-in-out;`;
+                    const fitScale = (page.rotation % 180 !== 0) ? ' scale(0.71)' : '';
+                    const rotationStyle = `transform: rotate(${page.rotation}deg)${fitScale}; transition: transform 0.2s ease-in-out;`;
 
-                    // 空白ページの場合は専用サムネイルを表示
                     const thumbContent = page.isBlank
                         ? `<div class="w-full h-full flex flex-col items-center justify-center text-slate-300">
                             <i data-lucide="file" class="w-8 h-8 mb-1"></i>
@@ -728,6 +758,7 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
             const confirmed = confirm("ワークスペースをすべてクリアしますか？インポートされた全ファイルと編集状態がリセットされます。");
             if (confirmed) {
                 loadedFiles = [];
+                Object.keys(pdfJsDocCache).forEach(k => delete pdfJsDocCache[k]);
                 workspacePages = [];
                 updateUI();
             }
@@ -744,11 +775,16 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
             }
             initIcons();
         };
-
+        const pdfJsDocCache = {};
+        async function getPdfJsDoc(fileId) {
+            if (!pdfJsDocCache[fileId]) {
+                const f = loadedFiles.find(x => x.id === fileId);
+                pdfJsDocCache[fileId] = await pdfjsLib.getDocument({ data: f.arrayBuffer.slice(0) }).promise;
+            }
+            return pdfJsDocCache[fileId];
+        }
         async function getCompresedPageImage(pageItem, targetDpi) {
-            const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
-            const loadingTask = pdfjsLib.getDocument({ data: fileData.arrayBuffer.slice(0) });
-            const pdf = await loadingTask.promise;
+            const pdf = await getPdfJsDoc(pageItem.fileId);
             const originalPage = await pdf.getPage(pageItem.originalPageIndex + 1);
 
             const targetScale = targetDpi / 72;
@@ -807,6 +843,10 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                 const pdfDocsCache = {};
 
                 for (const pageItem of workspacePages) {
+                    if (pageItem.isBlank) {
+                        mergedPdf.addPage([pageItem.width, pageItem.height]);
+                        continue;
+                    }
                     if (compressionSetting !== 'none') {
                         const dpi = compressionSetting === 'mid' ? 150 : 90;
                         const compressedImgUrl = await getCompresedPageImage(pageItem, dpi);
@@ -814,23 +854,12 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                         const imageBytes = await fetch(compressedImgUrl).then(res => res.arrayBuffer());
                         const embeddedImg = await mergedPdf.embedJpg(imageBytes);
                         
-                        let targetWidth = pageItem.width;
-                        let targetHeight = pageItem.height;
+                        const finalPage = mergedPdf.addPage([pageItem.width, pageItem.height]);
+                        finalPage.drawImage(embeddedImg, { x: 0, y: 0, width: pageItem.width, height: pageItem.height });
 
-                        const isRotatedOdd = (pageItem.rotation % 180 !== 0);
-                        const finalPage = mergedPdf.addPage([targetWidth, targetHeight]);
-                        
-                        finalPage.drawImage(embeddedImg, {
-                            x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
-                            y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
-                            width: isRotatedOdd ? targetHeight : targetWidth,
-                            height: isRotatedOdd ? targetWidth : targetHeight,
-                        });
-                        
                         if (pageItem.rotation !== 0) {
                             finalPage.setRotation(PDFLib.degrees(pageItem.rotation));
                         }
-
                     } else {
                         if (!pdfDocsCache[pageItem.fileId]) {
                             const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
@@ -915,17 +944,11 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                             const imgBytes = await fetch(imgUrl).then(res => res.arrayBuffer());
                             const embeddedImg = await tempProcessorDoc.embedJpg(imgBytes);
 
-                            let targetWidth = pageItem.width;
-                            let targetHeight = pageItem.height;
-                            const isRotatedOdd = (pageItem.rotation % 180 !== 0);
+                            const targetWidth = pageItem.width;
+                            const targetHeight = pageItem.height;
 
                             const newTempPage = tempProcessorDoc.addPage([targetWidth, targetHeight]);
-                            newTempPage.drawImage(embeddedImg, {
-                                x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
-                                y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
-                                width: isRotatedOdd ? targetHeight : targetWidth,
-                                height: isRotatedOdd ? targetWidth : targetHeight,
-                            });
+                            newTempPage.drawImage(embeddedImg, { x: 0, y: 0, width: targetWidth, height: targetHeight });
                             if (pageItem.rotation !== 0) {
                                 newTempPage.setRotation(PDFLib.degrees(pageItem.rotation));
                             }
@@ -1026,13 +1049,24 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
 
                 for (let idx = 0; idx < workspacePages.length; idx++) {
                     const pageItem = workspacePages[idx];
+
+                    if (pageItem.isBlank) {
+                        const blankCanvas = document.createElement('canvas');
+                        blankCanvas.width = Math.round(pageItem.width * scale);
+                        blankCanvas.height = Math.round(pageItem.height * scale);
+                        const blankCtx = blankCanvas.getContext('2d');
+                        blankCtx.fillStyle = '#ffffff';
+                        blankCtx.fillRect(0, 0, blankCanvas.width, blankCanvas.height);
+                        const blankIndex = String(idx + 1).padStart(3, '0');
+                        zip.file(`page_${blankIndex}.jpg`, blankCanvas.toDataURL('image/jpeg', quality).split(',')[1], { base64: true });
+                        continue;
+                    }
                     const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
 
                     const loadingTask = pdfjsLib.getDocument({ data: fileData.arrayBuffer.slice(0) });
                     const pdf = await loadingTask.promise;
                     const page = await pdf.getPage(pageItem.originalPageIndex + 1);
 
-                    // Apply workspace rotation on top of page's own rotation
                     const baseRotation = page.rotate || 0;
                     const totalRotation = (baseRotation + pageItem.rotation) % 360;
                     const viewport = page.getViewport({ scale, rotation: totalRotation });
@@ -1086,23 +1120,16 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                     const pageItem = workspacePages[idx];
                     const singlePagePdf = await PDFLib.PDFDocument.create();
 
-                    if (compressionSetting !== 'none') {
+                    if (pageItem.isBlank) {
+                        singlePagePdf.addPage([pageItem.width, pageItem.height]);
+                    } else if (compressionSetting !== 'none') {
                         const dpi = compressionSetting === 'mid' ? 150 : 90;
                         const compressedImgUrl = await getCompresedPageImage(pageItem, dpi);
                         const imageBytes = await fetch(compressedImgUrl).then(res => res.arrayBuffer());
                         const embeddedImg = await singlePagePdf.embedJpg(imageBytes);
 
-                        let targetWidth = pageItem.width;
-                        let targetHeight = pageItem.height;
-                        const isRotatedOdd = (pageItem.rotation % 180 !== 0);
-                        
-                        const newPage = singlePagePdf.addPage([targetWidth, targetHeight]);
-                        newPage.drawImage(embeddedImg, {
-                            x: isRotatedOdd ? (targetWidth - targetHeight) / 2 : 0,
-                            y: isRotatedOdd ? (targetHeight - targetWidth) / 2 : 0,
-                            width: isRotatedOdd ? targetHeight : targetWidth,
-                            height: isRotatedOdd ? targetWidth : targetHeight,
-                        });
+                        const newPage = singlePagePdf.addPage([pageItem.width, pageItem.height]);
+                        newPage.drawImage(embeddedImg, { x: 0, y: 0, width: pageItem.width, height: pageItem.height });
                         if (pageItem.rotation !== 0) {
                             newPage.setRotation(PDFLib.degrees(pageItem.rotation));
                         }
@@ -1176,27 +1203,26 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
         }
 
         function drawFitPageHalf(sheetPage, embeddedPageObj, meta, startX, maxW, maxH) {
-            let srcW = meta.width;
-            let srcH = meta.height;
+            const rot = (((meta.rotation || 0) % 360) + 360) % 360;
+            const odd = rot % 180 !== 0;
 
-            if (meta.rotation % 180 !== 0) {
-                const temp = srcW;
-                srcW = srcH;
-                srcH = temp;
-            }
+            const viewW = odd ? meta.height : meta.width;
+            const viewH = odd ? meta.width : meta.height;
+            const scale = Math.min(maxW / viewW, maxH / viewH) * 0.94;
 
-            const scale = Math.min(maxW / srcW, maxH / srcH) * 0.94; // slight spacing padding
-            const finalW = srcW * scale;
-            const finalH = srcH * scale;
+            const w = meta.width * scale;
+            const h = meta.height * scale;
+            const x0 = startX + (maxW - viewW * scale) / 2;
+            const y0 = (maxH - viewH * scale) / 2;
 
-            const paddingX = (maxW - finalW) / 2;
-            const paddingY = (maxH - finalH) / 2;
+            let ox = x0, oy = y0;
+            if (rot === 90)  { ox = x0;     oy = y0 + w; }
+            if (rot === 180) { ox = x0 + w; oy = y0 + h; }
+            if (rot === 270) { ox = x0 + h; oy = y0; }
 
             sheetPage.drawPage(embeddedPageObj, {
-                x: startX + paddingX,
-                y: paddingY,
-                width: finalW,
-                height: finalH
+                x: ox, y: oy, width: w, height: h,
+                rotate: PDFLib.degrees(-rot)
             });
         }
 
@@ -1264,15 +1290,17 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
 
                 for (let idx = 0; idx < workspacePages.length; idx++) {
                     const pageItem = workspacePages[idx];
-                    const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
 
-                    const loadingTask = pdfjsLib.getDocument({ data: fileData.arrayBuffer.slice(0) });
-                    const pdf = await loadingTask.promise;
-                    const page = await pdf.getPage(pageItem.originalPageIndex + 1);
-                    const textContent = await page.getTextContent();
+                    let items = [];
+                    if (!pageItem.isBlank) {
+                        const fileData = loadedFiles.find(f => f.id === pageItem.fileId);
+                        const loadingTask = pdfjsLib.getDocument({ data: fileData.arrayBuffer.slice(0) });
+                        const pdf = await loadingTask.promise;
+                        const page = await pdf.getPage(pageItem.originalPageIndex + 1);
+                        const textContent = await page.getTextContent();
+                        items = textContent.items;
+                    }
 
-                    // Reconstruct text with line breaks based on Y position
-                    const items = textContent.items;
                     let pageText = '';
                     let lastY = null;
 
@@ -1293,7 +1321,7 @@ return function(t){var r=e,n=r.lib,o=n.WordArray,i=n.Hasher,s=r.algo,a=o.create(
                         const paddedIndex = String(idx + 1).padStart(3, '0');
                         zip.file(`page_${paddedIndex}.txt`, pageText, { binary: false });
                     } else {
-                        const header = `${'='.repeat(40)}\nページ ${idx + 1}／${workspacePages.length}  (${escapeHtml(pageItem.fileName)})\n${'='.repeat(40)}`;
+                        const header = `${'='.repeat(40)}\nページ ${idx + 1}／${workspacePages.length}  (${pageItem.fileName})\n${'='.repeat(40)}`;
                         allLines.push(header + '\n\n' + pageText);
                     }
                 }
