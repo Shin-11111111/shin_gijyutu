@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ホワイトボード</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
 
@@ -41,12 +40,14 @@
             gap: 4px;
             overflow-y: auto;
             overflow-x: hidden;
-            scrollbar-width: none;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
             flex-shrink: 0;
             border-right: 1px solid var(--border);
             position: relative;
         }
-        #controls::-webkit-scrollbar { display: none; }
+        #controls::-webkit-scrollbar { width: 6px; }
+        #controls::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 3px; }
 
         .tb-divider {
             width: 36px;
@@ -92,6 +93,12 @@
             background: var(--surface);
             color: #fff;
             transform: scale(1.05);
+        }
+        .tb-btn:disabled, .mb-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: transparent;
+            transform: none;
         }
         .tb-btn.active {
             background: var(--accent);
@@ -365,7 +372,7 @@
 
             <button id="eraserModeButton" class="tb-btn mode-button" title="消しゴム">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l11-11 7 7-1 8z"/><path d="M6.5 17.5l5-5"/></svg>
-                <span>消去</span>
+                <span>消しゴム</span>
             </button>
 
             <button id="textToolButton" class="tb-btn mode-button" title="テキスト">
@@ -463,7 +470,7 @@
                 <div class="toggle-track" id="toggleTrack" title="画面モード">
                     <div class="toggle-thumb"></div>
                 </div>
-                <input type="checkbox" id="fixedModeToggle" class="sr-only" style="position:absolute;opacity:0;width:0;height:0;">
+                <input type="checkbox" id="fixedModeToggle" style="position:absolute;opacity:0;width:0;height:0;">
                 <span class="toggle-label-text" id="modeLabel">無制限</span>
             </div>
 
@@ -472,8 +479,8 @@
         <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
         <div id="canvasContainer" style="position:relative;flex:1;overflow:hidden;">
             <canvas id="chalkboard" style="width:100%;height:100%;display:block;" width="800" height="450"></canvas>
-            <textarea id="textInputOverlay" class="absolute hidden" style="font-size:16px;resize:both;overflow:auto;min-width:60px;min-height:30px;box-sizing:border-box;"></textarea>
-            <input type="file" id="imageFileInput" accept="image/*" class="hidden">
+            <textarea id="textInputOverlay" style="display:none;position:absolute;font-size:16px;resize:both;overflow:auto;min-width:60px;min-height:30px;box-sizing:border-box;"></textarea>
+            <input type="file" id="imageFileInput" accept="image/*" style="display:none;">
             <div id="messageBox" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;padding:8px 16px;border-radius:8px;opacity:0;transition:opacity 0.3s;pointer-events:none;font-size:13px;font-weight:600;font-family:'Noto Sans JP',sans-serif;white-space:nowrap;"></div>
         </div>
 
@@ -513,7 +520,7 @@
         </button>
         <button id="eraserModeButtonM" class="mb-btn mode-button" title="消しゴム">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l11-11 7 7-1 8z"/><path d="M6.5 17.5l5-5"/></svg>
-            <span>消去</span>
+            <span>消しゴム</span>
         </button>
         <button id="textToolButtonM" class="mb-btn mode-button" title="テキスト">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
@@ -609,10 +616,19 @@
         const HIGHLIGHTER_OPACITY = 0.5;
         const DEFAULT_LINE_WIDTH = 5;
         const DEFAULT_ERASER_WIDTH = 10;
+        const FONT_FAMILY = "'Noto Sans JP', 'Hiragino Sans', 'Meiryo', sans-serif";
         const HANDLE_SIZE = 10;
         const ROTATE_HANDLE_OFFSET = 30;
         let activeHandle = null;
         let isResizingSticky = false;
+        let isResizingShape = false;
+        let shapeResizeHandle = null;
+        let objectChanged = false;
+        let messageTimer = null;
+        let lastTapTime = 0, lastTapX = 0, lastTapY = 0;
+        const SHAPE_NAMES = { rect: '四角形', circle: '円', line: '直線', arrow: '矢印', triangle: '三角形' };
+        let imageStore = {};
+        let imageIdCounter = 1;
 
         let currentShapeType = 'rect';
         let shapeFill = false;
@@ -671,6 +687,7 @@
             colorBlack.classList.add('active');
             
             saveToHistory();
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(redrawCanvas);
         };
 
         window.addEventListener('resize', resizeCanvas);
@@ -678,10 +695,11 @@
 
         function resizeCanvas() {
             const isFullscreen = document.fullscreenElement === canvasContainer;
-
             if (isFullscreen) {
                 canvas.width = canvasContainer.clientWidth;
                 canvas.height = canvasContainer.clientHeight;
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
             } else {
                 const containerWidth = canvasContainer.clientWidth;
                 const containerHeight = canvasContainer.clientHeight;
@@ -689,13 +707,14 @@
                 if (currentModeSetting === 'fixed') {
                     canvas.width = FIXED_WIDTH;
                     canvas.height = FIXED_HEIGHT;
-                    const displayHeight = containerWidth * (FIXED_HEIGHT / FIXED_WIDTH);
-                    canvas.style.height = `${displayHeight}px`;
-                    
+                    const fit = Math.min(containerWidth / FIXED_WIDTH, (containerHeight || Infinity) / FIXED_HEIGHT);
+                    canvas.style.width  = `${FIXED_WIDTH * fit}px`;
+                    canvas.style.height = `${FIXED_HEIGHT * fit}px`;
                 } else {
                     canvas.width = containerWidth;
                     canvas.height = containerHeight > 0 ? containerHeight : containerWidth * (9 / 16);
-                    canvas.style.height = ``;
+                    canvas.style.width  = '100%';
+                    canvas.style.height = '100%';
                 }
             }
             redrawCanvas();
@@ -714,13 +733,24 @@
             resetView(); 
             resizeCanvas();
         }
+        function snapshotState() {
+            return JSON.stringify({ objects, layers, activeLayerId },
+                (key, value) => key === 'img' ? undefined : value);
+        }
 
+        function restoreState(json) {
+            const state = JSON.parse(json);
+            objects = state.objects;
+            layers = state.layers;
+            activeLayerId = state.activeLayerId;
+            objects.forEach(o => {
+                if (o.type === 'image') o.img = imageStore[o.imageId];
+            });
+            selectedObject = null;
+        }
         function saveToHistory() {
             history = history.slice(0, currentHistoryIndex + 1);
-            
-            const currentState = JSON.parse(JSON.stringify(objects));
-            history.push(currentState);
-            
+            history.push(snapshotState());
             if (history.length > MAX_HISTORY) {
                 history.shift();
             }
@@ -736,18 +766,19 @@
         function undo() {
             if (currentHistoryIndex > 0) {
                 currentHistoryIndex--;
-                objects = JSON.parse(JSON.stringify(history[currentHistoryIndex]));
+                restoreState(history[currentHistoryIndex]);
                 redrawCanvas();
+                renderLayerList();
                 showMessage('操作を元に戻しました');
             }
             updateUndoButtonState();
         }
 
         function updateUndoButtonState() {
-            const undoButton = document.getElementById('undoButton');
-            if (undoButton) {
-                undoButton.disabled = currentHistoryIndex <= 0;
-            }
+            ['undoButton', 'undoButtonM'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = currentHistoryIndex <= 0;
+            });
         }
 
         function setupEventListeners() {
@@ -757,8 +788,6 @@
             if (undoButton) {
                 undoButton.addEventListener('click', undo);
             }
-
-            colorYellow.addEventListener('click', () => selectColor('#facc15', colorYellow));
             
             canvas.addEventListener('mousedown', handleStart);
             canvas.addEventListener('mousemove', handleMove);
@@ -782,6 +811,7 @@
             });
 
             imageFileInput.addEventListener('change', handleImageFileSelect);
+            imageFileInput.addEventListener('cancel', setDrawMode);
 
             document.getElementById('colorBlack').addEventListener('click', () => selectColor('#1a1a2e', colorBlack));
             colorRed.addEventListener('click', () => selectColor('#f75a68', colorRed));
@@ -826,10 +856,11 @@
             document.getElementById('stickyToolButtonM')?.addEventListener('click', setStickyMode);
             document.getElementById('layerPanelButton')?.addEventListener('click', toggleLayerPanel);
             document.getElementById('addLayerBtn')?.addEventListener('click', () => {
-                layers.push({ id: layerIdCounter, name: `レイヤー ${layerIdCounter}`, visible: true, locked: false });
-                activeLayerId = layerIdCounter;
-                layerIdCounter++;
-                renderLayerList();
+            layers.push({ id: layerIdCounter, name: `レイヤー ${layerIdCounter}`, visible: true, locked: false });
+            activeLayerId = layerIdCounter;
+            layerIdCounter++;
+            renderLayerList();
+            saveToHistory();
             });
             document.getElementById('closeLayerBtn')?.addEventListener('click', toggleLayerPanel);
             document.querySelectorAll('.shape-sub-btn').forEach(btn => {
@@ -837,10 +868,11 @@
                     currentShapeType = btn.dataset.shape;
                     document.querySelectorAll('.shape-sub-btn').forEach(b => b.style.background = 'transparent');
                     btn.style.background = 'var(--accent)';
-                    showMessage('図形: ' + currentShapeType, '#2dd4bf');
+                    showMessage('図形: ' + SHAPE_NAMES[currentShapeType], '#2dd4bf');
                 });
             });
             document.getElementById('shapeFillCheck')?.addEventListener('change', e => { shapeFill = e.target.checked; });
+            document.querySelector('.shape-sub-btn[data-shape="rect"]').style.background = 'var(--accent)';
 
             canvas.removeEventListener('mousedown', handleStart);
             canvas.removeEventListener('mousemove', handleMove);
@@ -861,15 +893,7 @@
 
             canvas.addEventListener('dblclick', (e) => {
                 const { x, y } = getVirtualCoordinates(e);
-                const obj = getObjectAt(x, y);
-                if (!obj) return;
-                if (obj.type === 'text') {
-                    selectedObject = obj;
-                    startEditingText(obj);
-                } else if (obj.type === 'sticky') {
-                    selectedObject = obj;
-                    startEditingSticky(obj);
-                }
+                editObjectAt(x, y);
             });
 
             const mobileColorMapping = [
@@ -922,20 +946,27 @@
                 if (lineWidthInputM) lineWidthInputM.value = e.target.value;
             });
         }
-        
+        function editObjectAt(x, y) {
+            const obj = getObjectAt(x, y);
+            if (!obj) return;
+            if (obj.type === 'text') {
+                selectedObject = obj;
+                startEditingText(obj);
+            } else if (obj.type === 'sticky') {
+                selectedObject = obj;
+                startEditingSticky(obj);
+            }
+        }
         function toggleFullscreen() {
             if (document.fullscreenElement) {
                 document.exitFullscreen();
-                fullscreenButton.textContent = '全画面';
                 showMessage('全画面表示を終了しました');
+            } else if (!canvasContainer.requestFullscreen) {
+                showMessage('この端末・ブラウザでは全画面表示は使えません', '#f75a68');
             } else {
                 canvasContainer.requestFullscreen()
-                    .then(() => {
-                        showMessage('全画面表示を開始しました', '#3b82f6');
-                    })
-                    .catch(err => {
-                        showMessage(`全画面表示エラー: ${err.message}`, '#dc2626');
-                    });
+                    .then(() => showMessage('全画面表示です。やめるときは Esc キーを押してください', '#3b82f6'))
+                    .catch(() => showMessage('全画面表示にできませんでした', '#dc2626'));
             }
         }
 
@@ -944,7 +975,7 @@
 
             ctx.beginPath();
             ctx.strokeStyle = stroke.color;
-            ctx.lineWidth = stroke.width / scale;
+            ctx.lineWidth = stroke.width;
             
             if (stroke.isHighlighter) {
                 ctx.globalAlpha = HIGHLIGHTER_OPACITY; 
@@ -953,6 +984,9 @@
             }
 
             ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+            if (stroke.points.length === 1) {
+                ctx.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y);
+            }
 
             for (let i = 1; i < stroke.points.length; i++) {
                 ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
@@ -967,11 +1001,10 @@
             
             const lines = textObject.content.split('\n');
             let y = textObject.y;
-            const baseFontSize = parseInt(textObject.font);
-            const actualFontSize = baseFontSize / scale; 
+            const actualFontSize = parseInt(textObject.font);
             const lineHeight = actualFontSize * 1.2; 
             
-            ctx.font = `${actualFontSize}px Inter`;
+            ctx.font = `${actualFontSize}px ${FONT_FAMILY}`;
 
             lines.forEach(line => {
                 ctx.fillText(line, textObject.x, y);
@@ -1019,7 +1052,7 @@
                 ctx.strokeRect(imageObject.x, imageObject.y, imageObject.width, imageObject.height);
 
                 ctx.fillStyle = '#6b7280'; 
-                ctx.font = `${16 / scale}px Inter`;
+                ctx.font = `${16 / scale}px ${FONT_FAMILY}`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 ctx.fillText(
@@ -1093,14 +1126,7 @@
             ctx.restore();
         }
 
-
-        function redrawCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            ctx.save();
-            ctx.translate(offsetX, offsetY);
-            ctx.scale(scale, scale);
-
+        function drawAllObjects() {
             layers.forEach(layer => {
                 if (!layer.visible) return;
                 objects.filter(o => (o.layerId || 1) === layer.id).forEach(obj => {
@@ -1111,6 +1137,18 @@
                     else if (obj.type === 'sticky') drawSticky(obj);
                 });
             });
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.save();
+            ctx.translate(offsetX, offsetY);
+            ctx.scale(scale, scale);
+
+            drawAllObjects();
 
             if (isDrawing && currentStroke) {
                 drawStroke(currentStroke);
@@ -1137,12 +1175,11 @@
                  offsetY = 0;
                  return;
             }
+            const minOffsetX = canvas.width  * (1 - scale);
+            const minOffsetY = canvas.height * (1 - scale);
 
-            const maxPanX = (canvas.width * (scale - 1)) / 2; 
-            const maxPanY = (canvas.height * (scale - 1)) / 2;
-
-            offsetX = Math.min(Math.max(offsetX, -maxPanX), maxPanX);
-            offsetY = Math.min(Math.max(offsetY, -maxPanY), maxPanY);
+            offsetX = Math.min(0, Math.max(offsetX, minOffsetX));
+            offsetY = Math.min(0, Math.max(offsetY, minOffsetY));
         }
 
         function zoom(ratio) {
@@ -1247,6 +1284,8 @@
         function getObjectAt(virtualX, virtualY) {
             for (let i = objects.length - 1; i >= 0; i--) {
                 const obj = objects[i];
+                const layer = getLayer(obj.layerId || 1);
+                if (!layer || !layer.visible || layer.locked) continue;   // 非表示・ロック中のレイヤーは選べない
                 if (obj.type === 'text' || obj.type === 'image' || obj.type === 'shape' || obj.type === 'sticky') {
 
                     if (obj.type === 'image' && obj.rotation) {
@@ -1273,8 +1312,9 @@
                         const maxX = Math.max(obj.x1, obj.x2);
                         const minY = Math.min(obj.y1, obj.y2);
                         const maxY = Math.max(obj.y1, obj.y2);
-                        if (virtualX >= minX && virtualX <= maxX &&
-                            virtualY >= minY && virtualY <= maxY) {
+                        const pad = 8 / scale;
+                        if (virtualX >= minX - pad && virtualX <= maxX + pad &&
+                            virtualY >= minY - pad && virtualY <= maxY + pad) {
                             return obj;
                         }
                     } else {
@@ -1349,7 +1389,7 @@
                     isPanning = false;
                     [lastX, lastY] = [x, y];
                     canvas.classList.remove('grabbing');
-                    showMessage(`画像リサイズ (${activeHandle})`);
+                    showMessage('画像の大きさを変えています');
                     return;
                 }
                 
@@ -1385,7 +1425,7 @@
                         const lineWidthUIValue = Math.min(Math.max(Math.round(currentFontSize / 3), 1), 50); 
                         lineWidthRange.value = lineWidthUIValue;
                         lineWidthInput.value = lineWidthUIValue;
-                        showMessage(`フォントサイズ: ${currentFontSize}px (太さコントロールで変更可能)`);
+                        showMessage('文字の大きさは、左の「サイズ」で変えられます');
                     }
 
                 } else {
@@ -1417,6 +1457,7 @@
             }
             
             if (currentMode === 'draw' || currentMode === 'eraser' || currentMode === 'highlighter') {
+                if (!canEditActiveLayer()) return;
                 isDrawing = true;
                 selectedObject = null;
                 updateLineWidthLabel();
@@ -1427,18 +1468,18 @@
                 let isHighlighter = false;
 
                 if (currentMode === 'eraser') {
-                    strokeColor = blackboardBackgroundColor;
+                    eraseAtPoint(x, y);
+                    return;
                 } else if (currentMode === 'highlighter') {
                     isHighlighter = true;
-                    strokeColor = hexToRgba(currentColor, HIGHLIGHTER_OPACITY); 
-                    strokeWidth = HIGHLIGHTER_DEFAULT_WIDTH;
                 }
                 
                 currentStroke = {
                     type: 'stroke',
                     points: [{ x, y }],
                     color: strokeColor,
-                    width: strokeWidth,
+                    width: strokeWidth / scale,
+                    layerId: activeLayerId,
                     isEraser: currentMode === 'eraser',
                     isHighlighter: isHighlighter 
                 };
@@ -1447,13 +1488,40 @@
                 redrawCanvas(); 
             }
         }
+        function eraseAtPoint(x, y) {
+            if (!canEditActiveLayer()) return;
 
+            const eraseRadius = Math.max(
+                parseInt(lineWidthRange.value) / scale,
+                10 / scale
+            );
+
+            const before = objects.length;
+
+            objects = objects.filter(obj => {
+                if (obj.type !== 'stroke') return true;
+
+                if ((obj.layerId || 1) !== activeLayerId) return true;
+
+                return !obj.points.some(point => {
+                    const dx = point.x - x;
+                    const dy = point.y - y;
+                    return Math.sqrt(dx * dx + dy * dy) <= eraseRadius;
+                });
+            });
+
+            if (objects.length !== before) {
+                saveToHistory();
+                redrawCanvas();
+            }
+        }
         function handleMove(e) {
             e.preventDefault(); 
             const { x, y, rawX, rawY } = getVirtualCoordinates(e);
 
             if (isResizing && selectedObject && selectedObject.type === 'image') {
                 resizeImage(x, y);
+                objectChanged = true;
                 [lastX, lastY] = [x, y];
                 redrawCanvas();
                 return;
@@ -1461,6 +1529,7 @@
             
             if (isRotating && selectedObject && selectedObject.type === 'image') {
                 rotateImage(x, y);
+                objectChanged = true;
                 [lastX, lastY] = [x, y];
                 redrawCanvas();
                 return;
@@ -1484,6 +1553,7 @@
                 const dx = x - lastX;
                 const dy = y - lastY;
 
+                objectChanged = true;
                 if (selectedObject.type === 'shape') {
                     selectedObject.x1 += dx;
                     selectedObject.y1 += dy;
@@ -1508,6 +1578,10 @@
         }
 
         function handleEnd(e) {
+            if ((isObjectMoving || isResizing || isRotating) && objectChanged) {
+                objectChanged = false;
+                saveToHistory();
+            }
             if (isPanning) {
                 isPanning = false;
                 canvas.classList.remove('grabbing');
@@ -1547,12 +1621,13 @@
         }
 
         function insertText(x, y) {
+            if (!canEditActiveLayer()) return;
             const newText = {
                 type: 'text',
                 x: x,
                 y: y,
                 content: '新しいテキスト',
-                font: `${parseInt(lineWidthRange.value) * 3}px Inter`, 
+                font: `${parseInt(lineWidthRange.value) * 3}px`,
                 color: currentColor,
                 width: 150, 
                 height: 40,
@@ -1561,6 +1636,7 @@
             objects.push(newText);
             saveToHistory();
             startEditingText(newText);
+            textInputOverlay.select();
             redrawCanvas();
         }
 
@@ -1568,24 +1644,32 @@
             editingTextObject = textObject;
             selectedObject = null; 
 
-            const rect = canvas.getBoundingClientRect();
-            
+            const canvasRect = canvas.getBoundingClientRect();
+            const containerRect = canvasContainer.getBoundingClientRect();
+
+            const scaleX = canvasRect.width / canvas.width;
+            const scaleY = canvasRect.height / canvas.height;
+
             const screenX = textObject.x * scale + offsetX;
             const screenY = textObject.y * scale + offsetY;
-            
+
             const baseFontSize = parseInt(textObject.font);
-            const actualFontSize = baseFontSize * scale * (rect.width / canvas.width); 
-            
-            textInputOverlay.style.position = 'fixed';
-            textInputOverlay.style.left = `${rect.left + screenX * (rect.width / canvas.width)}px`;
-            textInputOverlay.style.top  = `${rect.top + (screenY - baseFontSize * 1.2 * scale) * (rect.height / canvas.height)}px`;
-            
+            const actualFontSize = baseFontSize * scale * scaleX;
+
+            const canvasLeft = canvasRect.left - containerRect.left;
+            const canvasTop = canvasRect.top - containerRect.top;
+
+            textInputOverlay.style.left = `${canvasLeft + screenX * scaleX}px`;
+            textInputOverlay.style.top = `${canvasTop + (screenY - baseFontSize * 1.2 * scale) * scaleY}px`;
+            textInputOverlay.style.fontSize = `${actualFontSize}px`;
+            textInputOverlay.style.width = `${textObject.width * scale * scaleX}px`;
+            textInputOverlay.style.height = `${textObject.height * scale * scaleY}px`;
             textInputOverlay.style.color = textObject.color;
+            textInputOverlay.style.background = '#ffffff';
+            textInputOverlay.style.border = '1px dashed #3b82f6';
+            textInputOverlay.style.resize = 'both';
             textInputOverlay.style.fontSize = `${actualFontSize}px`;
             textInputOverlay.value = textObject.content;
-            
-            textInputOverlay.style.width = `${textObject.width * scale * (rect.width / canvas.width)}px`;
-            textInputOverlay.style.height = `${textObject.height * scale * (rect.height / canvas.height)}px`;
             
             textInputOverlay.style.position = 'absolute';
             textInputOverlay.style.display = 'block';
@@ -1643,9 +1727,11 @@
                     const aspectRatio = img.width / img.height;
                     const initialWidth = 150;
                     const initialHeight = initialWidth / aspectRatio;
-                    
+                    const imageId = imageIdCounter++;
+                    imageStore[imageId] = img;
                     const newImage = {
                         type: 'image',
+                        imageId: imageId,
                         x: virtualX - initialWidth / 2, 
                         y: virtualY - initialHeight / 2, 
                         url: 'local_file', 
@@ -1828,9 +1914,8 @@
             } else {
                 currentColor = color;
                 if (currentMode === 'highlighter') {
-                    showMessage(`蛍光ペンの色を変更: ${color}`, color);
-                } else if (currentMode !== 'pan' && currentMode !== 'text' && currentMode !== 'image'
-                           && currentMode !== 'shape' && currentMode !== 'sticky') {
+                    showMessage('蛍光ペンの色を変えました', color);
+                } else if (currentMode === 'eraser') {
                     setDrawMode();
                 }
             }
@@ -1838,27 +1923,39 @@
         }
         
         function updateLineWidthLabel() {
-            if (selectedObject && (selectedObject.type === 'text' || selectedObject.type === 'sticky')) {
-                lineWidthLabel.textContent = 'サイズ:';
-            } else if (selectedObject && selectedObject.type === 'shape') {
-                lineWidthLabel.textContent = '太さ:';
+            if (selectedObject &&
+                selectedObject.type === 'text') {
+                lineWidthLabel.textContent = '文字サイズ';
+            } else if (selectedObject &&
+                    selectedObject.type === 'sticky') {
+                lineWidthLabel.textContent = '文字サイズ';
+            } else if (selectedObject &&
+                    selectedObject.type === 'shape') {
+                lineWidthLabel.textContent = '線の太さ';
+            } else if (currentMode === 'eraser') {
+                lineWidthLabel.textContent = '消しゴム';
             } else {
-                lineWidthLabel.textContent = '太さ:';
+                lineWidthLabel.textContent = 'ペンの太さ';
             }
+        }
+        function setLineWidthUI(value) {
+            ['lineWidthRange', 'lineWidthInput', 'lineWidthRangeM', 'lineWidthInputM'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = value;
+            });
         }
 
         function updateLineWidth(e) {
             let newWidth = parseInt(e.target.value);
-            
+            if (isNaN(newWidth)) return;
             if (newWidth < 1) newWidth = 1;
             if (newWidth > 50) newWidth = 50;
             
-            lineWidthRange.value = newWidth;
-            lineWidthInput.value = newWidth;
+            setLineWidthUI(newWidth);
 
             if (selectedObject && selectedObject.type === 'text') {
                 const newFontSize = newWidth * 3;
-                selectedObject.font = `${newFontSize}px Inter`;
+                selectedObject.font = `${newFontSize}px`;
                 redrawCanvas();
                 showMessage(`フォントサイズ: ${newFontSize}px`);
             } else if (selectedObject && selectedObject.type === 'sticky') {
@@ -1878,7 +1975,10 @@
             });
             if (currentMode !== 'shape') {
                 const menu = document.getElementById('shapeSubMenu');
-                if (menu) menu.style.display = 'none';
+                if (menu && menu.style.display !== 'none') {
+                    menu.style.display = 'none';
+                    resizeCanvas();
+                }
             }
         }
 
@@ -1898,8 +1998,7 @@
             selectedObject = null; 
             redrawCanvas();
             
-            lineWidthRange.value = DEFAULT_LINE_WIDTH;
-            lineWidthInput.value = DEFAULT_LINE_WIDTH;
+            setLineWidthUI(DEFAULT_LINE_WIDTH);
             updateLineWidthLabel(); 
             updateColorPickerUI();
 
@@ -1993,7 +2092,7 @@
             document.getElementById('imageToolButtonM')?.classList.add('active-teal');
             
             canvas.classList.remove('pan-cursor', 'grabbing'); 
-            canvas.style.cursor = 'wait'; 
+            canvas.style.cursor = 'default';
 
             selectedObject = null; 
             redrawCanvas();
@@ -2006,6 +2105,7 @@
 
         function clearCanvas() {
             stopEditingText();
+            if (!confirm('ボードの内容を、すべて消します。よろしいですか?\n(消したあとも「戻す」ボタンで元に戻せます)')) return;
             objects = [];
             currentStroke = null;
             redrawCanvas(); 
@@ -2015,114 +2115,54 @@
         }
 
         function takeScreenshot() {
-            let originalScale, originalOffsetX, originalOffsetY, originalWidth, originalHeight;
-            let finalCanvas = canvas;
-            
-            originalScale = scale;
-            originalOffsetX = offsetX;
-            originalOffsetY = offsetY;
-            originalWidth = canvas.width;
-            originalHeight = canvas.height;
+            stopEditingText();
 
-            finalCanvas = document.createElement('canvas');
-            finalCanvas.width = FIXED_WIDTH;
-            finalCanvas.height = FIXED_HEIGHT;
-            const tempCtx = finalCanvas.getContext('2d');
-            
-            let virtualViewX, virtualViewY, virtualViewWidth, virtualViewHeight;
+            const out = document.createElement('canvas');
+            out.width = FIXED_WIDTH;
+            out.height = FIXED_HEIGHT;
+            const outCtx = out.getContext('2d');
+            outCtx.fillStyle = blackboardBackgroundColor;
+            outCtx.fillRect(0, 0, out.width, out.height);
 
+            let vx, vy, vw, vh;
             if (currentModeSetting === 'fixed') {
-                virtualViewX = 0;
-                virtualViewY = 0;
-                virtualViewWidth = originalWidth;
-                virtualViewHeight = originalHeight;
+                vx = 0; vy = 0; vw = FIXED_WIDTH; vh = FIXED_HEIGHT;
             } else {
-                virtualViewX = -originalOffsetX / originalScale;
-                virtualViewY = -originalOffsetY / originalScale;
-                virtualViewWidth = originalWidth / originalScale;
-                virtualViewHeight = originalHeight / originalScale;
+                vx = -offsetX / scale;
+                vy = -offsetY / scale;
+                vw = canvas.width / scale;
+                vh = canvas.height / scale;
+            }
+            const k = Math.min(out.width / vw, out.height / vh);
+
+            const screenCtx = ctx;
+            const keepSelected = selectedObject;
+            try {
+                ctx = outCtx;
+                selectedObject = null;
+                ctx.save();
+                ctx.scale(k, k);
+                ctx.translate(-vx, -vy);
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                drawAllObjects();
+                ctx.restore();
+            } finally {
+                ctx = screenCtx;
+                selectedObject = keepSelected;
             }
 
-            const targetScaleX = finalCanvas.width / virtualViewWidth;
-            const targetScaleY = finalCanvas.height / virtualViewHeight;
-            const renderScale = Math.min(targetScaleX, targetScaleY); 
-
-            tempCtx.save();
-            
-            tempCtx.scale(renderScale, renderScale);
-            tempCtx.translate(-virtualViewX, -virtualViewY);
-            
-            tempCtx.lineCap = 'round';
-            tempCtx.lineJoin = 'round';
-            objects.forEach(obj => {
-                if (obj.type === 'stroke') {
-                    if (obj.isHighlighter) {
-                        tempCtx.globalAlpha = HIGHLIGHTER_OPACITY; 
-                    } else {
-                        tempCtx.globalAlpha = 1.0; 
-                    }
-
-                    tempCtx.beginPath();
-                    tempCtx.strokeStyle = obj.color;
-                    tempCtx.lineWidth = obj.width; 
-                    tempCtx.moveTo(obj.points[0].x, obj.points[0].y);
-
-                    for (let i = 1; i < obj.points.length; i++) {
-                        tempCtx.lineTo(obj.points[i].x, obj.points[i].y);
-                    }
-                    tempCtx.stroke();
-                    tempCtx.globalAlpha = 1.0; 
-                    
-                } else if (obj.type === 'text') {
-                    tempCtx.fillStyle = obj.color;
-                    const baseFontSize = parseInt(obj.font);
-                    tempCtx.font = `${baseFontSize}px Inter`; 
-
-                    const lines = obj.content.split('\n');
-                    let y = obj.y;
-                    const lineHeight = baseFontSize * 1.2;
-
-                    lines.forEach(line => {
-                        tempCtx.fillText(line, obj.x, y);
-                        y += lineHeight;
-                    });
-
-                } else if (obj.type === 'image') {
-                    const centerX = obj.x + obj.width / 2;
-                    const centerY = obj.y + obj.height / 2;
-
-                    tempCtx.save();
-                    tempCtx.translate(centerX, centerY);
-                    tempCtx.rotate(obj.rotation || 0);
-                    tempCtx.translate(-centerX, -centerY);
-
-                    if (obj.img && obj.img.complete) {
-                        tempCtx.drawImage(obj.img, obj.x, obj.y, obj.width, obj.height);
-                    }
-                    tempCtx.restore();
-                }
-            });
-            
-            tempCtx.restore();
-
-            
-            const dataURL = finalCanvas.toDataURL('image/png'); 
-            
+            const d = new Date();
+            const p = n => String(n).padStart(2, '0');
             const a = document.createElement('a');
-            a.href = dataURL;
-            a.download = `${currentModeSetting}_whiteboard_drawing_1920x1080.png`; 
+            a.href = out.toDataURL('image/png');
+            a.download = `whiteboard_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.png`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
 
-            scale = originalScale;
-            offsetX = originalOffsetX;
-            offsetY = originalOffsetY;
-            redrawCanvas(); 
-
-            showMessage('画像を保存しました', '#10b981');
+            showMessage('画像を保存しました(ダウンロードフォルダを見てください)', '#10b981');
         }
-
         function showMessage(text, color = '#f59e0b') { 
             messageBox.textContent = text;
             messageBox.style.backgroundColor = color;
@@ -2134,13 +2174,17 @@
             messageBox.style.color = brightness > 180 ? '#000000' : '#ffffff';
 
             messageBox.style.opacity = 1;
-            
-            setTimeout(() => {
+
+            clearTimeout(messageTimer);
+            messageTimer = setTimeout(() => {
                 messageBox.style.opacity = 0;
             }, 2000);
         }
         
         function handleKeyDown(event) {
+            const tag = event.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+
             if (textInputOverlay.style.display !== 'block') {
                 
                 if (event.key === 'Backspace' || event.key === 'Delete') {
@@ -2181,8 +2225,11 @@
             updateLineWidthLabel();
             updateColorPickerUI();
             const menu = document.getElementById('shapeSubMenu');
-            if (menu) menu.style.display = 'flex';
-            showMessage('図形モード: ' + currentShapeType, '#2dd4bf');
+            if (menu && menu.style.display !== 'flex') {
+                menu.style.display = 'flex';
+                resizeCanvas();
+            }
+            showMessage('図形モード: ' + SHAPE_NAMES[currentShapeType], '#2dd4bf');
         }
 
         function drawShape(ctx2, shape, preview) {
@@ -2254,6 +2301,7 @@
         }
 
         function insertSticky(x, y) {
+            if (!canEditActiveLayer()) return;
             const colors = stickyColors;
             const bg = colors[stickyColorIndex % colors.length];
             stickyColorIndex++;
@@ -2351,7 +2399,7 @@
             textInputOverlay.style.top  = `${screenY + screenHeaderH}px`;
             textInputOverlay.style.width  = `${obj.width  * scale * scaleX - 16}px`;
             textInputOverlay.style.height = `${(obj.height - HEADER_H) * scale * scaleY}px`;
-            textInputOverlay.style.fontSize = '13px';
+            textInputOverlay.style.fontSize = `${(obj.fontSize || 13) * scale * scaleX}px`;
             textInputOverlay.style.color = '#333';
             textInputOverlay.style.background = 'transparent';
             textInputOverlay.style.border = 'none';
@@ -2363,7 +2411,27 @@
             textInputOverlay.focus();
             redrawCanvas();
         }
+        function getLayer(id) {
+            return layers.find(l => l.id === id);
+        }
 
+        function canEditActiveLayer() {
+            const layer = getLayer(activeLayerId);
+            if (!layer) return false;
+            if (layer.locked) { showMessage('このレイヤーはロックされています', '#f75a68'); return false; }
+            if (!layer.visible) { showMessage('このレイヤーは非表示です。目のボタンで表示してください', '#f75a68'); return false; }
+            return true;
+        }
+
+        function moveInLayer(obj, dir) {
+            const layerId = obj.layerId || 1;
+            const from = objects.indexOf(obj);
+            let to = from + dir;
+            while (to >= 0 && to < objects.length && (objects[to].layerId || 1) !== layerId) to += dir;
+            if (to < 0 || to >= objects.length) return false;
+            [objects[from], objects[to]] = [objects[to], objects[from]];
+            return true;
+        }
         function toggleLayerPanel() {
             const panel = document.getElementById('layerPanel');
             if (!panel) return;
@@ -2401,8 +2469,8 @@
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
                     </button>
                 `;
-                header.querySelector('[data-role=vis]').addEventListener('click', e => { e.stopPropagation(); layer.visible=!layer.visible; redrawCanvas(); renderLayerList(); });
-                header.querySelector('[data-role=lock]').addEventListener('click', e => { e.stopPropagation(); layer.locked=!layer.locked; renderLayerList(); });
+                header.querySelector('[data-role=vis]') .addEventListener('click', e => { e.stopPropagation(); layer.visible = !layer.visible; redrawCanvas(); renderLayerList(); saveToHistory(); });
+                header.querySelector('[data-role=lock]').addEventListener('click', e => { e.stopPropagation(); layer.locked=!layer.locked; renderLayerList(); saveToHistory(); });
                 header.querySelector('[data-role=del]').addEventListener('click', e => {
                     e.stopPropagation();
                     if (layers.length <= 1) { showMessage('最後のレイヤーは削除できません', '#f75a68'); return; }
@@ -2436,17 +2504,11 @@
                     });
                     row.querySelector('[data-role=up]').addEventListener('click', e => {
                         e.stopPropagation();
-                        if (idx < objects.length - 1) {
-                            [objects[idx], objects[idx+1]] = [objects[idx+1], objects[idx]];
-                            redrawCanvas(); renderLayerList(); saveToHistory();
-                        }
+                        if (moveInLayer(obj, +1)) { redrawCanvas(); renderLayerList(); saveToHistory(); }
                     });
                     row.querySelector('[data-role=down]').addEventListener('click', e => {
                         e.stopPropagation();
-                        if (idx > 0) {
-                            [objects[idx], objects[idx-1]] = [objects[idx-1], objects[idx]];
-                            redrawCanvas(); renderLayerList(); saveToHistory();
-                        }
+                        if (moveInLayer(obj, -1)) { redrawCanvas(); renderLayerList(); saveToHistory(); }
                     });
                     row.querySelector('[data-role=del]').addEventListener('click', e => {
                         e.stopPropagation();
@@ -2458,7 +2520,23 @@
                 });
             });
         }
-
+        function getShapeHandleAt(vx, vy, shape) {
+            const pad = 6 / scale;
+            const hs = 10 / scale;
+            const minX = Math.min(shape.x1, shape.x2), maxX = Math.max(shape.x1, shape.x2);
+            const minY = Math.min(shape.y1, shape.y2), maxY = Math.max(shape.y1, shape.y2);
+            const leftKey  = shape.x1 <= shape.x2 ? 'x1' : 'x2';
+            const rightKey = shape.x1 <= shape.x2 ? 'x2' : 'x1';
+            const topKey   = shape.y1 <= shape.y2 ? 'y1' : 'y2';
+            const botKey   = shape.y1 <= shape.y2 ? 'y2' : 'y1';
+            const corners = [
+                { px: minX - pad, py: minY - pad, kx: leftKey,  ky: topKey },
+                { px: maxX + pad, py: minY - pad, kx: rightKey, ky: topKey },
+                { px: minX - pad, py: maxY + pad, kx: leftKey,  ky: botKey },
+                { px: maxX + pad, py: maxY + pad, kx: rightKey, ky: botKey }
+            ];
+            return corners.find(c => Math.abs(vx - c.px) <= hs && Math.abs(vy - c.py) <= hs) || null;
+        }
         function getStickyResizeHandleAt(vx, vy, obj) {
             const hs = 10 / scale;
             const rx = obj.x + obj.width;
@@ -2469,6 +2547,17 @@
         function handleStartExt(e) {
             e.preventDefault();
             const { x, y } = getVirtualCoordinates(e);
+
+            if (e.touches && e.touches.length === 1 && currentMode === 'pan') {
+                const t = e.touches[0];
+                if (Date.now() - lastTapTime < 350 && Math.hypot(t.clientX - lastTapX, t.clientY - lastTapY) < 25) {
+                    lastTapTime = 0;
+                    editObjectAt(x, y);
+                    return;
+                }
+                lastTapTime = Date.now(); lastTapX = t.clientX; lastTapY = t.clientY;
+            }
+
             if (editingTextObject) stopEditingText();
 
             if (currentMode === 'pan' && selectedObject && selectedObject.type === 'sticky') {
@@ -2479,9 +2568,17 @@
                 }
             }
 
+            if (currentMode === 'pan' && selectedObject && selectedObject.type === 'shape') {
+                const handle = getShapeHandleAt(x, y, selectedObject);
+                if (handle) {
+                    isResizingShape = true;
+                    shapeResizeHandle = handle;
+                    return;
+                }
+            }
+
             if (currentMode === 'shape') {
-                const activeLayer = layers.find(l => l.id === activeLayerId);
-                if (activeLayer && activeLayer.locked) { showMessage('このレイヤーはロックされています', '#f75a68'); return; }
+                if (!canEditActiveLayer()) return;
                 isDrawingShape = true;
                 shapeStartX = x; shapeStartY = y;
                 previewShape = { type:'shape', x1:x,y1:y,x2:x,y2:y, shapeType:currentShapeType, color:currentColor, width:parseInt(lineWidthRange.value)||3, fill:shapeFill, layerId:activeLayerId };
@@ -2497,6 +2594,13 @@
         function handleMoveExt(e) {
             e.preventDefault();
             const { x, y } = getVirtualCoordinates(e);
+
+            if (isResizingShape && selectedObject) {
+                selectedObject[shapeResizeHandle.kx] = x;
+                selectedObject[shapeResizeHandle.ky] = y;
+                redrawCanvas();
+                return;
+            }
 
             if (isResizingSticky && selectedObject) {
                 const minSize = 60;
@@ -2525,6 +2629,14 @@
         }
 
         function handleEndExt(e) {
+            if (isResizingShape) {
+                isResizingShape = false;
+                shapeResizeHandle = null;
+                saveToHistory();
+                redrawCanvas();
+                return;
+            }
+
             if (isResizingSticky) {
                 isResizingSticky = false;
                 saveToHistory();
