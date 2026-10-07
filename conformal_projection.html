@@ -8,18 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap');
-        
         body {
             font-family: 'Inter', sans-serif;
             overflow: hidden;
             background-color: #f1f5f9;
+            touch-action: manipulation;
         }
-
         canvas {
             cursor: crosshair;
             touch-action: none;
         }
-
         .toolbar-btn {
             padding: 0.4rem;
             border-radius: 0.5rem;
@@ -31,24 +29,20 @@
             width: 2.25rem;
             height: 2.25rem;
         }
-
         .toolbar-btn:hover {
             background-color: #eef2ff;
             color: #4f46e5;
         }
-
         .toolbar-btn.active {
             background-color: #4f46e5;
             color: #ffffff;
             box-shadow: 0 10px 15px -3px #a5b4fc;
         }
-
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
-
         .color-swatch {
             width: 1.5rem;
             height: 1.5rem;
@@ -63,22 +57,18 @@
             appearance: none;
             flex-shrink: 0;
         }
-
         .color-swatch:hover {
             transform: scale(1.1);
         }
-
         .color-swatch:active {
             transform: scale(0.95);
         }
-
         .color-swatch.active {
             outline: 2px solid #6366f1;
             outline-offset: 2px;
         }
-
         .side-label {
-            font-size: 0.6rem;
+            font-size: 0.75rem;
             font-weight: 700;
             letter-spacing: 0.08em;
             color: #94a3b8;
@@ -86,7 +76,6 @@
             padding: 0 0.5rem;
             margin-top: 0.25rem;
         }
-
         .tool-row-btn {
             display: flex;
             align-items: center;
@@ -94,11 +83,12 @@
             width: 100%;
             padding: 0.4rem 0.6rem;
             border-radius: 0.5rem;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: 500;
             color: #374151;
             transition: all 0.15s;
             text-align: left;
+            min-height: 44px;
         }
 
         .tool-row-btn:hover {
@@ -111,7 +101,8 @@
             color: #fff;
             box-shadow: 0 4px 10px -2px #a5b4fc;
         }
-
+        .tool-row-btn.is-laser { color: #ef4444; }
+        .tool-row-btn.is-laser.active { color: #fff; }
         .tool-row-btn i {
             width: 1rem;
             text-align: center;
@@ -150,6 +141,16 @@
             outline: 2.5px solid #6366f1;
             outline-offset: 2px;
         }
+        body.laser-on canvas { cursor: none; }
+        @media (max-width: 768px) {
+            aside { width: 6.5rem !important; }
+            .tool-row-btn span { display: none; }
+        }
+        @media (max-width: 640px) and (orientation: portrait) {
+            #canvas-container { flex-direction: column; }
+            #ortho-pane { width: 100% !important; height: 45%; }
+            #divider { display: none; }
+        }
     </style>
 </head>
 <body class="flex h-screen overflow-hidden">
@@ -168,10 +169,10 @@
             <button id="tool-line" class="tool-row-btn tool-btn active"><i class="fas fa-pen-nib"></i>線を描く<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">L</span></button>
             <button id="tool-face" class="tool-row-btn tool-btn"><i class="fas fa-draw-polygon"></i>面を描く<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">F</span></button>
             <button id="tool-eraser" class="tool-row-btn tool-btn"><i class="fas fa-eraser"></i>消しゴム<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">E</span></button>
-            <button id="tool-laser" class="tool-row-btn tool-btn" style="color:#ef4444"><i class="fas fa-circle" style="font-size:0.45rem;color:#ef4444"></i>レーザー<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">P</span></button>
+            <button id="tool-laser" class="tool-row-btn tool-btn is-laser"><i class="fas fa-circle" style="font-size:0.45rem"></i>レーザー<span style="margin-left:auto;font-size:0.6rem;color:inherit;opacity:0.6">P</span></button>
         </div>
 
-        <h1 class="side-label mt-3">スペースキーを押しながらマウスでドラッグすると移動できます</h1>
+        <h1 class="side-label mt-3">スペースキー＋マウスで移動可能</h1>
 
         <div class="side-divider"></div>
 
@@ -204,6 +205,9 @@
             <button class="color-swatch-lg sidebar-swatch" data-color="#facc15" title="黄" style="background:#facc15"></button>
             <button class="color-swatch-lg sidebar-swatch" data-color="#22c55e" title="緑" style="background:#22c55e"></button>
             <button class="color-swatch-lg sidebar-swatch" data-color="#1e293b" title="黒" style="background:#1e293b"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#f97316" title="オレンジ" style="background:#f97316"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#a855f7" title="紫" style="background:#a855f7"></button>
+            <button class="color-swatch-lg sidebar-swatch" data-color="#ec4899" title="ピンク" style="background:#ec4899"></button>
             <div style="width:100%;aspect-ratio:1;position:relative;">
                 <input type="color" id="color-picker-side" value="#ef4444" title="カスタム色"
                        style="position:absolute;inset:0;width:100%;height:100%;border-radius:0.375rem;border:2px solid #fff;cursor:pointer;padding:0;-webkit-appearance:none;appearance:none;box-shadow:0 1px 3px rgba(0,0,0,0.15)">
@@ -301,24 +305,33 @@
         const ANGLE = Math.PI / 6; 
         const sin30 = Math.sin(ANGLE);
         const cos30 = Math.cos(ANGLE);
+        const ISO_ORIGIN = { x: 0, y: 0 };
 
+        function isoScreenToWorld(sx, sy) {
+            return {
+                x: (sx - canvas.width / 2 - isoOffset.x) / isoZoom + canvas.width / 2,
+                y: (sy - canvas.height / 2 - isoOffset.y) / isoZoom + canvas.height / 2
+            };
+        }
 
-        function getSnappedPoint(rawX, rawY) {
-            const cx = (rawX - canvas.width/2 - isoOffset.x) / isoZoom;
-            const cy = (rawY - canvas.height/2 - isoOffset.y) / isoZoom;
-
+        function snapIsoWorld(wx, wy) {
+            const cx = wx - ISO_ORIGIN.x;
+            const cy = wy - ISO_ORIGIN.y;
             const u = cx / (2 * cos30) + cy / (2 * sin30);
             const v = -cx / (2 * cos30) + cy / (2 * sin30);
-
             const snappedU = Math.round(u / config.unit) * config.unit;
             const snappedV = Math.round(v / config.unit) * config.unit;
-
             return {
-                x: (snappedU - snappedV) * cos30 + canvas.width/2,
-                y: (snappedU + snappedV) * sin30 + canvas.height/2,
+                x: (snappedU - snappedV) * cos30 + ISO_ORIGIN.x,
+                y: (snappedU + snappedV) * sin30 + ISO_ORIGIN.y,
                 u: Math.round(snappedU / config.unit),
                 v: Math.round(snappedV / config.unit)
             };
+        }
+
+        function getSnappedPoint(rawX, rawY) {
+            const w = isoScreenToWorld(rawX, rawY);
+            return snapIsoWorld(w.x, w.y);
         }
 
         function resize() {
@@ -339,46 +352,24 @@
             gCtx.translate(gridCanvas.width / 2 + isoOffset.x, gridCanvas.height / 2 + isoOffset.y);
             gCtx.scale(isoZoom, isoZoom);
             gCtx.translate(-gridCanvas.width / 2, -gridCanvas.height / 2);
-
             gCtx.strokeStyle = '#64748b';
             gCtx.lineWidth = 1.0;
 
-            const cols = Math.ceil(gridCanvas.width / (config.unit * cos30 * isoZoom)) + 15;
-            const rows = Math.ceil(gridCanvas.height / (config.unit * sin30 * isoZoom)) + 10;
+            const tl = isoScreenToWorld(0, 0);
+            const br = isoScreenToWorld(gridCanvas.width, gridCanvas.height);
+            const ox = ISO_ORIGIN.x, oy = ISO_ORIGIN.y;
+            const x0 = tl.x - ox, x1 = br.x - ox, y0 = tl.y - oy, y1 = br.y - oy;
+            const c = config.unit * cos30, s = config.unit * sin30, k = s / c;
+            const line = (ax, ay, bx, by) => {
+                gCtx.beginPath(); gCtx.moveTo(ox + ax, oy + ay); gCtx.lineTo(ox + bx, oy + by); gCtx.stroke();
+            };
 
-            const getP = (uIdx, vIdx) => ({
-                x: (uIdx - vIdx) * config.unit * cos30 + gridCanvas.width/2,
-                y: (uIdx + vIdx) * config.unit * sin30 + gridCanvas.height/2
-            });
+            for (let i = Math.floor(x0 / c); i <= Math.ceil(x1 / c); i++) line(i * c, y0, i * c, y1);
+            for (let a = Math.floor((y0 + k * x0) / (2 * s)); a <= Math.ceil((y1 + k * x1) / (2 * s)); a++)
+                line(x0, 2 * a * s - k * x0, x1, 2 * a * s - k * x1);
+            for (let b = Math.floor((y0 - k * x1) / (2 * s)); b <= Math.ceil((y1 - k * x0) / (2 * s)); b++)
+                line(x0, 2 * b * s + k * x0, x1, 2 * b * s + k * x1);
 
-            for (let v = -rows; v <= rows; v++) {
-                gCtx.beginPath();
-                const p1 = getP(-cols, v);
-                const p2 = getP(cols, v);
-                gCtx.moveTo(p1.x, p1.y);
-                gCtx.lineTo(p2.x, p2.y);
-                gCtx.stroke();
-            }
-
-            for (let u = -cols; u <= cols; u++) {
-                gCtx.beginPath();
-                const p1 = getP(u, -rows);
-                const p2 = getP(u, rows);
-                gCtx.moveTo(p1.x, p1.y);
-                gCtx.lineTo(p2.x, p2.y);
-                gCtx.stroke();
-            }
-
-            gCtx.strokeStyle = '#64748b';
-            gCtx.lineWidth = 1.0;
-            const vExtra = (gridCanvas.height + Math.abs(isoOffset.y)) / isoZoom;
-            for (let i = -cols; i <= cols; i += 0.5) {
-                const p = getP(i, -i);
-                gCtx.beginPath();
-                gCtx.moveTo(p.x, -vExtra);
-                gCtx.lineTo(p.x, gridCanvas.height + vExtra);
-                gCtx.stroke();
-            }
             gCtx.restore();
         }
 
@@ -446,11 +437,19 @@
                     ctx.stroke();
                 });
             }
+            if (polyPoints.length > 2) {
+                ctx.beginPath();
+                ctx.strokeStyle = config.color;
+                ctx.lineWidth = 3;
+                ctx.arc(polyPoints[0].x, polyPoints[0].y, 9, 0, Math.PI * 2);
+                ctx.stroke();
+            }
             ctx.restore();
         }
 
 
         canvas.addEventListener('mousedown', (e) => {
+            if (spaceDown || e.button !== 0) return;
             const snapped = getSnappedPoint(e.offsetX, e.offsetY);
             isDrawing = true;
 
@@ -501,7 +500,7 @@
                         x: currentShape.start.x + dist * Math.cos(snappedAngle),
                         y: currentShape.start.y + dist * Math.sin(snappedAngle)
                     };
-                    end = getSnappedPoint(rawEnd.x, rawEnd.y);
+                    end = snapIsoWorld(rawEnd.x, rawEnd.y);
                 }
                 currentShape.end = end;
             }
@@ -529,8 +528,17 @@
             return { offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top };
         }
 
+        let touchAddedPoint = false;
+        let orthoTouchAddedPoint = false;
+
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            if (e.touches.length >= 2) {
+                currentShape = null; isDrawing = false;
+                if (touchAddedPoint) { polyPoints.pop(); touchAddedPoint = false; }
+                redraw();
+                return;
+            }
             const { offsetX, offsetY } = getTouchOffset(e, canvas);
             const snapped = getSnappedPoint(offsetX, offsetY);
             isDrawing = true;
@@ -546,6 +554,7 @@
                     }
                 }
                 polyPoints.push(snapped);
+                touchAddedPoint = true;
             } else if (config.tool === 'eraser') {
                 eraseAt(offsetX, offsetY);
             }
@@ -554,12 +563,13 @@
 
         canvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
+            if (e.touches.length >= 2) return;
             const { offsetX, offsetY } = getTouchOffset(e, canvas);
             const snapped = getSnappedPoint(offsetX, offsetY);
             lastMousePoint = snapped;
             if (isDrawing && config.tool === 'line' && currentShape) {
                 currentShape.end = snapped;
-            } else if (config.tool === 'eraser') {
+            } else if (isDrawing && config.tool === 'eraser') {
                 eraseAt(offsetX, offsetY);
             } else if (config.tool === 'laser') {
                 const touch = e.touches[0];
@@ -571,6 +581,7 @@
 
         canvas.addEventListener('touchend', (e) => {
             e.preventDefault();
+            touchAddedPoint = false;
             if (config.tool === 'line' && currentShape) {
                 const dist = Math.hypot(currentShape.end.x - currentShape.start.x, currentShape.end.y - currentShape.start.y);
                 if (dist > 5) { shapes.push({...currentShape}); history.push('shape'); globalHistory.push({ area: 'iso', type: 'shape' }); }
@@ -580,14 +591,28 @@
             redraw();
         }, { passive: false });
 
-        function eraseAt(x, y) {
-            const threshold = 15;
-            shapes = shapes.filter(s => {
-                const d = distToSegment({x, y}, s.start, s.end);
-                return d > threshold;
-            });
-            faces = faces.filter(f => !isPointInPoly({x, y}, f.points));
+        function eraseAt(sx, sy) {
+            const p = isoScreenToWorld(sx, sy);
+            const threshold = 15 / isoZoom;
+            const prevShapes = shapes, prevFaces = faces;
+            shapes = shapes.filter(s => distToSegment(p, s.start, s.end) > threshold);
+            faces = faces.filter(f => !isPointInPoly(p, f.points));
+            if (shapes.length !== prevShapes.length || faces.length !== prevFaces.length) {
+                globalHistory.push({ area: 'iso', type: 'erase', shapes: prevShapes, faces: prevFaces });
+            }
             redraw();
+        }
+
+        function orthoEraseAt(sx, sy) {
+            const p = orthoScreenToWorld(sx, sy);
+            const threshold = 15 / orthoZoom;
+            const prevShapes = orthoShapes, prevFaces = orthoFaces;
+            orthoShapes = orthoShapes.filter(s => distToSegment(p, s.start, s.end) > threshold);
+            orthoFaces = orthoFaces.filter(f => !isPointInPoly(p, f.points));
+            if (orthoShapes.length !== prevShapes.length || orthoFaces.length !== prevFaces.length) {
+                globalHistory.push({ area: 'ortho', type: 'erase', shapes: prevShapes, faces: prevFaces });
+            }
+            orthoRedraw();
         }
 
         function distToSegment(p, v, w) {
@@ -609,14 +634,16 @@
             return inside;
         }
 
-        function showMessage(text) {
+        let msgTimer = null;
+        function showMessage(text, ms = 2000) {
             msgBox.innerText = text;
             msgBox.style.opacity = '1';
             msgBox.style.bottom = '40px';
-            setTimeout(() => { 
-                msgBox.style.opacity = '0'; 
+            clearTimeout(msgTimer);
+            msgTimer = setTimeout(() => {
+                msgBox.style.opacity = '0';
                 msgBox.style.bottom = '30px';
-            }, 2000);
+            }, ms);
         }
 
         function setColor(color) {
@@ -635,7 +662,7 @@
 
         document.getElementById('color-picker-side').oninput = (e) => {
             setColor(e.target.value);
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.color-swatch-lg').forEach(s => s.classList.remove('active'));
         };
 
         document.getElementById('line-weight').oninput = (e) => {
@@ -645,7 +672,7 @@
 
         document.getElementById('tool-line').onclick = function() {
             stopLaser();
-            config.tool = 'line'; polyPoints = [];
+            config.tool = 'line'; polyPoints = []; orthoPolyPoints = []; orthoRedraw();
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         };
@@ -660,7 +687,7 @@
 
         document.getElementById('tool-eraser').onclick = function() {
             stopLaser();
-            config.tool = 'eraser'; polyPoints = [];
+            config.tool = 'eraser'; polyPoints = []; orthoPolyPoints = []; orthoRedraw();
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         };
@@ -670,6 +697,18 @@
             if (orthoPolyPoints.length > 0) { orthoPolyPoints.pop(); orthoRedraw(); return; }
             if (globalHistory.length === 0) return;
             const last = globalHistory.pop();
+            if (last.type === 'clear') {
+                shapes = last.shapes; faces = last.faces;
+                orthoShapes = last.orthoShapes; orthoFaces = last.orthoFaces;
+                redraw(); orthoRedraw();
+                showMessage("全て消す前に戻しました");
+                return;
+            }
+            if (last.type === 'erase') {
+                if (last.area === 'iso') { shapes = last.shapes; faces = last.faces; redraw(); }
+                else { orthoShapes = last.shapes; orthoFaces = last.faces; orthoRedraw(); }
+                return;
+            }
             if (last.area === 'iso') {
                 history.pop();
                 if (last.type === 'shape') shapes.pop(); else faces.pop();
@@ -681,15 +720,12 @@
             }
         };
 
-        document.getElementById('ortho-toggle').onclick = function() {
-            const pane = document.getElementById('ortho-pane');
-            const hidden = pane.style.display === 'none';
-            pane.style.display = hidden ? '' : 'none';
-            this.classList.toggle('active', hidden);
+        document.getElementById('grid-toggle').onclick = function() {
+            config.showGrid = !config.showGrid;
+            this.classList.toggle('active', config.showGrid);
             drawGrid();
             orthoDrawGrid();
         };
-
         document.getElementById('save-btn').onclick = () => {
             const orthoVisible = document.getElementById('ortho-pane').style.display !== 'none';
             const tempCanvas = document.createElement('canvas');
@@ -736,7 +772,8 @@
             }
 
             const link = document.createElement('a');
-            link.download = 'isometric-art.png';
+            const d = new Date();
+            link.download = `zumen-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.png`;
             link.href = tempCanvas.toDataURL();
             link.click();
         };
@@ -791,11 +828,13 @@
             laserPos = null; laserTrail = [];
             laserCtx.clearRect(0, 0, laserOverlay.width, laserOverlay.height);
             document.body.style.cursor = '';
+            document.body.classList.remove('laser-on');
         }
 
         document.getElementById('tool-laser').onclick = function() {
             const isActive = config.tool === 'laser';
             config.tool = isActive ? 'line' : 'laser';
+            document.body.classList.toggle('laser-on', config.tool === 'laser');
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             if (config.tool === 'laser') {
                 this.classList.add('active');
@@ -817,19 +856,32 @@
         });
 
         window.onkeydown = (e) => {
-            if (e.ctrlKey && e.key === 'z') { e.preventDefault(); document.getElementById('undo-btn').click(); }
-            if (e.key === 'l') document.getElementById('tool-line').click();
-            if (e.key === 'f') document.getElementById('tool-face').click();
-            if (e.key === 'e') document.getElementById('tool-eraser').click();
-            if (e.key === 'o') document.getElementById('ortho-toggle').click();
-            if (e.key === 'p') document.getElementById('tool-laser').click();
+            if (e.ctrlKey || e.metaKey) {
+                if (e.code === 'KeyZ') { e.preventDefault(); document.getElementById('undo-btn').click(); }
+                return;
+            }
+            if (e.altKey) return;
+            if (e.code === 'KeyL') document.getElementById('tool-line').click();
+            if (e.code === 'KeyF') document.getElementById('tool-face').click();
+            if (e.code === 'KeyE') document.getElementById('tool-eraser').click();
+            if (e.code === 'KeyO') document.getElementById('ortho-toggle').click();
+            if (e.code === 'KeyP') document.getElementById('tool-laser').click();
             if (e.key === 'Escape') { polyPoints = []; orthoPolyPoints = []; redraw(); orthoRedraw(); }
-            if (e.key === ' ' && !spaceDown) {
+            if (e.code === 'Space' && !spaceDown) {
                 spaceDown = true;
                 document.body.style.cursor = 'grab';
-                e.preventDefault();
             }
+            if (e.code === 'Space') e.preventDefault();
         };
+
+        window.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                spaceDown = false;
+                isPanning = false;
+                document.body.style.cursor = config.tool === 'laser' ? 'none' : '';
+            }
+        });
 
         window.addEventListener('keyup', (e) => {
             if (e.key === ' ') {
@@ -913,17 +965,21 @@
         addPanTouch(orthoCanvas,
             () => orthoOffset, (v) => { orthoOffset = v; }, orthoRedraw, orthoDrawGrid);
 
-        function getOrthoSnappedPoint(rawX, rawY) {
-            const unit = config.unit;
-            const cx = (rawX - orthoCanvas.width/2 - orthoOffset.x) / orthoZoom + orthoCanvas.width/2;
-            const cy = (rawY - orthoCanvas.height/2 - orthoOffset.y) / orthoZoom + orthoCanvas.height/2;
+        function orthoScreenToWorld(sx, sy) {
             return {
-                x: Math.round(cx / unit) * unit,
-                y: Math.round(cy / unit) * unit
+                x: (sx - orthoCanvas.width / 2 - orthoOffset.x) / orthoZoom + orthoCanvas.width / 2,
+                y: (sy - orthoCanvas.height / 2 - orthoOffset.y) / orthoZoom + orthoCanvas.height / 2
             };
         }
 
+        function getOrthoSnappedPoint(rawX, rawY) {
+            const unit = config.unit;
+            const w = orthoScreenToWorld(rawX, rawY);
+            return { x: Math.round(w.x / unit) * unit, y: Math.round(w.y / unit) * unit };
+        }
+
         function orthoResize() {
+            if (orthoPane.clientWidth === 0) return;
             orthoCanvas.width = orthoPane.clientWidth;
             orthoCanvas.height = orthoPane.clientHeight;
             orthoGridCanvas.width = orthoPane.clientWidth;
@@ -1019,6 +1075,12 @@
 
         orthoCanvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            if (e.touches.length >= 2) {
+                orthoCurrentShape = null; orthoIsDrawing = false;
+                if (orthoTouchAddedPoint) { orthoPolyPoints.pop(); orthoTouchAddedPoint = false; }
+                orthoRedraw();
+                return;
+            }
             const { offsetX, offsetY } = getTouchOffset(e, orthoCanvas);
             const snapped = getOrthoSnappedPoint(offsetX, offsetY);
             orthoIsDrawing = true;
@@ -1034,29 +1096,38 @@
                     }
                 }
                 orthoPolyPoints.push(snapped);
+                orthoTouchAddedPoint = true;
             } else if (config.tool === 'eraser') {
-                orthoShapes = orthoShapes.filter(s => distToSegment({x: offsetX, y: offsetY}, s.start, s.end) > 15);
-                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: offsetX, y: offsetY}, f.points));
+                orthoEraseAt(offsetX, offsetY);
+            } else if (config.tool === 'laser') {
+                const t = e.touches[0];
+                laserPos = { x: t.clientX, y: t.clientY };
+                laserTrail.push({ ...laserPos });
             }
             orthoRedraw();
         }, { passive: false });
 
         orthoCanvas.addEventListener('touchmove', (e) => {
             e.preventDefault();
+            if (e.touches.length >= 2) return;
             const { offsetX, offsetY } = getTouchOffset(e, orthoCanvas);
             const snapped = getOrthoSnappedPoint(offsetX, offsetY);
             orthoLastMousePoint = snapped;
             if (orthoIsDrawing && config.tool === 'line' && orthoCurrentShape) {
                 orthoCurrentShape.end = snapped;
-            } else if (config.tool === 'eraser') {
-                orthoShapes = orthoShapes.filter(s => distToSegment({x: offsetX, y: offsetY}, s.start, s.end) > 15);
-                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: offsetX, y: offsetY}, f.points));
+            } else if (orthoIsDrawing && config.tool === 'eraser') {
+                orthoEraseAt(offsetX, offsetY);
+            } else if (config.tool === 'laser') {
+                const t = e.touches[0];
+                laserPos = { x: t.clientX, y: t.clientY };
+                laserTrail.push({ ...laserPos });
             }
             orthoRedraw();
         }, { passive: false });
 
         orthoCanvas.addEventListener('touchend', (e) => {
             e.preventDefault();
+            orthoTouchAddedPoint = false;
             if (config.tool === 'line' && orthoCurrentShape) {
                 const dist = Math.hypot(orthoCurrentShape.end.x - orthoCurrentShape.start.x, orthoCurrentShape.end.y - orthoCurrentShape.start.y);
                 if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); globalHistory.push({ area: 'ortho', type: 'shape' }); }
@@ -1067,6 +1138,7 @@
         }, { passive: false });
 
         orthoCanvas.addEventListener('mousedown', (e) => {
+            if (spaceDown || e.button !== 0) return;
             const snapped = getOrthoSnappedPoint(e.offsetX, e.offsetY);
             orthoIsDrawing = true;
             if (config.tool === 'line') {
@@ -1086,14 +1158,14 @@
                 }
                 orthoPolyPoints.push(snapped);
             } else if (config.tool === 'eraser') {
-                orthoShapes = orthoShapes.filter(s => distToSegment({x: e.offsetX, y: e.offsetY}, s.start, s.end) > 15);
-                orthoFaces = orthoFaces.filter(f => !isPointInPoly({x: e.offsetX, y: e.offsetY}, f.points));
+                orthoEraseAt(e.offsetX, e.offsetY);
             }
             orthoRedraw();
         });
 
-        orthoCanvas.addEventListener('mousemove', (e) => {
-            const snapped = getOrthoSnappedPoint(e.offsetX, e.offsetY);
+        window.addEventListener('mousemove', (e) => {
+            const r = orthoCanvas.getBoundingClientRect();
+            const snapped = getOrthoSnappedPoint(e.clientX - r.left, e.clientY - r.top);
             orthoLastMousePoint = snapped;
             if (orthoIsDrawing && config.tool === 'line' && orthoCurrentShape) {
                 let end = snapped;
@@ -1109,7 +1181,7 @@
             orthoRedraw();
         });
 
-        orthoCanvas.addEventListener('mouseup', () => {
+        window.addEventListener('mouseup', () => {
             if (config.tool === 'line' && orthoCurrentShape) {
                 const dist = Math.hypot(orthoCurrentShape.end.x - orthoCurrentShape.start.x, orthoCurrentShape.end.y - orthoCurrentShape.start.y);
                 if (dist > 5) { orthoShapes.push({...orthoCurrentShape}); orthoHistory.push('shape'); globalHistory.push({ area: 'ortho', type: 'shape' }); }
@@ -1120,12 +1192,14 @@
         });
 
         document.getElementById('clear-btn').addEventListener('click', () => {
-            shapes = []; faces = []; polyPoints = []; history = [];
-            orthoShapes = []; orthoFaces = []; orthoPolyPoints = []; orthoHistory = [];
-            globalHistory.length = 0;
+            if (shapes.length + faces.length + orthoShapes.length + orthoFaces.length === 0) return;
+            globalHistory.push({ area: 'all', type: 'clear',
+                shapes, faces, orthoShapes, orthoFaces });
+            shapes = []; faces = []; polyPoints = [];
+            orthoShapes = []; orthoFaces = []; orthoPolyPoints = [];
             redraw();
             orthoRedraw();
-            showMessage("クリアしました");
+            showMessage("全て消しました（「元に戻す」で戻せます）", 3000);
         });
 
         document.getElementById('ortho-toggle').onclick = function() {
@@ -1134,6 +1208,7 @@
             pane.style.display = hidden ? '' : 'none';
             this.classList.toggle('active', hidden);
             resize();
+            if (hidden) orthoResize();
         };
 
         window.addEventListener('load', () => { resize(); orthoResize(); });
