@@ -26,7 +26,6 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            transform: scaleX(1);
         }
         .controls {
             position: absolute;
@@ -109,15 +108,31 @@
             border: 2px solid white;
             box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
+        @media (max-width: 520px) {
+            .controls {
+                flex-wrap: wrap;
+                border-radius: 1.5rem;
+                padding: 0.75rem 1rem;
+                gap: 0.5rem;
+            }
+            .controls > .flex-col {
+                order: 1;
+                width: 100%;
+                flex-basis: 100%;
+            }
+            #toggleBtn { order: 2; }
+            #flipBtn   { order: 3; flex: 1; }
+            #cameraBtn { order: 4; flex: 1; }
+        }
     </style>
 </head>
 <body>
 
     <div class="video-container" id="container">
-        <video id="liveVideo" autoplay playsinline muted style="display:none;"></video>
+        <video id="liveVideo" autoplay playsinline muted style="position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;"></video>
         <canvas id="outputCanvas"></canvas>
         
-        <div id="status" class="status-badge">REC</div>
+        <div id="status" class="status-badge">準備中…</div>
 
         <div class="controls" id="controls">
             <button id="toggleBtn" class="bg-blue-600 hover:bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center transition shrink-0 shadow-lg">
@@ -133,7 +148,7 @@
             </div>
 
             <button id="flipBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-bold transition shrink-0 border border-white/10">
-                反転
+                左右反転
             </button>
             <button id="cameraBtn" class="bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-full text-[10px] font-bold transition shrink-0 border border-white/10">
                 外カメ
@@ -151,6 +166,7 @@
         const toggleBtn = document.getElementById('toggleBtn');
         const toggleIcon = document.getElementById('toggleIcon');
         const flipBtn = document.getElementById('flipBtn');
+        const cameraBtn = document.getElementById('cameraBtn');
         const statusBadge = document.getElementById('status');
         const container = document.getElementById('container');
 
@@ -158,49 +174,99 @@
         let isRunning = true;
         let isFlipped = false;
         let facingMode = "environment";
-
+        let loopId = 0;
+        let isSwitching = false;
         const TARGET_FPS = 30;
         const FRAME_INTERVAL = 1000 / TARGET_FPS;
         let lastFrameTime = 0;
 
-        async function initCamera() {
+        async function getStream(mode) {
+            const size = { width: { ideal: 1280 }, height: { ideal: 720 } };
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: facingMode,
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    }, 
-                    audio: false 
+                return await navigator.mediaDevices.getUserMedia({
+                    video: { ...size, facingMode: { exact: mode } },
+                    audio: false
                 });
-                
-                liveVideo.srcObject = stream;
-                
+            } catch (e) {
+                if (e.name === "OverconstrainedError" || e.name === "NotFoundError") {
+                    return await navigator.mediaDevices.getUserMedia({
+                        video: { ...size, facingMode: { ideal: mode } },
+                        audio: false
+                    });
+                }
+                throw e;
+            }
+        }
+
+        function updateCameraLabel() {
+            cameraBtn.textContent = facingMode === "environment" ? "外カメ" : "内カメ";
+        }
+
+        async function initCamera() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusBadge.textContent = "カメラが使えません";
+                statusBadge.style.background = "red";
+                alert("この方法ではカメラを使えません。");
+                return false;
+            }
+
+            loopId++;
+            const oldTracks = liveVideo.srcObject?.getTracks();
+            oldTracks?.forEach(t => t.stop());
+            liveVideo.srcObject = null;
+
+            try {
+                const stream = await getStream(facingMode);
+
+                const actual = stream.getVideoTracks()[0].getSettings().facingMode;
+                if (actual === "environment" || actual === "user") {
+                    facingMode = actual;
+                }
+                updateCameraLabel();
+
                 liveVideo.onloadedmetadata = async () => {
                     try {
                         await liveVideo.play();
                         outputCanvas.width = liveVideo.videoWidth;
                         outputCanvas.height = liveVideo.videoHeight;
                         console.log("Camera started:", liveVideo.videoWidth, "x", liveVideo.videoHeight);
-                        requestAnimationFrame(processFrame);
+                        startLoop();
                     } catch (playError) {
                         console.error("Playback failed:", playError);
                     }
                 };
+                liveVideo.srcObject = stream;
+                return true;
             } catch (err) {
                 console.error("Camera error:", err);
-                statusBadge.textContent = "CAMERA ERROR";
+                statusBadge.textContent = "カメラのエラー";
                 statusBadge.style.background = "red";
-                alert("カメラの起動に失敗しました。設定を確認してください。");
+                if (err.name === "NotAllowedError") {
+                    alert("カメラの使用が許可されていません。\nブラウザの設定で、カメラを「許可」にしてから、ページを読み込み直してください。");
+                } else if (err.name === "NotFoundError") {
+                    alert("カメラが見つかりません。\nカメラがついている機器か確認してください。");
+                } else if (err.name === "NotReadableError") {
+                    alert("カメラを他のアプリが使っています。\n他のアプリを閉じてから、もう一度試してください。");
+                } else {
+                    alert("カメラを起動できませんでした。\nページを読み込み直してください。");
+                }
+                return false;
             }
         }
 
-        function processFrame(now) {
-            if (!isRunning) return;
+        function startLoop() {
+            loopId++;
+            const myId = loopId;
+            lastFrameTime = 0;
+            requestAnimationFrame((t) => processFrame(t, myId));
+        }
+
+        function processFrame(now, myId) {
+            if (!isRunning || myId !== loopId) return;
 
             const elapsed = now - lastFrameTime;
             if (elapsed < FRAME_INTERVAL) {
-                requestAnimationFrame(processFrame);
+                requestAnimationFrame((t) => processFrame(t, myId));
                 return;
             }
             lastFrameTime = now;
@@ -215,9 +281,16 @@
                     resizeHeight: saveH,
                     resizeQuality: 'low'
                 }).then(bitmap => {
+                    if (!isRunning || myId !== loopId) {
+                        bitmap.close();
+                        return;
+                    }
                     const timestamp = performance.now();
                     buffer.push({ img: bitmap, time: timestamp });
-
+                    const MAX_FRAMES = 1000;
+                    while (buffer.length > MAX_FRAMES) {
+                        buffer.shift().img.close();
+                    }
                     const delayMs = parseFloat(delayRange.value) * 1000;
                     const targetTime = timestamp - delayMs;
                     
@@ -237,23 +310,25 @@
 
                         if (frameToDraw) {
                             ctx.drawImage(frameToDraw.img, 0, 0, outputCanvas.width, outputCanvas.height);
-                            statusBadge.textContent = "DELAY ACTIVE (" + delayRange.value + "s)";
+                            statusBadge.textContent = "⏱ " + delayRange.value + "秒前の映像";
                             statusBadge.style.background = "rgba(59, 130, 246, 0.8)";
                         } else {
                             ctx.fillStyle = "#111";
                             ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
-                            statusBadge.textContent = "BUFFERING...";
+                            const waited = (timestamp - buffer[0].time) / 1000;
+                            const remain = Math.max(0, parseFloat(delayRange.value) - waited);
+                            statusBadge.textContent = "あと" + remain.toFixed(1) + "秒で表示されます。";
                             statusBadge.style.background = "rgba(239, 68, 68, 0.8)";
                         }
                     }
 
-                    requestAnimationFrame(processFrame);
+                    requestAnimationFrame((t) => processFrame(t, myId));
                 }).catch(e => {
                     console.error(e);
-                    requestAnimationFrame(processFrame);
+                    requestAnimationFrame((t) => processFrame(t, myId));
                 });
             } else {
-                requestAnimationFrame(processFrame);
+                requestAnimationFrame((t) => processFrame(t, myId));
             }
         }
 
@@ -269,13 +344,13 @@
                 toggleIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>';
                 toggleBtn.classList.replace('bg-green-600', 'bg-blue-600');
                 statusBadge.style.display = "block";
-                lastFrameTime = 0;
-                requestAnimationFrame(processFrame);
+                clearBuffer();
+                startLoop();
             } else {
                 toggleIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>';
                 toggleBtn.classList.replace('bg-blue-600', 'bg-green-600');
-                statusBadge.style.display = "none";
-                clearBuffer();
+                statusBadge.textContent = "⏸ 一時停止中(▶で再開)";
+                statusBadge.style.background = "rgba(100, 116, 139, 0.9)";
             }
         });
 
@@ -286,15 +361,25 @@
             ctx.fillRect(0, 0, outputCanvas.width, outputCanvas.height);
         }
 
-        const cameraBtn = document.getElementById('cameraBtn');
         cameraBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
+            if (isSwitching) return;
+            isSwitching = true;
+            cameraBtn.disabled = true;
+            cameraBtn.textContent = "切りかえ中…";
+
+            const oldMode = facingMode;
             facingMode = facingMode === "environment" ? "user" : "environment";
-            cameraBtn.textContent = facingMode === "environment" ? "外カメ" : "内カメ";
-            const tracks = liveVideo.srcObject?.getTracks();
-            tracks?.forEach(t => t.stop());
             clearBuffer();
-            await initCamera();
+
+            const ok = await initCamera();
+            if (!ok) {
+                facingMode = oldMode;
+                await initCamera();
+            }
+            updateCameraLabel();
+            cameraBtn.disabled = false;
+            isSwitching = false;
         });
 
         flipBtn.addEventListener('click', (e) => {
@@ -306,10 +391,6 @@
         container.addEventListener('click', () => {
             controls.classList.toggle('hidden');
         });
-
-        window.addEventListener('resize', () => {
-        });
-
         window.onload = initCamera;
     </script>
 </body>
