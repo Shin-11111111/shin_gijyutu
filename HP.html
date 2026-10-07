@@ -59,7 +59,7 @@
 
         <div class="flex gap-3 mb-4">
             <a href="https://shin-11111111.github.io/shin_gijyutu/technology.html" target="_blank" class="flex-1 text-center text-xl font-bold bg-secondary hover:bg-blue-700 text-white py-2 px-3 rounded-lg shadow transition duration-300 flex items-center justify-center">
-                技術科とは
+                技術科とは？
             </a>
             <a href="https://shin-11111111.github.io/shin_gijyutu/collage.html" target="_blank" class="flex-1 text-center text-xl font-bold bg-secondary hover:bg-blue-700 text-white py-2 px-3 rounded-lg shadow transition duration-300 flex items-center justify-center">
                 年度末アンケート集計結果
@@ -102,7 +102,7 @@
             </h2>
             <button id="hiragana-mode-button"
                     class="bg-third hover:bg-third/70 text-white font-bold p-3 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-third/50 whitespace-nowrap">
-                ひらがなモード: OFF
+                ひらがな: OFF
             </button>
             <button id="teacher-mode-button"
                     class="bg-teacher hover:bg-teacher/50 text-white font-bold p-3 rounded-lg shadow-md transition duration-300 transform active:scale-95 focus:outline-none focus:ring-4 focus:ring-teacher/50 whitespace-nowrap">
@@ -1740,11 +1740,11 @@
                     node.textContent = await kuroshiro.convert(preprocessed, { to: 'hiragana', mode: 'normal' });
                 }
                 isHiraganaOn = true;
-                hiraganaButton.textContent = 'ひらがなモード: ON';
+                hiraganaButton.textContent = 'ひらがな: ON';
             } catch (error) {
                 console.error(error);
                 alert_message('ひらがな変換の読み込みに失敗しました。', 'error');
-                hiraganaButton.textContent = 'ひらがなモード: OFF';
+                hiraganaButton.textContent = 'ひらがな: OFF';
             } finally {
                 isConverting = false;
                 hiraganaButton.disabled = false;
@@ -1756,7 +1756,7 @@
                 node.textContent = original;
             });
             isHiraganaOn = false;
-            hiraganaButton.textContent = 'ひらがなモード: OFF';
+            hiraganaButton.textContent = 'ひらがな: OFF';
         }
 
         hiraganaButton.addEventListener('click', function () {
