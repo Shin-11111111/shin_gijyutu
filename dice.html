@@ -13,83 +13,107 @@
             background:linear-gradient(180deg,#e8f0ff,#ffffff);
         }
         .wrap{
-            height:100%;
+            min-height:100%;
             display:flex;
             flex-direction:column;
             align-items:center;
             justify-content:center;
-            gap:18px;
+            gap:14px;
             padding:20px;
             box-sizing:border-box
         }
         h1{
-            font-size:18px;
+            font-size:24px;
             margin:0;
             color:#0b3b66
         }
         #diceCanvas{
             touch-action:none;
+            cursor:pointer;
             border-radius:18px;
             box-shadow:0 8px 24px rgba(11,59,102,0.12);
             overflow:hidden;
         }
-        .wrap{
-            perspective:600px;
+        #diceCanvas:focus-visible{
+            outline:3px solid #ffb703;
+            outline-offset:4px;
         }
         .hint{
             color:#43627a;
-            font-size:14px;
-            opacity:0.9
+            font-size:16px;
+            margin:0;
+            text-align:center;
         }
         .button{
-            padding:10px 18px;
-            border-radius:12px;
+            min-height:48px;
+            padding:12px 36px;
+            font-family:inherit;
+            font-size:20px;
+            border-radius:14px;
             background:#0b6cff;
             color:white;
             border:none;
-            font-weight:600;
+            font-weight:700;
+            cursor:pointer;
+            touch-action:manipulation;
             box-shadow:0 6px 18px rgba(11,108,255,0.18)
         }
-        .footer{
-            position:fixed;
-            left:12px;
-            right:12px;
-            bottom:18px;
-            text-align:center;
-            color:#99a7b8;
-            font-size:13px
+        .button:active{ transform:translateY(2px); }
+        .button:disabled{
+            background:#9db8e0;
+            cursor:not-allowed;
+            box-shadow:none;
         }
-        @media (min-width:600px){
-            #diceCanvas{
-                width:320px;
-                height:320px
-            }
+        .button:focus-visible{
+            outline:3px solid #ffb703;
+            outline-offset:3px;
         }
     </style>
 </head>
 <body>
     <div class="wrap">
         <h1>サイコロ</h1>
-        <button id="rollBtn" class="button">振る</button>
-        <div id="diceCanvas" aria-label="サイコロ"></div>
-        <div id="result" style="font-size:28px;font-weight:700;color:#0b3b66;min-height:40px;letter-spacing:0.05em;"></div>
+        <p class="hint">「振る」ボタンか、サイコロをタップ</p>
+        <div id="diceCanvas" role="button" tabindex="0" aria-label="サイコロ（タップで振る）"></div>
+        <div id="result" aria-live="polite" style="font-size:28px;font-weight:700;color:#0b3b66;min-height:40px;letter-spacing:0.05em;text-align:center;"></div>
+        <button id="rollBtn" class="button" type="button">振る</button>
     </div>
 
     <script>
         const container = document.getElementById('diceCanvas');
 
+        function showFatal(message){
+            const el = document.getElementById('result');
+            el.style.fontSize = '16px';
+            el.style.color = '#c0392b';
+            el.textContent = message;
+            document.getElementById('rollBtn').disabled = true;
+        }
+
+        if (typeof THREE === 'undefined') {
+            showFatal('⚠ サイコロの部品を読み込めませんでした。インターネットの接続を確認して、ページを開き直してください。');
+            throw new Error('three.js が読み込めませんでした');
+        }
+
         function getSize(){
-            return Math.min(window.innerWidth - 40, 360);
+            const s = Math.min(window.innerWidth - 40, window.innerHeight - 260, 360);
+            return Math.max(s, 160);
         }
 
         const size = getSize();
         container.style.width  = size + 'px';
         container.style.height = size + 'px';
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        let renderer;
+        try {
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        } catch (e) {
+            showFatal('⚠ この端末では3Dを表示できません。別のブラウザや端末で試してください。');
+            throw e;
+        }
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.setSize(size, size);
-        renderer.shadowMap.enabled = true;
+        renderer.domElement.style.display = 'block';
         container.appendChild(renderer.domElement);
 
         const scene = new THREE.Scene();
@@ -107,16 +131,17 @@
             const cx = c.getContext('2d');
 
             cx.fillStyle = '#ffffff';
-            const r = 32;
+            cx.fillRect(0, 0, 256, 256);
+            const m = 8, r = 32, s = 256;
             cx.beginPath();
-            cx.moveTo(r,0); cx.lineTo(256-r,0);
-            cx.arcTo(256,0,256,r,r);
-            cx.lineTo(256,256-r);
-            cx.arcTo(256,256,256-r,256,r);
-            cx.lineTo(r,256);
-            cx.arcTo(0,256,0,256-r,r);
-            cx.lineTo(0,r);
-            cx.arcTo(0,0,r,0,r);
+            cx.moveTo(m+r, m);       cx.lineTo(s-m-r, m);
+            cx.arcTo(s-m, m,   s-m, m+r,   r);
+            cx.lineTo(s-m, s-m-r);
+            cx.arcTo(s-m, s-m, s-m-r, s-m, r);
+            cx.lineTo(m+r, s-m);
+            cx.arcTo(m, s-m,   m, s-m-r,   r);
+            cx.lineTo(m, m+r);
+            cx.arcTo(m, m,     m+r, m,     r);
             cx.closePath();
             cx.fill();
 
@@ -167,10 +192,12 @@
         function rollDice(){
             if(rolling) return;
             rolling = true;
-            const el = document.getElementById('result');
+            const btn = document.getElementById('rollBtn');
+            const el  = document.getElementById('result');
+            btn.disabled = true;
             el.style.transition = 'none';
-            el.style.opacity = '0';
-            el.textContent = '';
+            el.style.opacity = '1';
+            el.textContent = '🎲 コロコロ…';
 
             const duration = 1200;
             const start = performance.now();
@@ -216,26 +243,28 @@
                     const snapTo   = new THREE.Quaternion().setFromEuler(faceRotations[detectedFace]);
                     const snapDuration = 300;
                     const snapStart = performance.now();
+                    const nums = ['', '１', '２', '３', '４', '５', '６'];
 
                     function snapStep(now){
                         const st = Math.min((now - snapStart) / snapDuration, 1);
                         const eased = 1 - Math.pow(1 - st, 3);
-                        dice.quaternion.slerpQuaternions(snapFrom, snapTo, eased);
+                        dice.quaternion.copy(snapFrom).slerp(snapTo, eased);
                         if(st < 1){
                             requestAnimationFrame(snapStep);
                         } else {
                             dice.quaternion.copy(snapTo);
                             rolling = false;
+                            btn.disabled = false;
+
+                            el.style.transition = 'none';
+                            el.style.opacity = '0';
+                            el.textContent = `🎲 ${nums[detectedFace]}`;
+                            void el.offsetWidth;
+                            el.style.transition = 'opacity 0.4s ease';
+                            el.style.opacity = '1';
                         }
                     }
                     requestAnimationFrame(snapStep);
-
-                    const nums = ['', '１', '２', '３', '４', '５', '６'];
-                    const el = document.getElementById('result');
-                    el.textContent = `🎲 ${nums[detectedFace]}`;
-                    el.style.opacity = '0';
-                    el.style.transition = 'opacity 0.4s ease';
-                    requestAnimationFrame(() => { el.style.opacity = '1'; });
                 }
             }
             requestAnimationFrame(step);
@@ -246,6 +275,9 @@
 
         container.addEventListener('touchstart', onActivate, {passive:false});
         container.addEventListener('click', onActivate);
+        container.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); rollDice(); }
+        });
         document.getElementById('rollBtn').addEventListener('click', onBtnClick);
 
         window.addEventListener('resize', ()=>{
