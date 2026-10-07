@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>プレミアム WEB ピアノ</title>
+    <title>WEB ピアノ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -37,7 +37,6 @@
                         inset 0 2px 3px rgba(0, 0, 0, 0.6);
             transform: translateY(2px) scaleY(0.99);
         }
-        /* スクロールバーの非表示 */
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -55,8 +54,8 @@
                 <i class="fa-solid fa-music text-slate-950 text-xl"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-wider bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">Virtual Grand Piano</h1>
-                <p class="text-xs text-slate-400">Web piano with premium sound</p>
+                <h1 class="text-xl font-bold tracking-wider bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">WEB Piano</h1>
+                <p class="text-xs text-slate-400">鍵盤をクリック・タップ、またはキーボードで演奏できます</p>
             </div>
         </div>
 
@@ -182,7 +181,7 @@
             <div class="absolute top-0 left-0 right-0 h-2.5 bg-gradient-to-r from-red-800 via-red-950 to-red-900 border-b border-yellow-600/30"></div>
             
             <div class="w-full overflow-x-auto no-scrollbar py-2">
-                <div class="flex relative min-w-[700px] h-64 md:h-80 select-none" id="piano-keyboard">
+                <div class="flex relative min-w-[320px] md:min-w-[700px] h-64 md:h-80 select-none" id="piano-keyboard">
                 </div>
             </div>
         </div>
@@ -267,9 +266,9 @@
             }
         }
 
-        function getFrequency(offset) {
-            const baseFreq = 261.63; // C4
-            const octaveDiff = baseOctave - 4;
+        function getFrequency(offset, octave = baseOctave) {
+            const baseFreq = 261.63;
+            const octaveDiff = octave - 4;
             const noteOffset = offset + (octaveDiff * 12);
             return baseFreq * Math.pow(2, noteOffset / 12);
         }
@@ -287,7 +286,7 @@
             });
         }
 
-        function playNote(offset, keyId) {
+        function playNote(offset, keyId, octave = baseOctave) {
             initAudio();
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -298,7 +297,7 @@
             }
 
             const now = audioCtx.currentTime;
-            const freq = getFrequency(offset);
+            const freq = getFrequency(offset, octave);
 
             const oscs = [];
             const gains = [];
@@ -399,6 +398,7 @@
             if (isRecording) {
                 recordedNotes.push({
                     offset: offset,
+                    octave: octave,
                     keyId: keyId,
                     time: Date.now() - recordStartTime,
                     type: 'start'
@@ -447,6 +447,7 @@
             Object.keys(activeNodes).forEach(keyId => {
                 stopNote(keyId);
             });
+            Object.keys(keyboardActiveKeys).forEach(k => { keyboardActiveKeys[k] = false; });
             lastMouseKeyId = null;
             lastTouchedKeyId = null;
             isMouseDown = false;
@@ -455,8 +456,6 @@
         function renderKeyboard() {
             const container = document.getElementById('piano-keyboard');
             container.innerHTML = '';
-
-            document.getElementById('piano-keyboard').addEventListener('contextmenu', (e) => e.preventDefault());
 
             const whiteKeysContainer = document.createElement('div');
             whiteKeysContainer.className = "flex w-full h-full relative";
@@ -492,8 +491,7 @@
                     whiteKeyIndex++;
                     whiteKeysContainer.appendChild(keyElement);
                 } else {
-                    const prevWhiteKeyIndex = whiteKeyIndex - 1;
-                    const leftPos = (prevWhiteKeyIndex * whiteKeyWidthPercent) - (whiteKeyWidthPercent * 0.25);
+                    const leftPos = (whiteKeyIndex * whiteKeyWidthPercent) - (whiteKeyWidthPercent * 0.3);
                     
                     const blackNoteText = showNotes ? `<span class="text-[9px] block opacity-80 mt-1">${noteName}</span>` : '';
 
@@ -541,7 +539,16 @@
                 }
             });
         }
-
+        function setupKeyboardEvents() {
+            const keyboard = document.getElementById('piano-keyboard');
+            keyboard.addEventListener('contextmenu', (e) => e.preventDefault());
+            keyboard.addEventListener('mouseleave', () => {
+                if (isMouseDown && lastMouseKeyId !== null) {
+                    stopNote(lastMouseKeyId);
+                    lastMouseKeyId = null;
+                }
+            });
+        }
         const setupTouchGlissando = () => {
             const keyboard = document.getElementById('piano-keyboard');
 
@@ -585,6 +592,7 @@
 
             keyboard.addEventListener('touchend', (e) => {
                 e.preventDefault();
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
                 if (lastTouchedKeyId !== null) {
                     stopNote(lastTouchedKeyId);
                     lastTouchedKeyId = null;
@@ -631,24 +639,29 @@
 
         const keyboardActiveKeys = {};
 
-        window.addEventListener('keydown', (e) => {
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            const keyPressed = e.key.toLowerCase();
-            const keyIdx = keyMap.findIndex(k => k.key === keyPressed);
+        const codeToIndex = {};
+        keyMap.forEach((k, i) => {
+            const code = (k.key === ';') ? 'Semicolon' : 'Key' + k.key.toUpperCase();
+            codeToIndex[code] = i;
+        });
 
-            if (keyIdx !== -1 && !keyboardActiveKeys[keyPressed]) {
-                keyboardActiveKeys[keyPressed] = true;
+        window.addEventListener('keydown', (e) => {
+            const t = e.target;
+            if (t.tagName === 'TEXTAREA' || t.isContentEditable ||
+                (t.tagName === 'INPUT' && t.type !== 'range' && t.type !== 'checkbox')) return;
+            if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+
+            const keyIdx = codeToIndex[e.code];
+            if (keyIdx !== undefined && !keyboardActiveKeys[e.code]) {
+                keyboardActiveKeys[e.code] = true;
                 playNote(keyMap[keyIdx].offset, keyIdx);
             }
         });
 
         window.addEventListener('keyup', (e) => {
-            const keyPressed = e.key.toLowerCase();
-            const keyIdx = keyMap.findIndex(k => k.key === keyPressed);
-
-            if (keyIdx !== -1) {
-                keyboardActiveKeys[keyPressed] = false;
+            const keyIdx = codeToIndex[e.code];
+            if (keyIdx !== undefined) {
+                keyboardActiveKeys[e.code] = false;
                 stopNote(keyIdx);
             }
         });
@@ -689,6 +702,9 @@
             const recInfo = document.getElementById('rec-info');
 
             if (!isRecording) {
+                if (recordedNotes.length > 0 && !confirm('今の録音は消えてしまいます。新しく録音しますか?')) {
+                    return;
+                }
                 isRecording = true;
                 recordedNotes = [];
                 recordStartTime = Date.now();
@@ -740,7 +756,7 @@
             recordedNotes.forEach(event => {
                 const timeoutId = setTimeout(() => {
                     if (event.type === 'start') {
-                        playNote(event.offset, event.keyId);
+                        playNote(event.offset, event.keyId, event.octave);
                     } else if (event.type === 'end') {
                         stopNote(event.keyId);
                     }
@@ -812,6 +828,7 @@
 
         window.onload = function() {
             renderKeyboard();
+            setupKeyboardEvents();
             setupTouchGlissando();
             
             document.body.addEventListener('click', function() {
