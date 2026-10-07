@@ -120,9 +120,9 @@
         const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
         camera.position.set(0, 0, 5);
 
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-        dirLight.position.set(5, 8, 5);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        dirLight.position.set(3, 5, 8);
         scene.add(dirLight);
 
         function makeFaceTexture(face){
