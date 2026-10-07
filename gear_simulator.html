@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GEAR-SIM // ギヤ比・回転速度シミュレーター</title>
+  <title>ギヤ比・回転速度シミュレーター</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -16,15 +16,15 @@
       --line-bright: #2c4058;
       --grid: rgba(79, 209, 255, 0.055);
       --cyan: #4fd8ff;
-      --cyan-dim: #2b7d94;
+      --cyan-dim: #4aa3bb;
       --amber: #ffb020;
       --green: #00e08a;
       --red: #ff5f56;
       --text: #dce6f0;
       --text-dim: #6f8299;
-      --text-faint: #445369;
-      --mono: 'JetBrains Mono', 'Noto Sans JP', monospace;
-      --sans: 'Noto Sans JP', 'JetBrains Mono', sans-serif;
+      --text-faint: #8497ad;
+      --mono: 'JetBrains Mono', 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', monospace;
+      --sans: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', 'JetBrains Mono', sans-serif;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -47,7 +47,6 @@
       gap: 18px;
     }
 
-    /* ---- ヘッダー：機器の銘板風 ---- */
     header.nameplate {
       display: flex;
       align-items: baseline;
@@ -86,7 +85,6 @@
       white-space: nowrap;
     }
 
-    /* ---- 共通パネル：コーナーブラケット付き ---- */
     .panel {
       position: relative;
       background: linear-gradient(180deg, var(--panel), var(--panel-alt));
@@ -128,7 +126,6 @@
       flex-shrink: 0;
     }
 
-    /* ---- モード切替：セグメントコントロール ---- */
     .segmented {
       display: flex;
       border: 1px solid var(--line-bright);
@@ -156,7 +153,6 @@
       font-weight: 700;
     }
 
-    /* ---- 入力欄 ---- */
     .fields {
       display: flex;
       gap: 20px;
@@ -209,7 +205,6 @@
       white-space: nowrap;
     }
 
-    /* ---- ボタン行 ---- */
     .button-row {
       display: flex;
       gap: 8px;
@@ -284,7 +279,6 @@
       min-width: 28px;
     }
 
-    /* ---- キャンバス：スコープ風フレーム ---- */
     .scope {
       display: flex;
       flex-direction: column;
@@ -304,7 +298,6 @@
       background-size: 24px 24px;
     }
 
-    /* ---- 読み取りパネル（LCD風） ---- */
     .readouts {
       display: flex;
       gap: 14px;
@@ -357,6 +350,33 @@
       .fields { gap: 14px; }
       .readouts { flex-direction: column; }
     }
+    .input-message { display: none; margin-top: 14px; padding: 10px 12px; border: 1px solid var(--amber); border-radius: 4px; color: var(--amber); font-size: 0.9rem; line-height: 1.6; }
+    .input-message.show { display: block; }
+    .result-comment { margin-top: 14px; width: 100%; padding: 12px 14px; border-left: 3px solid var(--cyan); background: var(--void); font-size: 1rem; line-height: 1.7; }
+    .panel-label { font-size: 0.85rem; }
+    .field label { font-size: 0.85rem; }
+    .field-input .unit { font-size: 0.85rem; }
+    .readout .r-label { font-size: 0.8rem; }
+    .readout .r-value { font-size: 1.3rem; }
+    .segmented button { font-size: 0.95rem; padding: 12px 16px; }
+    .button-row { flex-wrap: wrap; }
+    .button-row button { font-size: 0.95rem; padding: 12px 18px; min-height: 44px; }
+    .toggle-text { font-size: 0.9rem; }
+    .guide-steps { margin-left: 1.4em; line-height: 1.8; font-size: 0.95rem; }
+    .guide-hint { margin-top: 8px; font-size: 0.9rem; color: var(--text-dim); }
+    .status-text { font-size: 0.9rem; font-weight: 700; color: var(--green); }
+    .status-text.stopped { color: var(--amber); }
+    button:focus-visible,
+    .toggle input:focus-visible + .toggle-track { outline: 3px solid var(--amber); outline-offset: 2px; }
+    .fields-row2 {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      flex-basis: 100%;
+    }
+    @media (max-width: 560px) {
+      .fields-row2 { gap: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -365,7 +385,7 @@
     <header class="nameplate">
       <div class="title-block">
         <h1>ギヤ比シミュレーター</h1>
-        <span class="subtitle">回転速度を比較してみよう</span>
+        <span class="subtitle">回転速度(回数)を比較してみよう</span>
       </div>
     </header>
 
@@ -399,23 +419,27 @@
           <label for="speed">駆動軸 ギヤ速度</label>
           <div class="field-input"><input type="number" id="speed" value="30" min="1" max="120"><span class="unit">RPM</span></div>
         </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <div class="button-row">
-            <button id="startBtn" type="button">スタート</button>
-            <button id="stopBtn" type="button">ストップ</button>
-            <button id="resetBtn" type="button">リセット</button>
+        <div class="fields-row2">
+          <div class="field">
+            <label>&nbsp;</label>
+            <div class="button-row">
+              <button id="startBtn" type="button">スタート</button>
+              <button id="stopBtn" type="button">ストップ</button>
+              <button id="resetBtn" type="button">リセット</button>
+              <span id="statusText" class="status-text" role="status">回転中</span>
+            </div>
+          </div>
+          <div class="field">
+            <label for="markerToggle">基準マーカー</label>
+            <label class="toggle">
+              <input type="checkbox" id="markerToggle" checked>
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span class="toggle-text" id="markerToggleText">表示</span>
+            </label>
           </div>
         </div>
-        <div class="field">
-          <label for="markerToggle">基準マーカー</label>
-          <label class="toggle">
-            <input type="checkbox" id="markerToggle" checked>
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-            <span class="toggle-text" id="markerToggleText">表示</span>
-          </label>
-        </div>
       </div>
+      <p class="input-message" id="inputMessage" role="status"></p>
     </section>
 
     <section class="panel scope">
@@ -423,20 +447,33 @@
       <canvas id="gearCanvas" width="600" height="350"></canvas>
       <div class="readouts">
         <div class="readout">
-          <div class="r-label">Gear Ratio</div>
-          <div class="r-value" id="ratioDisplay">1 : 2</div>
+          <div class="r-label">歯数の比（駆動 : 被動）</div>
+          <div class="r-value" id="ratioDisplay">12 : 24</div>
         </div>
         <div class="readout">
-          <div class="r-label">Final Stage Speed</div>
+          <div class="r-label">回転速度の比（駆動 : 被動）</div>
+          <div class="r-value" id="speedRatioDisplay">2 : 1</div>
+        </div>
+        <div class="readout">
+          <div class="r-label">最後のギヤの回転速度</div>
           <div class="r-value"><span id="outputSpeedDisplay">15</span><span class="unit">RPM</span></div>
         </div>
       </div>
+      <p class="result-comment" id="resultComment"></p>
     </section>
   </div>
 
   <script>
     const canvas = document.getElementById('gearCanvas');
     const ctx = canvas.getContext('2d');
+    const VIEW_W = 600;
+    const VIEW_H = 350;
+    (function setupHiDpiCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = VIEW_W * dpr;
+      canvas.height = VIEW_H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    })();
 
     const modeButtons = document.querySelectorAll('#modeSwitch button');
     let currentMode = 'standard';
@@ -451,6 +488,9 @@
     const groupC = document.getElementById('groupC');
     const ratioDisplay = document.getElementById('ratioDisplay');
     const outputSpeedDisplay = document.getElementById('outputSpeedDisplay');
+    const speedRatioDisplay = document.getElementById('speedRatioDisplay');
+    const resultComment = document.getElementById('resultComment');
+    const inputMessage = document.getElementById('inputMessage');
     const startBtn = document.getElementById('startBtn');
     const stopBtn = document.getElementById('stopBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -459,8 +499,6 @@
     let showMarkers = true;
 
     let angleA = 0;
-    let angleB = 0;
-    let angleC = 0;
     let lastTime = performance.now();
     let isRunning = true;
 
@@ -469,17 +507,57 @@
       return Math.min(max, Math.max(min, value));
     }
 
+    const inputRules = [
+      { input: inputA,     min: 6, max: 60 },
+      { input: inputB,     min: 6, max: 60 },
+      { input: inputB2,    min: 6, max: 60 },
+      { input: inputC,     min: 6, max: 60 },
+      { input: inputSpeed, min: 1, max: 120 }
+    ];
+
+    function checkInputs() {
+      const messages = [];
+      inputRules.forEach(({ input, min, max }) => {
+        const field = input.closest('.field');
+        if (field.style.display === 'none') return;
+        const name = field.querySelector('label').textContent;
+        const v = parseInt(input.value, 10);
+        if (isNaN(v)) {
+          messages.push(`「${name}」に数字を入力してください。`);
+        } else if (v < min || v > max) {
+          messages.push(`「${name}」は ${min}〜${max} の整数で入力してください（いまは ${clamp(v, min, max, v)} として計算しています）。`);
+        }
+      });
+      if (currentMode === 'compound') {
+        const b1 = parseInt(inputB.value, 10);
+        const b2 = parseInt(inputB2.value, 10);
+        if (!isNaN(b1) && !isNaN(b2) && b2 >= b1) {
+          messages.push('「中間ギヤ（小）」は「中間ギヤ（大）」より歯数を少なくしてください（ギヤが重なって見えます）。');
+        }
+      }
+      inputMessage.textContent = messages.join(' ');
+      inputMessage.classList.toggle('show', messages.length > 0);
+    }
+
     function restrictNumberInput(input, min, max, fallback) {
+      input.setAttribute('inputmode', 'numeric');
+      input.addEventListener('keydown', (e) => {
+        if (['.', ',', 'e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+      });
       input.addEventListener('input', () => {
         const cleaned = input.value.replace(/[^\d]/g, '');
         if (cleaned !== input.value) input.value = cleaned;
+        checkInputs();
       });
-      input.addEventListener('blur', () => {
+      const fixValue = () => {
         let v = parseInt(input.value, 10);
         if (isNaN(v)) v = fallback;
         v = clamp(v, min, max, fallback);
         input.value = v;
-      });
+        checkInputs();
+      };
+      input.addEventListener('blur', fixValue);
+      input.addEventListener('change', fixValue);
     }
     restrictNumberInput(inputA, 6, 60, 12);
     restrictNumberInput(inputB, 6, 60, 24);
@@ -517,12 +595,12 @@
       ctx.strokeStyle = '#04151d';
       ctx.lineWidth = 2;
 
-      const toothDepth = 10;
+      const toothDepth = (radius / teeth) * 2;
       ctx.beginPath();
 
       const pitch = (Math.PI * 2) / teeth;
-      const tipHalfWidth = pitch * 0.20;
-      const rootHalfWidth = pitch * 0.35;
+      const tipHalfWidth = pitch * 0.15;
+      const rootHalfWidth = pitch * 0.30;
 
       for (let i = 0; i < teeth; i++) {
         const center = (i + 0.5) * pitch;
@@ -556,7 +634,7 @@
       ctx.fill();
       ctx.stroke();
 
-      if (showMarkers) {
+      if (showMarkers && markerOffset !== null) {
         ctx.beginPath();
         ctx.moveTo(0, 0);
         ctx.lineTo(Math.cos(markerOffset) * (radius - 5), Math.sin(markerOffset) * (radius - 5));
@@ -583,15 +661,18 @@
     function updateModeUI() {
       groupB2.style.display = (currentMode === 'compound') ? 'flex' : 'none';
       groupC.style.display = (currentMode === 'three' || currentMode === 'compound') ? 'flex' : 'none';
-      labelB.textContent = (currentMode === 'standard') ? '被動軸ギヤ' : '中間ギヤ (大)';
+      labelB.textContent = (currentMode === 'standard') ? '被動軸ギヤ'
+                         : (currentMode === 'three')    ? '中間ギヤ'
+                         :                                '中間ギヤ (大)';
       labelC.textContent = '被動軸ギヤ';
+      checkInputs();
     }
     modeButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
         currentMode = btn.dataset.mode;
         modeButtons.forEach((b) => b.classList.toggle('active', b === btn));
         updateModeUI();
-        angleA = 0; angleB = 0; angleC = 0;
+        angleA = 0;
         lastTime = performance.now();
       });
     });
@@ -600,9 +681,29 @@
     function readTeeth(input, fallback) {
       return clamp(parseInt(input.value), 6, 60, fallback);
     }
+    function gcd(a, b) { return b === 0 ? a : gcd(b, a % b); }
+    function formatRatio(x, y) { const g = gcd(x, y); return `${x / g} : ${y / g}`; }
+    function setText(el, text) { if (el.textContent !== text) el.textContent = text; }
 
+    function showResult(teethText, speedRatioText, rpmIn, rpmOut, sameDirection) {
+      setText(ratioDisplay, teethText);
+      setText(speedRatioDisplay, speedRatioText);
+      setText(outputSpeedDisplay, rpmOut.toFixed(1));
+      const ratio = rpmOut / rpmIn;
+      let speedText;
+      if (Math.abs(ratio - 1) < 0.005) {
+        speedText = '駆動ギヤと同じ速さで回ります。';
+      } else if (ratio < 1) {
+        speedText = `【減速】駆動ギヤの ${ratio.toFixed(2)} 倍の速さで、ゆっくり回ります。そのかわり、回す力（トルク）は大きくなります。`;
+      } else {
+        speedText = `【増速】駆動ギヤの ${ratio.toFixed(2)} 倍の速さで、はやく回ります。そのかわり、回す力（トルク）は小さくなります。`;
+      }
+      const dirText = sameDirection ? '最後のギヤは、駆動ギヤと同じ向きに回ります。'
+                                    : '最後のギヤは、駆動ギヤと逆向きに回ります。';
+      setText(resultComment, speedText + dirText);
+    }
     function animate(currentTime) {
-      const deltaTime = (currentTime - lastTime) / 1000;
+      const deltaTime = Math.min(Math.max((currentTime - lastTime) / 1000, 0), 0.1);
       lastTime = currentTime;
 
       const mode = currentMode;
@@ -620,15 +721,11 @@
       if (mode === 'standard') {
         const teethB = readTeeth(inputB, 24);
         const rpmB = rpmA * (teethA / teethB);
-        const speedB = (rpmB * Math.PI * 2) / 60;
 
-        if (isRunning) {
-          angleA += speedA * deltaTime;
-          angleB -= speedB * deltaTime;
-        }
+        if (isRunning) angleA += speedA * deltaTime;
+        const angleB = -angleA * (teethA / teethB);
 
-        ratioDisplay.textContent = `${teethA} : ${teethB}`;
-        outputSpeedDisplay.textContent = rpmB.toFixed(1);
+        showResult(`${teethA} : ${teethB}`, formatRatio(teethB, teethA), rpmA, rpmB, false);
 
         const maxTeeth = Math.max(teethA, teethB);
         const moduleByWidth = (canvas.width - padding * 2) / (2 * (teethA + teethB));
@@ -650,17 +747,12 @@
         const teethC = readTeeth(inputC, 24);
         const rpmB = rpmA * (teethA / teethB);
         const rpmC = rpmB * (teethB / teethC);
-        const speedB = (rpmB * Math.PI * 2) / 60;
-        const speedC = (rpmC * Math.PI * 2) / 60;
 
-        if (isRunning) {
-          angleA += speedA * deltaTime;
-          angleB -= speedB * deltaTime;
-          angleC += speedC * deltaTime;
-        }
+        if (isRunning) angleA += speedA * deltaTime;
+        const angleB = -angleA * (teethA / teethB);
+        const angleC =  angleA * (teethA / teethC);
 
-        ratioDisplay.textContent = `${teethA} : ${teethB} : ${teethC}`;
-        outputSpeedDisplay.textContent = rpmC.toFixed(1);
+        showResult(`${teethA} : ${teethB} : ${teethC}`, formatRatio(teethC, teethA), rpmA, rpmC, true);
 
         const maxTeeth = Math.max(teethA, teethB, teethC);
         const moduleByWidth = (canvas.width - padding * 2) / (2 * (teethA + teethB + teethC));
@@ -689,17 +781,12 @@
         const teethC = readTeeth(inputC, 18);
         const rpmB = rpmA * (teethA / teethB1);
         const rpmC = rpmB * (teethB2 / teethC);
-        const speedB = (rpmB * Math.PI * 2) / 60;
-        const speedC = (rpmC * Math.PI * 2) / 60;
 
-        if (isRunning) {
-          angleA += speedA * deltaTime;
-          angleB -= speedB * deltaTime;
-          angleC += speedC * deltaTime;
-        }
+        if (isRunning) angleA += speedA * deltaTime;
+        const angleB = -angleA * (teethA / teethB1);
+        const angleC =  angleA * (teethA / teethB1) * (teethB2 / teethC);
 
-        ratioDisplay.textContent = `${teethA} : ${teethB1} / ${teethB2} : ${teethC}`;
-        outputSpeedDisplay.textContent = rpmC.toFixed(1);
+        showResult(`${teethA} : ${teethB1} / ${teethB2} : ${teethC}`, formatRatio(teethB1 * teethC, teethA * teethB2), rpmA, rpmC, true);
 
         const maxTeeth = Math.max(teethA, teethB1, teethB2, teethC);
         const moduleByHeight = (canvas.height - padding * 2) / (2 * maxTeeth);
@@ -723,7 +810,7 @@
         const pitchC = (Math.PI * 2) / teethC;
 
         drawGear(xA, centerY, teethA, radiusA, angleA, '#4fd8ff');
-        drawGear(xCompound, centerY, teethB1, radiusB1, angleB + offsetB1, '#ffb020', pitchB1 / 2, 0.55);
+        drawGear(xCompound, centerY, teethB1, radiusB1, angleB + offsetB1, '#ffb020', null, 0.55);
         drawGear(xCompound, centerY, teethB2, radiusB2, angleB, '#c98200');
         drawGear(xC, centerY, teethC, radiusC, angleC + offsetC, '#00e08a', pitchC / 2);
       }
@@ -733,21 +820,27 @@
 
     requestAnimationFrame(animate);
 
+    const statusText = document.getElementById('statusText');
+
+    function setRunning(running) {
+      isRunning = running;
+      statusText.textContent = running ? '回転中' : '停止中';
+      statusText.classList.toggle('stopped', !running);
+    }
+
     startBtn.addEventListener('click', () => {
       if (isRunning) return;
-      isRunning = true;
+      setRunning(true);
       lastTime = performance.now();
     });
 
     stopBtn.addEventListener('click', () => {
-      isRunning = false;
+      setRunning(false);
     });
 
     resetBtn.addEventListener('click', () => {
-      angleA = 0;
-      angleB = 0;
-      angleC = 0;
-      lastTime = performance.now();
+        angleA = 0;
+        lastTime = performance.now();
     });
 
     markerToggle.addEventListener('change', () => {
