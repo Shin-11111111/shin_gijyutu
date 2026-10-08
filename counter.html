@@ -2,14 +2,12 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>カウンター</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', 'Meiryo', 'Yu Gothic', sans-serif;
             background-color: #f8fafc;
             touch-action: manipulation;
             overflow: hidden;
@@ -17,7 +15,7 @@
 
         .counter-value {
             font-variant-numeric: tabular-nums;
-            transition: transform 0.05s ease-out;
+            transition: transform 0.12s ease-out;
         }
 
         .counter-value.active {
@@ -36,7 +34,7 @@
         }
     </style>
 </head>
-<body class="flex flex-col h-screen w-screen items-center justify-center p-4 md:p-8">
+<body class="flex flex-col w-screen items-center justify-center p-4 md:p-8" style="height: 100vh; height: 100dvh;">
 
     <div class="w-full max-w-2xl h-full max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] md:rounded-[3rem] shadow-2xl p-6 md:p-10 border border-gray-100 overflow-hidden">
         
@@ -79,10 +77,23 @@
     </div>
 
     <script>
-        // State
-        let count = parseInt(localStorage.getItem('simple_counter_val')) || 0;
+        function loadCount() {
+            try {
+                const saved = parseInt(localStorage.getItem('simple_counter_val'), 10);
+                return Number.isNaN(saved) || saved < 0 ? 0 : saved;
+            } catch (e) {
+                return 0;
+            }
+        }
 
-        // DOM Elements
+        function saveCount() {
+            try {
+                localStorage.setItem('simple_counter_val', count);
+            } catch (e) {}
+        }
+
+        let count = loadCount();
+
         const counterDisplay = document.getElementById('counter');
         const plusBtn = document.getElementById('plus');
         const minusBtn = document.getElementById('minus');
@@ -90,25 +101,26 @@
         const toast = document.getElementById('toast');
 
         function updateDisplay() {
-            counterDisplay.innerText = count;
-            localStorage.setItem('simple_counter_val', count);
-            
-            // Animation feedback
+            counterDisplay.textContent = count;
+            saveCount();
+
             counterDisplay.classList.add('active');
-            setTimeout(() => counterDisplay.classList.remove('active'), 50);
+            setTimeout(() => counterDisplay.classList.remove('active'), 120);
         }
 
+        let toastTimer = null;
+
         function showToast(message) {
-            toast.innerText = message;
+            toast.textContent = message;
             toast.style.opacity = '1';
             toast.style.transform = 'translateY(0)';
-            setTimeout(() => {
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(16px)';
             }, 2000);
         }
 
-        // Click Events
         plusBtn.addEventListener('click', () => {
             count++;
             updateDisplay();
@@ -128,21 +140,25 @@
             showToast('リセットしました');
         });
 
-        // Keyboard Support
         document.addEventListener('keydown', (e) => {
+            if (e.repeat) return;
+
             if (e.key === '+' || e.key === 'ArrowUp' || e.key === ' ') {
                 e.preventDefault();
                 plusBtn.click();
+                plusBtn.blur();
             }
             if (e.key === '-' || e.key === 'ArrowDown') {
+                e.preventDefault();
                 minusBtn.click();
+                minusBtn.blur();
             }
             if (e.key === 'r' || e.key === 'R' || e.key === 'Escape') {
                 resetBtn.click();
+                resetBtn.blur();
             }
         });
 
-        // Initialize display
         updateDisplay();
     </script>
 </body>
