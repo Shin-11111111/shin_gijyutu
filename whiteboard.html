@@ -629,19 +629,17 @@
         const SHAPE_NAMES = { rect: '四角形', circle: '円', line: '直線', arrow: '矢印', triangle: '三角形' };
         let imageStore = {};
         let imageIdCounter = 1;
-
         let currentShapeType = 'rect';
         let shapeFill = false;
         let isDrawingShape = false;
         let shapeStartX = 0, shapeStartY = 0;
         let previewShape = null;
-
         let layers = [{ id: 1, name: 'レイヤー 1', visible: true, locked: false }];
         let activeLayerId = 1;
         let layerIdCounter = 2;
-
         let stickyColors = ['#fef08a','#bbf7d0','#bfdbfe','#fecaca','#e9d5ff'];
         let stickyColorIndex = 0;
+        let eraserChanged = false;
 
         const canvasContainer = document.getElementById('canvasContainer');
         const colorPicker = document.getElementById('colorPicker');
@@ -1468,7 +1466,9 @@
                 let isHighlighter = false;
 
                 if (currentMode === 'eraser') {
-                    eraseAtPoint(x, y);
+                    eraserChanged = false;
+                    if (eraseAtPoint(x, y)) redrawCanvas();
+                    [lastX, lastY] = [x, y];
                     return;
                 } else if (currentMode === 'highlighter') {
                     isHighlighter = true;
@@ -1488,32 +1488,97 @@
                 redrawCanvas(); 
             }
         }
-        function eraseAtPoint(x, y) {
-            if (!canEditActiveLayer()) return;
+        function getEraseRadius() {
+            return Math.max(parseInt(lineWidthRange.value) / scale, 10 / scale);
+        }
 
-            const eraseRadius = Math.max(
-                parseInt(lineWidthRange.value) / scale,
-                10 / scale
-            );
+        function distToSegment(px, py, ax, ay, bx, by) {
+            const dx = bx - ax, dy = by - ay;
+            const len2 = dx * dx + dy * dy;
+            let t = len2 === 0 ? 0 : ((px - ax) * dx + (py - ay) * dy) / len2;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(px - (ax + t * dx), py - (ay + t * dy));
+        }
 
-            const before = objects.length;
-
-            objects = objects.filter(obj => {
-                if (obj.type !== 'stroke') return true;
-
-                if ((obj.layerId || 1) !== activeLayerId) return true;
-
-                return !obj.points.some(point => {
-                    const dx = point.x - x;
-                    const dy = point.y - y;
-                    return Math.sqrt(dx * dx + dy * dy) <= eraseRadius;
-                });
-            });
-
-            if (objects.length !== before) {
-                saveToHistory();
-                redrawCanvas();
+        function densifyPoints(points, step) {
+            const out = [points[0]];
+            for (let i = 1; i < points.length; i++) {
+                const a = points[i - 1], b = points[i];
+                const n = Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / step);
+                for (let k = 1; k < n; k++) {
+                    const t = k / n;
+                    out.push({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+                }
+                out.push(b);
             }
+            return out;
+        }
+
+        function eraseAtPoint(x, y) {
+            if (!canEditActiveLayer()) return false;
+
+            const eraseRadius = getEraseRadius();
+            let changed = false;
+            const next = [];
+
+            for (const obj of objects) {
+                if (obj.type !== 'stroke' || (obj.layerId || 1) !== activeLayerId) {
+                    next.push(obj);
+                    continue;
+                }
+
+                const r = eraseRadius + obj.width / 2;
+                const pts = obj.points;
+
+                let touched = false;
+                if (pts.length === 1) {
+                    touched = Math.hypot(pts[0].x - x, pts[0].y - y) <= r;
+                } else {
+                    for (let i = 1; i < pts.length; i++) {
+                        if (distToSegment(x, y, pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y) <= r) {
+                            touched = true;
+                            break;
+                        }
+                    }
+                }
+                if (!touched) { next.push(obj); continue; }
+
+                changed = true;
+
+                const dense = densifyPoints(pts, eraseRadius / 2);
+                const pieces = [];
+                let piece = [];
+                for (const p of dense) {
+                    if (Math.hypot(p.x - x, p.y - y) <= r) {
+                        if (piece.length) pieces.push(piece);
+                        piece = [];
+                    } else {
+                        piece.push(p);
+                    }
+                }
+                if (piece.length) pieces.push(piece);
+
+                pieces.forEach(pc => {
+                    if (pc.length >= 2) next.push({ ...obj, points: pc });
+                });
+            }
+
+            if (changed) {
+                objects = next;
+                eraserChanged = true;
+            }
+            return changed;
+        }
+
+        function eraseAlong(x0, y0, x1, y1) {
+            const step = getEraseRadius() / 2;
+            const n = Math.max(1, Math.ceil(Math.hypot(x1 - x0, y1 - y0) / step));
+            let changed = false;
+            for (let k = 1; k <= n; k++) {
+                const t = k / n;
+                if (eraseAtPoint(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) changed = true;
+            }
+            if (changed) redrawCanvas();
         }
         function handleMove(e) {
             e.preventDefault(); 
@@ -1571,6 +1636,12 @@
             
             if (!isDrawing) return;
 
+            if (currentMode === 'eraser') {
+                eraseAlong(lastX, lastY, x, y);
+                [lastX, lastY] = [x, y];
+                return;
+            }
+
             currentStroke.points.push({ x, y });
             redrawCanvas();
 
@@ -1610,8 +1681,17 @@
 
             if (!isDrawing) return;
             isDrawing = false;
-            
-            if (currentStroke && currentStroke.points.length >= 1) { 
+
+            if (currentMode === 'eraser') {
+                if (eraserChanged) {
+                    eraserChanged = false;
+                    saveToHistory();
+                }
+                redrawCanvas();
+                return;
+            }
+
+            if (currentStroke && currentStroke.points.length >= 1) {
                 objects.push(currentStroke);
                 saveToHistory();
             }
