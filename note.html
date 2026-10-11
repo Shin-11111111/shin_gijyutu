@@ -30,6 +30,11 @@
             background-color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             touch-action: pan-y;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            column-gap: 8px;
         }
 
         .header-grid {
@@ -111,7 +116,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 6px 4px;
             border-radius: 8px;
             transition: all 0.2s;
             cursor: pointer;
@@ -269,27 +274,19 @@
             #font-panel.collapsed { box-shadow: none; border-left: none; }
         }
 
-        .header-row1 {
+        .header-row1, .header-row2 {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 4px 8px;
-            border-bottom: 1px solid #f3f4f6;
-            flex-wrap: wrap;
-        }
-        .header-row2 {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            padding: 4px 8px;
+            gap: 2px;
+            padding: 4px 6px;
             flex-wrap: wrap;
         }
         .toolbar-sep {
             width: 1px;
             height: 24px;
             background: #d1d5db;
-            margin: 0 4px;
+            margin: 0 2px;
             flex-shrink: 0;
         }
 
@@ -392,9 +389,6 @@
 
     <header>
         <div class="header-row1">
-            <h1 class="font-bold text-base text-gray-800 mr-2 hidden lg:block">Web ノート</h1>
-            <div class="toolbar-sep"></div>
-
             <button onclick="setMode('select')" id="btn-select" class="tool-btn active" title="選択" aria-label="選択">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/><path d="m13 13 6 6"/></svg>
                 <span class="tool-label">選択</span>
@@ -423,10 +417,11 @@
             <button onclick="setColor('#22c55e')" class="color-swatch" style="background:#22c55e;" title="緑" id="swatch-green"></button>
             <input type="color" id="color-picker" value="#000000" class="w-6 h-6 cursor-pointer rounded overflow-hidden p-0 border-none" title="カスタムカラー">
             <div class="toolbar-sep"></div>
-            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="3"/></svg>
-            <input type="range" id="brush-size-slider" min="1" max="30" value="5" style="width:70px; accent-color:#3b82f6;" title="ブラシ太さ">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-gray-400"><circle cx="12" cy="12" r="7"/></svg>
-            <div class="toolbar-sep"></div>
+            <span style="font-size:12px;color:#4b5563;">細い</span>
+            <input type="range" id="brush-size-slider" min="1" max="30" value="5" style="width:70px; accent-color:#3b82f6;" title="線の太さ" aria-label="線の太さ">
+            <span style="font-size:12px;color:#4b5563;">太い</span>
+            </div>
+            <div class="header-row2">
 
             <button onclick="undo()" class="tool-btn" title="元に戻す (Ctrl+Z)" aria-label="元に戻す">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
@@ -525,7 +520,11 @@
 
     <footer>
         <div class="max-w-4xl mx-auto flex justify-between items-center px-4">
-            <p id="page-counter" class="text-gray-700 font-bold text-sm">ページ: 1 / 1</p>
+            <div class="flex items-center gap-2">
+                <button onclick="goPage(-1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg border text-sm" style="min-height:44px;" aria-label="前のページ">◀ 前</button>
+                <p id="page-counter" class="text-gray-700 font-bold text-sm">ページ: 1 / 1</p>
+                <button onclick="goPage(1)" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-lg border text-sm" style="min-height:44px;" aria-label="次のページ">次 ▶</button>
+            </div>
             <button onclick="addNewPage(); scrollToPage(pages.length - 1);"
                     class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg border text-sm">＋ ページを足す</button>
         </div>
@@ -535,6 +534,7 @@
     <script>
         let pages = [];
         let currentMode = 'select';
+        let _penColor = '#000000';
         let canvasScale = 1.0;
         
         let baseWidth = 595; 
@@ -547,11 +547,11 @@
         let _thumbTimer = null;
 
         const MODE_HINTS = {
-            'select':      '選ぶ：文字や画像をタップすると、動かしたり大きさを変えたりできます',
-            'draw':        'ペン：なぞると線が書けます',
-            'highlighter': '蛍光ペン：文字の上をなぞると、マーカーのように色をつけられます',
-            'erase':       '消しゴム：消したい線をなぞると、その線が1本まるごと消えます',
-            'text-inline': '文字：書きたい行をタップして入力。Enterキーで次の行に進みます'
+            'select':      '選択',
+            'draw':        'ペン (フリー入力)',
+            'highlighter': '蛍光ペン',
+            'erase':       '消しゴム',
+            'text-inline': '文字入力モード'
         };
 
         function showConfirmModal(title, message, onOk, okLabel = '削除して続ける') {
@@ -696,7 +696,7 @@
         }
 
         function isPointerOnStroke(obj, pointer) {
-            const R = 6;
+            const R = Math.max(6, 10 / (obj.canvas ? obj.canvas.getZoom() : 1));
             const tmpCanvas = document.createElement('canvas');
             const bound = obj.getBoundingRect(true);
             const pad = (obj.strokeWidth || 1) + 2 + R;
@@ -746,7 +746,7 @@
             let erasing = false;
             const eraseAt = (options) => {
                 const pointer = fCanvas.getPointer(options.e);
-                const target = fCanvas.getObjects().find(obj => {
+                const target = fCanvas.getObjects().slice().reverse().find(obj => {
                     if (obj._isBackground) return false;
                     const b = obj.getBoundingRect(true), m = 8;
                     if (pointer.x < b.left - m || pointer.x > b.left + b.width  + m ||
@@ -766,6 +766,7 @@
             });
 
             fCanvas.on('object:added', (e) => {
+                if (!e.target._isBackground) e.target._snap = takeSnap(e.target);
                 if (!e.target._isHistoryAction && !e.target._isBackground) {
                     fCanvas.undoStack.push({ type: 'add', obj: e.target });
                     fCanvas.redoStack = [];
@@ -789,6 +790,13 @@
             const scheduleThumbUpdate = () => scheduleThumbnails(400);
             fCanvas.on('path:created', scheduleThumbUpdate);
             fCanvas.on('object:modified', scheduleThumbUpdate);
+            fCanvas.on('object:modified', (e) => recordModify(fCanvas, e.target));
+            const recordReleased = (e) => {
+                const batch = Date.now() + Math.random();
+                (e.deselected || []).forEach(o => recordModify(fCanvas, o, { batch }));
+            };
+            fCanvas.on('selection:cleared', recordReleased);
+            fCanvas.on('selection:updated', recordReleased);
             fCanvas.on('object:removed', scheduleThumbUpdate);
             fCanvas.on('text:editing:exited', scheduleThumbUpdate);
 
@@ -913,6 +921,7 @@
 
         function showInlineTextarea(fCanvas, screenX, screenY, snappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine) {
             const overlay = document.getElementById('inline-input-overlay');
+            const on = (id) => !!document.getElementById(id)?.classList.contains('active');
 
             const ta = document.createElement('textarea');
             ta.className = 'inline-textarea';
@@ -921,6 +930,8 @@
             ta.style.top        = screenY + 'px';
             ta.style.fontSize   = (fontSize * zoom) + 'px';
             ta.style.fontFamily = fontFamily;
+            ta.style.fontWeight = on('fp-bold') ? 'bold' : 'normal';
+            ta.style.fontStyle  = on('fp-italic') ? 'italic' : 'normal';
             ta.style.color      = color;
             ta.style.width      = '200px';
             ta.style.height     = (fontSize * zoom + 6) + 'px';
@@ -929,41 +940,98 @@
             document.body.appendChild(ta);
             requestAnimationFrame(() => ta.focus());
 
-            const maxWidth = (baseWidth - 20) * zoom;
+            const limit = baseWidth - 20;
+            const meas  = new fabric.IText('', { fontFamily, fontSize });
+            const textWidth = (s) => {
+                const o = ta._editingObj;
+                meas.set({
+                    fontWeight: o ? o.fontWeight : (on('fp-bold') ? 'bold' : 'normal'),
+                    fontStyle:  o ? o.fontStyle  : (on('fp-italic') ? 'italic' : 'normal'),
+                    text: s
+                });
+                return meas.width;
+            };
+            const updateWidth = () => {
+                ta.style.width = Math.max(80, textWidth(ta.value) * zoom + 20) + 'px';
+            };
+            ta._textWidth = textWidth;
+            ta._limit = limit;
+            ta._updateWidth = updateWidth;
 
-            ta.addEventListener('input', (e) => {
-                const naturalWidth = ta.scrollWidth;
-                if (!e.isComposing && naturalWidth + 20 > maxWidth) {
-                    const cursorPos = ta.selectionStart;
-                    const fullText  = ta.value;
-                    const before   = fullText.slice(0, cursorPos);
-                    const splitPos = before.lastIndexOf(' ') > 0 ? before.lastIndexOf(' ') : cursorPos - 1;
-                    const thisLine = fullText.slice(0, splitPos).trimEnd();
-                    const carry    = fullText.slice(splitPos).trimStart();
-
-                    committed = true;
-                    ta.value = thisLine;
-                    commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color);
-
-                    const nextSnappedY = snappedY + lineSpacing;
-                    if (nextSnappedY < baseHeight) {
-                        const upperCanvas = fCanvas.upperCanvasEl;
-                        const rect  = upperCanvas.getBoundingClientRect();
-                        const nextLeft = rect.left + 10 * zoom;
-                        const nextTop  = rect.top  + (nextSnappedY - fontSize) * zoom;
-                        const nextTa = showInlineTextarea(fCanvas, nextLeft, nextTop, nextSnappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
-                        requestAnimationFrame(() => {
-                            nextTa.value = carry;
-                            nextTa.dispatchEvent(new Event('input'));
-                            nextTa.setSelectionRange(carry.length, carry.length);
-                        });
+            const splitLines = (text) => {
+                const out = [];
+                let rest = text, off = 0;
+                while (rest.length && textWidth(rest) > limit) {
+                    let lo = 1, hi = rest.length;
+                    while (lo < hi) {
+                        const mid = Math.ceil((lo + hi) / 2);
+                        if (textWidth(rest.slice(0, mid)) <= limit) lo = mid; else hi = mid - 1;
                     }
-                    return;
+                    let cut = lo;
+                    const sp = rest.lastIndexOf(' ', cut);
+                    if (sp > 0 && cut < rest.length) cut = sp;
+                    out.push({ text: rest.slice(0, cut).trimEnd(), start: off });
+                    const next = rest.slice(cut);
+                    const trimmed = next.trimStart();
+                    off += cut + (next.length - trimmed.length);
+                    rest = trimmed;
                 }
-                ta.style.width = Math.max(80, naturalWidth + 20) + 'px';
-            });
+                out.push({ text: rest, start: off });
+                return out;
+            };
+
+            const openTextarea = (y, value, col) => {
+                const rect = fCanvas.upperCanvasEl.getBoundingClientRect();
+                const t = showInlineTextarea(fCanvas, rect.left + 10 * zoom, rect.top + (y - fontSize) * zoom,
+                                             y, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
+                requestAnimationFrame(() => {
+                    t.value = value;
+                    t.setSelectionRange(col, col);
+                    t._updateWidth();
+                });
+                return t;
+            };
 
             let committed = false;
+
+            const wrapLine = () => {
+                const full  = ta.value;
+                const caret = ta.selectionStart;
+                let lines = splitLines(full);
+                const maxLines = Math.ceil((baseHeight - snappedY) / lineSpacing);
+                if (lines.length > maxLines) {
+                    lines = lines.slice(0, maxLines);
+                    showToast('ページの最後の行です。「＋ ページを足す」で次のページを作ってね');
+                }
+                let ci = 0;
+                lines.forEach((ln, i) => { if (ln.start <= caret) ci = i; });
+                const col = Math.max(0, Math.min(caret - lines[ci].start, lines[ci].text.length));
+
+                lines.forEach((ln, i) => {
+                    if (i === ci) return;
+                    const y = snappedY + i * lineSpacing;
+                    if (i === 0) {
+                        committed = true;
+                        ta.value = ln.text;
+                        commitTextarea(ta, fCanvas, y, fontSize, fontFamily, color);
+                    } else {
+                        commitTextarea({ value: ln.text, remove() {} }, fCanvas, y, fontSize, fontFamily, color);
+                    }
+                });
+                if (ci === 0) {
+                    ta.value = lines[0].text;
+                    ta.setSelectionRange(col, col);
+                    updateWidth();
+                } else {
+                    openTextarea(snappedY + ci * lineSpacing, lines[ci].text, col);
+                }
+            };
+
+            ta.addEventListener('input', (e) => {
+                if (!e.isComposing && textWidth(ta.value) > limit) { wrapLine(); return; }
+                updateWidth();
+            });
+
             const commit = () => {
                 if (committed) return;
                 committed = true;
@@ -972,8 +1040,51 @@
 
             ta.addEventListener('compositionend', () => ta.dispatchEvent(new Event('input')));
 
+            const goBackToPrevLine = () => {
+                const prevY = snappedY - lineSpacing;
+                if (committed || prevY < firstLine) return false;
+                if (ta.selectionStart !== 0 || ta.selectionEnd !== 0) return false;
+
+                committed = true;
+                const curText = ta.value;
+                const curObj  = ta._editingObj;
+                ta.remove();
+                if (curObj) { curObj.visible = true; fCanvas.removeWithUndo(curObj); }
+
+                const prevObj = fCanvas.getObjects().find(o =>
+                    o._isInlineText && o.visible !== false && Math.abs(o.top + o.fontSize - prevY) < lineSpacing / 2);
+                const prevText = prevObj ? prevObj.text : '';
+                const fs  = prevObj ? prevObj.fontSize   : fontSize;
+                const ff  = prevObj ? prevObj.fontFamily : fontFamily;
+                const col = prevObj ? prevObj.fill       : color;
+
+                const rect = fCanvas.upperCanvasEl.getBoundingClientRect();
+                const prevTa = showInlineTextarea(fCanvas, rect.left + 10 * zoom, rect.top + (prevY - fs) * zoom,
+                                                prevY, fs, ff, col, zoom, lineSpacing, firstLine);
+                if (prevObj) {
+                    prevObj.visible = false;
+                    prevTa._editingObj = prevObj;
+                    prevTa.style.fontWeight = prevObj.fontWeight;
+                    prevTa.style.fontStyle  = prevObj.fontStyle;
+                    fCanvas.requestRenderAll();
+                }
+                requestAnimationFrame(() => {
+                    let value = prevText + curText;
+                    let caret = prevText.length;
+                    if (prevText && curText && prevTa._textWidth(value) > prevTa._limit) {
+                        value = prevText.slice(0, -1) + curText;
+                        caret = prevText.length - 1;
+                    }
+                    prevTa.value = value;
+                    prevTa.setSelectionRange(caret, caret);
+                    prevTa.dispatchEvent(new Event('input'));
+                });
+                return true;
+            };
+
             ta.addEventListener('keydown', (e) => {
                 if (e.isComposing || e.keyCode === 229) return;
+                if (e.key === 'Backspace' && goBackToPrevLine()) { e.preventDefault(); return; }
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     commit();
@@ -990,7 +1101,9 @@
                     commit();
                 }
             });
-
+            ta.addEventListener('beforeinput', (e) => {
+                if (e.inputType === 'deleteContentBackward' && !e.isComposing && goBackToPrevLine()) e.preventDefault();
+            });
             ta.addEventListener('blur', () => {
                 if (!ta._wrapCommitted) commit();
             });
@@ -999,7 +1112,22 @@
 
         function commitTextarea(ta, fCanvas, snappedY, fontSize, fontFamily, color) {
             const val = ta.value;
+            const editing = ta._editingObj;
             ta.remove();
+
+            if (editing) {
+                editing.visible = true;
+                if (!val.trim()) { fCanvas.removeWithUndo(editing); return; }
+                if (val !== editing.text) {
+                    editing.set('text', val);
+                    repositionTextByAlign(editing, editing.textAlign || 'left', fCanvas);
+                    editing.setCoords();
+                    recordModify(fCanvas, editing);
+                }
+                fCanvas.renderAll();
+                scheduleThumbnails();
+                return;
+            }
             if (!val.trim()) return;
 
             const lineY = snappedY - fontSize;
@@ -1017,7 +1145,7 @@
                 selectable: true,
                 evented: true,
                 hasControls: false,
-                hasBorders: false,
+                hasBorders: true,
                 lockMovementX: true,
                 lockMovementY: true,
                 _isInlineText: true,
@@ -1026,7 +1154,62 @@
             fCanvas.add(text);
             fCanvas.renderAll();
         }
+        function isTextObj(o) { return !!o && (o.type === 'i-text' || o.type === 'textbox'); }
 
+        function noteLineHeight(fontSize, lineSpacing = 30) {
+            const pitch = Math.max(1, Math.ceil(fontSize * 1.2 / lineSpacing)) * lineSpacing;
+            return pitch / (fontSize * 1.13);
+        }
+
+        function refocusText(obj) {
+            if (obj && obj.isEditing && obj.hiddenTextarea) obj.hiddenTextarea.focus();
+        }
+
+        function createNoteText(fCanvas, snappedY) {
+            const on = (id) => !!document.getElementById(id)?.classList.contains('active');
+            const fontSize   = parseInt(document.getElementById('fp-size').value) || 20;
+            const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
+            const color      = document.getElementById('fp-color-picker').value;
+            const align = ['left', 'center', 'right'].find(a => on(`fp-align-${a}`)) || 'left';
+
+            const tb = new fabric.Textbox('', {
+                left: 10, top: snappedY - fontSize, width: baseWidth - 20,
+                fontFamily, fontSize, fill: color, textAlign: align,
+                fontWeight: on('fp-bold') ? 'bold' : 'normal',
+                fontStyle:  on('fp-italic') ? 'italic' : 'normal',
+                underline:  on('fp-underline'),
+                linethrough: on('fp-linethrough'),
+                lineHeight: noteLineHeight(fontSize),
+                splitByGrapheme: true,
+                lockRotation: true,
+                hasBorders: true,
+                _isNoteText: true,
+                _isNew: true,
+                _isHistoryAction: true,
+            });
+            tb.setControlsVisibility({ mt: false, mb: false, tl: false, tr: false, bl: false, br: false, mtr: false });
+            tb.on('editing:exited', () => finishNoteText(fCanvas, tb));
+            fCanvas.add(tb);
+            fCanvas.setActiveObject(tb);
+            tb.enterEditing();
+            fCanvas.requestRenderAll();
+            return tb;
+        }
+
+        function finishNoteText(fCanvas, tb) {
+            const empty = !tb.text.trim();
+            if (tb._isNew) {
+                tb._isNew = false;
+                if (empty) { fCanvas.remove(tb); return; }
+                fCanvas.undoStack.push({ type: 'add', obj: tb });
+                fCanvas.redoStack = [];
+                tb._snap = takeSnap(tb);
+            } else if (empty) {
+                recordModify(fCanvas, tb);
+                fCanvas.removeWithUndo(tb);
+            }
+            fCanvas.requestRenderAll();
+        }
         function setMode(mode) {
             const prevMode = currentMode;
             currentMode = mode;
@@ -1038,11 +1221,14 @@
             if (mode !== prevMode && MODE_HINTS[mode]) showToast(MODE_HINTS[mode], 3500);
 
             if (mode !== prevMode) {
+                const picker = document.getElementById('color-picker');
                 if (mode === 'highlighter') {
+                    if (prevMode !== 'highlighter' && picker.value.toLowerCase() !== '#ffff00') {
+                        _penColor = picker.value;
+                    }
                     setColor('#ffff00');
-                } else if (mode === 'draw' &&
-                        document.getElementById('color-picker').value.toLowerCase() === '#ffff00') {
-                    setColor('#000000');
+                } else if (mode === 'draw' && picker.value.toLowerCase() === '#ffff00') {
+                    setColor(_penColor);
                 }
             }
 
@@ -1054,56 +1240,48 @@
 
             pages.forEach(fCanvas => {
                 if (fCanvas._textInlineHandler) {
-                    fCanvas.off('mouse:down', fCanvas._textInlineHandler);
+                    fCanvas.off('mouse:down', fCanvas._textDownHandler);
+                    fCanvas.off('mouse:up', fCanvas._textInlineHandler);
                     fCanvas._textInlineHandler = null;
+                }
+                if (prevMode === 'text-inline' && mode !== prevMode) {
+                    fCanvas.discardActiveObject();
                 }
 
                 if (mode === 'text-inline') {
                     fCanvas.isDrawingMode = false;
                     fCanvas.selection = false;
                     fCanvas.forEachObject(obj => {
-                    obj.selectable = false;
-                    obj.evented = !!obj._isInlineText;
+                    obj.selectable = !!obj._isNoteText;
+                    obj.evented = !!(obj._isInlineText || obj._isNoteText);
                 });
 
+                let downPt = null;
+                fCanvas._textDownHandler = (opt) => { downPt = fCanvas.getPointer(opt.e); };
                 fCanvas._textInlineHandler = (opt) => {
-                    const activeEl = document.activeElement;
-                    if (activeEl && activeEl.classList.contains('inline-textarea')) activeEl.blur();
+                    const up = fCanvas.getPointer(opt.e);
+                    if (downPt && Math.hypot(up.x - downPt.x, up.y - downPt.y) > 8) return;
 
-                    const pointer     = fCanvas.getPointer(opt.e);
-                    const lineSpacing = 30;
-                    const firstLine   = 50;
-                    const maxLine     = Math.floor((baseHeight - firstLine) / lineSpacing);
-                    const lineIndex   = Math.max(0, Math.min(maxLine, Math.round((pointer.y - firstLine) / lineSpacing)));
-                    const snappedY    = firstLine + lineIndex * lineSpacing;
-
-                    const existing = fCanvas.getObjects().find(o =>
-                        o._isInlineText && Math.abs(o.top + o.fontSize - snappedY) < lineSpacing / 2);
-                    if (existing) {
-                        if (!existing.isEditing) {
-                            fCanvas.setActiveObject(existing);
-                            existing.enterEditing();
-                            existing.selectAll();
-                            fCanvas.renderAll();
+                    const target = opt.target;
+                    if (target && target._isNoteText) {
+                        if (!target.isEditing) {
+                            fCanvas.setActiveObject(target);
+                            target.enterEditing(opt.e);
+                            target.setCursorByClick(opt.e);
+                            fCanvas.requestRenderAll();
                         }
                         return;
                     }
-                    if (opt.target && !opt.target._isBackground) return;
+                    if (target && !target._isBackground) return;
 
-                        const fontSize   = parseInt(document.getElementById('fp-size').value) || 18;
-                        const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
-                        const color      = document.getElementById('fp-color-picker').value;
-
-                        const zoom     = fCanvas.getZoom();
-                        const upperCanvas = fCanvas.upperCanvasEl;
-                        const rect        = upperCanvas.getBoundingClientRect();
-
-                        const taLeft = rect.left + 10 * zoom;
-                        const taTop  = rect.top  + (snappedY - fontSize) * zoom;
-
-                        showInlineTextarea(fCanvas, taLeft, taTop, snappedY, fontSize, fontFamily, color, zoom, lineSpacing, firstLine);
-                    };
-                    fCanvas.on('mouse:down', fCanvas._textInlineHandler);
+                    const lineSpacing = 30;
+                    const firstLine   = 50;
+                    const maxLine     = Math.floor((baseHeight - firstLine) / lineSpacing);
+                    const lineIndex   = Math.max(0, Math.min(maxLine, Math.round((up.y - firstLine) / lineSpacing)));
+                    createNoteText(fCanvas, firstLine + lineIndex * lineSpacing);
+                };
+                fCanvas.on('mouse:down', fCanvas._textDownHandler);
+                fCanvas.on('mouse:up', fCanvas._textInlineHandler);
 
                 } else {
                     fCanvas.isDrawingMode = false;
@@ -1149,12 +1327,19 @@
             const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
             const fontFamily = document.getElementById('fp-font').value || 'sans-serif';
 
+            const on = (id) => !!document.getElementById(id)?.classList.contains('active');
+            const align = ['left', 'center', 'right'].find(a => on(`fp-align-${a}`)) || 'left';
             const text = new fabric.IText('テキスト入力', {
                 left: 100,
                 top: 100,
                 fontFamily,
                 fontSize,
                 fill: color,
+                fontWeight: on('fp-bold') ? 'bold' : 'normal',
+                fontStyle: on('fp-italic') ? 'italic' : 'normal',
+                underline: on('fp-underline'),
+                linethrough: on('fp-linethrough'),
+                textAlign: align,
                 selectable: true,
                 backgroundColor: 'rgba(255,255,255,0.85)',
                 padding: 4,
@@ -1176,34 +1361,87 @@
             return pages[getCurrentPageIndex()];
         }
 
+        const SNAP_KEYS = ['left', 'top', 'width', 'scaleX', 'scaleY', 'angle', 'flipX', 'flipY',
+                        'text', 'fontFamily', 'fontSize', 'fontWeight', 'fontStyle',
+                        'underline', 'linethrough', 'fill', 'textAlign', 'styles'];
+
+        function takeSnap(obj) {
+            const s = {};
+            SNAP_KEYS.forEach(k => {
+                if (!(k in obj)) return;
+                s[k] = (k === 'styles') ? JSON.parse(JSON.stringify(obj.styles || {})) : obj[k];
+            });
+            return s;
+        }
+
+        function recordModify(fCanvas, obj, opt = {}) {
+            if (!fCanvas || !obj || obj._isBackground || obj.type === 'activeSelection') return;
+            const after  = takeSnap(obj);
+            const before = obj._snap;
+            obj._snap = after;
+            if (!before || JSON.stringify(before) === JSON.stringify(after)) return;
+            const top = fCanvas.undoStack[fCanvas.undoStack.length - 1];
+            if (opt.merge && top && top.type === 'modify' && top.obj === obj && !top.batch &&
+                Date.now() - top.time < 1000) {
+                top.after = after;
+                top.time = Date.now();
+            } else {
+                fCanvas.undoStack.push({ type: 'modify', obj, before, after, batch: opt.batch, time: Date.now() });
+            }
+            fCanvas.redoStack = [];
+        }
+
+        function flushSelection(fCanvas) {
+            const a = fCanvas.getActiveObject();
+            if (a && a.isEditing) a.exitEditing();
+            else if (a && a.type === 'activeSelection') fCanvas.discardActiveObject();
+        }
+
+        function applyHistory(fCanvas, action, dir) {
+            const obj = action.obj;
+            obj._isHistoryAction = true;
+            if (action.type === 'modify') {
+                obj.set(JSON.parse(JSON.stringify(dir === 'undo' ? action.before : action.after)));
+                obj.setCoords();
+                obj._snap = takeSnap(obj);
+            } else if ((action.type === 'add') === (dir === 'redo')) {
+                fCanvas.add(obj);
+            } else {
+                fCanvas.remove(obj);
+            }
+        }
+
+        function popGroup(stack) {
+            const first = stack.pop();
+            const group = [first];
+            while (first.batch && stack.length && stack[stack.length - 1].batch === first.batch) {
+                group.push(stack.pop());
+            }
+            return group;
+        }
+
         function undo() {
             const fCanvas = getCurrentCanvas();
             if (!fCanvas) return;
+            flushSelection(fCanvas);
             if (fCanvas.undoStack.length === 0) { showToast('これ以上、元に戻せません'); return; }
-            const action = fCanvas.undoStack.pop();
-            action.obj._isHistoryAction = true;
-            if (action.type === 'add') {
-                fCanvas.remove(action.obj);
-            } else if (action.type === 'remove') {
-                fCanvas.add(action.obj);
-            }
-            fCanvas.redoStack.push(action);
+            const group = popGroup(fCanvas.undoStack);
+            group.forEach(a => applyHistory(fCanvas, a, 'undo'));
+            fCanvas.redoStack.push(...group);
             fCanvas.renderAll();
+            scheduleThumbnails();
         }
 
         function redo() {
             const fCanvas = getCurrentCanvas();
             if (!fCanvas) return;
+            flushSelection(fCanvas);
             if (fCanvas.redoStack.length === 0) { showToast('やり直せる操作がありません'); return; }
-            const action = fCanvas.redoStack.pop();
-            action.obj._isHistoryAction = true;
-            if (action.type === 'add') {
-                fCanvas.add(action.obj);
-            } else if (action.type === 'remove') {
-                fCanvas.remove(action.obj);
-            }
-            fCanvas.undoStack.push(action);
+            const group = popGroup(fCanvas.redoStack);
+            group.forEach(a => applyHistory(fCanvas, a, 'redo'));
+            fCanvas.undoStack.push(...group);
             fCanvas.renderAll();
+            scheduleThumbnails();
         }
 
         function clearAll() {
@@ -1351,7 +1589,7 @@
         function syncFontPanel(e) {
             const obj = e?.selected?.[0] || (e?.target);
             const target = (e?.selected && e.selected[0]) || e?.target;
-            if (!target || target.type !== 'i-text') return;
+            if (!isTextObj(target)) return;
             document.getElementById('fp-font').value = target.fontFamily || 'sans-serif';
             document.getElementById('fp-size').value = target.fontSize || 20;
             document.getElementById('fp-bold').classList.toggle('active', target.fontWeight === 'bold');
@@ -1368,11 +1606,15 @@
             const fCanvas = getCurrentCanvas();
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
-            if (!obj || obj.type !== 'i-text') return;
-            obj.set({
-                fontFamily: document.getElementById('fp-font').value,
-                fontSize: parseInt(document.getElementById('fp-size').value) || 20,
-            });
+            if (!isTextObj(obj)) return;
+            const oldSize = obj.fontSize;
+            const newSize = parseInt(document.getElementById('fp-size').value) || 20;
+            obj.set({ fontFamily: document.getElementById('fp-font').value, fontSize: newSize });
+            if (obj._isNoteText) {
+                obj.set({ lineHeight: noteLineHeight(newSize), top: obj.top + oldSize - newSize });
+                obj.setCoords();
+            }
+            recordModify(fCanvas, obj, { merge: true });
             fCanvas.renderAll();
         }
 
@@ -1380,7 +1622,7 @@
             const fCanvas = getActiveCanvas();
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
-            if (!obj || obj.type !== 'i-text') {
+            if (!isTextObj(obj)) {
                 const ids = { bold: 'fp-bold', italic: 'fp-italic', underline: 'fp-underline', linethrough: 'fp-linethrough' };
                 document.getElementById(ids[prop]).classList.toggle('active');
                 showToast('次に書く文字に反映されます');
@@ -1399,17 +1641,21 @@
                 obj.set('linethrough', !obj.linethrough);
                 document.getElementById('fp-linethrough').classList.toggle('active', !!obj.linethrough);
             }
+            recordModify(fCanvas, obj, { merge: true });
             fCanvas.renderAll();
+            refocusText(obj);
         }
 
         function setTextAlign(align) {
             const fCanvas = getCurrentCanvas();
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
-            if (obj && obj.type === 'i-text') {
+            if (isTextObj(obj)) {
                 obj.set('textAlign', align);
                 repositionTextByAlign(obj, align, fCanvas);
+                recordModify(fCanvas, obj, { merge: true });
                 fCanvas.renderAll();
+                refocusText(obj);
             }
             ['left','center','right'].forEach(a => {
                 document.getElementById(`fp-align-${a}`).classList.toggle('active', a === align);
@@ -1438,13 +1684,15 @@
             if (map[hex]) document.getElementById(map[hex])?.classList.add('selected');
             if (!fCanvas) return;
             const obj = fCanvas.getActiveObject();
-            if (obj && obj.type === 'i-text') {
+            if (isTextObj(obj)) {
                 if (obj.isEditing && obj.selectionStart !== obj.selectionEnd) {
                     obj.setSelectionStyles({ fill: hex });
                 } else {
                     obj.set('fill', hex);
                 }
+                recordModify(fCanvas, obj, { merge: true });
                 fCanvas.renderAll();
+                refocusText(obj);
             }
         }
 
@@ -1452,6 +1700,10 @@
             const file = e.target.files[0];
             if (!file) return;
             e.target.value = '';
+            if (typeof pdfjsLib === 'undefined') {
+                alert('PDFを読み込む部品が読み込めませんでした。インターネットにつながっているか確認して、ページを開き直してください。');
+                return;
+            }
 
             const doLoad = async () => {
                 try {
@@ -1616,7 +1868,10 @@
             container.scrollTop = i * pageH;
             highlightActiveThumb();
         }
-
+        function goPage(step) {
+            const i = Math.max(0, Math.min(pages.length - 1, getCurrentPageIndex() + step));
+            scrollToPage(i);
+        }
         function initKeyboardShortcuts() {
             document.addEventListener('keydown', (e) => {
                 const active = document.activeElement;
