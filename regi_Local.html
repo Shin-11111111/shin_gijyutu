@@ -62,23 +62,24 @@
         }
         .product-button {
             transition: transform 0.1s, background-color 0.1s;
-            background-color: #eef2ff;
+            background-color: var(--btn-bg, #eef2ff);
             color: #1f2937; 
-            border: 1px solid #c7d2fe;
+            border: 1px solid var(--btn-border, #c7d2fe);
+            height: 7rem;
         }
-        .product-button:hover {
-            background-color: #e0e7ff;
+        #product-grid { align-content: start; }
+        .product-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            overflow-wrap: anywhere;
         }
-        .product-button:active {
-            transform: scale(0.98);
-        }
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        .product-button:hover { background-color: var(--btn-bg-hover, #e0e7ff); }
+        .product-button:active { transform: scale(0.98); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .calc-button {
             height: 64px;
             font-size: 2rem;
@@ -86,10 +87,7 @@
             transition: background-color 0.1s;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .calc-button:active {
-            box-shadow: none;
-            transform: translateY(1px);
-        }
+        .calc-button:active { box-shadow: none; transform: translateY(1px); }
         @media (max-width: 767px) {
             body { padding: 0; }
             #app-container {
@@ -125,10 +123,11 @@
             }
             .tab-button:hover { background-color: transparent; }
             .tab-button svg { margin-bottom: 2px; margin-right: 0 !important; width: 20px; height: 20px; }
-            
             .tab-content[data-content="pos"] { flex-direction: column; overflow-y: auto; }
             .tab-content[data-content="pos"] > div { width: 100% !important; height: auto; flex-shrink: 0; }
             #menu-area { max-height: 45vh; }
+            .product-button { height: 5.5rem; }
+            .product-button .product-name { font-size: 1rem; line-height: 1.25; }
             #cart-list-container { min-height: 140px; }
             #register-area { border-left: none !important; border-top: 1px solid #e5e7eb; }
         }
@@ -140,11 +139,9 @@
     </style>
 </head>
 <body class="bg-gray-100 p-0 md:p-8">
-
     <div id="app-container" class="transition-all duration-300">
-        
         <div id="sidebar">
-            <h1 class="text-white text-xl font-extrabold mb-6 px-3 text-center hidden md:block">POS System</h1>
+            <h1 class="text-white text-xl font-extrabold mb-6 px-3 text-center hidden md:block">Web レジ</h1>
             <button data-tab="pos" onclick="switchTab('pos')" class="tab-button active-tab">
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -192,19 +189,23 @@
                         <div class="text-center p-8 bg-gray-100 rounded-lg text-gray-500 col-span-full">メニューを読み込み中...</div>
                     </div>
                 </div>
-
                 <div id="register-area" class="w-2/5 p-4 md:p-6 bg-gray-50 flex flex-col h-full border-l border-gray-200">
                     <h2 class="text-xl font-bold mb-4 text-gray-800">カート</h2>
-                    
                     <div id="cart-list-container" class="flex-grow overflow-y-auto no-scrollbar mb-4 border-b border-gray-200">
                         <ul id="cart-list" class="space-y-2"></ul>
                         <div id="empty-cart-message" class="text-center py-12 text-gray-400">カートは空です</div>
                     </div>
-
                     <div class="space-y-2 text-lg font-medium mb-4">
                         <div class="flex justify-between text-gray-600">
                             <span>小計:</span>
                             <span id="subtotal-display">¥0</span>
+                        </div>
+                        <div id="set-discount-row" class="hidden">
+                            <div class="flex justify-between text-pink-600 text-base font-semibold">
+                                <span>セット割引:</span>
+                                <span id="set-discount-display">- ¥0</span>
+                            </div>
+                            <p id="set-discount-detail" class="text-xs text-pink-600 text-right"></p>
                         </div>
                         <div class="flex justify-between items-center text-red-500">
                             <label for="discount-input" class="cursor-pointer">
@@ -225,7 +226,6 @@
                             <span id="total-display">¥0</span>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-2 gap-3">
                         <button onclick="clearCart()" class="action-button bg-red-500 hover:bg-red-600 text-white font-semibold py-4 rounded-xl shadow-lg transition duration-150">
                             <span class="text-xl">取消</span>
@@ -240,6 +240,14 @@
             <div data-content="settings" class="tab-content w-full h-full p-4 md:p-6 flex flex-col hidden overflow-y-auto no-scrollbar">
                 <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-3">販売設定・管理</h3>
 
+                <div class="p-4 mb-6 bg-yellow-50 rounded-xl shadow-md border border-yellow-200">
+                    <h4 class="text-lg font-bold mb-3 text-yellow-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+                        店名の設定
+                    </h4>
+                    <input type="text" id="shop-name-input" maxlength="30" autocomplete="off" placeholder="例: 3年1組 クレープ屋" oninput="updateShopName()" class="block w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-yellow-500 focus:border-yellow-500">
+                </div>
+
                 <div class="p-4 mb-6 bg-green-50 rounded-xl shadow-md border border-green-200">
                     <h4 class="text-lg font-bold mb-3 text-green-700 flex items-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
@@ -251,9 +259,7 @@
 
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <input type="text" id="new-payment-method-name" placeholder="新しい支払い方法名" class="col-span-1 sm:col-span-3 p-3 border rounded-lg focus:ring-green-500 focus:border-green-500">
-                        <button onclick="addPaymentMethod()" class="action-button col-span-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">
-                            追加
-                        </button>
+                        <button onclick="addPaymentMethod()" class="action-button col-span-1 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md">追加</button>
                     </div>
                 </div>
                 
@@ -265,13 +271,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
                         <input type="text" id="new-item-name" placeholder="商品名" class="col-span-1 sm:col-span-2 p-3 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
                         <input type="number" id="new-item-price" placeholder="価格 (例: 300)" min="0" class="col-span-1 p-3 border rounded-lg text-right focus:ring-indigo-500 focus:border-indigo-500">
-                        <button onclick="addNewItem()" class="action-button col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md">
-                            追加
-                        </button>
+                        <button onclick="addNewItem()" class="action-button col-span-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md">追加</button>
                     </div>
                 </div>
 
-                <div class="flex-grow overflow-y-auto no-scrollbar">
+                <div class="flex-shrink-0">
                 <h4 class="text-lg font-bold mb-3 text-gray-700 border-b pb-2">商品一覧・編集</h4>
                 <ul id="edit-list" class="space-y-3">
                     <li class="hidden md:grid grid-cols-7 gap-4 text-sm font-semibold text-gray-500 border-b pb-2 px-2">
@@ -282,6 +286,38 @@
                     </li>
                         <li class="text-center py-8 text-gray-500">アイテムを読み込み中...</li>
                     </ul>
+                </div>
+
+                <div class="p-4 mt-6 mb-6 bg-pink-50 rounded-xl shadow-md border border-pink-200">
+                    <h4 class="text-lg font-bold mb-2 text-pink-700 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path></svg>
+                        セット割引の設定
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-4 leading-relaxed">
+                        決めた商品を<span class="font-bold">まとめて買うと割引</span>になる「セット」を作れます。(例: クレープ1個 + サイダー1個 で 100円引き)<br>
+                        レジのカートにセットの組み合わせがそろうと、自動で割引されます。
+                    </p>
+
+                    <div class="bg-white p-3 rounded-lg border border-pink-100 mb-4">
+                        <p class="text-sm font-semibold text-gray-700 mb-2">セットに入れる商品の個数</p>
+                        <div id="set-item-picker" class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-4"></div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div class="sm:col-span-2">
+                                <label for="set-name-input" class="block text-sm font-semibold text-gray-700 mb-1">② セットの名前</label>
+                                <input type="text" id="set-name-input" maxlength="20" autocomplete="off" placeholder="例: クレープセット (空欄でも可能)" class="block w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-pink-500 focus:border-pink-500">
+                            </div>
+                            <div>
+                                <label for="set-discount-input" class="block text-sm font-semibold text-gray-700 mb-1">値引額</label>
+                                <input type="number" id="set-discount-input" min="1" inputmode="numeric" placeholder="例: 100" class="block w-full p-3 border border-gray-300 rounded-lg text-base text-right focus:ring-pink-500 focus:border-pink-500">
+                            </div>
+                        </div>
+                        <p id="set-form-hint" class="text-sm text-red-500 h-5 mt-2"></p>
+                        <button type="button" onclick="addSetDiscount()" class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition duration-150">セットを追加</button>
+                    </div>
+
+                    <h5 class="text-sm font-bold text-gray-700 mb-2">登録したセット</h5>
+                    <ul id="set-discount-list" class="space-y-2"></ul>
                 </div>
             </div>
 
@@ -327,16 +363,29 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
                     <div class="md:col-span-2">
-                        <label for="receipt-sale-select" class="block text-sm font-semibold text-gray-700 mb-1">領収書にする会計 (販売履歴から選びます)</label>
+                        <label for="receipt-sale-select" class="block text-sm font-semibold text-gray-700 mb-1">領収書を作成する会計</label>
                         <select id="receipt-sale-select" onchange="updateReceiptPreview()" class="block w-full p-3 border border-gray-300 rounded-lg bg-white text-base"></select>
                     </div>
                     <div>
-                        <label for="receipt-shop-name" class="block text-sm font-semibold text-gray-700 mb-1">店名</label>
-                        <input type="text" id="receipt-shop-name" maxlength="30" autocomplete="off" placeholder="例: 〇〇店" oninput="updateReceiptPreview()" class="block w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-indigo-500 focus:border-indigo-500">
+                        <p class="block text-sm font-semibold text-gray-700 mb-1">店名</p>
+                        <div class="flex items-center gap-2">
+                            <p id="receipt-shop-display" class="flex-grow min-w-0 truncate p-3 border border-gray-200 bg-gray-50 rounded-lg text-base"></p>
+                            <button type="button" onclick="switchTab('settings')" class="flex-shrink-0 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-4 rounded-lg">設定を開く</button>
+                        </div>
                     </div>
                     <div>
                         <label for="receipt-addressee" class="block text-sm font-semibold text-gray-700 mb-1">宛先</label>
                         <input type="text" id="receipt-addressee" maxlength="30" autocomplete="off" placeholder="例: 山田 太郎 (「様」は自動でつきます)" oninput="updateReceiptPreview()" class="block w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="receipt-proviso" class="block text-sm font-semibold text-gray-700 mb-1">但し書き</label>
+                        <input type="text" id="receipt-proviso" maxlength="30" autocomplete="off" placeholder="お品代" oninput="updateReceiptPreview()" class="block w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-indigo-500 focus:border-indigo-500">
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button type="button" onclick="setProviso('お品代')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-3 py-1 rounded-full">お品代</button>
+                            <button type="button" onclick="setProviso('飲食代')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-3 py-1 rounded-full">飲食代</button>
+                            <button type="button" onclick="setProviso('参加費')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-3 py-1 rounded-full">参加費</button>
+                            <button type="button" onclick="setProviso('入場料')" class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold px-3 py-1 rounded-full">入場料</button>
+                        </div>
                     </div>
                 </div>
 
@@ -426,17 +475,13 @@
 
 
             <div class="grid grid-cols-2 gap-3">
-                <button onclick="hidePaymentModal()" class="action-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-xl">
-                    キャンセル
-                </button>
-                <button onclick="processPayment()" class="action-button bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl" id="complete-payment-button" disabled>
-                    完了
-                </button>
+                <button onclick="hidePaymentModal()" class="action-button bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-xl">キャンセル</button>
+                <button onclick="processPayment()" class="action-button bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl" id="complete-payment-button" disabled>完了</button>
             </div>
         </div>
     </div>
     
-    <div id="message-box" class="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-2xl z-50 hidden transition-opacity duration-300 opacity-0 max-w-xs">
+    <div id="message-box" class="fixed top-16 md:top-auto md:bottom-4 right-4 bg-gray-800 text-white p-4 rounded-lg shadow-2xl z-50 hidden transition-opacity duration-300 opacity-0 max-w-xs">
         <p id="message-text" class="font-medium"></p>
     </div>
 
@@ -448,28 +493,20 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50 sticky top-0">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                商品名
-                            </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                販売個数
-                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">商品名</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">販売個数</th>
                         </tr>
                     </thead>
-                    <tbody id="item-stats-table-body" class="bg-white divide-y divide-gray-200">
-                        </tbody>
+                    <tbody id="item-stats-table-body" class="bg-white divide-y divide-gray-200"></tbody>
                 </table>
             </div>
-
-            <button onclick="hideItemStatsModal()" class="action-button w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl">
-                閉じる
-            </button>
+            <button onclick="hideItemStatsModal()" class="action-button w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl">閉じる</button>
         </div>
     </div>
     <div id="csv-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm transform transition-all">
             <h3 class="text-2xl font-bold mb-2">CSVでダウンロード</h3>
-            <p class="text-sm text-gray-600 mb-4">ダウンロードする販売履歴をえらんでください。(ExcelやGoogleスプレッドシートで開けます)</p>
+            <p class="text-sm text-gray-600 mb-4">ダウンロードするデータをえらんでください。</p>
 
             <div class="space-y-3 mb-6">
                 <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
@@ -482,15 +519,19 @@
                     <span class="text-lg font-semibold flex-grow">すべて</span>
                     <span class="text-sm text-gray-500"><span id="csv-count-all">0</span>件</span>
                 </label>
+                <label class="flex items-center p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input type="radio" name="csv-range" value="items" class="w-5 h-5 mr-3">
+                    <span class="flex-grow">
+                        <span class="block text-lg font-semibold">商品別販売個数</span>
+                        <span class="block text-xs text-gray-500">本日の商品ごとの売れた数</span>
+                    </span>
+                    <span class="text-sm text-gray-500"><span id="csv-count-items">0</span>種類</span>
+                </label>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <button type="button" onclick="hideCsvModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-xl">
-                    キャンセル
-                </button>
-                <button type="button" onclick="downloadHistoryCsv()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl">
-                    ダウンロード
-                </button>
+                <button type="button" onclick="hideCsvModal()" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-3 rounded-xl">キャンセル</button>
+                <button type="button" onclick="downloadHistoryCsv()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl">ダウンロード</button>
             </div>
         </div>
     </div>
@@ -499,7 +540,9 @@
             MENU: 'pos_menu_items',
             HISTORY: 'pos_sales_history',
             PAYMENT: 'pos_payment_methods',
-            RECEIPT_SHOP: 'pos_receipt_shop_name'
+            SHOP_NAME: 'pos_receipt_shop_name',
+            SET_DISCOUNTS: 'pos_set_discounts',
+            RECEIPT_PROVISO: 'pos_receipt_proviso'
         };
 
         window.inventory = [];
@@ -508,6 +551,9 @@
         window.currentTotal = 0;
         window.currentSubtotal = 0;
         window.currentDiscount = 0;
+        window.setDiscounts = [];
+        window.currentSetDiscount = 0;
+        window.currentAppliedSets = [];
 
         const loadFromLocalStorage = (key, defaultValue) => {
             try {
@@ -521,9 +567,13 @@
 
         const saveToLocalStorage = (key, data) => {
             try {
-                localStorage.setItem(key, JSON.stringify(data));
+                const serialized = JSON.stringify(data);
+                localStorage.setItem(key, serialized);
+                return true;
             } catch (e) {
                 console.error(`Error saving to LS key: ${key}`, e);
+                showMessage('データを保存できませんでした。空き容量やブラウザの設定を確認してください。');
+                return false;
             }
         };
 
@@ -555,8 +605,9 @@
                     if (tabName === 'history') window.renderHistoryList();
                     if (tabName === 'receipt') window.renderReceiptSection();
                     if (tabName === 'settings') {
-                         window.renderEditList(); 
-                         window.renderPaymentEditSection();
+                        window.renderShopNameSetting();
+                        window.renderEditList(); 
+                        window.renderPaymentEditSection();
                     }
                 }
             });
@@ -572,7 +623,28 @@
                 document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
             }
         };
-        
+        const BUTTON_COLORS = [
+            { key: 'default', label: '標準',     bg: '#eef2ff', border: '#c7d2fe', hover: '#e0e7ff' },
+            { key: 'red',     label: '赤',       bg: '#fecaca', border: '#f87171', hover: '#fca5a5' },
+            { key: 'orange',  label: 'オレンジ', bg: '#fed7aa', border: '#fb923c', hover: '#fdba74' },
+            { key: 'yellow',  label: '黄',       bg: '#fef08a', border: '#facc15', hover: '#fde047' },
+            { key: 'green',   label: '緑',       bg: '#bbf7d0', border: '#4ade80', hover: '#86efac' },
+            { key: 'blue',    label: '青',       bg: '#bfdbfe', border: '#60a5fa', hover: '#93c5fd' },
+            { key: 'purple',  label: '紫',       bg: '#e9d5ff', border: '#c084fc', hover: '#d8b4fe' },
+            { key: 'pink',    label: 'ピンク',   bg: '#fbcfe8', border: '#f472b6', hover: '#f9a8d4' },
+            { key: 'gray',    label: 'グレー',   bg: '#e5e7eb', border: '#9ca3af', hover: '#d1d5db' }
+        ];
+
+        const renderColorSwatches = (item) => {
+            const current = BUTTON_COLORS.some(color => color.key === item.color) ? item.color : 'default';
+            return BUTTON_COLORS.map(color => {
+                const selected = color.key === current;
+                return `<button type="button" onclick="setItemColor('${item.docId}', '${color.key}')"
+                            title="${color.label}" aria-label="${escapeHtml(item.name)}のボタンを${color.label}にする" aria-pressed="${selected}"
+                            class="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold text-gray-800 ${selected ? 'ring-2 ring-offset-1 ring-gray-700' : ''}"
+                            style="background-color: ${color.bg}; border-color: ${color.border};">${selected ? '✓' : ''}</button>`;
+            }).join('');
+        };
         window.renderMenu = () => {
             const grid = document.getElementById('product-grid');
             grid.innerHTML = '';
@@ -588,10 +660,17 @@
             }
             visibleItems.forEach(item => {
                 const button = document.createElement('button');
-                button.className = 'product-button p-4 rounded-xl shadow-md flex flex-col justify-center items-center text-center';
+                button.className = 'product-button p-3 rounded-xl shadow-md flex flex-col justify-center items-center text-center';
+                button.title = item.name;
+                const buttonColor = BUTTON_COLORS.find(color => color.key === item.color);
+                if (buttonColor && buttonColor.key !== 'default') {
+                    button.style.setProperty('--btn-bg', buttonColor.bg);
+                    button.style.setProperty('--btn-border', buttonColor.border);
+                    button.style.setProperty('--btn-bg-hover', buttonColor.hover);
+                }
                 button.innerHTML = `
-                    <span class="text-xl font-semibold">${escapeHtml(item.name)}</span>
-                    <span class="text-sm text-gray-600">${formatYen(item.price)}</span>
+                    <span class="product-name text-xl font-semibold">${escapeHtml(item.name)}</span>
+                    <span class="text-sm text-gray-700">${formatYen(item.price)}</span>
                 `;
                 button.onclick = () => addToCart(item); 
                 grid.appendChild(button);
@@ -655,11 +734,9 @@
             const emptyMessage = document.getElementById('empty-cart-message');
             const paymentButton = document.getElementById('payment-button');
             const discountDisplay = document.getElementById('discount-display');
-            
             cartListElement.innerHTML = '';
-            
             let subtotal = 0;
-            
+
             if (window.cart.length === 0) {
                 emptyMessage.classList.remove('hidden');
                 paymentButton.disabled = true;
@@ -688,18 +765,25 @@
                 });
             }
 
-            const discountAmount = calculateDiscount(subtotal);
+            const setResult = calculateSetDiscount();
+            const setDiscountAmount = Math.min(subtotal, setResult.total);
+            const manualDiscount = calculateDiscount(subtotal - setDiscountAmount);
+            const discountAmount = setDiscountAmount + manualDiscount;
             const total = subtotal - discountAmount;
 
             document.getElementById('subtotal-display').textContent = formatYen(subtotal);
-            
-            discountDisplay.textContent = `- ${formatYen(discountAmount)}`;
-            
+            discountDisplay.textContent = `- ${formatYen(manualDiscount)}`;
+            document.getElementById('set-discount-row').classList.toggle('hidden', setResult.applied.length === 0);
+            document.getElementById('set-discount-display').textContent = `- ${formatYen(setDiscountAmount)}`;
+            document.getElementById('set-discount-detail').textContent =
+                setResult.applied.map(applied => `${applied.name} × ${applied.count}`).join(' / ');
             document.getElementById('total-display').textContent = formatYen(total);
-            
+
             window.currentTotal = total;
             window.currentSubtotal = subtotal;
             window.currentDiscount = discountAmount;
+            window.currentSetDiscount = setDiscountAmount;
+            window.currentAppliedSets = setResult.applied;
         };
         
         window.clearCart = () => {
@@ -799,7 +883,6 @@
         window.processPayment = () => {
             const methodSelect = document.getElementById('payment-method-select');
             const tenderedInput = document.getElementById('cash-tendered-input');
-            
             const selectedMethod = methodSelect.value;
             const total = window.currentTotal;
             const tendered = selectedMethod === "現金" ? parseInt(tenderedInput.value || 0) : total;
@@ -813,6 +896,8 @@
                 total: total,
                 subtotal: window.currentSubtotal,
                 discount: window.currentDiscount,
+                setDiscount: window.currentSetDiscount,
+                setDetails: window.currentAppliedSets.map(applied => ({ name: applied.name, count: applied.count, amount: applied.amount })),
                 
                 method: selectedMethod,
                 tendered: tendered,
@@ -829,10 +914,15 @@
 
             try {
                 const history = loadFromLocalStorage(LS_KEYS.HISTORY, []);
+                if (!Array.isArray(history)) {
+                    showMessage('販売履歴の形式が不正です。会計を中断しました。');
+                    return;
+                }
                 history.push(saleData);
-                saveToLocalStorage(LS_KEYS.HISTORY, history);
-                
-                showMessage(`会計完了: ${formatYen(window.currentTotal)}を記録しました (${selectedMethod}) お釣り ${formatYen(change)}`)
+                if (!saveToLocalStorage(LS_KEYS.HISTORY, history)) {
+                    return;
+                }
+                showMessage(`会計完了: ${formatYen(saleData.total)}を記録しました${selectedMethod === '現金' ? ` お釣り ${formatYen(change)}` : ''}`);
             } catch (e) {
                 console.error("Failed to save sale history locally:", e);
                 showMessage(`エラー: 履歴の保存に失敗しました`);
@@ -851,9 +941,7 @@
 
             try {
                 let historyData = loadFromLocalStorage(LS_KEYS.HISTORY, []);
-
                 historyData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-                
                 const today = new Date().toLocaleDateString('ja-JP');
                 let dailyRevenue = 0;
                 let todayItemCounts = {};
@@ -873,7 +961,6 @@
                 });
                 
                 window.currentItemCounts = todayItemCounts;
-
                 document.getElementById('stats-visitors').textContent = todayVisitors.toLocaleString();
                 document.getElementById('stats-revenue').textContent = formatYen(dailyRevenue);
                 
@@ -920,6 +1007,7 @@
                                 <div class="text-sm text-gray-700 space-y-1">
                                     <p><strong>支払い:</strong> ${escapeHtml(sale.method)} &bull; <strong>小計:</strong> ${formatYen(sale.subtotal)} &bull; <strong>割引:</strong> ${formatYen(sale.discount)}</p>
                                     <p class="truncate"><strong>内訳:</strong> ${itemsDetail}</p>
+                                    ${(sale.setDetails && sale.setDetails.length > 0) ? `<p class="text-pink-600"><strong>セット割引:</strong> ${sale.setDetails.map(s => `${escapeHtml(s.name)} × ${s.count} (- ${formatYen(s.amount)})`).join(', ')}</p>` : ''}
                                     <p class="text-xs text-gray-500"><strong>お預かり/お釣り:</strong> ${formatYen(sale.tendered)} / ${sale.change < 0 ? '<span class="text-red-500">-' + formatYen(Math.abs(sale.change)) + '</span>' : formatYen(sale.change)}</p>
                                 </div>
                             </li>
@@ -931,7 +1019,7 @@
                 
             } catch (e) {
                 console.error("Failed to fetch history locally:", e);
-                historyList.innerHTML = `<li class="text-center py-8 text-red-500">履歴の取得エラー: ${e.message}</li>`;
+                historyList.innerHTML = `<li class="text-center py-8 text-red-500">履歴の取得エラー: ${escapeHtml(e.message)}</li>`;
             }
         };
         
@@ -984,6 +1072,19 @@
                 alert('エラー：履歴のクリアに失敗しました。');
             }
         };
+        const getShopName = () => String(loadFromLocalStorage(LS_KEYS.SHOP_NAME, '')).trim();
+
+        window.renderShopNameSetting = () => {
+            document.getElementById('shop-name-input').value = getShopName();
+        };
+
+        window.updateShopName = () => {
+            saveToLocalStorage(LS_KEYS.SHOP_NAME, document.getElementById('shop-name-input').value.trim());
+        };
+
+        const toSafeFileName = (text, maxLength) =>
+            Array.from(text.replace(/[\\/:*?"<>|\s]/g, '_')).slice(0, maxLength).join('');
+
         const csvEscape = (value) => {
             if (typeof value === 'number') return String(value);
             let text = String(value ?? '');
@@ -999,9 +1100,43 @@
             return [...target].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
         };
 
+        const getItemCountRows = (sales) => {
+            const counts = {};
+            sales.forEach(sale => {
+                (sale.items || []).forEach(item => {
+                    counts[item.name] = (counts[item.name] || 0) + item.quantity;
+                });
+            });
+            return Object.entries(counts).sort(([, a], [, b]) => b - a);
+        };
+
+        const buildCsvFileName = (baseName) => {
+            const pad = (n) => String(n).padStart(2, '0');
+            const now = new Date();
+            const dateText = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+            const shopName = toSafeFileName(getShopName(), 20);
+            return `${shopName ? shopName + '_' : ''}${baseName}_${dateText}.csv`;
+        };
+
+        const downloadCsvFile = (fileName, header, rows) => {
+            const csvText = [header, ...rows]
+                .map(row => row.map(csvEscape).join(','))
+                .join('\r\n');
+            const blob = new Blob(['\uFEFF' + csvText], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        };
+
         window.showCsvModal = () => {
             document.getElementById('csv-count-today').textContent = getCsvTargetSales('today').length;
             document.getElementById('csv-count-all').textContent = getCsvTargetSales('all').length;
+            document.getElementById('csv-count-items').textContent = getItemCountRows(getCsvTargetSales('today')).length;
             document.getElementById('csv-modal').classList.remove('hidden');
         };
 
@@ -1012,6 +1147,21 @@
         window.downloadHistoryCsv = () => {
             const checked = document.querySelector('input[name="csv-range"]:checked');
             const range = checked ? checked.value : 'today';
+
+            if (range === 'items') {
+                const itemRows = getItemCountRows(getCsvTargetSales('today'));
+                if (itemRows.length === 0) {
+                    hideCsvModal();
+                    showMessage('本日の販売履歴がないため、ダウンロードできません');
+                    return;
+                }
+                const itemFileName = buildCsvFileName('商品別販売個数_本日');
+                downloadCsvFile(itemFileName, ['商品名', '販売個数'], itemRows);
+                hideCsvModal();
+                showMessage(`${itemFileName} をダウンロードしました (${itemRows.length}種類)`);
+                return;
+            }
+
             const rangeName = range === 'today' ? '本日' : 'すべて';
             const sales = getCsvTargetSales(range);
 
@@ -1041,24 +1191,8 @@
                 ];
             });
 
-            const csvText = [header, ...rows]
-                .map(row => row.map(csvEscape).join(','))
-                .join('\r\n');
-            const blob = new Blob(['\uFEFF' + csvText], { type: 'text/csv;charset=utf-8;' });
-
-            const pad = (n) => String(n).padStart(2, '0');
-            const now = new Date();
-            const dateText = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-            const fileName = `販売履歴_${rangeName}_${dateText}.csv`;
-
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            const fileName = buildCsvFileName(`販売履歴_${rangeName}`);
+            downloadCsvFile(fileName, header, rows);
 
             hideCsvModal();
             showMessage(`${fileName} をダウンロードしました (${sales.length}件)`);
@@ -1066,11 +1200,17 @@
         const RECEIPT_W = 1654;
         const RECEIPT_H = 1169;
         const RECEIPT_FONT = '"Hiragino Kaku Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif';
-
         const receiptYen = (amount) => '¥' + Number(amount).toLocaleString('ja-JP');
-
         const formatAddressee = (name) => /(様|御中|殿)$/.test(name) ? name : `${name} 様`;
+        const formatProviso = (text) => {
+            const core = String(text || '').trim().replace(/^但し[、,]?/, '').replace(/として$/, '').trim();
+            return `但し、${core || 'お品代'}として`;
+        };
 
+        window.setProviso = (text) => {
+            document.getElementById('receipt-proviso').value = text;
+            updateReceiptPreview();
+        };
         const fitText = (ctx, text, maxWidth, size, minSize, weight = 'normal') => {
             let fontSize = size;
             ctx.font = `${weight} ${fontSize}px ${RECEIPT_FONT}`;
@@ -1086,7 +1226,7 @@
             return chars.join('') + '…';
         };
 
-        const drawReceipt = (canvas, sale, shopName, addressee) => {
+        const drawReceipt = (canvas, sale, shopName, addressee, proviso) => {
             canvas.width = RECEIPT_W;
             canvas.height = RECEIPT_H;
             const ctx = canvas.getContext('2d');
@@ -1102,7 +1242,6 @@
             ctx.strokeRect(30, 30, W - 60, H - 60);
             ctx.lineWidth = 1.5;
             ctx.strokeRect(42, 42, W - 84, H - 84);
-
             ctx.fillStyle = '#111827';
             ctx.textAlign = 'center';
             ctx.font = `bold 84px ${RECEIPT_FONT}`;
@@ -1136,7 +1275,6 @@
             ctx.strokeStyle = '#111827';
             ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(left, 355); ctx.lineTo(left + 900, 355); ctx.stroke();
-
             ctx.fillStyle = '#f3f4f6';
             ctx.fillRect(left, 410, W - 220, 150);
             ctx.strokeStyle = '#111827';
@@ -1154,19 +1292,18 @@
             } else {
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = `40px ${RECEIPT_FONT}`;
-                ctx.fillText('会計をえらんでください', W / 2 + 50, 497);
+                ctx.fillText('会計を選択してください', W / 2 + 50, 497);
             }
 
             ctx.textAlign = 'left';
             ctx.fillStyle = '#111827';
             ctx.font = `38px ${RECEIPT_FONT}`;
-            ctx.fillText('但し、お品代として', left, 635);
+            ctx.fillText(fitText(ctx, formatProviso(proviso), W - 220, 38, 24), left, 635);
+            ctx.font = `38px ${RECEIPT_FONT}`;
             ctx.fillText('上記の金額を正に領収いたしました。', left, 695);
-
             ctx.strokeStyle = '#d1d5db';
             ctx.lineWidth = 2;
             ctx.beginPath(); ctx.moveTo(1020, 750); ctx.lineTo(1020, 1050); ctx.stroke();
-
             ctx.fillStyle = '#6b7280';
             ctx.font = `bold 30px ${RECEIPT_FONT}`;
             ctx.fillText('内訳', left, 775);
@@ -1306,44 +1443,43 @@
                 if (sales.some(sale => sale.saleId === previousValue)) select.value = previousValue;
             }
 
-            const shopInput = document.getElementById('receipt-shop-name');
-            if (!shopInput.value) shopInput.value = loadFromLocalStorage(LS_KEYS.RECEIPT_SHOP, '');
+            const provisoInput = document.getElementById('receipt-proviso');
+            if (!provisoInput.value) provisoInput.value = loadFromLocalStorage(LS_KEYS.RECEIPT_PROVISO, 'お品代') || 'お品代';
             updateReceiptPreview();
         };
 
         window.updateReceiptPreview = () => {
-            const shopName = document.getElementById('receipt-shop-name').value.trim();
+            const shopName = getShopName();
             const addressee = document.getElementById('receipt-addressee').value.trim();
-            saveToLocalStorage(LS_KEYS.RECEIPT_SHOP, shopName);
+            document.getElementById('receipt-shop-display').textContent = shopName || '(未設定)';
             document.getElementById('receipt-hint').textContent = '';
-            drawReceipt(document.getElementById('receipt-canvas'), getSelectedReceiptSale(), shopName, addressee);
+            const proviso = document.getElementById('receipt-proviso').value.trim();
+            saveToLocalStorage(LS_KEYS.RECEIPT_PROVISO, proviso);
+            drawReceipt(document.getElementById('receipt-canvas'), getSelectedReceiptSale(), shopName, addressee, proviso);
         };
 
         window.downloadReceiptPdf = () => {
             const hint = document.getElementById('receipt-hint');
-            const shopInput = document.getElementById('receipt-shop-name');
             const addresseeInput = document.getElementById('receipt-addressee');
             const sale = getSelectedReceiptSale();
-            const shopName = shopInput.value.trim();
+            const shopName = getShopName();
             const addressee = addresseeInput.value.trim();
 
             if (!sale) { hint.textContent = '領収書にする会計をえらんでください'; return; }
-            if (!shopName) { hint.textContent = '店名を入力してください'; shopInput.focus(); return; }
+            if (!shopName) { hint.textContent = '店名が未設定です。「設定を開く」から、設定タブの一番上で入力してください'; return; }
             if (!addressee) { hint.textContent = '宛先を入力してください'; addresseeInput.focus(); return; }
             hint.textContent = '';
 
             const canvas = document.getElementById('receipt-canvas');
-            drawReceipt(canvas, sale, shopName, addressee);
+            drawReceipt(canvas, sale, shopName, addressee, document.getElementById('receipt-proviso').value.trim());
             const base64 = canvas.toDataURL('image/jpeg', 0.92).split(',')[1];
             const jpegBytes = Uint8Array.from(atob(base64), ch => ch.charCodeAt(0));
             const pdfBytes = buildPdfFromJpeg(jpegBytes, canvas.width, canvas.height, 210, 148);
-
             const pad = (n) => String(n).padStart(2, '0');
             const dateTime = new Date(sale.timestamp);
             const dateText = `${dateTime.getFullYear()}-${pad(dateTime.getMonth() + 1)}-${pad(dateTime.getDate())}`;
-            const safeName = addressee.replace(/[\\/:*?"<>|\s]/g, '_').slice(0, 20);
+            const safeName = toSafeFileName(addressee, 20);
             const fileName = `領収書_${safeName}_${dateText}.pdf`;
-
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
@@ -1359,9 +1495,7 @@
         window.showItemStatsModal = () => {
             const modal = document.getElementById('item-stats-modal');
             const tableBody = document.getElementById('item-stats-table-body');
-            
             tableBody.innerHTML = '';
-
             const itemCounts = window.currentItemCounts || {};
             const sortedItems = Object.entries(itemCounts)
                 .sort(([, a], [, b]) => b - a);
@@ -1393,7 +1527,193 @@
             document.getElementById('item-stats-modal').classList.add('hidden');
         };
 
+        const saveSetDiscounts = () => saveToLocalStorage(LS_KEYS.SET_DISCOUNTS, window.setDiscounts);
+        const findMenuItem = (docId) => window.inventory.find(item => item.docId === docId);
+        const calculateSetDiscount = () => {
+            const remaining = {};
+            const priceById = {};
+            window.cart.forEach(item => {
+                remaining[item.docId] = (remaining[item.docId] || 0) + item.quantity;
+                priceById[item.docId] = item.price;
+            });
+
+            const activeSets = window.setDiscounts
+                .filter(set => set.enabled && set.items.every(req => findMenuItem(req.docId)))
+                .sort((a, b) => b.discount - a.discount);
+
+            const applied = [];
+            let total = 0;
+            activeSets.forEach(set => {
+                const count = Math.min(...set.items.map(req => Math.floor((remaining[req.docId] || 0) / req.quantity)));
+                if (!isFinite(count) || count <= 0) return;
+
+                const setPrice = set.items.reduce((sum, req) => sum + priceById[req.docId] * req.quantity, 0);
+                const unitDiscount = Math.min(set.discount, setPrice);
+                set.items.forEach(req => { remaining[req.docId] -= req.quantity * count; });
+
+                applied.push({ name: set.name, count: count, amount: unitDiscount * count });
+                total += unitDiscount * count;
+            });
+            return { total, applied };
+        };
+
+        window.renderSetItemPicker = () => {
+            const picker = document.getElementById('set-item-picker');
+            const kept = {};
+            picker.querySelectorAll('input[data-set-item]').forEach(input => {
+                kept[input.dataset.setItem] = input.value;
+            });
+
+            picker.innerHTML = '';
+            if (window.inventory.length === 0) {
+                picker.innerHTML = '<p class="text-sm text-gray-500">先に、商品を追加してください。</p>';
+                return;
+            }
+            window.inventory.forEach(item => {
+                const label = document.createElement('label');
+                label.className = 'flex items-center justify-between p-2 border border-gray-200 rounded-lg bg-gray-50';
+                label.innerHTML = `
+                    <span class="truncate mr-2">${escapeHtml(item.name)} <span class="text-xs text-gray-500">${formatYen(item.price)}</span></span>
+                    <input type="number" min="0" max="9" value="${Number(kept[item.docId]) || 0}" data-set-item="${item.docId}"
+                           class="w-16 p-1 border border-gray-300 rounded text-right flex-shrink-0">
+                `;
+                picker.appendChild(label);
+            });
+        };
+
+        window.renderSetDiscountList = () => {
+            const list = document.getElementById('set-discount-list');
+            list.innerHTML = '';
+            if (window.setDiscounts.length === 0) {
+                list.innerHTML = '<li class="text-sm text-gray-500 py-2">まだセットがありません。上のフォームから作れます。</li>';
+                return;
+            }
+
+            window.setDiscounts.forEach(set => {
+                const broken = set.items.some(req => !findMenuItem(req.docId));
+                const parts = set.items.map(req => {
+                    const menuItem = findMenuItem(req.docId);
+                    return menuItem
+                        ? `${escapeHtml(menuItem.name)} × ${req.quantity}`
+                        : '<span class="text-red-500">(削除された商品)</span>';
+                });
+
+                const li = document.createElement('li');
+                li.className = 'flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-lg border border-pink-100';
+                li.innerHTML = `
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-800">${escapeHtml(set.name)}</p>
+                        <p class="text-sm text-gray-600">${parts.join(' + ')}</p>
+                        <p class="text-sm font-bold text-pink-600">${Number(set.discount).toLocaleString('ja-JP')}円引き</p>
+                        ${broken ? '<p class="text-xs text-red-500">※削除された商品が入っているため、割引されません</p>' : ''}
+                    </div>
+                    <div class="flex items-center justify-between sm:justify-end gap-3 flex-shrink-0">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" ${set.enabled ? 'checked' : ''} class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-pink-300 rounded-full peer after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pink-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+                            <span class="ml-2 text-sm font-semibold text-gray-400 peer-checked:hidden">停止</span>
+                            <span class="ml-2 text-sm font-semibold text-pink-600 hidden peer-checked:inline">利用可能</span>
+                        </label>
+                        <button type="button" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-3 h-10 rounded-lg text-sm">削除</button>
+                    </div>
+                `;
+                li.querySelector('input[type="checkbox"]').addEventListener('change', (e) => window.toggleSetDiscount(set.id, e.target.checked));
+                li.querySelector('button').addEventListener('click', () => window.deleteSetDiscount(set.id));
+                list.appendChild(li);
+            });
+        };
+
+        window.addSetDiscount = () => {
+            const hint = document.getElementById('set-form-hint');
+            hint.textContent = '';
+            const items = [];
+            let invalidQuantity = false;
+            document.querySelectorAll('#set-item-picker input[data-set-item]').forEach(input => {
+                const raw = input.value.trim();
+                const quantity = Number(raw);
+                if (
+                    raw === '' ||
+                    !Number.isInteger(quantity) ||
+                    quantity < 0 ||
+                    quantity > 9
+                ) {
+                    invalidQuantity = true;
+                    return;
+                }
+                if (quantity > 0) {items.push({docId: input.dataset.setItem, quantity});}
+            });
+            if (invalidQuantity) {
+                hint.textContent = '商品の個数は0～9の整数で入力してください';
+                return;
+            }
+            const totalCount = items.reduce((sum, req) => sum + req.quantity, 0);
+            if (totalCount < 2) {
+                hint.textContent = 'セットには、商品を合わせて2個以上入れてください';
+                return;
+            }
+
+            const discountInput = document.getElementById('set-discount-input').value.trim();
+            const discount = Number(discountInput);
+            if ( discountInput === '' || !Number.isSafeInteger(discount) || discount <= 0 ) {
+                hint.textContent = '割引額は1以上の整数で入力してください';
+                return;
+            }
+
+            const regularPrice = items.reduce((sum, req) => sum + findMenuItem(req.docId).price * req.quantity, 0);
+            if (discount >= regularPrice) {
+                hint.textContent = `割引は、セットの定価の合計 (${formatYen(regularPrice)}) より小さくしてください`;
+                return;
+            }
+
+            const makeKey = (list) => list.map(req => `${req.docId}:${req.quantity}`).sort().join(',');
+            if (window.setDiscounts.some(set => makeKey(set.items) === makeKey(items))) {
+                hint.textContent = '同じ組み合わせのセットが、すでにあります';
+                return;
+            }
+
+            const defaultName = items.map(req => findMenuItem(req.docId).name + (req.quantity > 1 ? `×${req.quantity}` : '')).join('+');
+            const name = document.getElementById('set-name-input').value.trim() || defaultName;
+
+            window.setDiscounts.push({ id: generateId(), name: name, items: items, discount: discount, enabled: true });
+
+            if (!saveToLocalStorage( LS_KEYS.SET_DISCOUNTS, window.setDiscounts )) {
+                window.setDiscounts.pop();
+                window.renderSetDiscountList();
+                return;
+            }
+
+            document.getElementById('set-name-input').value = '';
+            document.getElementById('set-discount-input').value = '';
+            document.querySelectorAll('#set-item-picker input[data-set-item]').forEach(input => { input.value = 0; });
+
+            window.renderSetDiscountList();
+            window.updateCart();
+            showMessage(`セット「${name}」を追加しました`);
+        };
+
+        window.toggleSetDiscount = (setId, isChecked) => {
+            const set = window.setDiscounts.find(s => s.id === setId);
+            if (!set) return;
+            set.enabled = isChecked;
+            saveSetDiscounts();
+            window.updateCart();
+            showMessage(`セット「${set.name}」を${isChecked ? '使用可能に' : '停止'}しました`);
+        };
+
+        window.deleteSetDiscount = (setId) => {
+            const set = window.setDiscounts.find(s => s.id === setId);
+            if (!set) return;
+            if (!confirm(`本当にセット「${set.name}」を削除しますか？`)) return;
+            window.setDiscounts = window.setDiscounts.filter(s => s.id !== setId);
+            saveSetDiscounts();
+            window.renderSetDiscountList();
+            window.updateCart();
+            showMessage(`セット「${set.name}」を削除しました`);
+        };
+
         window.renderEditList = () => {
+            window.renderSetItemPicker();
+            window.renderSetDiscountList();
             const editList = document.getElementById('edit-list');
             const header = editList.querySelector('li:first-child');
             editList.innerHTML = '';
@@ -1404,7 +1724,7 @@
                 return;
             }
 
-            inventory.forEach(item => {
+            inventory.forEach((item, index) => {
                 const li = document.createElement('li');
                 li.className = 'grid grid-cols-2 md:grid-cols-7 gap-3 md:gap-4 items-center bg-white p-3 rounded-lg shadow-sm border border-gray-200';
                 li.innerHTML = `
@@ -1432,7 +1752,23 @@
                             <span class="text-sm">削除</span>
                         </button>
                     </div>
+                <div class="col-span-2 md:col-span-7 border-t border-gray-100 pt-3 flex flex-wrap items-center gap-x-6 gap-y-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-500 whitespace-nowrap flex-shrink-0">並び替え</span>
+                            <button type="button" onclick="moveItem('${item.docId}', -1)" ${index === 0 ? 'disabled' : ''}
+                                    aria-label="${escapeHtml(item.name)}を上へ"
+                                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 h-10 rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed">↑ 上へ</button>
+                            <button type="button" onclick="moveItem('${item.docId}', 1)" ${index === inventory.length - 1 ? 'disabled' : ''}
+                                    aria-label="${escapeHtml(item.name)}を下へ"
+                                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-3 h-10 rounded-lg text-sm disabled:opacity-40 disabled:cursor-not-allowed">↓ 下へ</button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-semibold text-gray-500 whitespace-nowrap flex-shrink-0">ボタンの色</span>
+                            <div class="flex flex-wrap gap-2">${renderColorSwatches(item)}</div>
+                        </div>
+                    </div>
                 `;
+                li.dataset.docId = item.docId;
                 editList.appendChild(li);
             });
         };
@@ -1441,10 +1777,11 @@
             const nameInput = document.getElementById('new-item-name');
             const priceInput = document.getElementById('new-item-price');
             const name = nameInput.value.trim();
-            const price = parseInt(priceInput.value, 10);
+            const rawPrice = priceInput.value.trim();
+            const price = Number(rawPrice);
 
-            if (!name || isNaN(price) || price < 0) {
-                showMessage('商品名と有効な価格を入力してください');
+            if ( !name || rawPrice === '' || !Number.isSafeInteger(price) || price < 0 ) {
+                showMessage( '商品名と、0以上の整数の価格を入力してください' );
                 return;
             }
 
@@ -1463,10 +1800,12 @@
 
         window.updateItem = (docId) => {
             const name = document.getElementById(`edit-name-${docId}`).value.trim();
-            const price = parseInt(document.getElementById(`edit-price-${docId}`).value, 10);
+            const rawPrice = document.getElementById(`edit-price-${docId}`).value.trim();
+            const price = Number(rawPrice);
 
-            if (!name || isNaN(price) || price < 0) {
-                showMessage('有効な名前と価格を入力してください');
+            if (!name || rawPrice === '' || !Number.isSafeInteger(price) || price < 0) {
+                showMessage('商品名と、0以上の整数の価格を入力してください');
+                window.renderEditList();
                 return;
             }
 
@@ -1480,6 +1819,8 @@
                 saveToLocalStorage(LS_KEYS.MENU, window.inventory); 
 
                 showMessage(`${name} の情報を更新しました`);
+                window.renderSetItemPicker();
+                window.renderSetDiscountList();
                 window.renderMenu();
             } catch (e) {
                 console.error("Failed to update item locally:", e);
@@ -1506,7 +1847,38 @@
                 showMessage(`エラー: 表示設定の更新に失敗しました`);
             }
         };
+        window.moveItem = (docId, direction) => {
+            const index = window.inventory.findIndex(item => item.docId === docId);
+            const newIndex = index + direction;
+            if (index < 0 || newIndex < 0 || newIndex >= window.inventory.length) return;
 
+            const itemName = window.inventory[index].name;
+            [window.inventory[index], window.inventory[newIndex]] = [window.inventory[newIndex], window.inventory[index]];
+            saveToLocalStorage(LS_KEYS.MENU, window.inventory);
+
+            window.renderMenu();
+            window.renderEditList();
+            showMessage(`${itemName} を${direction < 0 ? '上' : '下'}に動かしました`);
+
+            const movedRow = document.querySelector(`#edit-list li[data-doc-id="${docId}"]`);
+            if (movedRow) {
+                movedRow.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+                movedRow.classList.add('ring-2', 'ring-indigo-400');
+                setTimeout(() => movedRow.classList.remove('ring-2', 'ring-indigo-400'), 1000);
+            }
+        };
+
+        window.setItemColor = (docId, colorKey) => {
+            const item = window.inventory.find(i => i.docId === docId);
+            const color = BUTTON_COLORS.find(c => c.key === colorKey);
+            if (!item || !color) return;
+
+            item.color = color.key;
+            saveToLocalStorage(LS_KEYS.MENU, window.inventory);
+            window.renderMenu();
+            window.renderEditList();
+            showMessage(`${item.name} のボタンを${color.label}にしました`);
+        };
         window.deleteItem = (docId) => {
             const target = window.inventory.find(item => item.docId === docId);
             if (!target) {
@@ -1727,12 +2099,13 @@
             { docId: generateId(), name: "サイダー", price: 250, isHidden: false },
             { docId: generateId(), name: "アイス", price: 450, isHidden: false }
         ]);
-        
+        if (loadFromLocalStorage(LS_KEYS.MENU, null) === null) {
+            saveToLocalStorage(LS_KEYS.MENU, window.inventory);
+        }
         window.paymentMethods = loadFromLocalStorage(LS_KEYS.PAYMENT, ["現金", "二次元コード決済", "クレジットカード"]);
-
+        window.setDiscounts = loadFromLocalStorage(LS_KEYS.SET_DISCOUNTS, []);
         window.renderMenu();
         window.updateCart();
-        
         window.switchTab('pos');
     };
 
