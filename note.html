@@ -656,6 +656,14 @@
                     lastDistance = getDistance(e.touches);
                     startScale = canvasScale;
                     lastMid = midpoint(e.touches);
+                    pages.forEach(c => {
+                        if (c.isDrawingMode) {
+                            c.isDrawingMode = false;
+                            c._isCurrentlyDrawing = false;
+                            c._pausedDrawing = true;
+                            c.clearContext(c.contextTop);
+                        }
+                    });
                 } else if (e.touches.length === 1) {
                     rebase(e.touches[0]);
                 }
@@ -676,6 +684,9 @@
                     }
                     lastMid = m;
                 } else if (e.touches.length === 1 && currentMode === 'select' && !touchOnObject) {
+                    pages.forEach(c => {
+                        if (c._groupSelector) { c._groupSelector = null; c.clearContext(c.contextTop); }
+                    });
                     container.scrollLeft = startScrollLeft + (startX - e.touches[0].pageX);
                     container.scrollTop  = startScrollTop  + (startY - e.touches[0].pageY);
                 }
@@ -684,8 +695,16 @@
             const onTouchEnd = (e) => {
                 lastDistance = null;
                 lastMid = null;
-                if (e.touches.length === 1) rebase(e.touches[0]);   // ★2本→1本で画面が飛ばないように
-                if (e.touches.length === 0) touchOnObject = false;
+                if (e.touches.length === 1) rebase(e.touches[0]);
+                if (e.touches.length === 0) {
+                    touchOnObject = false;
+                    pages.forEach(c => {
+                        if (c._pausedDrawing) {
+                            c._pausedDrawing = false;
+                            c.isDrawingMode = (currentMode === 'draw' || currentMode === 'highlighter');
+                        }
+                    });
+                }
             };
             container.addEventListener('touchend', onTouchEnd);
             container.addEventListener('touchcancel', onTouchEnd);
@@ -761,6 +780,9 @@
             fCanvas.on('mouse:up',   () => { erasing = false; });
 
             fCanvas.on('mouse:down', (opt) => {
+                if (lastTouchedCanvas && lastTouchedCanvas !== fCanvas && pages.includes(lastTouchedCanvas)) {
+                    lastTouchedCanvas.discardActiveObject();
+                }
                 lastTouchedCanvas = fCanvas;
                 touchOnObject = !!(opt.target && !opt.target._isBackground);
             });
@@ -1164,7 +1186,30 @@
         function refocusText(obj) {
             if (obj && obj.isEditing && obj.hiddenTextarea) obj.hiddenTextarea.focus();
         }
+        function setupNoteText(fCanvas, tb) {
+            tb._isNoteText = true;
+            tb._okText = tb.text;
+            tb.setControlsVisibility({ mt: false, mb: false, tl: false, tr: false, bl: false, br: false, mtr: false });
+            tb.on('editing:exited', () => finishNoteText(fCanvas, tb));
+            tb.on('changed', () => keepInPage(fCanvas, tb));
+        }
 
+        function keepInPage(fCanvas, tb) {
+            if (tb.top + tb.height <= baseHeight - 2) {
+                tb._okText = tb.text;
+                tb._okCaret = tb.selectionStart;
+                return;
+            }
+            const prev = tb._okText || '';
+            const pos = Math.min(tb._okCaret || 0, prev.length);
+            tb.set('text', prev);
+            tb.selectionStart = tb.selectionEnd = pos;
+            if (tb.hiddenTextarea) { tb.hiddenTextarea.value = prev; tb.hiddenTextarea.setSelectionRange(pos, pos); }
+            tb.initDimensions();
+            tb.setCoords();
+            fCanvas.requestRenderAll();
+            showToast('ページの下まで書きました。「＋ ページを足す」を押してページを追加してください');
+        }
         function createNoteText(fCanvas, snappedY) {
             const on = (id) => !!document.getElementById(id)?.classList.contains('active');
             const fontSize   = parseInt(document.getElementById('fp-size').value) || 20;
@@ -1187,8 +1232,7 @@
                 _isNew: true,
                 _isHistoryAction: true,
             });
-            tb.setControlsVisibility({ mt: false, mb: false, tl: false, tr: false, bl: false, br: false, mtr: false });
-            tb.on('editing:exited', () => finishNoteText(fCanvas, tb));
+            setupNoteText(fCanvas, tb);
             fCanvas.add(tb);
             fCanvas.setActiveObject(tb);
             tb.enterEditing();
@@ -1322,6 +1366,7 @@
         }
 
         function addTextBox() {
+            setMode('select');
             const target = pages[getCurrentPageIndex()];
             const color = document.getElementById('fp-color-picker').value;
             const fontSize = parseInt(document.getElementById('fp-size').value) || 20;
@@ -1349,7 +1394,6 @@
             text.enterEditing();
             text.selectAll();
             target.renderAll();
-            setMode('select');
         }
 
         function getCurrentCanvas() {
@@ -1450,7 +1494,7 @@
                 '描画内容と追加したページはすべて削除されます。よろしいですか？',
                 () => {
                     const container = document.getElementById('canvas-container');
-                    pages.forEach(p => p.dispose());
+                    pages.forEach(p => { p.discardActiveObject(); p.dispose(); });
                     container.innerHTML = '';
                     pages = [];
                     addNewPage();
@@ -1462,7 +1506,7 @@
 
         async function downloadPDF() {
             const btn = document.getElementById('btn-save');
-            if (btn.disabled) return;                 // 保存中に二重で押されないように
+            if (btn.disabled) return;
             btn.disabled = true;
             btn.textContent = '保存中…';
             try {
@@ -1523,6 +1567,7 @@
         function deletePage(i) {
             if (pages.length <= 1) { alert('最後の1ページは削除できません'); return; }
             const container = document.getElementById('canvas-container');
+            pages[i].discardActiveObject();
             pages[i].dispose();
             container.querySelectorAll('.canvas-wrapper')[i].remove();
             pages.splice(i, 1);
@@ -1710,7 +1755,7 @@
                     const arrayBuffer = await file.arrayBuffer();
                     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                     const container = document.getElementById('canvas-container');
-                    pages.forEach(p => p.dispose());
+                    pages.forEach(p => { p.discardActiveObject(); p.dispose(); });
                     container.innerHTML = '';
                     container.scrollTop = 0;
                     pages = [];
@@ -1873,6 +1918,20 @@
             scrollToPage(i);
         }
         function initKeyboardShortcuts() {
+            const editingText = () => {
+                const c = getCurrentCanvas();
+                const a = c && c.getActiveObject();
+                return (a && a.isEditing) ? a : null;
+            };
+            document.addEventListener('mousedown', (e) => {
+                if (!e.target.closest('button, label') || e.target.closest('input, select, textarea')) return;
+                if (editingText()) e.preventDefault();
+            }, true);
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('button, label')) return;
+                const a = editingText();
+                if (a) refocusText(a);
+            });
             document.addEventListener('keydown', (e) => {
                 const active = document.activeElement;
                 if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT')) return;
@@ -1902,6 +1961,8 @@
                     if (_clipboard) {
                         _clipboard.clone(c => {
                             c.set({ left: c.left + 16, top: c.top + 16, evented: true });
+                            if (c.type === 'textbox') setupNoteText(fCanvas, c);
+                            _clipboard.set({ left: _clipboard.left + 16, top: _clipboard.top + 16 });
                             fCanvas.add(c);
                             fCanvas.setActiveObject(c);
                             fCanvas.renderAll();
