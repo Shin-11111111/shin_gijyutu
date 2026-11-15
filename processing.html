@@ -6,181 +6,120 @@
 <title>材料と加工 工程ガイド</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-base:#efe4cd;
+    --bg-base:#f1e7d1;
     --bg-panel:#fffbf2;
-    --bg-panel-2:#f8efdd;
+    --bg-panel-2:#f6ecd8;
     --ink:#2b2118;
     --ink-soft:#5b4d3c;
     --wood:#a9723d;
     --wood-dark:#6b4423;
     --wood-line:#c99a5e;
     --danger:#b8402e;
-    --steel:#55636b;
-    --steel-light:#8fa1a8;
-    --ruler-line: rgba(43,33,24,0.16);
-    --radius: 6px;
-    --shadow-card: 0 2px 0 rgba(43,33,24,0.06), 0 14px 30px -18px rgba(43,33,24,0.45);
+    --ruler-line: rgba(43,33,24,0.18);
+    --radius: 8px;
+    --shadow-card: 0 2px 0 rgba(43,33,24,0.06), 0 12px 26px -18px rgba(43,33,24,0.45);
   }
 
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
     margin:0;
-    background:
-      radial-gradient(1200px 600px at 10% -10%, rgba(255,255,255,0.5), transparent 60%),
-      repeating-linear-gradient(100deg, rgba(107,68,35,0.035) 0px, rgba(107,68,35,0.035) 2px, transparent 2px, transparent 90px),
-      repeating-linear-gradient(96deg, rgba(107,68,35,0.02) 0px, rgba(107,68,35,0.02) 1px, transparent 1px, transparent 34px),
-      var(--bg-base);
+    background:var(--bg-base);
     color:var(--ink);
     font-family:"Zen Kaku Gothic New", "Noto Sans JP", sans-serif;
-    line-height:1.75;
+    font-size:16px;
+    line-height:1.8;
     -webkit-font-smoothing:antialiased;
   }
-  h1,h2,h3,.mincho{
-    font-family:"Shippori Mincho", serif;
-  }
   a{color:inherit;}
-  img,svg{display:block;}
   .wrap{max-width:1080px; margin:0 auto; padding:0 24px;}
 
-  /* focus visibility */
   a:focus-visible, button:focus-visible, .card-head:focus-visible{
     outline:3px solid var(--danger);
     outline-offset:3px;
   }
 
-  /* ===== Header / Hero ===== */
-  header.hero{
-    position:relative;
-    padding:64px 0 40px;
-    overflow:hidden;
-    border-bottom:1px solid var(--ruler-line);
+  /* ===== Header (compact) ===== */
+  header.top{
+    padding:20px 0 16px;
   }
-  .hero-inner{
-    position:relative;
-    z-index:2;
-    display:grid;
-    grid-template-columns: 1.1fr 0.9fr;
-    gap:32px;
-    align-items:center;
-  }
-  .eyebrow{
-    display:inline-flex;
-    align-items:center;
-    gap:10px;
-    font-size:13px;
-    letter-spacing:.14em;
-    color:var(--wood-dark);
+  .school{
+    margin:0 0 2px;
+    font-size:13.5px;
     font-weight:700;
-    margin-bottom:18px;
-  }
-  .eyebrow::before{
-    content:"";
-    width:26px;height:2px;background:var(--danger);
-    display:inline-block;
+    color:var(--wood-dark);
   }
   h1.title{
-    font-size:clamp(34px, 5vw, 54px);
-    font-weight:800;
+    margin:0 0 6px;
+    font-size:clamp(24px, 4vw, 30px);
+    font-weight:900;
     line-height:1.35;
-    margin:0 0 18px;
-    color:var(--ink);
-  }
-  h1.title .accent{
-    color:var(--danger);
-    position:relative;
-    white-space:nowrap;
   }
   .lead{
-    font-size:16.5px;
-    color:var(--ink-soft);
-    max-width:46ch;
-    margin:0 0 26px;
-  }
-  .hero-tags{
-    display:flex; gap:10px; flex-wrap:wrap;
-  }
-  .tag{
-    font-size:12.5px;
-    padding:7px 12px;
-    background:var(--bg-panel);
-    border:1px solid var(--ruler-line);
-    border-radius:999px;
+    margin:0;
+    font-size:15.5px;
     color:var(--ink-soft);
   }
 
-  /* Sashigane (carpenter square) illustration - signature element */
-  .sashigane{
-    width:100%;
-    height:auto;
-  }
-
-  /* ===== Progress rail ===== */
+  /* ===== Step navigation ===== */
   nav.rail{
     position:sticky;
     top:0;
     z-index:50;
-    background:rgba(239,228,205,0.92);
+    background:rgba(241,231,209,0.96);
     backdrop-filter:blur(6px);
+    border-top:1px solid var(--ruler-line);
     border-bottom:1px solid var(--ruler-line);
   }
   .rail-inner{
     display:flex;
+    gap:6px;
     overflow-x:auto;
-    gap:2px;
     padding:10px 24px;
     max-width:1080px;
     margin:0 auto;
     scrollbar-width:thin;
   }
-  .rail-inner::-webkit-scrollbar{height:5px;}
-  .rail-inner::-webkit-scrollbar-thumb{background:var(--wood-line); border-radius:4px;}
   .rail-item{
-    flex:0 0 auto;
-    font-size:12.5px;
-    font-weight:700;
-    color:var(--ink-soft);
-    text-decoration:none;
-    padding:8px 12px;
-    border-radius:999px;
-    white-space:nowrap;
+    flex:1 0 auto;
+    min-height:44px;
     display:flex;
     align-items:center;
-    gap:6px;
+    justify-content:center;
+    gap:8px;
+    padding:6px 14px;
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    text-decoration:none;
+    white-space:nowrap;
+    background:var(--bg-panel);
+    border:1px solid var(--ruler-line);
+    border-radius:var(--radius);
     transition:background .15s, color .15s;
   }
   .rail-item .n{
-    font-family:"Shippori Mincho", serif;
-    font-weight:800;
-    color:var(--wood-dark);
+    width:24px; height:24px;
+    border-radius:50%;
+    display:grid; place-items:center;
+    font-size:13px; font-weight:900;
+    color:#fff;
+    background:var(--wood-dark);
   }
-  .rail-item:hover{ background:var(--bg-panel-2); color:var(--ink); }
-  .rail-item.active{ background:var(--wood-dark); color:#fff; }
-  .rail-item.active .n{ color:#f0d9b5; }
-  .rail-arrow{ color:var(--wood-line); align-self:center; font-size:12px; padding:0 2px;}
+  .rail-item:hover{ background:var(--bg-panel-2); }
+  .rail-item.active{ background:var(--wood-dark); color:#fff; border-color:var(--wood-dark); }
+  .rail-item.active .n{ background:#fff; color:var(--wood-dark); }
 
-  /* ===== Section shell ===== */
-  section{ padding:56px 0; }
-  .section-head{ margin-bottom:34px; }
-  .section-head h2{
-    font-size:26px; font-weight:700; margin:0 0 10px;
-  }
-  .section-head p{ color:var(--ink-soft); margin:0; max-width:60ch; }
-  .kicker{
-    font-size:12.5px; letter-spacing:.12em; color:var(--danger); font-weight:700; margin:0 0 8px;
-  }
-
-  /* ===== Process cards ===== */
+  /* ===== Cards ===== */
+  main{ padding:24px 0 48px; }
   .process-list{
     display:flex;
     flex-direction:column;
     gap:14px;
-    counter-reset: step;
   }
-
   .card{
     position:relative;
     background:var(--bg-panel);
@@ -190,11 +129,10 @@
     overflow:hidden;
   }
   .card::before{
-    /* marking-out (kegaki) scribe line along the left edge */
     content:"";
     position:absolute;
     left:0; top:0; bottom:0;
-    width:5px;
+    width:6px;
     background:var(--wood-line);
     transition:background .2s;
   }
@@ -202,58 +140,46 @@
 
   .card-head{
     all:unset;
+    box-sizing:border-box;
     display:grid;
-    grid-template-columns: 78px 1fr 130px 28px;
+    grid-template-columns:48px 1fr auto;
     align-items:center;
-    gap:18px;
+    gap:16px;
     width:100%;
-    padding:20px 26px 20px 28px;
+    padding:18px 20px 18px 26px;
     cursor:pointer;
   }
   .card-num{
-    font-family:"Shippori Mincho", serif;
-    font-weight:800;
-    font-size:34px;
-    color:var(--wood-line);
-    line-height:1;
-    transition:color .2s;
-  }
-  .card[data-open="true"] .card-num{ color:var(--danger); }
-  .card-name{
-    display:flex;
-    flex-direction:column;
-    gap:4px;
-  }
-  .card-name .jp{
-    font-family:"Shippori Mincho", serif;
-    font-weight:700;
-    font-size:21px;
-  }
-  .card-name .en{
-    font-size:12px;
-    color:var(--ink-soft);
-    letter-spacing:.08em;
-  }
-  .card-glance{
-    font-size:12.5px;
-    color:var(--ink-soft);
-    text-align:right;
-    line-height:1.5;
-  }
-  .card-chevron{
-    width:28px; height:28px;
-    border-radius:50%;
-    border:1px solid var(--ruler-line);
-    display:flex;align-items:center;justify-content:center;
-    transition:transform .25s ease, background .2s;
-    flex-shrink:0;
-  }
-  .card[data-open="true"] .card-chevron{
-    transform:rotate(45deg);
-    background:var(--danger);
-    border-color:var(--danger);
+    width:48px; height:48px;
+    border-radius:10px;
+    display:grid; place-items:center;
+    font-size:24px; font-weight:900;
     color:#fff;
+    background:var(--wood-dark);
+    transition:background .2s;
   }
+  .card[data-open="true"] .card-num{ background:var(--danger); }
+  .card-name{ display:flex; flex-direction:column; gap:0; }
+  .card-name .jp{ font-size:22px; font-weight:900; line-height:1.4; }
+  .card-name .glance{ font-size:14.5px; color:var(--ink-soft); }
+
+  .card-toggle{
+    display:inline-flex;
+    align-items:center;
+    min-height:38px;
+    padding:4px 16px;
+    font-size:14.5px;
+    font-weight:700;
+    color:var(--wood-dark);
+    border:2px solid var(--wood-dark);
+    border-radius:999px;
+    white-space:nowrap;
+    transition:background .2s, color .2s;
+  }
+  .card-toggle .t-close{ display:none; }
+  .card[data-open="true"] .card-toggle{ background:var(--danger); border-color:var(--danger); color:#fff; }
+  .card[data-open="true"] .t-open{ display:none; }
+  .card[data-open="true"] .t-close{ display:inline; }
 
   .card-body{
     display:grid;
@@ -264,130 +190,89 @@
   .card[data-open="true"] .card-body{ grid-template-rows:1fr; }
 
   .card-content{
-    padding:4px 28px 30px;
     display:grid;
-    grid-template-columns: 1.1fr 1.3fr;
+    grid-template-columns:1fr 1.2fr;
     gap:28px;
+    margin:0 0 0;
+    padding:24px 26px 28px 28px;
     border-top:1px dashed var(--ruler-line);
-    margin-top:2px;
-    padding-top:24px;
   }
 
-  .content-block h4{
-    font-size:12.5px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--wood-dark);
+  .content-block h4,
+  .safety-box h4,
+  .video-block h4{
     margin:0 0 12px;
-    font-weight:700;
-    display:flex; align-items:center; gap:8px;
-  }
-  .content-block h4::before{
-    content:"";
-    width:14px;height:1px;background:var(--wood-dark);
-    display:inline-block;
+    font-size:17px;
+    font-weight:900;
+    line-height:1.4;
+    padding-left:10px;
+    border-left:5px solid var(--wood);
   }
 
+  /* tools */
   .tool-list{
     list-style:none; margin:0; padding:0;
-    display:flex; flex-wrap:wrap; gap:8px;
+    display:flex; flex-direction:column; gap:8px;
   }
   .tool-list li{
-    font-size:13px;
     background:var(--bg-panel-2);
     border:1px solid var(--ruler-line);
-    padding:6px 12px;
-    border-radius:999px;
-    color:var(--ink);
+    border-radius:var(--radius);
+    padding:7px 12px;
+    line-height:1.5;
   }
+  .tool-list .tn{ display:block; font-size:15.5px; font-weight:700; }
+  .tool-list .tnote{ display:block; font-size:13.5px; color:var(--ink-soft); }
 
+  /* steps */
   .step-list{
     list-style:none; margin:0; padding:0;
     counter-reset:sub;
-    display:flex; flex-direction:column; gap:10px;
+    display:flex; flex-direction:column; gap:12px;
   }
   .step-list li{
     counter-increment:sub;
     display:grid;
-    grid-template-columns:22px 1fr;
-    gap:10px;
-    font-size:14px;
-    color:var(--ink);
+    grid-template-columns:28px 1fr;
+    gap:12px;
+    font-size:16px;
+    line-height:1.7;
   }
   .step-list li::before{
     content:counter(sub);
-    font-family:"Shippori Mincho", serif;
-    font-weight:700;
-    font-size:12px;
-    color:var(--bg-panel);
+    font-size:14px;
+    font-weight:900;
+    color:#fff;
     background:var(--wood);
-    width:20px;height:20px;
+    width:28px; height:28px;
     border-radius:50%;
-    display:flex;align-items:center;justify-content:center;
+    display:grid; place-items:center;
   }
 
+  /* safety */
   .safety-box{
     grid-column:1 / -1;
     background:#fbeeea;
-    border:1px solid #e6bcae;
+    border:2px solid #e0a999;
     border-radius:var(--radius);
-    padding:16px 18px;
+    padding:16px 20px;
     display:flex;
-    gap:12px;
+    gap:14px;
   }
-  .safety-icon{
-    flex-shrink:0;
-    width:20px;height:20px;
-    margin-top:2px;
-  }
-  .safety-box h4{
-    color:var(--danger);
-    margin:0 0 8px;
-    font-size:12.5px;
-    letter-spacing:.08em;
-  }
-  .safety-box h4::before{ background:var(--danger); }
+  .safety-icon{ flex-shrink:0; width:26px; height:26px; margin-top:2px; }
+  .safety-icon svg{ width:26px; height:26px; }
+  .safety-box h4{ color:var(--danger); border-left-color:var(--danger); }
   .safety-box ul{
-    margin:0; padding-left:18px; font-size:13.5px; color:#5e2b21;
+    margin:0; padding-left:20px;
+    font-size:15.5px; color:#4e2219;
     display:flex; flex-direction:column; gap:6px;
   }
-  .safety-box li{ margin:0; }
 
-  .video-row{
-    grid-column:1 / -1;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-    padding-top:6px;
-  }
-  .video-btn{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    font-size:13px;
-    font-weight:700;
-    font-family:inherit;
-    color:#fff;
-    background:var(--steel);
-    padding:9px 16px;
-    border:none;
-    border-radius:999px;
-    text-decoration:none;
-    cursor:pointer;
-    transition:background .15s, transform .15s;
-  }
-  .video-btn:hover{ background:var(--ink); transform:translateY(-1px); }
-  .video-btn.is-active{ background:var(--danger); }
-  .video-btn.is-active:hover{ background:var(--ink); }
-  .video-btn svg{ width:13px; height:13px; }
-  .video-btn .icon-close{ display:none; }
-  .video-btn.is-active .icon-play{ display:none; }
-  .video-btn.is-active .icon-close{ display:inline-flex; }
-  .video-hint{ font-size:12px; color:var(--ink-soft); }
+  /* video */
+  .video-block{ grid-column:1 / -1; }
+  .video-hint{ font-size:14px; color:var(--ink-soft); }
   .video-player{
     width:100%;
-    margin-top:4px;
     border-radius:var(--radius);
     overflow:hidden;
     background:#111;
@@ -400,25 +285,49 @@
     background:#000;
   }
 
+  /* next step */
+  .next-row{
+    grid-column:1 / -1;
+    display:flex;
+    justify-content:flex-end;
+  }
+  .next-btn{
+    font-family:inherit;
+    font-size:15.5px;
+    font-weight:700;
+    min-height:44px;
+    padding:8px 20px;
+    color:#fff;
+    background:var(--wood-dark);
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .next-btn:hover{ background:var(--ink); }
+  .done-msg{ font-size:15.5px; font-weight:700; color:var(--wood-dark); margin:0; }
+
   @media (max-width: 760px){
-    .hero-inner{ grid-template-columns:1fr; }
+    .wrap{ padding:0 16px; }
+    .rail-inner{ padding:8px 16px; }
     .card-head{
-      grid-template-columns: 46px 1fr 24px;
-      padding:16px 16px 16px 20px;
+      grid-template-columns:42px 1fr auto;
       gap:12px;
+      padding:14px 14px 14px 20px;
     }
-    .card-glance{ display:none; }
-    .card-num{ font-size:26px; }
-    .card-content{ grid-template-columns:1fr; padding:20px 18px 26px; }
-    .card-name .jp{ font-size:18px; }
+    .card-num{ width:42px; height:42px; font-size:21px; }
+    .card-name .jp{ font-size:19px; }
+    .card-toggle{ padding:4px 12px; font-size:13.5px; }
+    .card-content{ grid-template-columns:1fr; padding:20px 18px 24px; gap:24px; }
+    .next-row{ justify-content:stretch; }
+    .next-btn{ width:100%; }
   }
 
-  /* ===== Footer ===== */
   footer{
     border-top:1px solid var(--ruler-line);
-    padding:34px 0 60px;
+    padding:28px 0 48px;
     color:var(--ink-soft);
-    font-size:13px;
+    font-size:14px;
   }
   footer .wrap{
     display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
@@ -426,80 +335,20 @@
 
   @media (prefers-reduced-motion: reduce){
     html{ scroll-behavior:auto; }
-    .card-body, .card-chevron, .video-btn{ transition:none; }
+    .card-body, .card-toggle, .next-btn, .rail-item{ transition:none; }
   }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="wrap hero-inner">
-    <div>
-      <p class="eyebrow">久保田の技術部屋 ｜ 材料と加工に関する技術</p>
-      <h1 class="title"><span class="accent">図面どおり</span>の<br>かたちに。</h1>
-      <p class="lead">
-        設計から仕上げまで、作品づくりは7つの工程でできています。
-        カードをタップすると、その工程で使う道具・作業の流れ・安全に関する注意点を確認できます。
-        安全に注意しながら、順番に進めましょう。
-      </p>
-    </div>
-    <div>
-      <svg class="sashigane" viewBox="0 0 360 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="7つの工程を示す差し金のイラスト">
-        <defs>
-          <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#eef2f2"/>
-            <stop offset="1" stop-color="#c7d2d4"/>
-          </linearGradient>
-        </defs>
-        <g transform="translate(20,20)">
-          <path d="M0 0 H300 V38 H60 V240 H0 Z" fill="url(#metal)" stroke="#55636b" stroke-width="2"/>
-          <!-- horizontal arm ticks -->
-          <g stroke="#55636b" stroke-width="1.4">
-            <line x1="10" y1="0" x2="10" y2="38"/>
-            <line x1="52" y1="0" x2="52" y2="38"/>
-            <g font-family="Shippori Mincho, serif" font-size="11" fill="#3a4448">
-            </g>
-          </g>
-          <!-- process ticks along vertical arm, 7 marks -->
-          <g>
-            <!-- step marks -->
-            <g stroke="#b8402e" stroke-width="2">
-              <line x1="60" y1="58" x2="86" y2="58"/>
-              <line x1="60" y1="86" x2="86" y2="86"/>
-              <line x1="60" y1="114" x2="86" y2="114"/>
-              <line x1="60" y1="142" x2="86" y2="142"/>
-              <line x1="60" y1="170" x2="86" y2="170"/>
-              <line x1="60" y1="198" x2="86" y2="198"/>
-              <line x1="60" y1="226" x2="86" y2="226"/>
-            </g>
-            <g font-family="Shippori Mincho, serif" font-weight="700" font-size="13" fill="#2b2118">
-              <text x="94" y="62">01 設計</text>
-              <text x="94" y="90">02 製図</text>
-              <text x="94" y="118">03 けがき</text>
-              <text x="94" y="146">04 切断</text>
-              <text x="94" y="174">05 部品加工</text>
-              <text x="94" y="202">06 組み立て</text>
-              <text x="94" y="230">07 仕上げ</text>
-            </g>
-          </g>
-          <!-- fine scale ticks on the horizontal arm -->
-          <g stroke="#8fa1a8" stroke-width="1">
-            <line x1="70" y1="0" x2="70" y2="10"/>
-            <line x1="90" y1="0" x2="90" y2="14"/>
-            <line x1="110" y1="0" x2="110" y2="10"/>
-            <line x1="130" y1="0" x2="130" y2="14"/>
-            <line x1="150" y1="0" x2="150" y2="10"/>
-            <line x1="170" y1="0" x2="170" y2="14"/>
-            <line x1="190" y1="0" x2="190" y2="10"/>
-            <line x1="210" y1="0" x2="210" y2="14"/>
-            <line x1="230" y1="0" x2="230" y2="10"/>
-            <line x1="250" y1="0" x2="250" y2="14"/>
-            <line x1="270" y1="0" x2="270" y2="10"/>
-            <line x1="290" y1="0" x2="290" y2="14"/>
-          </g>
-        </g>
-      </svg>
-    </div>
+<header class="top">
+  <div class="wrap">
+    <p class="school">久保田の技術部屋 ｜ 材料と加工の技術</p>
+    <h1 class="title">材料と加工 工程ガイド</h1>
+    <p class="lead">
+      木の作品づくりは、7つの工程で進めます。
+      下のボタンから、いま取り組む工程をえらぼう。道具・作業の順番・安全の注意が見られます。
+    </p>
   </div>
 </header>
 
@@ -510,150 +359,190 @@
 </nav>
 
 <main>
-  <section id="process" class="wrap">
+  <div class="wrap">
     <div class="process-list" id="processList"></div>
-  </section>
+  </div>
 </main>
 
 <footer>
   <div class="wrap">
     <span>技術科 材料と加工の技術</span>
-    <span>安全第一 品質第二 生産第三。困ったときはすぐ先生に相談しよう。</span>
+    <span>安全第一・品質第二・生産第三。こまったときは、すぐ先生に相談しよう。</span>
   </div>
 </footer>
 
 <script>
   // ------------------------------------------------------------------
   // 工程データ
-  // 各工程の videoUrl に GitHub の動画リンク（例: raw.githubusercontent.com の .mp4 URL や
-  // GitHub リポジトリの動画ファイルへのリンク）を入れる。
-  // 空文字("")のままにしておくと「参考動画を見る」ボタンは表示されない。
+  // tools: [道具の名前, 説明(なくてもよい)]
+  // videoUrl: 動画のURL。空文字("")なら「参考動画はありません」と表示される。
   // ------------------------------------------------------------------
   const PROCESS_DATA = [
     {
       jp: "設計",
-      en: "DESIGN",
-      glance: "アイデアを形にする",
-      tools: ["パソコン(CAD)", "等角図方眼紙", "鉛筆・消しゴム", "定規"],
+      glance: "どんなものを作るか、アイデアを形にする",
+      tools: [
+        ["パソコン(CAD)", "図をかくためのソフト"],
+        ["等角図方眼紙", "立体的な図をかくための方眼紙"],
+        ["鉛筆・消しゴム"],
+        ["定規"]
+      ],
       steps: [
-        "何のために、誰が使うものかを考える",
+        "何のために、だれが使うものかを考える",
         "大きさ・形・使いやすさをイメージする",
-        "CADや手描きで、立体的な形を描く",
-        "加工のしやすさや材料の取りやすさを考えて作成する"
+        "CAD（パソコンの作図ソフト）か手がきで、立体的な形をかく",
+        "切りやすさや、材料の手に入れやすさも考えて形を決める"
       ],
       safety: [
-        "パソコンを使うときは、姿勢やパソコンと目の距離に注意する"
+        "パソコンを使うときは、よい姿勢で、画面に目を近づけすぎない"
       ],
       videoUrl: ""
     },
     {
       jp: "製図",
-      en: "DRAFTING",
-      glance: "正確な図面を書く",
-      tools: ["パソコン(CAD)", "等角図方眼紙", "鉛筆・消しゴム", "定規"],
+      glance: "長さを入れた、正確な図面をかく",
+      tools: [
+        ["パソコン(CAD)", "図をかくためのソフト"],
+        ["等角図方眼紙", "立体的な図をかくための方眼紙"],
+        ["鉛筆・消しゴム"],
+        ["定規"]
+      ],
       steps: [
-        "パソコンのCADで作成した図面を参考にして、等角図を描く",
-        "各部分の寸法を正確に書き込む",
-        "材料取り図を作成する",
-        "等角図と材料取り図を比較し、それぞれの図の一致する板に同じ番号を振る"
+        "パソコンのCADで作った図を見ながら、等角図（立体的な図）をかく",
+        "各部分の長さ（寸法）を、正確に書き込む",
+        "材料取り図（板のどこから、どの部品を切り出すかを示した図）を作る",
+        "等角図と材料取り図を見くらべて、同じ板には同じ番号をふる"
       ],
       safety: [
-        "机の上を整理し、正確に描く",
-        "さしがねで遊ばない"
+        "机の上をかたづけて、ていねいにかく",
+        "さしがねで遊ばない（金属でできていて、けがをするおそれがある）"
       ],
-      videoUrl: ""
+      videoUrl: "https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/drafting.jpg"
     },
     {
       jp: "けがき",
-      en: "MARKING OUT",
-      glance: "材料に線を引く",
-      tools: ["木材", "さしがね", "鉛筆・消しゴム", "作成した材料取り図"],
+      glance: "材料に、切る線や仕上がりの線を引く",
+      tools: [
+        ["木材"],
+        ["さしがね", "L字形の金属の定規。長さを測ったり、直角の線を引いたりする"],
+        ["鉛筆・消しゴム"],
+        ["作った材料取り図"]
+      ],
       steps: [
-        "端からの距離をさしがねのメモリを使用して測り、鉛筆で軽く印をつける",
-        "さしがねをこばに引っ掛けて、印をめがけて線を引く",
-        "1か所の切断に、切断線と仕上がり寸法線の合計3本の線を正確に描く",
-        "描いた線に間違いがないか、図面と照らし合わせる"
+        "端からの長さを、さしがねの目盛りで測り、鉛筆で軽く印をつける",
+        "さしがねを材料の側面（こば）に引っかけて、印に合わせて線を引く",
+        "1か所を切るために、「切断線」と「仕上がり寸法線」をあわせて3本の線を正確にかく",
+        "かいた線が図面と合っているか、見くらべて確かめる"
       ],
       safety: [
-        "材料が動かないよう、作業台の上を整理整頓してから作業する"
+        "作業台の上をかたづけて、材料が動かないようにしてから作業する"
       ],
       videoUrl: "https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/marking.mp4"
     },
     {
       jp: "切断",
-      en: "CUTTING",
       glance: "のこぎりで材料を切る",
-      tools: ["木材", "のこぎり", "万力", "角椅子", "ほうき・ちりとり"],
+      tools: [
+        ["木材"],
+        ["のこぎり"],
+        ["万力", "材料をはさんで、動かないように固定する道具"],
+        ["角椅子", "材料をのせる台。足で材料をおさえて固定する"],
+        ["ほうき・ちりとり"]
+      ],
       steps: [
-        "材料を万力や角椅子に置いて足でしっかり固定する",
-        "切り始めは刃を立てず、浅い角度でガイドの爪を使う",
-        "切断線に沿って、まっすぐ一定のリズムでひく",
-        "切り終わりは、ささくれ落ちにならないように材料を支えながらゆっくり切り離す"
+        "材料を万力や角椅子にのせて、足でしっかり固定する",
+        "切り始めは、刃を立てすぎず浅い角度にして、指の爪をガイドにして刃を当てる",
+        "切る線に合わせて、まっすぐ・同じリズムでひく",
+        "切り終わりは、材料が裂けないように、切り落とす部分を支えながら、ゆっくり切りはなす"
       ],
       safety: [
-        "持ち運びのときは持ち方に注意する",
-        "刃の進む方向に手や指を置かない",
-        "材料をしっかりと固定してから切る",
-        "のこぎりを使わないときは机の上の安全な場所に置く",
-        "木くずはしっかりと掃除する"
+        "のこぎりを持ち運ぶときは、持ち方に注意する",
+        "刃が進む方向に、手や指を置かない",
+        "材料をしっかり固定してから切る",
+        "使わないときは、机の上の安全な場所に置く",
+        "木くずは、しっかり掃除する"
       ],
       videoUrl: "https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/cutting.mp4"
     },
     {
       jp: "部品加工",
-      en: "SHAPING",
-      glance: "削る・磨く",
-      tools: ["切断した木材", "金やすり", "ドレッサー", "研磨紙", "ほうき・ちりとり", "ベルトサンダー"],
+      glance: "切った部品を、削って・みがいて整える",
+      tools: [
+        ["切断した木材"],
+        ["金やすり", "木を削る道具"],
+        ["ドレッサー", "木の表面を削って整える道具"],
+        ["研磨紙", "表面をなめらかにする紙やすり"],
+        ["ほうき・ちりとり"],
+        ["ベルトサンダー", "回転するベルトで、一度にたくさん削る機械"]
+      ],
       steps: [
-        "仕上がり寸法線に沿って、金やすりで削る",
-        "ドレッサーや研磨紙を使用して、表面を滑らかにする",
+        "仕上がり寸法線に合わせて、金やすりで削る",
+        "ドレッサーや研磨紙で、表面をなめらかにする",
         "木くずを払いながら削る",
-        "多く削らなければいけないときはベルトサンダーを使用する"
+        "たくさん削るときは、ベルトサンダーを使う"
       ],
       safety: [
-        "金やすりやドレッサー、研磨紙の進行方向に、支える手を置かない",
-        "木材が折れないように、やすりがけを行う方向に注意する"
+        "金やすり・ドレッサー・研磨紙が進む方向に、材料を支える手を置かない",
+        "材料が折れないように、やすりをかける向きに注意する"
       ],
       videoUrl: "https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/shaping.mp4"
     },
     {
       jp: "組み立て",
-      en: "ASSEMBLY",
-      glance: "部品を組み合わせる",
-      tools: ["切断した木材", "作成した等角図", "作成した材料取り図", "げんのう", "くぎ締め", "くぎ", "きり", "木工用ボンド", "垂直クランプ", "濡れ雑巾", "パテ", "バール（くぎ抜き）・あて木"],
+      glance: "部品をつなぎ合わせて、形にする",
+      tools: [
+        ["切断した木材"],
+        ["作った等角図"],
+        ["作った材料取り図"],
+        ["げんのう", "くぎを打つ金づち"],
+        ["くぎ締め", "くぎの頭を、木の中まで打ち込むための棒"],
+        ["くぎ"],
+        ["きり", "くぎを打つ前に、下穴（くぎの通り道）をあける道具"],
+        ["木工用ボンド"],
+        ["垂直クランプ", "部品を直角に合わせて、固定する道具"],
+        ["濡れ雑巾", "はみ出たボンドを拭き取るもの"],
+        ["パテ・ヘラ", "くぎ穴やすき間を、うめる材料"],
+        ["バール(くぎ抜き)・あて木", "打ちまちがえたくぎを抜く道具"]
+      ],
       steps: [
-        "どの板がどの位置にくるかを確認する(特に向きに注意する)",
-        "くぎを打つ位置にきりで下穴をあける",
-        "接着面に木工用ボンドを均一に薄く塗る",
-        "90度クランプなどを使用しながら部材をしっかり固定する",
+        "どの板がどの位置に来るかを確認する（特に向きに注意）",
+        "くぎを打つ位置に、きりで下穴をあける",
+        "くっつける面に、木工用ボンドを、うすく均一に塗る",
+        "垂直クランプなどで、部品をしっかり固定する",
         "くぎを打つ",
-        "最後はくぎ締めを使用して、くぎを最後まで打ち込む",
-        "木工用ボンドがはみ出た場合は濡れ雑巾で拭き取る",
+        "最後は、くぎ締めを使って、くぎを最後まで打ち込む",
+        "はみ出したボンドは、濡れ雑巾でふき取る"
       ],
       safety: [
-        "げんのうを使うときは、周囲を確認する",
-        "くぎを打つ手と支える手の位置に十分気をつける",
-        "くぎを打ち込み終わる前に、側面からくぎが飛び出ていないか確認する",
-        "バール(くぎ抜き)を使用するときは、てこの原理を使用する(上に引き抜かない)"
+        "げんのうを使うときは、まわりに人がいないか確認する",
+        "くぎを打つ手と、支える手の位置に、十分気をつける",
+        "打ち込み終わる前に、横からくぎが飛び出していないか確認する",
+        "バール(くぎ抜き)を使うときは、てこの原理を使う（まっすぐ上に引き抜かない）"
       ],
       videoUrl: "https://raw.githubusercontent.com/Shin-11111111/shin_gijyutu/main/video/assembly.mp4"
     },
     {
       jp: "仕上げ",
-      en: "FINISHING",
-      glance: "磨いて塗って完成",
-      tools: ["切断した木材", "ニス", "ハケ", "容器", "新聞紙", "汚れてもいい服装"],
+      glance: "ニスを塗って、完成させる",
+      tools: [
+        ["組み立てた作品"],
+        ["ニス", "木を守り、つやを出す塗料"],
+        ["ハケ"],
+        ["容器"],
+        ["新聞紙"],
+        ["よごれてもいい服装"]
+      ],
       steps: [
-        "必要な量のニスを容器に出す",
-        "新聞紙を下に敷き、汚れてもいい服装で作業する",
-        "ハケで塗料をむらなく薄く塗る",
-        "2～3回塗装作業を繰り返す",
-        "容器に残った塗料は、新聞紙に染み込ませて廃棄する",
-        "ハケはきれいに洗い、乾かす"
+        "必要な量のニスを、容器に出す",
+        "新聞紙をしいて、よごれてもいい服装で作業する",
+        "ハケで、むらなく・うすく塗る",
+        "2～3回、くり返して塗る",
+        "容器に残ったニスは、新聞紙にしみ込ませて捨てる",
+        "ハケはきれいに洗って、乾かす"
       ],
       safety: [
-        "塗料やニスは、必ず換気の良い場所で使用する",
-        "塗料が皮膚についた場合はすぐに洗い流す"
+        "ニスは、必ず換気のよい場所で使う",
+        "ニスが皮膚についたら、すぐ洗い流す"
       ],
       videoUrl: ""
     }
@@ -662,16 +551,13 @@
   const railInner = document.getElementById('railInner');
   const processList = document.getElementById('processList');
 
-  const chevronSvg = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
-  const playSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 4L20 12L6 20V4Z" fill="currentColor"/></svg>`;
-  const closeSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
-  const alertSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L22 20H2L12 3Z" stroke="#b8402e" stroke-width="1.6" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="14" stroke="#b8402e" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="17" r="1" fill="#b8402e"/></svg>`;
+  const alertSvg = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M12 3L22 20H2L12 3Z" stroke="#b8402e" stroke-width="1.8" stroke-linejoin="round"/><line x1="12" y1="9" x2="12" y2="14" stroke="#b8402e" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="1.1" fill="#b8402e"/></svg>`;
 
   PROCESS_DATA.forEach((p, i) => {
-    const num = String(i + 1).padStart(2, '0');
+    const num = i + 1;
     const id = `step-${num}`;
+    const next = PROCESS_DATA[i + 1];
 
-    // rail item
     const railA = document.createElement('a');
     railA.href = `#${id}`;
     railA.className = 'rail-item';
@@ -682,37 +568,42 @@
       scrollToCard(id);
     });
     railInner.appendChild(railA);
-    if (i < PROCESS_DATA.length - 1) {
-      const arrow = document.createElement('span');
-      arrow.className = 'rail-arrow';
-      arrow.textContent = '→';
-      railInner.appendChild(arrow);
-    }
 
     const card = document.createElement('article');
     card.className = 'card';
     card.id = id;
     card.dataset.open = 'false';
 
-    const toolsHtml = p.tools.map(t => `<li>${t}</li>`).join('');
+    const toolsHtml = p.tools.map(([name, note]) =>
+      `<li><span class="tn">${name}</span>${note ? `<span class="tnote">${note}</span>` : ''}</li>`
+    ).join('');
     const stepsHtml = p.steps.map(s => `<li>${s}</li>`).join('');
     const safetyHtml = p.safety.map(s => `<li>${s}</li>`).join('');
 
-    const videoHtml = p.videoUrl
-      ? `<div class="video-player">
-           <video controls autoplay muted loop playsinline preload="metadata" controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false" src="${p.videoUrl}"></video>
-         </div>`
-      : `<span class="video-hint">参考動画はありません</span>`;
+    const isImage = /\.(png|jpe?g|gif|webp|svg)(\?.*)?$/i.test(p.videoUrl || '');
+
+    const videoInner = !p.videoUrl
+      ? `<span class="video-hint">この工程の参考動画はありません</span>`
+      : isImage
+        ? `<div class="video-player">
+             <img src="${p.videoUrl}" alt="${p.jp}の参考画像" oncontextmenu="return false" style="display:block;width:100%;max-height:420px;object-fit:contain;">
+           </div>`
+        : `<div class="video-player">
+             <video controls autoplay muted loop playsinline preload="metadata" controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false" src="${p.videoUrl}"></video>
+           </div>`;
+
+    const nextHtml = next
+      ? `<button type="button" class="next-btn" data-next="step-${num + 1}">次の工程：${next.jp} を見る</button>`
+      : `<p class="done-msg">これで全部の工程が終了です。おつかれさまでした！</p>`;
 
     card.innerHTML = `
       <button class="card-head" aria-expanded="false" aria-controls="${id}-body">
         <span class="card-num">${num}</span>
         <span class="card-name">
           <span class="jp">${p.jp}</span>
-          <span class="en">${p.en}</span>
+          <span class="glance">${p.glance}</span>
         </span>
-        <span class="card-glance">${p.glance}</span>
-        <span class="card-chevron">${chevronSvg}</span>
+        <span class="card-toggle" aria-hidden="true"><span class="t-open">＋ ひらく</span><span class="t-close">－ とじる</span></span>
       </button>
       <div class="card-body" id="${id}-body">
         <div class="card-body-inner">
@@ -728,11 +619,15 @@
             <div class="safety-box">
               <span class="safety-icon">${alertSvg}</span>
               <div>
-                <h4>安全に関する注意点</h4>
+                <h4>安全のために気をつけること</h4>
                 <ul>${safetyHtml}</ul>
               </div>
             </div>
-            <div class="video-row">${videoHtml}</div>
+            <div class="video-block">
+              <h4>参考動画・画像</h4>
+              ${videoInner}
+            </div>
+            <div class="next-row">${nextHtml}</div>
           </div>
         </div>
       </div>
@@ -745,6 +640,11 @@
       card.dataset.open = isOpen ? 'false' : 'true';
       head.setAttribute('aria-expanded', String(!isOpen));
     });
+
+    const nextBtn = card.querySelector('.next-btn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => scrollToCard(nextBtn.dataset.next));
+    }
   });
 
   const railItems = Array.from(document.querySelectorAll('.rail-item'));
@@ -764,8 +664,7 @@
     const doScroll = () => {
       const navHeight = railNav.getBoundingClientRect().height;
       const targetTop = target.getBoundingClientRect().top + window.pageYOffset;
-      const offset = targetTop - navHeight - 16;
-      window.scrollTo({ top: offset, behavior: 'smooth' });
+      window.scrollTo({ top: targetTop - navHeight - 16, behavior: 'smooth' });
     };
 
     const wasAlreadyOpen = target.dataset.open === 'true';
@@ -793,13 +692,11 @@
 
   let ticking = false;
   function updateActiveCard() {
-    const navBottom = railNav.getBoundingClientRect().bottom;
-    const activationLine = navBottom + 24;
+    const activationLine = railNav.getBoundingClientRect().bottom + 24;
 
     let current = cards[0];
     for (const card of cards) {
-      const rect = card.getBoundingClientRect();
-      if (rect.top <= activationLine) {
+      if (card.getBoundingClientRect().top <= activationLine) {
         current = card;
       } else {
         break;
