@@ -337,6 +337,102 @@
     html{ scroll-behavior:auto; }
     .card-body, .card-toggle, .next-btn, .rail-item{ transition:none; }
   }
+
+  /* 画像の拡大 */
+  .zoom-trigger{
+    position:relative;
+    display:block;
+    width:100%;
+    padding:0;
+    border:0;
+    background:none;
+    cursor:zoom-in;
+  }
+  .zoom-trigger img{
+    display:block;
+    width:100%;
+    max-height:420px;
+    object-fit:contain;
+  }
+  .zoom-badge{
+    position:absolute;
+    right:10px;
+    bottom:10px;
+    padding:4px 12px;
+    border-radius:999px;
+    background:rgba(0,0,0,.65);
+    color:#fff;
+    font-size:13px;
+    pointer-events:none;
+  }
+  .lightbox{
+    position:fixed;
+    inset:0;
+    z-index:1000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    background:rgba(0,0,0,.92);
+    overflow:hidden;
+    touch-action:none;
+    overscroll-behavior:contain;
+  }
+  .lightbox[data-open="true"]{ display:flex; }
+  .lightbox img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    border-radius:8px;
+    transform-origin:center center;
+    will-change:transform;
+    cursor:grab;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-user-drag:none;
+    touch-action:none;
+  }
+  .lightbox[data-dragging="true"] img{ cursor:grabbing; }
+  .lightbox-close{
+    position:absolute;
+    top:12px;
+    right:12px;
+    padding:8px 16px;
+    border:0;
+    border-radius:999px;
+    background:#fff;
+    color:#111;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .lightbox-tools{
+    position:absolute;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 8px;
+    border-radius:999px;
+    background:rgba(0,0,0,.55);
+  }
+  .lightbox-tools button{
+    min-width:44px;
+    height:44px;
+    padding:0 14px;
+    border:0;
+    border-radius:999px;
+    background:#fff;
+    color:#111;
+    font-family:inherit;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+</style>
 </style>
 </head>
 <body>
@@ -370,7 +466,15 @@
     <span>安全第一・品質第二・生産第三。こまったときは、すぐ先生に相談しよう。</span>
   </div>
 </footer>
-
+<div class="lightbox" id="lightbox" data-open="false" data-dragging="false" role="dialog" aria-modal="true" aria-label="画像の拡大表示">
+  <button type="button" class="lightbox-close">× とじる</button>
+  <img id="lightboxImg" alt="" draggable="false" oncontextmenu="return false">
+  <div class="lightbox-tools">
+    <button type="button" data-zoom="out" aria-label="縮小">－</button>
+    <button type="button" data-zoom="reset" aria-label="元の大きさに戻す">元に戻す</button>
+    <button type="button" data-zoom="in" aria-label="拡大">＋</button>
+  </div>
+</div>
 <script>
   // ------------------------------------------------------------------
   // 工程データ
@@ -586,7 +690,10 @@
       ? `<span class="video-hint">この工程の参考動画はありません</span>`
       : isImage
         ? `<div class="video-player">
-             <img src="${p.videoUrl}" alt="${p.jp}の参考画像" oncontextmenu="return false" style="display:block;width:100%;max-height:420px;object-fit:contain;">
+             <button type="button" class="zoom-trigger" aria-label="${p.jp}の参考画像を拡大する">
+               <img src="${p.videoUrl}" alt="${p.jp}の参考画像" oncontextmenu="return false">
+               <span class="zoom-badge">🔍 タップで拡大</span>
+             </button>
            </div>`
         : `<div class="video-player">
              <video controls autoplay muted loop playsinline preload="metadata" controlsList="nodownload noremoteplayback" disablePictureInPicture oncontextmenu="return false" src="${p.videoUrl}"></video>
@@ -733,6 +840,170 @@
   });
 
   updateActiveCard();
+
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const MIN_SCALE = 1;
+  const MAX_SCALE = 6;
+  let zScale = 1, zX = 0, zY = 0;
+
+  function applyZoom() {
+    lightboxImg.style.transform = `translate(${zX}px, ${zY}px) scale(${zScale})`;
+  }
+
+  function clampPan() {
+    const maxX = Math.max(0, (lightboxImg.offsetWidth * zScale - lightbox.clientWidth) / 2);
+    const maxY = Math.max(0, (lightboxImg.offsetHeight * zScale - lightbox.clientHeight) / 2);
+    zX = Math.min(maxX, Math.max(-maxX, zX));
+    zY = Math.min(maxY, Math.max(-maxY, zY));
+  }
+
+  function zoomAt(px, py, newScale) {
+    newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+    const r = lightbox.getBoundingClientRect();
+    const dx = px - (r.left + r.width / 2);
+    const dy = py - (r.top + r.height / 2);
+    const k = newScale / zScale;
+    zX = dx - (dx - zX) * k;
+    zY = dy - (dy - zY) * k;
+    zScale = newScale;
+    clampPan();
+    applyZoom();
+  }
+
+  function zoomAtCenter(factor) {
+    const r = lightbox.getBoundingClientRect();
+    zoomAt(r.left + r.width / 2, r.top + r.height / 2, zScale * factor);
+  }
+
+  function resetZoom() {
+    zScale = 1; zX = 0; zY = 0;
+    applyZoom();
+  }
+
+  function openLightbox(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || '';
+    resetZoom();
+    lightbox.dataset.open = 'true';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    pointers.clear();
+    tapStart = null;
+    lightbox.dataset.open = 'false';
+    lightbox.dataset.dragging = 'false';
+    lightboxImg.removeAttribute('src');
+    document.body.style.overflow = '';
+    resetZoom();
+  }
+
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('.zoom-trigger');
+    if (!trigger) return;
+    const img = trigger.querySelector('img');
+    openLightbox(img.src, img.alt);
+  });
+
+  const pointers = new Map();
+  let lastDist = 0;
+  let lastMid = { x: 0, y: 0 };
+  let tapStart = null;
+  let lastTap = { time: 0, x: 0, y: 0 };
+
+  function pinchInfo() {
+    const [a, b] = Array.from(pointers.values());
+    return { dist: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+
+  lightbox.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('button')) return;
+    lightbox.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) {
+      tapStart = { x: e.clientX, y: e.clientY, onBackdrop: e.target === lightbox, moved: false };
+    } else {
+      tapStart = null;
+      const p = pinchInfo();
+      lastDist = p.dist;
+      lastMid = { x: p.x, y: p.y };
+    }
+    lightbox.dataset.dragging = 'true';
+  });
+
+  lightbox.addEventListener('pointermove', (e) => {
+    const prev = pointers.get(e.pointerId);
+    if (!prev) return;
+    const cur = { x: e.clientX, y: e.clientY };
+    pointers.set(e.pointerId, cur);
+
+    if (pointers.size >= 2) {
+      const p = pinchInfo();
+      if (lastDist > 0) zoomAt(p.x, p.y, zScale * (p.dist / lastDist));
+      zX += p.x - lastMid.x;
+      zY += p.y - lastMid.y;
+      clampPan();
+      applyZoom();
+      lastDist = p.dist;
+      lastMid = { x: p.x, y: p.y };
+    } else {
+      zX += cur.x - prev.x;
+      zY += cur.y - prev.y;
+      clampPan();
+      applyZoom();
+      if (tapStart && Math.hypot(cur.x - tapStart.x, cur.y - tapStart.y) > 8) tapStart.moved = true;
+    }
+  });
+
+  function endPointer(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size > 0) return;
+
+    lightbox.dataset.dragging = 'false';
+    if (e.type === 'pointerup' && tapStart && !tapStart.moved) {
+      if (tapStart.onBackdrop) {
+        closeLightbox();
+        return;
+      }
+      const now = Date.now();
+      if (now - lastTap.time < 320 && Math.hypot(e.clientX - lastTap.x, e.clientY - lastTap.y) < 30) {
+        if (zScale > 1.01) resetZoom();
+        else zoomAt(e.clientX, e.clientY, 2.5);
+        lastTap.time = 0;
+      } else {
+        lastTap = { time: now, x: e.clientX, y: e.clientY };
+      }
+    }
+    tapStart = null;
+  }
+  lightbox.addEventListener('pointerup', endPointer);
+  lightbox.addEventListener('pointercancel', endPointer);
+
+  lightbox.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    let dy = e.deltaY;
+    if (e.deltaMode === 1) dy *= 33;
+    zoomAt(e.clientX, e.clientY, zScale * Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0015)));
+  }, { passive: false });
+
+  lightbox.querySelector('.lightbox-close').addEventListener('click', closeLightbox);
+  lightbox.querySelector('[data-zoom="in"]').addEventListener('click', () => zoomAtCenter(1.5));
+  lightbox.querySelector('[data-zoom="out"]').addEventListener('click', () => zoomAtCenter(1 / 1.5));
+  lightbox.querySelector('[data-zoom="reset"]').addEventListener('click', resetZoom);
+
+  document.addEventListener('keydown', (e) => {
+    if (lightbox.dataset.open !== 'true') return;
+    if (e.key === 'Escape') closeLightbox();
+    else if (e.key === '+' || e.key === '=') zoomAtCenter(1.5);
+    else if (e.key === '-') zoomAtCenter(1 / 1.5);
+    else if (e.key === '0') resetZoom();
+  });
+
+  window.addEventListener('resize', () => {
+    if (lightbox.dataset.open === 'true') { clampPan(); applyZoom(); }
+  });
 </script>
 </body>
 </html>
