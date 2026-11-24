@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>オンラインテスト</title>
+<style>
+:root{--bg:#f4f6fa;--fg:#1c2330;--card:#fff;--bd:#d5dbe6;--ac:#2563eb}
+@media (prefers-color-scheme:dark){:root{--bg:#141922;--fg:#e8ecf3;--card:#1e2530;--bd:#38425a;--ac:#5b8def}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;background:var(--bg);color:var(--fg)}
+.wrap{max-width:520px;margin:0 auto;padding:24px 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:20px;margin-bottom:16px}
+h1{font-size:1.3rem;margin:0 0 12px}
+label{display:block;font-size:.9rem;margin:12px 0 4px}
+input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font-size:1rem}
+button{padding:12px 18px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:1rem;cursor:pointer;margin-top:14px}
+.note{font-size:.85rem;opacity:.85;line-height:1.7}
+.err{color:#dc2626;font-size:.9rem;margin-top:8px}
+.hero{background:linear-gradient(135deg,#1d4ed8,#4338ca);color:#fff;border-radius:16px;padding:28px 20px;text-align:center;margin-bottom:16px}
+.hero small{display:block;font-size:.8rem;letter-spacing:.2em;opacity:.8;margin-bottom:8px}
+.hero h1{font-size:1.6rem;line-height:1.4;margin:0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px 10px;text-align:center}
+.tile .k{font-size:.75rem;opacity:.7;margin-bottom:4px}
+.tile .v{font-size:1.5rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.3}
+.tile .s{font-size:.8rem;opacity:.75;margin-top:2px}
+.tile.wide{grid-column:1/3}
+.tile.accent .v{color:var(--ac)}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.grid .full-row{grid-column:1/4}
+select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font-size:1rem}
+.card h2{font-size:1rem;margin:0 0 4px}
+
+.notes{background:var(--card);border:1px solid var(--bd);border-left:5px solid #d97706;border-radius:12px;
+  padding:clamp(8px,1.8vh,14px) 14px;font-size:clamp(.78rem,2.2vmin,.95rem);line-height:1.6;max-height:26vh;overflow-y:auto;text-align:left}
+.notes h2{margin:0 0 4px;font-size:1em}
+.notes ul,#notePanel ul{margin:0;padding-left:1.2em}
+#wait .notes{width:100%;max-width:560px;margin-top:14px;max-height:40vh}
+#noteBtn{margin:0;padding:4px 12px;font-size:.85rem;background:#d97706;border-radius:6px}
+#notePanel{position:absolute;top:40px;left:0;right:0;display:none;z-index:6;background:var(--card);color:var(--fg);
+  padding:14px 18px;border-bottom:4px solid #d97706;max-height:60%;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.35);line-height:1.7}
+#notePanel h2{margin:0 0 6px;font-size:1.05rem}
+
+#grace{position:absolute;left:0;right:0;top:40px;display:none;pointer-events:none;text-align:center;
+  background:rgba(185,28,28,.94);color:#fff;padding:clamp(8px,2vh,18px) 12px;z-index:3;animation:blink 1s steps(2,start) infinite}
+#grace .t{font-size:clamp(1.3rem,5.5vmin,2.8rem);font-weight:800;line-height:1.3}
+#grace .c{font-size:clamp(2.2rem,11vmin,5.5rem);font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
+#grace .s{font-size:clamp(.8rem,2.4vmin,1.1rem);opacity:.95}
+#exam.over::after{content:"";position:absolute;inset:0;border:10px solid #dc2626;pointer-events:none;z-index:4;animation:blinkb 1s steps(2,start) infinite}
+@keyframes blink{50%{background:rgba(127,29,29,.94)}}
+@keyframes blinkb{50%{border-color:#7f1d1d}}
+@media (prefers-reduced-motion:reduce){#grace,#exam.over::after{animation:none}}
+
+html,body{overflow:hidden}
+.full{overflow:hidden}
+.wrap{width:100%;max-width:560px;height:100dvh;margin:0 auto;padding:clamp(8px,2.2vh,24px) 14px;
+  display:grid;grid-template-columns:1fr;align-content:center;gap:clamp(6px,1.6vh,16px);overflow-y:auto}
+.left{display:flex;flex-direction:column;gap:clamp(6px,1.6vh,16px)}
+.hero,.tiles,.card{margin:0}
+.hero{padding:clamp(10px,3vh,28px) 16px}
+.hero h1{font-size:clamp(1.05rem,4.4vmin,1.8rem);margin:0}
+.hero small{margin-bottom:clamp(2px,.8vh,8px)}
+.tile{padding:clamp(6px,1.6vh,14px) 8px}
+.tile .v{font-size:clamp(1.05rem,3.8vmin,1.6rem)}
+.card{padding:clamp(10px,2.2vh,20px)}
+label{margin:clamp(4px,1.2vh,12px) 0 3px}
+input,select{padding:clamp(6px,1.4vh,10px)}
+button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px)}
+.err{margin-top:4px}
+#wait .big{font-size:clamp(2.6rem,18vmin,7rem);margin:clamp(4px,2vh,16px) 0}
+#wait h1{font-size:clamp(1.1rem,5vmin,2rem)}
+
+@media (max-height:720px){
+  .tiles{grid-template-columns:repeat(4,1fr);gap:6px}
+  .tile.wide{grid-column:auto}
+  .tile .k{font-size:.65rem}
+  .card .note{display:none}
+}
+@media (max-height:480px){
+  .hero small{display:none}
+  h2{display:none}
+}
+
+@media (min-width:700px) and (min-aspect-ratio:11/10){
+  .wrap{max-width:1000px;grid-template-columns:1fr 1fr;align-items:center;gap:clamp(12px,3vw,32px)}
+  .tiles{grid-template-columns:1fr 1fr}
+  .tile.wide{grid-column:1/3}
+  .card .note{display:block}
+}
+@media (min-width:700px) and (min-aspect-ratio:11/10) and (max-height:520px){
+  .card .note{display:none}
+  .tile .v{font-size:1.1rem}
+}
+.full{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;flex-direction:column}
+#wait{background:var(--bg);z-index:5}
+#wait .big{font-size:3rem;font-weight:700;margin:12px 0}
+#lock{background:#b91c1c;color:#fff;z-index:10}
+#lock input{max-width:280px;margin:8px auto;color:#000;background:#fff}
+#lock button{background:#fff;color:#b91c1c}
+#done{background:var(--bg);z-index:9}
+#exam{position:fixed;inset:0;display:none;background:#fff}
+#bar{height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:#1e293b;color:#fff;font-size:.95rem}
+#bar.warn{background:#b45309}#bar.danger{background:#b91c1c}
+#timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:1.1rem}
+#frame{width:100%;height:calc(100% - 40px);border:0;display:block}
+</style>
+</head>
+<body>
+
+<div class="wrap" id="start">
+  <div class="left">
+    <div class="hero"><small>ONLINE TEST</small><h1 id="title"></h1></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="notes"><h2>📌 注意事項</h2><ul></ul></div>
+  </div>
+  <div class="card">
+    <h2>受験者情報</h2>
+    <div class="grid">
+      <div><label for="sGrade">学年</label>
+        <select id="sGrade"><option value="">選択</option><option>1</option><option>2</option><option>3</option></select></div>
+      <div><label for="sClass">クラス</label><input id="sClass" placeholder="例: 3" autocomplete="off"></div>
+      <div><label for="sNo">番号</label><input id="sNo" type="number" min="1" inputmode="numeric" placeholder="例: 15"></div>
+      <div class="full-row"><label for="sName">名前</label><input id="sName" placeholder="例: 山田 太郎" autocomplete="off"></div>
+    </div>
+    <button id="go" style="width:100%">試験を開始する</button>
+    <div class="err" id="err"></div>
+    <p class="note">※試験中に全画面を解除したり、他のタブ・アプリへ切り替えると、画面が閉じて警告画面になります。</p>
+  </div>
+</div>
+
+<div class="full" id="wait">
+  <div id="waitTitle"></div>
+  <div class="big" id="count">--:--</div>
+  <div class="note">開始時刻になると自動で試験問題が表示されます。<br>このまま全画面で待ってください。</div>
+  <div class="notes"><h2>📌 注意事項</h2><ul></ul></div>
+</div>
+
+<div id="exam">
+  <div id="bar"><span id="who"></span><button id="noteBtn" type="button">📌 注意事項</button><span><span id="lbl">残り時間</span> <span id="timer">--:--</span></span></div>
+  <div id="notePanel"><h2>📌 注意事項</h2><ul></ul><p class="note" style="margin:8px 0 0">もう一度「注意事項」を押すと閉じます。</p></div>
+  <div id="grace">
+    <div class="t">試験終了。今すぐ「送信」を押してください</div>
+    <div class="c" id="graceCount">--:--</div>
+    <div class="s">この表示が終わると試験問題が強制的に閉じます</div>
+  </div>
+  <iframe id="frame" allow="fullscreen" referrerpolicy="no-referrer"></iframe>
+</div>
+
+<div class="full" id="lock">
+  <h1 style="font-size:1.6rem">⚠ 不正が疑われる行為の可能性があります</h1>
+  <p id="lockMsg"></p>
+  <p>画面は閉じられました。先生を呼んでください。</p>
+  <div id="unlockBox" style="display:none">
+    <input id="uCode" type="password" placeholder="先生用解除コード">
+    <button id="unlock">再開する</button>
+    <div id="uErr"></div>
+  </div>
+</div>
+
+<div class="full" id="done">
+  <h1>試験終了</h1>
+  <p class="note">制限時間になりました。<br>先生の指示に従ってください。</p>
+</div>
+
+<script>
+/* =====================================================
+   ★ 先生が編集する設定(ここだけ書き換えればOK) ★
+   ===================================================== */
+const CONFIG = {
+  // Microsoft Forms または Google Forms のURL(httpsで始まる正式なURL)
+  FORM_URL: "https://forms.office.com/Pages/ResponsePage.aspx?id=ここにフォームID",
+
+  // 試験のタイトル
+  TITLE: "技術科 小テスト",
+
+  // 一斉開始時刻(日本時間)。形式: "年-月-日T時:分:秒+09:00"
+  // 空文字 "" にすると、生徒が「開始」を押した時点で個別にスタート
+  START_TIME: "2026-11-24T10:30:00+09:00",
+
+  // 制限時間(分)。一斉開始の場合は開始時刻からカウント(全員同じ終了時刻)
+  TIME_LIMIT_MIN: 40,
+
+  // 制限時間後も送信ボタンを押せる猶予(秒)。0なら時間になった瞬間にFormsを閉じる
+  GRACE_SEC: 10,
+
+  // 残り何分で黄色/赤色の警告表示にするか
+  WARN_MIN: 10,
+  DANGER_MIN: 5,
+
+  // 注意事項(1行ずつ書く。不要なら [] にすると非表示)
+  NOTES: [
+    "試験中は全画面を解除しないこと(解除すると画面が閉じます)。",
+    "他のタブやアプリを開かないこと。",
+    "わからないことがあれば、手をあげて先生に聞くこと。",
+    "最後に必ず「送信」ボタンを押すこと。",
+    "制限時間後の猶予時間内に送信できなかった答案は提出されません。"
+  ],
+
+  // 先生用の再開コード(空文字 "" なら再開不可)
+  TEACHER_CODE: "4829"
+};
+/* ===================================================== */
+
+const $ = id => document.getElementById(id);
+let active = false, finished = false, startMs = 0, endMs = 0, offset = 0, tick = null;
+
+$("title").textContent = CONFIG.TITLE;
+(function(){
+  const hm = d => d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit"});
+  const md = d => d.toLocaleDateString("ja-JP",{month:"numeric",day:"numeric",weekday:"short"});
+  let h = "";
+  if (CONFIG.START_TIME){
+    const s = new Date(CONFIG.START_TIME), e = new Date(s.getTime() + CONFIG.TIME_LIMIT_MIN*60000);
+    h += `<div class="tile wide"><div class="k">実施日</div><div class="v">${md(s)}</div></div>`;
+    h += `<div class="tile"><div class="k">開始</div><div class="v">${hm(s)}</div></div>`;
+    h += `<div class="tile"><div class="k">終了</div><div class="v">${hm(e)}</div></div>`;
+  } else {
+    h += `<div class="tile wide"><div class="k">開始</div><div class="v" style="font-size:1.1rem">開始ボタンを押すとスタート</div></div>`;
+  }
+  h += `<div class="tile wide accent"><div class="k">制限時間</div><div class="v">${CONFIG.TIME_LIMIT_MIN}<span style="font-size:1rem"> 分</span></div></div>`;
+  $("tiles").innerHTML = h;
+})();
+(function(){
+  const notes = CONFIG.NOTES || [];
+  document.querySelectorAll(".notes ul, #notePanel ul").forEach(ul => {
+    notes.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+  });
+  if (!notes.length){
+    document.querySelectorAll(".notes, #notePanel, #noteBtn").forEach(e => e.style.display = "none");
+    document.getElementById("notePanel").dataset.off = "1";
+  }
+})();
+$("noteBtn").onclick = () => {
+  const p = $("notePanel");
+  p.style.display = p.style.display === "block" ? "none" : "block";
+};
+function getName(){
+  return `${$("sGrade").value}年${$("sClass").value.trim()}組 ${$("sNo").value}番 ${$("sName").value.trim()}`;
+}
+
+function normalize(u){
+  let url;
+  try { url = new URL(u.trim()); } catch(e){ return null; }
+  if (url.protocol !== "https:") return null;
+  const h = url.hostname;
+  if (h === "forms.office.com" || h === "forms.cloud.microsoft"){ url.searchParams.set("embed","true"); return url.toString(); }
+  if (h === "docs.google.com" && url.pathname.startsWith("/forms/")){ url.searchParams.set("embedded","true"); return url.toString(); }
+  return null;
+}
+const FORM = normalize(CONFIG.FORM_URL);
+
+// サーバー時刻との差を測る(端末の時計ズレ対策)
+async function syncClock(){
+  try{
+    const t0 = Date.now();
+    const r = await fetch(location.href, {method:"HEAD", cache:"no-store"});
+    const d = r.headers.get("Date");
+    if (d){ offset = new Date(d).getTime() - (t0 + Date.now())/2; }
+  }catch(e){ offset = 0; }
+}
+const now = () => Date.now() + offset;
+const fmt = ms => { const s = Math.max(0, Math.ceil(ms/1000)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60;
+  return (h ? h+":" : "") + String(m).padStart(2,"0") + ":" + String(x).padStart(2,"0"); };
+
+$("go").onclick = async () => {
+  $("err").textContent = "";
+  if (!FORM){ $("err").textContent = "FormsのURLが正しく設定されていません(先生に伝えてください)。"; return; }
+  if (!$("sGrade").value || !$("sClass").value.trim() || !$("sNo").value || !$("sName").value.trim()){
+    $("err").textContent = "学年・クラス・番号・名前をすべて入力してください。"; return; }
+  try {
+    const el = document.documentElement;
+    await (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } catch(e){ $("err").textContent = "全画面にできません。PC・Chromebook・iPadで開いてください。"; return; }
+
+  await syncClock();
+  if (CONFIG.START_TIME){ startMs = new Date(CONFIG.START_TIME).getTime(); }
+  else { startMs = now(); }
+  endMs = startMs + CONFIG.TIME_LIMIT_MIN * 60000;
+
+  if (now() >= endMs + CONFIG.GRACE_SEC * 1000){ endTest(); return; }
+  active = true;
+  $("who").textContent = getName();
+  if (now() < startMs){
+    $("waitTitle").innerHTML = "<h1>" + CONFIG.TITLE + "</h1>";
+    $("wait").style.display = "flex";
+  }
+  tick = setInterval(loop, 250);
+  loop();
+};
+
+let started = false;
+function loop(){
+  if (finished) return;
+  const t = now();
+  if (t < startMs){ $("count").textContent = fmt(startMs - t); return; }
+  if (!started){ started = true; $("wait").style.display = "none"; $("exam").style.display = "block"; $("frame").src = FORM; }
+  const left = endMs - t, grace = CONFIG.GRACE_SEC * 1000;
+  if (left <= -grace){ endTest(); return; }
+  const bar = $("bar");
+  if (left <= 0){
+    $("lbl").textContent = "⏰ 試験終了 閉じるまで";
+    $("timer").textContent = fmt(left + grace);
+    $("graceCount").textContent = fmt(left + grace);
+    $("grace").style.display = "block";
+    $("exam").classList.add("over");
+    bar.className = "danger";
+    return;
+  }
+  $("grace").style.display = "none";
+  $("exam").classList.remove("over");
+  $("lbl").textContent = "残り時間";
+  $("timer").textContent = fmt(left);
+  bar.className = left <= CONFIG.DANGER_MIN*60000 ? "danger" : left <= CONFIG.WARN_MIN*60000 ? "warn" : "";
+}
+
+function endTest(){
+  finished = true; active = false; clearInterval(tick);
+  $("frame").src = "about:blank";
+  $("grace").style.display = "none"; $("exam").classList.remove("over"); $("notePanel").style.display = "none";
+  ["exam","wait","lock"].forEach(i => $(i).style.display = "none");
+  $("done").style.display = "flex";
+}
+
+function violation(reason){
+  if (!active || finished || !started) return;
+  active = false;
+  $("frame").src = "about:blank";
+  $("exam").style.display = "none";
+  const t = new Date().toLocaleString("ja-JP");
+  $("lockMsg").textContent = `${getName()} / ${t} / ${reason}`;
+  $("unlockBox").style.display = CONFIG.TEACHER_CODE ? "block" : "none";
+  $("lock").style.display = "flex";
+  try{
+    const log = JSON.parse(localStorage.getItem("examLog") || "[]");
+    log.push({name:getName(), time:t, reason});
+    localStorage.setItem("examLog", JSON.stringify(log));
+  }catch(e){}
+}
+function fsLost(){
+  if (document.fullscreenElement || document.webkitFullscreenElement) return;
+  if (!started && active){
+    active = false; clearInterval(tick);
+    $("wait").style.display = "none";
+    $("start").style.display = "";
+    $("err").textContent = "全画面が解除されました。もう一度「全画面にして待機する」を押してください。";
+    return;
+  }
+  violation("全画面を解除");
+}
+document.addEventListener("fullscreenchange", fsLost);
+document.addEventListener("webkitfullscreenchange", fsLost);
+document.addEventListener("visibilitychange", () => { if (document.hidden) violation("他のタブ・アプリへ切替"); });
+document.addEventListener("contextmenu", e => { if (active) e.preventDefault(); });
+
+$("unlock").onclick = async () => {
+  if ($("uCode").value !== CONFIG.TEACHER_CODE){ $("uErr").textContent = "コードが違います"; return; }
+  $("uCode").value = ""; $("uErr").textContent = "";
+  $("lock").style.display = "none";
+  try { await document.documentElement.requestFullscreen(); } catch(e){}
+  if (finished) return;
+  $("frame").src = FORM;
+  $("exam").style.display = "block";
+  active = true;
+};
+</script>
+</body>
+</html>
