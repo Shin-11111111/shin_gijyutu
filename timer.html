@@ -561,14 +561,17 @@
                 setDisplay('timerDisplay', msg, true);
                 clearInterval(timerId);
                 timerId = null;
+                updateWakeLock();
                 playAlarm(msg);
             }
         }, 250);
+        updateWakeLock();
     }
     function pauseTimer(showMsg = true) { 
         const wasRunning = timerId !== null;
         clearInterval(timerId); 
-        timerId = null; 
+        timerId = null;
+        updateWakeLock();
         if (showMsg && wasRunning) showMessage('タイマーを一時停止しました', 'info');
     }
     function resetTimer() { 
@@ -602,6 +605,7 @@
             ? `${time}はすぎているので、明日の${time}に設定しました`
             : `アラームを${time}に設定しました`, 'success');
         alarmInterval = setInterval(updateAlarmCountdown, 250);
+        updateWakeLock();
     }
     function updateAlarmCountdown() {
         const now = new Date();
@@ -609,7 +613,8 @@
         
         if (diff <= 0 && alarmTargetTime) {
             clearInterval(alarmInterval); 
-            alarmInterval = null; 
+            alarmInterval = null;
+            updateWakeLock();
             const msg = getEndMessage('alarmEndMessageInput');
             playAlarm(msg); 
             setDisplay('alarmCountdown', msg, true);
@@ -631,6 +636,7 @@
         setDisplay('alarmCountdown', '--:--:--');
         alarmInterval = null;
         alarmTargetTime = null;
+        updateWakeLock();
     }
     let stopwatchTime = 0;
     let stopwatchId = null;
@@ -649,11 +655,13 @@
             stopwatchTime = Math.floor((Date.now() - startedAt) / 1000);
             updateStopwatchDisplay();
         }, 250);
+        updateWakeLock();
     }
     function pauseStopwatch(showMsg = true) { 
         const wasRunning = stopwatchId !== null;
         clearInterval(stopwatchId); 
-        stopwatchId = null; 
+        stopwatchId = null;
+        updateWakeLock();
         if (showMsg && wasRunning) showMessage('ストップウォッチを一時停止しました', 'info');
     }
     function resetStopwatch() { 
@@ -768,12 +776,14 @@
                 runNextRepeat();
             }
         }, 250);
+        updateWakeLock();
     }
     
     function pauseRepeatTimer(showMessageOnPause = true) {
         const wasRunning = repeatTimerId !== null;
         clearInterval(repeatTimerId);
         repeatTimerId = null;
+        updateWakeLock();
         if (showMessageOnPause && wasRunning) {
             showMessage('繰り返しタイマーを一時停止しました', 'info');
         }
@@ -893,7 +903,42 @@
         }
         refitMessages();
     });
+    let wakeLock = null;
+    let wakeLockPending = false;
 
+    function isAnyTimerRunning() {
+        return timerId !== null || alarmInterval !== null ||
+            stopwatchId !== null || repeatTimerId !== null;
+    }
+    function releaseWakeLock() {
+        if (!wakeLock) return;
+        const lock = wakeLock;
+        wakeLock = null;
+        lock.release().catch(() => {});
+    }
+    async function updateWakeLock() {
+        if (!('wakeLock' in navigator)) return;
+        if (!isAnyTimerRunning()) {
+            releaseWakeLock();
+            return;
+        }
+        if (wakeLock || wakeLockPending) return;
+        wakeLockPending = true;
+        try {
+            const lock = await navigator.wakeLock.request('screen');
+            wakeLock = lock;
+            lock.addEventListener('release', () => {
+                if (wakeLock === lock) wakeLock = null;
+            });
+            if (!isAnyTimerRunning()) releaseWakeLock();
+        } catch (e) {
+        } finally {
+            wakeLockPending = false;
+        }
+    }
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') updateWakeLock();
+    });
     let audioCtx = null;
     let beepNodes = [];
 
