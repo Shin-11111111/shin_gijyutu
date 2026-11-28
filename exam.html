@@ -32,7 +32,6 @@ button{padding:12px 18px;border:0;border-radius:8px;background:var(--ac);color:#
 select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--fg);font-size:1rem}
 .card h2{font-size:1rem;margin:0 0 4px}
 
-/* 注意事項 */
 .notes{background:var(--card);border:1px solid var(--bd);border-left:5px solid #d97706;border-radius:12px;
   padding:clamp(8px,1.8vh,14px) 14px;font-size:clamp(.78rem,2.2vmin,.95rem);line-height:1.6;max-height:30vh;overflow-y:auto;text-align:left}
 .notes h2{margin:0 0 4px;font-size:1em}
@@ -57,7 +56,6 @@ select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:8px;back
 html,body{overflow:hidden}
 .full{overflow:hidden}
 
-/* 開始画面:試験名・詳細 → 名前入力欄 → 注意事項(上から順) */
 .wrap{width:100%;max-width:560px;height:100dvh;margin:0 auto;padding:clamp(8px,2.2vh,24px) 14px;
   display:grid;grid-template-columns:1fr;align-content:center;gap:clamp(6px,1.6vh,16px);overflow-y:auto}
 @supports (align-content:safe center){.wrap{align-content:safe center}}
@@ -100,11 +98,9 @@ button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px);min-hei
   .tile .v{font-size:1.1rem}
 }
 
-/* パスワード欄(開始時刻が空欄のときだけ表示) */
 #pwBox{display:none}
 #pwBox .pwhint{font-size:.8rem;opacity:.75;margin:2px 0 0}
 
-/* 先生用ハッシュ作成ツール(URLの末尾に #hash を付けたときだけ表示) */
 #tool{display:none}
 #tool code{word-break:break-all;display:block;margin-top:8px;font-size:.8rem}
 
@@ -126,13 +122,11 @@ button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px);min-hei
 <body>
 
 <div class="wrap" id="start">
-  <!-- ① 試験名・詳細 -->
   <div class="left">
     <div class="hero"><small>ONLINE TEST</small><h1 id="title"></h1></div>
     <div class="tiles" id="tiles"></div>
   </div>
 
-  <!-- ② 名前入力欄(+ 開始パスワード欄) -->
   <div class="card">
     <h2>受験者情報</h2>
     <div class="grid">
@@ -152,10 +146,8 @@ button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px);min-hei
     <p class="note">※試験中に全画面を解除したり、他のタブ・アプリへ切り替えると、画面が閉じて警告画面になります。</p>
   </div>
 
-  <!-- ③ 注意事項(試験名・詳細と名前入力欄の下) -->
   <div class="notes"><h2>📌 注意事項</h2><ul></ul></div>
 
-  <!-- 先生用:パスワードのハッシュ作成ツール(URL末尾に #hash) -->
   <div class="card" id="tool">
     <h2>先生用:ハッシュ作成</h2>
     <label for="tIn">パスワード(開始用・解除用どちらでも)</label>
@@ -187,7 +179,7 @@ button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px);min-hei
 <div class="full" id="lock">
   <h1 style="font-size:1.6rem">⚠ 画面が閉じました</h1>
   <p id="lockMsg"></p>
-  <p>先生を呼んでください。(あわてなくて大丈夫です。回答は消えません)</p>
+  <p>先生を呼んでください。</p>
   <div id="unlockBox" style="display:none">
     <input id="uCode" type="password" placeholder="先生用解除コード">
     <button id="unlock">再開する</button>
@@ -202,7 +194,7 @@ button#go{margin-top:clamp(8px,1.8vh,14px);padding:clamp(9px,1.8vh,12px);min-hei
 
 <script>
 /* =====================================================
-   ★ 先生が編集する設定(ここだけ書き換えればOK) ★
+   ★ 設定 ★
    ===================================================== */
 const CONFIG = {
   // Microsoft Forms または Google Forms のURL(httpsで始まる正式なURL)
@@ -212,15 +204,13 @@ const CONFIG = {
   TITLE: "技術科 小テスト",
 
   // 一斉開始時刻(日本時間)。形式: "年-月-日T時:分:秒+09:00"
-  // ★ 空文字 "" にすると「パスワード開始モード」になります。
-  //    受験者情報の下にパスワード欄が表示され、正しいパスワードを入力した時点で
-  //    その生徒の試験がスタートします(制限時間はその時点から数えます)。
+  // 空文字 "" にすると「パスワード開始モード」になる
+  // 受験者情報の下にパスワード欄が表示され、正しいパスワードを入力した時点でその生徒の試験がスタート(制限時間はその時点から数える)。
   START_TIME: "",
 
   // パスワード開始モード用の「開始パスワード」のハッシュ値(SHA-256)。
   // 作り方:このHTMLのURLの末尾に #hash を付けて開き、パスワードを入力 → 出てきた値を貼る。
-  // 初期値は仮のパスワード「start2026」のハッシュです。必ず変更してください。
-  START_PASSWORD_HASH: "bdd65ed898ca03ce71e76dae4761a8c4b32381b3697afbfe9d702d0378687462",
+  START_PASSWORD_HASH: "417639a8b583809381d5e468fec0c7215c362f36bc03fa5d8b049a4d7dad8c14",
 
   // 制限時間(分)。一斉開始の場合は開始時刻からカウント(全員同じ終了時刻)
   TIME_LIMIT_MIN: 10,
@@ -229,7 +219,7 @@ const CONFIG = {
   GRACE_SEC: 30,
 
   // 残り何分で黄色/赤色の警告表示にするか
-  WARN_MIN: 3,
+  WARN_MIN: 5,
   DANGER_MIN: 1,
 
   // 注意事項(1行ずつ書く。不要なら [] にすると非表示)
@@ -242,13 +232,12 @@ const CONFIG = {
   ],
 
   // 先生用の再開コードのハッシュ値(SHA-256)。空文字 "" なら再開不可。
-  // 初期値は仮のコード「Teacher2026」のハッシュです。必ず変更してください。
   TEACHER_CODE_HASH: "4499a093a9dfe821a53b263f2148f48abd52d48d90e344170274d8052fa0c8bb"
 };
 /* ===================================================== */
 
 const $ = id => document.getElementById(id);
-const USE_PW = !CONFIG.START_TIME;           // 開始時刻が空欄ならパスワード開始モード
+const USE_PW = !CONFIG.START_TIME;
 let active = false, finished = false, started = false, busy = false;
 let startMs = 0, endMs = 0, offset = 0, tick = null;
 
@@ -258,7 +247,6 @@ async function sha256(s){
 }
 const canHash = !!(window.crypto && crypto.subtle);
 
-/* ---------- 開始画面の表示 ---------- */
 $("title").textContent = CONFIG.TITLE;
 (function(){
   const hm = d => d.toLocaleTimeString("ja-JP",{hour:"2-digit",minute:"2-digit",timeZone:"Asia/Tokyo"});
@@ -277,7 +265,6 @@ $("title").textContent = CONFIG.TITLE;
 })();
 if (USE_PW) $("pwBox").style.display = "block";
 
-/* ---------- 注意事項 ---------- */
 (function(){
   const notes = CONFIG.NOTES || [];
   document.querySelectorAll(".notes ul, #notePanel ul").forEach(ul => {
@@ -292,7 +279,6 @@ $("noteBtn").onclick = () => {
   p.style.display = p.style.display === "block" ? "none" : "block";
 };
 
-/* ---------- 先生用ハッシュ作成ツール ---------- */
 if (location.hash === "#hash"){
   $("tool").style.display = "block";
   $("tBtn").onclick = async () => {
@@ -317,7 +303,6 @@ function normalize(u){
 }
 const FORM = normalize(CONFIG.FORM_URL);
 
-// サーバー時刻との差を測る(端末の時計ズレ対策)
 async function syncClock(){
   try{
     const t0 = Date.now();
@@ -331,7 +316,6 @@ const fmt = ms => { const s = Math.max(0, Math.ceil(ms/1000)); const h = Math.fl
   return (h ? h+":" : "") + String(m).padStart(2,"0") + ":" + String(x).padStart(2,"0"); };
 const exitFs = () => { try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch(e){} };
 
-/* ---------- 試験開始 ---------- */
 $("go").onclick = async () => {
   if (busy) return; busy = true;
   try {
@@ -349,13 +333,11 @@ $("go").onclick = async () => {
       if (!$("sPw").value.trim()){ $("err").textContent = "テスト開始パスワードを入力してください。"; return; }
     }
 
-    // 全画面はクリック直後に要求する(ブラウザの制限対策)
     try {
       const el = document.documentElement;
       await (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
     } catch(e){ $("err").textContent = "全画面にできません。PC・Chromebook・iPadで開いてください。"; return; }
 
-    // パスワード開始モード:パスワードが違えば全画面を戻す
     if (USE_PW){
       const ok = (await sha256($("sPw").value.trim())) === CONFIG.START_PASSWORD_HASH;
       if (!ok){
@@ -417,7 +399,6 @@ function endTest(){
   $("done").style.display = "flex";
 }
 
-/* ---------- 「提出した」ボタン(2回押しで終了) ---------- */
 let finArmed = false;
 $("finBtn").onclick = () => {
   if (!finArmed){
@@ -429,11 +410,9 @@ $("finBtn").onclick = () => {
   endTest();
 };
 
-/* ---------- 不正の疑い(全画面解除・タブ切替) ---------- */
 function violation(reason){
   if (!active || finished || !started) return;
   active = false;
-  // iframe は消さず非表示にするだけ(再開したとき回答が残る)
   $("exam").style.display = "none";
   $("notePanel").style.display = "none";
   const t = new Date().toLocaleString("ja-JP");
@@ -462,7 +441,6 @@ document.addEventListener("webkitfullscreenchange", fsLost);
 document.addEventListener("visibilitychange", () => { if (document.hidden) violation("他のタブ・アプリへ切替"); });
 document.addEventListener("contextmenu", e => { if (active) e.preventDefault(); });
 
-/* ---------- 先生用の再開 ---------- */
 $("unlock").onclick = async () => {
   $("uErr").textContent = "";
   if (!canHash){ $("uErr").textContent = "https のページで開いてください。"; return; }
